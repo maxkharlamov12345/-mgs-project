@@ -28,8 +28,6 @@ a{color:var(--text)}
 .chip{min-height:44px;padding:0 18px;border-radius:999px;border:0;font:inherit;font-size:15px;font-weight:500;cursor:pointer;
   background:var(--chip);color:var(--text);transition:background-color .2s ease,color .2s ease}
 .chip:hover{background:var(--chip-hover)}
-.chip:disabled{opacity:.4;cursor:default}
-.chip:disabled:hover{background:var(--chip)}
 .chip[aria-pressed="true"]{background:var(--text);color:var(--ink)}
 .chip .n{opacity:.6;font-weight:400;margin-left:4px}
 .chip:focus-visible,.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -88,26 +86,9 @@ a{color:var(--text)}
 // ===== ПРОЕКТЫ ПОРТФОЛИО =====
 // Каждая карточка: обложка (1 фото), название, тип и ссылка на страницу проекта.
 // Новые проекты добавлять сюда; порядок в списке = порядок в ленте.
-// Пока есть одна готовая страница проекта (index.html), поэтому все карточки ведут на неё,
-// а обложки и названия — временные, из фото этого же проекта.
-var REEL_KITCHEN  = { src: 'assets/b808bde975a2d936c5b588e3ccd832a6-preview.mp4', poster: 'assets/3e0259f301dba983b78349f5a604e115.jpg' };
-var REEL_BATH     = { src: 'assets/e973636b1be0fa442bd7abad4e80c1fc-preview.mp4', poster: 'assets/6c99a6c59a75e664d36f16d87121653d.jpg' };
-var REEL_WARDROBE = { src: 'assets/cc34b5de93f0f3885d7d5bb75804001d-preview.mp4', poster: 'assets/63fd036724736762c0d1b1c7c10fd77c.jpg' };
-// types — все фильтры, где показывать проект (комплекс попадает и в каждую свою зону);
-// reel — видео проекта для фильтра REELS (необязательно)
+// types — в каких лентах показывать проект; reel — видео для ленты REELS: { src: 'assets/<id>-preview.mp4', poster: 'assets/<id>.jpg' }
 var PROJECTS = [
-  { title: 'Квартира в тёплых тонах', types: ['Комплекс', 'Кухни', 'Шкафы', 'Гардеробные', 'Ванные', 'Гостиные'], cover: 'assets/51b3a741d39db0d4301d3aa373ff7deb.jpg', href: 'index.html', reel: REEL_KITCHEN },
-  { title: '[Кухня в дубе и графите]', types: ['Кухни'],               cover: 'assets/1df78be4ea18f381158d3b6f19fb0650.jpg', href: 'index.html' },
-  { title: '[Гардеробная в графите]',  types: ['Гардеробные'],         cover: 'assets/61eb3ef72c07f95746daa6f6ca26a80a.jpg', href: 'index.html', reel: REEL_WARDROBE },
-  { title: '[Гостиная со стеллажом]',  types: ['Гостиные'],            cover: 'assets/852969a9418bd9af724aadd3b339a6a4.jpg', href: 'index.html' },
-  { title: '[Угловая кухня]',          types: ['Кухни'],               cover: 'assets/bf2bd4491530627d1ddddc9a7168d603.jpg', href: 'index.html' },
-  { title: '[Прихожая до потолка]',    types: ['Шкафы'],               cover: 'assets/3cfcf686eab5b7ab3072c5817360f51f.jpg', href: 'index.html' },
-  { title: '[Ванная в дубе]',          types: ['Ванные'],              cover: 'assets/afbdb40f8ab83b0c8cd8cbc128206fe6.jpg', href: 'index.html', reel: REEL_BATH },
-  { title: '[Квартира-студия]',        types: ['Комплекс', 'Кухни', 'Гостиные'], cover: 'assets/16c8149d74c21abbbe503503db9855c9.jpg', href: 'index.html' },
-  { title: '[Детская с рабочим местом]', types: ['Детские'],           cover: 'assets/4ba006136224ef583eb1266d27d9aa59.jpg', href: 'index.html' },
-  { title: '[Прихожая с банкеткой]',   types: ['Шкафы'],               cover: 'assets/10a1df574d7617bbbecc858b0109f42e.jpg', href: 'index.html' },
-  { title: '[Ванная с пеналом]',       types: ['Ванные'],              cover: 'assets/b831b81840edffbf15c0404891a16a1e.jpg', href: 'index.html' },
-  { title: '[Кухня с островом]',       types: ['Кухни'],               cover: 'assets/3c05a41db1716a4f183f4c2b81c98a08.jpg', href: 'index.html' }
+  { title: 'Квартира в тёплых тонах', types: ['Комплекс'], cover: 'assets/51b3a741d39db0d4301d3aa373ff7deb.jpg', href: 'index.html' }
 ];
 var DEFAULT_FILTER = 'Комплекс'; // открывается при заходе на страницу
 var FILTERS = ['REELS', 'Комплекс', 'Кухни', 'Шкафы', 'Гардеробные', 'Ванные', 'Детские', 'Гостиные'];
@@ -143,7 +124,7 @@ function renderChips() {
   var html = '';
   FILTERS.forEach(function (f) {
     var n = listFor(f).length;
-    html += '<button class="chip" type="button" data-f="' + f + '" aria-pressed="' + (f === filter) + '"' + (n ? '' : ' disabled') + '>' + f + '<span class="n">' + n + '</span></button>';
+    html += '<button class="chip" type="button" data-f="' + f + '" aria-pressed="' + (f === filter) + '"' + '>' + f + '<span class="n">' + n + '</span></button>';
   });
   chipsEl.innerHTML = html;
 }
@@ -165,7 +146,7 @@ function renderFeed(force) {
   var n = list.length;
   subEl.textContent = reels ? n + ' ' + plural(n, 'видео', 'видео', 'видео') : n + ' ' + plural(n, 'проект', 'проекта', 'проектов');
   feed.style.maxWidth = { 1: '640px', 2: '900px', 3: '1400px', 4: '1920px' }[cols];
-  if (!n) { feed.innerHTML = '<div class="empty">Пока нет проектов</div>'; return; }
+  if (!n) { feed.innerHTML = '<div class="empty">Скоро здесь появятся проекты</div>'; return; }
 
   // каждую плитку — в самую короткую колонку; фото тянутся, и колонки кончаются ровно
   var columns = [];
