@@ -43,7 +43,8 @@ a{color:var(--text)}
 .card video{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .reels{position:absolute;left:12px;top:12px;height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;
   background:rgba(255,255,255,.94);color:var(--ink);font-size:13px;font-weight:500;letter-spacing:.04em}
-.meta{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
+.meta{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none;opacity:0;transition:opacity .25s ease}
+.card:hover .meta,.card:focus-visible .meta{opacity:1}
 .tag{height:32px;min-width:0;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;
   background:rgba(255,255,255,.95);color:var(--ink);font-size:13px;font-weight:500;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
