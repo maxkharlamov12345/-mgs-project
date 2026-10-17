@@ -539,8 +539,8 @@ class Component extends DCLogic {
   // каждое видео скачиваем ОДИН раз и дальше отдаём всем плеерам из памяти (лента, просмотр, полный экран)
   videoURL(orig) {
     var self = this; this._vp = this._vp || {}; this.vurls = this.vurls || {};
-    // на обычном хостинге видео отдаётся кусками, поэтому играем его потоком сразу, без скачивания целиком
-    if (!this._vp[orig]) { self.vurls[orig] = orig; this._vp[orig] = Promise.resolve(orig); }
+    // играем потоком сразу; полную версию тем временем тихо докачиваем в память (bgLoadVideos)
+    if (!this._vp[orig]) { if (!self.vurls[orig]) self.vurls[orig] = orig; this._vp[orig] = Promise.resolve(self.vurls[orig]); }
     return this._vp[orig];
   }
   preloadVideos() {
@@ -548,9 +548,23 @@ class Component extends DCLogic {
     var list = [];
     (pr.videos || []).forEach(function (v) { list.push(v.src || v); });
     (pr.zones || []).forEach(function (z) { (z.videos || []).forEach(function (v) { list.push(v.src); }); });
-    var n = 0;
-    list.forEach(function (src) { if (src && String(src).indexOf('assets/') === 0) self.videoURL(src).then(function () { if (++n === list.length) self.forceUpdate(); }); });
+    list = list.filter(function (src, i) { return src && list.indexOf(src) === i; });
+    this.vurls = this.vurls || {}; this._vpend = this._vpend || {};
+    var next = function (i) {
+      if (i >= list.length) return;
+      var src = list[i];
+      fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
+        var u = URL.createObjectURL(new Blob([b], { type: 'video/mp4' }));
+        // пока окно просмотра открыто — не подменяем источник у играющего видео, подставим после закрытия
+        if (self.state.lb >= 0) self._vpend[src] = u; else { self.vurls[src] = u; if (self._vp) delete self._vp[src]; }
+        next(i + 1);
+      }).catch(function () { next(i + 1); });
+    };
+    var start = function () { setTimeout(function () { next(0); }, 1200); };
+    if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
   }
+  // короткие 10-секундные превью для ленты (без звука, лёгкие)
+  previewOf(src) { return /\.mp4$/.test(src || '') ? src.replace(/\.mp4$/, '-preview.mp4') : src; }
   ensureVideo() {
     var self = this;
     var vs = document.querySelectorAll('video');
@@ -562,6 +576,15 @@ class Component extends DCLogic {
       // iPhone требует от сервера отдачу видео кусками; если хранилище так не умеет,
       // видео не грузится (зачёркнутый play). Поэтому скачиваем файл целиком и играем из памяти.
       var orig = v.getAttribute('data-src') || v.getAttribute('src');
+      if (!v.getAttribute('data-lb') && window.IntersectionObserver && orig && orig.indexOf('assets/') === 0) {
+        v.preload = 'none'; v.setAttribute('data-want', self.previewOf(orig));
+        if (!self._io) self._io = new IntersectionObserver(function (es) {
+          es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-want');
+            if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) el.src = s; var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+            else if (!el.paused) el.pause(); });
+        }, { rootMargin: '200px 0px' });
+        self._io.observe(v); continue;
+      }
       if (orig && orig.indexOf('assets/') === 0 && window.fetch && window.URL && window.Blob) {
         (function (v, orig) {
           self.videoURL(orig).then(function (u) {
@@ -590,6 +613,7 @@ class Component extends DCLogic {
   // поэтому предыдущее состояние просмотра запоминаем сами
   componentDidUpdate(prev) {
     if (prev.variant !== this.props.variant) this.setState({ filter: 'all', lb: -1 });
+    if (this.state.lb < 0 && this._vpend) { var pd = this._vpend, ks = Object.keys(pd); if (ks.length) { var me = this; ks.forEach(function (k) { me.vurls[k] = pd[k]; if (me._vp) delete me._vp[k]; }); this._vpend = {}; } }
     this.syncTrack();
     this.syncVideos();
     this.ensureVideo();
