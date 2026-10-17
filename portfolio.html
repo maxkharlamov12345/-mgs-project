@@ -261,7 +261,9 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
           <span style="font-size: 30px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">{{lb.price}}</span>
           <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
         </div>
-        <a href="{{lb.href}}" aria-label="Открыть весь проект «{{lb.project}}»" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 999px; border: 1px solid rgba(244,241,236,0.35); color: #f4f1ec; font-weight: 500; font-size: 15px">Открыть весь проект<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+        <sc-if value="{{lb.hasPage}}" hint-placeholder-val="{{ true }}">
+          <a href="{{lb.href}}" aria-label="Открыть весь проект «{{lb.project}}»" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 999px; border: 1px solid rgba(244,241,236,0.35); color: #f4f1ec; font-weight: 500; font-size: 15px">Открыть весь проект<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+        </sc-if>
         <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
           <div class="lb-thumbs-grid" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-top: 6px; border-top: 1px solid #262220">
             <sc-for list="{{lbList}}" as="t" hint-placeholder-count="4">
@@ -334,6 +336,18 @@ class Component extends DCLogic {
           { name: 'Гостиная', type: 'Гостиные', photos: [P.l1, P.l2], price: '420 000 ₽',
             text: 'Шкаф до потолка с длинными чёрными ручками, открытый стеллаж с подсветкой, подвесная ТВ-тумба с подсветкой снизу и рабочее место на фоне дубовой панели.',
             korpus: '[Материал]', fasady: 'Матовые светлые', furn: '[Бренд]' }
+        ]
+      },
+      // второй комплексный проект: фото приходят по изделиям; страница проекта ещё не сделана —
+      // пока href пустой, проекта нет в «Комплексе» и в просмотре нет кнопки «Открыть весь проект»
+      {
+        title: '[Новый проект]', href: '', cover: 'assets/p2-kitchen-1.jpg', complex: true,
+        priceDate: 'октябрь 2026',
+        reels: [],
+        items: [
+          { name: 'Кухня', type: 'Кухни', photos: ['assets/p2-kitchen-1.jpg', 'assets/p2-kitchen-2.jpg', 'assets/p2-kitchen-3.jpg', 'assets/p2-kitchen-4.jpg',
+                      'assets/p2-kitchen-5.jpg', 'assets/p2-kitchen-6.jpg'],
+            price: '[Цена]', text: '[Описание кухни]', korpus: '[Материал]', fasady: '[Фасады]', furn: '[Бренд]' }
         ]
       }
     ];
@@ -603,7 +617,7 @@ class Component extends DCLogic {
         pins.push({ isVideo: true, src: r.src, poster: r.poster, label: r.project, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
     } else if (f === 'Комплекс') {
-      D.projects.forEach(function (pr) { if (pr.complex) pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title }); });
+      D.projects.forEach(function (pr) { if (pr.complex && pr.href) pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title }); });
     } else {
       D.items.forEach(function (it) {
         if (it.type !== f || !it.photos.length) return;
@@ -641,7 +655,7 @@ class Component extends DCLogic {
     // ---- плашки ----
     var countOf = function (k) {
       if (k === 'REELS') return D.reels.length;
-      if (k === 'Комплекс') return D.projects.filter(function (p) { return p.complex; }).length;
+      if (k === 'Комплекс') return D.projects.filter(function (p) { return p.complex && p.href; }).length;
       return D.items.filter(function (it) { return it.type === k && it.photos.length; }).length;
     };
     var chips = this.FILTERS().map(function (k) {
@@ -677,7 +691,7 @@ class Component extends DCLogic {
       chips: chips, columns: columns, isEmpty: n === 0,
       priceDate: view[li].priceDate || 'октябрь 2026',
       lbOpen: this.state.lb >= 0,
-      lb: { src: view[li].src, zone: view[li].zone, text: view[li].text, price: view[li].price, korpus: view[li].korpus, fasady: view[li].fasady, furn: view[li].furn, project: view[li].project, href: view[li].href, pos: pc > 1 ? (li + 1) + ' / ' + pc : '1 фото' },
+      lb: { src: view[li].src, zone: view[li].zone, text: view[li].text, price: view[li].price, korpus: view[li].korpus, fasady: view[li].fasady, furn: view[li].furn, project: view[li].project, href: view[li].href, hasPage: !!view[li].href, pos: pc > 1 ? (li + 1) + ' / ' + pc : '1 фото' },
       lbMulti: pc > 1,
       isReels: isReels, panelCls: isReels ? 'lb-hide' : '', trackCls: isReels ? 'lb-reels' : '',
       lbH: (function () { var r = (self.ratios || {})[view[li].src] || 1.25; return (r * 100).toFixed(2) + 'vw'; })(),
