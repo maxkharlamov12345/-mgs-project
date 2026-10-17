@@ -477,6 +477,7 @@ class Component extends DCLogic {
       z.korpus = z.korpus || sp.korpus || '[Материал]'; z.fasady = z.fasady || sp.fasady || '[Фасады]'; z.furn = z.furn || sp.furn || '[Бренд]';
     });
     // рендеры дизайн-проекта: пара «рендер → реализация» на изделие; нет пар — блок не показывается
+    pr.designer = { name: 'Кирилл', face: 'assets/804032ad4626bf1d42b4a683da1a4311.jpg', photo: 'assets/e5b176bbe219ca971c57de78cc78af9c.jpg' };
     return pr;
   }
   projectData() {
