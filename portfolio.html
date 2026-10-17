@@ -87,9 +87,15 @@ a{color:var(--text)}
 // ===== ПРОЕКТЫ ПОРТФОЛИО =====
 // Каждая карточка: обложка (1 фото), название, тип и ссылка на страницу проекта.
 // Новые проекты добавлять сюда; порядок в списке = порядок в ленте.
-// types — в каких лентах показывать проект; reel — видео для ленты REELS: { src: 'assets/<id>-preview.mp4', poster: 'assets/<id>.jpg' }
+// types — в каких лентах показывать проект;
+// reels — видео проекта для ленты REELS (каждое — отдельная плитка): { src: 'assets/<id>-preview.mp4', poster: 'assets/<id>.jpg' }
 var PROJECTS = [
-  { title: 'Квартира в тёплых тонах', types: ['Комплекс'], cover: 'assets/cover-warm-apartment.jpg', href: 'index.html' }
+  { title: 'Квартира в тёплых тонах', types: ['Комплекс'], cover: 'assets/cover-warm-apartment.jpg', href: 'index.html',
+    reels: [
+      { src: 'assets/b808bde975a2d936c5b588e3ccd832a6-preview.mp4', poster: 'assets/3e0259f301dba983b78349f5a604e115.jpg' },
+      { src: 'assets/e973636b1be0fa442bd7abad4e80c1fc-preview.mp4', poster: 'assets/6c99a6c59a75e664d36f16d87121653d.jpg' },
+      { src: 'assets/cc34b5de93f0f3885d7d5bb75804001d-preview.mp4', poster: 'assets/63fd036724736762c0d1b1c7c10fd77c.jpg' }
+    ] }
 ];
 var DEFAULT_FILTER = 'Комплекс'; // открывается при заходе на страницу
 var FILTERS = ['REELS', 'Комплекс', 'Кухни', 'Шкафы', 'Гардеробные', 'Ванные', 'Детские', 'Гостиные'];
@@ -117,7 +123,11 @@ function readFilter() {
 }
 
 function listFor(f) {
-  if (f === 'REELS') return PROJECTS.filter(function (p) { return p.reel; });
+  if (f === 'REELS') {
+    var out = [];
+    PROJECTS.forEach(function (p) { (p.reels || []).forEach(function (rl) { out.push({ title: p.title, href: p.href, reel: rl }); }); });
+    return out;
+  }
   return PROJECTS.filter(function (p) { return p.types.indexOf(f) >= 0; });
 }
 
