@@ -129,23 +129,23 @@ function renderChips() {
   chipsEl.innerHTML = html;
 }
 
-function colsFor(vw, n) {
-  var c = vw < 760 ? 2 : vw < 1100 ? 3 : 4;
-  return Math.max(1, Math.min(c, n));
+// сетка как в ленте проекта: ПК — 4 колонки, планшет — 3, телефон — 2, даже если проектов мало
+function colsFor(vw) {
+  return vw < 760 ? 2 : vw < 1100 ? 3 : 4;
 }
 
 function renderFeed(force) {
   var list = listFor(filter);
   var reels = filter === 'REELS';
   var vw = window.innerWidth;
-  var cols = colsFor(vw, list.length);
+  var cols = colsFor(vw);
   var key = filter + '|' + cols;
   if (!force && key === lastKey) return;
   lastKey = key;
 
   var n = list.length;
   subEl.textContent = reels ? n + ' ' + plural(n, 'видео', 'видео', 'видео') : n + ' ' + plural(n, 'проект', 'проекта', 'проектов');
-  feed.style.maxWidth = { 1: '640px', 2: '900px', 3: '1400px', 4: '1920px' }[cols];
+  feed.style.maxWidth = '1920px';
   if (!n) { feed.innerHTML = '<div class="empty">Скоро здесь появятся проекты</div>'; return; }
 
   // каждую плитку — в самую короткую колонку; фото тянутся, и колонки кончаются ровно
