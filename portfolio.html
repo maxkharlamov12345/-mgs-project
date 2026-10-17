@@ -377,7 +377,7 @@ class Component extends DCLogic {
   preloadPhotos() {
     var self = this; this.mem = this.mem || {}; this.keep = this.keep || [];
     this.data().photos.forEach(function (src) {
-      if (self.mem[src] || !window.fetch) return;
+      if (self.mem[src] || !window.fetch || src.indexOf('data:') === 0) return; // встроенные фото уже в памяти
       fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
         var u = URL.createObjectURL(b);
         var im = new Image(); im.src = u; self.keep.push(im);
@@ -388,7 +388,7 @@ class Component extends DCLogic {
   }
   // полные видео тихо докачиваем в фоне — в просмотре они играют без задержек
   preloadVideos() {
-    var self = this, list = this.data().videos; if (!window.fetch) return;
+    var self = this, list = this.data().videos.filter(function (s) { return s.indexOf('data:') !== 0; }); if (!window.fetch) return;
     this.vurls = this.vurls || {}; this._vpend = this._vpend || {};
     var next = function (i) {
       if (i >= list.length) return;
