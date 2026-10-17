@@ -159,7 +159,10 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <sc-if value="{{p.isVideo}}" hint-placeholder-val="{{ false }}">
           <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
             <video data-src="{{p.src}}" poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
-            <span style="position: absolute; left: 12px; top: 12px; height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
+            <span style="position: absolute; left: 12px; top: 12px; right: 56px; display: flex; flex-wrap: wrap; gap: 6px">
+              <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
+              <sc-if value="{{p.hasZone}}" hint-placeholder-val="{{ false }}"><span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px">{{p.zone}}</span></sc-if>
+            </span>
             <button onClick="{{p.open}}" aria-label="Открыть REELS: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer">
               <span style="position: absolute; right: 12px; top: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
             </button>
@@ -370,7 +373,12 @@ class Component extends DCLogic {
     var prs = this.projects();
     prs.forEach(function (pr, pi) {
       if (pr.cover) photos.push(pr.cover);
-      (pr.reels || []).forEach(function (r) { reels.push({ src: r.src, poster: r.poster, project: pr.title, href: pr.href }); videos.push(r.src); });
+      // у рилса два тега: REELS и изделие, к которому видео тоже относится (если есть)
+      (pr.reels || []).forEach(function (r) {
+        var zone = '';
+        (pr.items || []).forEach(function (it) { (it.videos || []).forEach(function (v) { if (v.src === r.src) zone = it.name; }); });
+        reels.push({ src: r.src, poster: r.poster, project: pr.title, href: pr.href, zone: zone }); videos.push(r.src);
+      });
       (pr.items || []).forEach(function (it, ii) {
         var key = pi + '-' + ii;
         var x = { key: key, name: it.name, type: it.type, photos: it.photos || [], videos: it.videos || [], text: it.text || '', price: it.price || '',
@@ -624,7 +632,7 @@ class Component extends DCLogic {
     var pins = [];
     if (f === 'REELS') {
       D.reels.forEach(function (r, i) {
-        pins.push({ isVideo: true, src: r.src, poster: r.poster, label: r.project, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
+        pins.push({ isVideo: true, src: r.src, poster: r.poster, label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
     } else if (f === 'Комплекс') {
       D.projects.forEach(function (pr) { if (pr.complex && pr.href) pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title }); });
