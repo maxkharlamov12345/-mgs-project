@@ -342,7 +342,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
               </sc-if>
               <sc-if value="{{t.isVideo}}" hint-placeholder-val="{{ false }}">
                 <div style="position: relative; height: 100%">
-                  <video class="lb-slide-img" src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="auto" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" style="aspect-ratio: {{t.ar}}; background: #000; cursor: pointer"></video>
+                  <video class="lb-slide-img" src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" style="aspect-ratio: {{t.ar}}; background: #000; cursor: pointer"></video>
                   <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{t.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{t.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{t.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
                   <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
                 </div>
@@ -369,7 +369,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             </sc-if>
             <sc-if value="{{t.isVideo}}" hint-placeholder-val="{{ false }}">
               <div style="position: relative">
-                <video src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="auto" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" class="lb-vvid" style="display: block; width: 100%; object-fit: cover; background: #000; border-radius: 10px; cursor: pointer"></video>
+                <video src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" class="lb-vvid" style="display: block; width: 100%; object-fit: cover; background: #000; border-radius: 10px; cursor: pointer"></video>
                 <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{t.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{t.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{t.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
                 <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
               </div>
@@ -539,9 +539,8 @@ class Component extends DCLogic {
   // каждое видео скачиваем ОДИН раз и дальше отдаём всем плеерам из памяти (лента, просмотр, полный экран)
   videoURL(orig) {
     var self = this; this._vp = this._vp || {}; this.vurls = this.vurls || {};
-    if (!this._vp[orig]) this._vp[orig] = fetch(orig).then(function (r) { return r.blob(); }).then(function (b) {
-      var u = URL.createObjectURL(new Blob([b], { type: 'video/mp4' })); self.vurls[orig] = u; return u;
-    });
+    // на обычном хостинге видео отдаётся кусками, поэтому играем его потоком сразу, без скачивания целиком
+    if (!this._vp[orig]) { self.vurls[orig] = orig; this._vp[orig] = Promise.resolve(orig); }
     return this._vp[orig];
   }
   preloadVideos() {
@@ -566,6 +565,16 @@ class Component extends DCLogic {
       if (orig && orig.indexOf('assets/') === 0 && window.fetch && window.URL && window.Blob) {
         (function (v, orig) {
           self.videoURL(orig).then(function (u) {
+            if (!v.getAttribute('data-lb') && window.IntersectionObserver) {
+              // видео в ленте грузим и запускаем только когда оно на экране — страница открывается быстро
+              v.preload = 'none';
+              if (!self._io) self._io = new IntersectionObserver(function (es) {
+                es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-src') || el.getAttribute('data-want');
+                  if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) { el.src = s; } var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+                  else if (!el.paused) el.pause(); });
+              }, { rootMargin: '200px 0px' });
+              v.setAttribute('data-want', u); self._io.observe(v); return;
+            }
             if (v.getAttribute('src') !== u) { v.src = u; v.load(); }
             if (v === self._activeV) self.playWithSound(v);
             else if (!v.getAttribute('data-lb')) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
