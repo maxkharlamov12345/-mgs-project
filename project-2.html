@@ -2,7 +2,7 @@
 <html lang="ru">
 <head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta charset="utf-8">
-<title>[Новый проект] — MGS Mebel</title>
+<title>Квартира в светлом беже — MGS Mebel</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -128,7 +128,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
     <div class="about-band" style="max-width: {{maxW}}; margin: 0 auto; border-radius: 18px; background: #1b1916; padding: 28px 32px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 48px">
       <div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px; max-width: 820px">
         <span style="font-size: 13px; color: #a39a8e; letter-spacing: 0.08em; text-transform: uppercase">О проекте</span>
-        <p style="margin: 0; font-size: 18px; line-height: 1.55">[Пара слов о проекте: что сделали, в каком стиле, материалы.]</p>
+        <p style="margin: 0; font-size: 18px; line-height: 1.55">Мебель для всей квартиры в одном спокойном тоне: матовые бежевые фасады без ручек, тонкие чёрные акценты и тёплая подсветка. Кухня с барной стойкой, шкафы до потолка в прихожей и спальне, санузел с подсвеченными нишами.</p>
       </div>
       <div style="flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px">
         <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
@@ -194,7 +194,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <sc-if value="{{p.isAbout}}" hint-placeholder-val="{{ false }}">
           <div class="pin" style="border-radius: 18px; background: #1b1916; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
             <span style="font-size: 13px; color: #a39a8e; letter-spacing: 0.08em; text-transform: uppercase">О проекте</span>
-            <p style="margin: 0; font-size: 17px; line-height: 1.55">[Пара слов о проекте: что сделали, в каком стиле, материалы.]</p>
+            <p style="margin: 0; font-size: 17px; line-height: 1.55">Мебель для всей квартиры в одном спокойном тоне: матовые бежевые фасады без ручек, тонкие чёрные акценты и тёплая подсветка. Кухня с барной стойкой, шкафы до потолка в прихожей и спальне, санузел с подсвеченными нишами.</p>
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border-top: 1px solid #26221f; padding-top: 16px">
               <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
               <span style="font-size: 30px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">[Цена]</span>
@@ -258,7 +258,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
       <div class="about-band" style="max-width: {{maxW}}; margin: 0 auto; border-radius: 18px; background: #1b1916; padding: 28px 32px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 48px">
       <div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px; max-width: 820px">
         <span style="font-size: 13px; color: #a39a8e; letter-spacing: 0.08em; text-transform: uppercase">О проекте</span>
-        <p style="margin: 0; font-size: 18px; line-height: 1.55">[Пара слов о проекте: что сделали, в каком стиле, материалы.]</p>
+        <p style="margin: 0; font-size: 18px; line-height: 1.55">Мебель для всей квартиры в одном спокойном тоне: матовые бежевые фасады без ручек, тонкие чёрные акценты и тёплая подсветка. Кухня с барной стойкой, шкафы до потолка в прихожей и спальне, санузел с подсвеченными нишами.</p>
       </div>
       <div style="flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px">
         <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
@@ -452,7 +452,21 @@ class Component extends DCLogic {
     // дизайнер проекта (нет дизайнера — блоки не показываются)
     // описания изделий — на сайте приходят из CMS вместе с фото
     // описания, цены и материалы изделий — пока заглушки, пришлёт Макс
-    var texts = {}, prices = {}, specs = {};
+    var texts = {
+      'Кухня': 'П-образная кухня до потолка с барной стойкой в сторону гостиной. Колонна со встроенными духовым шкафом и микроволновкой, витрина в чёрной раме с подсветкой, светлая столешница и фартук под мрамор с подсветкой рабочей зоны.',
+      'Прихожая': 'Шкафы до потолка с вертикальными чёрными профилями-ручками, подвесная тумба с ящиками и зеркальные панели с линейной подсветкой.',
+      'Санузел': 'Подвесная тумба с каменной столешницей, шкафы до потолка над инсталляцией, открытые ниши в шпоне с подсветкой и пенал за рифлёным стеклом в чёрной раме. В гостевом санузле — узкий стеллаж в шпоне.',
+      'Спальня': 'Шкаф до потолка с чёрными профилями-ручками, подвесные тумбы у кровати, рабочее место у окна с полкой и подсветкой и подвесная консоль с ящиками.'
+    };
+    // цены изделий пришлёт Макс
+    var prices = {};
+    // корпус и фурнитура по фото не видны — пришлёт Макс
+    var specs = {
+      'Кухня': { fasady: 'Матовые бежевые, без ручек' },
+      'Прихожая': { fasady: 'Матовые бежевые' },
+      'Санузел': { fasady: 'Матовые светлые + шпон, рифлёное стекло' },
+      'Спальня': { fasady: 'Матовые серо-бежевые' }
+    };
     pr.zones.forEach(function (z) {
       if (!z.text) z.text = texts[z.name] || '[Описание]';
       if (!z.price) z.price = prices[z.name] || '[Цена]';
@@ -467,7 +481,7 @@ class Component extends DCLogic {
     var R1 = { src: 'assets/p2-bath-reel-1.mp4', poster: 'assets/p2-bath-reel-1.jpg' };
     var R2 = { src: 'assets/p2-bath-reel-2.mp4', poster: 'assets/p2-bath-reel-2.jpg' };
     // видео проекта: первое — в начале ленты, остальные — равномерно по ленте
-    return { title: '[Новый проект]', video: this.video, videos: [R1, R2], zones: [
+    return { title: 'Квартира в светлом беже', video: this.video, videos: [R1, R2], zones: [
       { name: 'Кухня', photos: [P.k1, P.k2, P.k3, P.k4, P.k5, P.k6] },
       { name: 'Прихожая', photos: [P.h1, P.h2] },
       { name: 'Санузел', photos: [P.b1, P.b2, P.b3], videos: [R1, R2] },
