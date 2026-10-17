@@ -485,9 +485,10 @@ class Component extends DCLogic {
     var R1 = { src: 'assets/p2-bath-reel-1.mp4', poster: 'assets/p2-bath-reel-1.jpg' };
     var R2 = { src: 'assets/p2-bath-reel-2.mp4', poster: 'assets/p2-bath-reel-2.jpg' };
     var R3 = { src: 'assets/p2-bedroom-reel-1.mp4', poster: 'assets/p2-bedroom-reel-1.jpg' };
+    var R4 = { src: 'assets/p2-kitchen-reel-1.mp4', poster: 'assets/p2-kitchen-reel-1.jpg' };
     // видео проекта: первое — в начале ленты, остальные — равномерно по ленте
-    return { title: 'Квартира в светлом беже', video: this.video, videos: [R1, R2, R3], zones: [
-      { name: 'Кухня', photos: [P.k1, P.k2, P.k3, P.k4, P.k5, P.k6] },
+    return { title: 'Квартира в светлом беже', video: this.video, videos: [R1, R2, R3, R4], zones: [
+      { name: 'Кухня', photos: [P.k1, P.k2, P.k3, P.k4, P.k5, P.k6], videos: [R4] },
       { name: 'Прихожая', photos: [P.h1, P.h2] },
       { name: 'Санузел', photos: [P.b1, P.b2, P.b3], videos: [R1, R2] },
       { name: 'Спальня', photos: [P.s1, P.s2, P.s3, P.s4], videos: [R3] } ] };
