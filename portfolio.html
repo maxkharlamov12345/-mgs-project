@@ -37,6 +37,7 @@ a{color:var(--text)}
 .feed{display:flex;gap:16px;align-items:stretch;margin:0 auto}
 .col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:16px}
 .cell{position:relative;flex:1 0 auto}
+.cell.vid{flex:none} /* видео не растягиваем — всегда ровно 9:16, как в ленте проекта */
 .card{position:absolute;inset:0;display:block;border-radius:18px;overflow:hidden;background:var(--tile);text-decoration:none}
 .card img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s ease,filter .3s ease}
 .card:hover img{transform:scale(1.035);filter:brightness(.82)}
@@ -178,7 +179,7 @@ function renderFeed(force) {
           '<span class="reels">REELS</span>'
         : '<img src="' + it.p.cover + '" alt="' + t + '" style="object-position:' + it.pos + '" ' +
           (it.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async">';
-      return '<div class="cell"><div aria-hidden="true" style="padding-top:' + it.pad + '"></div>' +
+      return '<div class="cell' + (reels ? ' vid' : '') + '"><div aria-hidden="true" style="padding-top:' + it.pad + '"></div>' +
         '<a class="card" href="' + it.p.href + '" aria-label="Открыть проект: ' + t + '">' + media +
         '<span class="meta"><span class="tag">' + it.p.title + '</span>' +
         '<span class="go"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></span>' +
