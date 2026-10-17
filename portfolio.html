@@ -109,6 +109,7 @@ var PROJECTS = [
   { title: '[Ванная с пеналом]',       types: ['Ванные'],              cover: 'assets/b831b81840edffbf15c0404891a16a1e.jpg', href: 'index.html' },
   { title: '[Кухня с островом]',       types: ['Кухни'],               cover: 'assets/3c05a41db1716a4f183f4c2b81c98a08.jpg', href: 'index.html' }
 ];
+var DEFAULT_FILTER = 'Комплекс'; // открывается при заходе на страницу
 var FILTERS = ['REELS', 'Комплекс', 'Кухни', 'Шкафы', 'Гардеробные', 'Ванные', 'Детские', 'Гостиные'];
 
 // разная высота плиток — эффект Pinterest
@@ -118,7 +119,7 @@ var POSES  = ['center','center 40%','center 65%','center','center 55%','center 3
 var feed = document.getElementById('feed');
 var chipsEl = document.getElementById('chips');
 var subEl = document.getElementById('sub');
-var filter = FILTERS[0]; // общей ленты нет: всегда открыта одна из лент, по умолчанию первая
+var filter = DEFAULT_FILTER; // общей ленты нет: всегда открыта одна из лент
 var lastKey = '';
 
 function plural(n, a, b, c) {
@@ -130,7 +131,7 @@ function plural(n, a, b, c) {
 
 function readFilter() {
   var h = decodeURIComponent((location.hash || '').slice(1));
-  filter = FILTERS.indexOf(h) >= 0 ? h : FILTERS[0];
+  filter = FILTERS.indexOf(h) >= 0 ? h : DEFAULT_FILTER;
 }
 
 function listFor(f) {
@@ -215,7 +216,7 @@ chipsEl.addEventListener('click', function (e) {
   var b = e.target.closest('.chip'); if (!b) return;
   var f = b.getAttribute('data-f');
   if (f === filter) return;
-  history.replaceState(null, '', f === FILTERS[0] ? location.pathname : '#' + encodeURIComponent(f));
+  history.replaceState(null, '', f === DEFAULT_FILTER ? location.pathname : '#' + encodeURIComponent(f));
   filter = f; renderChips(); renderFeed(true);
 });
 window.addEventListener('hashchange', function () { readFilter(); renderChips(); renderFeed(true); });
