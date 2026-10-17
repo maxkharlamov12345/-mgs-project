@@ -99,6 +99,46 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
   .lb-close-m{display:flex !important;position:fixed !important;top:14px !important;right:14px !important;z-index:60 !important}
   .lb-panel-head{display:none !important}
 }
+/* «Комплекс»: карточка проекта — мозаика изделий + сводка */
+.cx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:1920px;margin:0 auto}
+.cx-card{display:flex;flex-direction:column;border-radius:18px;overflow:hidden;background:#151311;color:#f4f1ec;text-decoration:none;transition:background-color .25s ease}
+.cx-card:hover{background:#1b1916;color:#f4f1ec}
+.cx-media{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:repeat(3,minmax(0,1fr));gap:4px;aspect-ratio:5 / 4;background:#0f0e0c}
+.cx-tile{position:relative;overflow:hidden;background:#1f1c19;min-height:0}
+.cx-tile img{position:absolute;top:0;left:0;display:block;width:100%;height:100%;object-fit:cover;transition:transform .6s ease,filter .3s ease}
+.cx-card:hover .cx-tile img{transform:scale(1.04)}
+.cx-cover{grid-row:1 / 4}
+.cx-media.one{grid-template-columns:1fr}
+.cx-tag{position:absolute;left:10px;bottom:10px;height:32px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:rgba(255,255,255,0.94);color:#1c1a17;font-size:13px;font-weight:500;white-space:nowrap}
+.cx-more{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(15,14,12,0.55);font-size:28px;font-weight:300;color:#f4f1ec}
+.cx-info{display:flex;flex-direction:column;gap:16px;padding:24px 28px 28px}
+.cx-head{display:flex;flex-direction:column;gap:6px}
+.cx-title{margin:0;font-size:34px;font-weight:300;line-height:1.1;letter-spacing:-0.01em}
+.cx-meta{font-size:14px;color:#a89f92}
+.cx-zones{display:flex;flex-wrap:wrap;gap:6px}
+.cx-zone{height:32px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:#26221f;font-size:13px;font-weight:500}
+.cx-zone b{font-weight:400;opacity:.55;margin-left:6px}
+.cx-foot{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 24px;border-top:1px solid #26221f;padding-top:18px}
+.cx-price{display:flex;flex-direction:column;gap:4px}
+.cx-price small{font-size:13px;color:#a39a8e}
+.cx-price span{font-size:28px;font-weight:500;line-height:1.1;white-space:nowrap}
+.cx-des{display:flex;align-items:center;gap:10px}
+.cx-des img{width:40px;height:40px;border-radius:50%;object-fit:cover;display:block}
+.cx-des span{display:flex;flex-direction:column;gap:1px;font-size:15px;font-weight:500}
+.cx-des small{font-size:12px;font-weight:400;color:#a39a8e}
+.cx-go{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border-radius:999px;font-weight:500;font-size:15px;color:#1c1a17;white-space:nowrap}
+@media (max-width: 1099px){ .cx-grid{grid-template-columns:1fr;max-width:900px} }
+@media (max-width: 760px){
+  .cx-grid{gap:5px}
+  .cx-card{border-radius:12px}
+  .cx-media{aspect-ratio:1 / 1}
+  .cx-info{padding:18px 16px 20px;gap:14px}
+  .cx-title{font-size:26px}
+  .cx-tag{left:6px;bottom:6px;height:26px;font-size:11px;padding:0 9px}
+  .cx-more{font-size:22px}
+  .cx-price span{font-size:24px}
+  .cx-go{width:100%}
+}
 </style>
 </helmet>
 
@@ -116,6 +156,48 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
       <button class="chip" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; background: {{c.bg}}; color: {{c.fg}}">{{c.name}} <span style="opacity: 0.6; font-weight: 400">{{c.count}}</span></button>
     </sc-for>
   </nav>
+
+  <!-- «Комплекс»: свои карточки проектов вместо ленты -->
+  <sc-if value="{{isComplex}}" hint-placeholder-val="{{ false }}">
+  <div class="pad" style="padding: 0 12px 64px">
+    <div class="cx-grid">
+      <sc-for list="{{cxCards}}" as="c" hint-placeholder-count="2">
+        <a class="cx-card" href="{{c.href}}" aria-label="Открыть проект: {{c.title}}">
+          <div class="cx-media {{c.mediaCls}}">
+            <div class="cx-tile cx-cover"><img src="{{c.cover}}" alt="{{c.title}}" style="object-position: {{c.coverPos}}"></div>
+            <sc-for list="{{c.thumbs}}" as="t" hint-placeholder-count="3">
+              <div class="cx-tile">
+                <img src="{{t.src}}" alt="{{t.name}}" loading="lazy">
+                <sc-if value="{{t.more}}" hint-placeholder-val="{{ false }}"><span class="cx-more">{{t.moreText}}</span></sc-if>
+                <sc-if value="{{t.tag}}" hint-placeholder-val="{{ true }}"><span class="cx-tag">{{t.name}}</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <div class="cx-info">
+            <div class="cx-head">
+              <h2 class="cx-title">{{c.title}}</h2>
+              <div class="cx-meta">{{c.meta}}</div>
+            </div>
+            <div class="cx-zones">
+              <sc-for list="{{c.zones}}" as="z" hint-placeholder-count="4"><span class="cx-zone">{{z.name}}<b>{{z.count}}</b></span></sc-for>
+            </div>
+            <div class="cx-foot">
+              <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 28px">
+                <sc-if value="{{c.hasPrice}}" hint-placeholder-val="{{ true }}">
+                  <div class="cx-price"><small>Стоимость проекта</small><span style="color: {{accent}}">{{c.price}}</span></div>
+                </sc-if>
+                <sc-if value="{{c.hasDesigner}}" hint-placeholder-val="{{ true }}">
+                  <div class="cx-des"><img src="{{c.designerFace}}" alt=""><span><small>Дизайнер</small>{{c.designer}}</span></div>
+                </sc-if>
+              </div>
+              <span class="cx-go" style="background: {{accent}}">Смотреть проект<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+            </div>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
 
   <!-- лента -->
   <div class="pad" style="padding: 0 12px 64px">
@@ -321,6 +403,7 @@ class Component extends DCLogic {
     return [
       {
         title: 'Квартира в тёплых тонах', href: 'index.html', cover: 'assets/cover-warm-apartment.jpg', complex: true,
+        place: 'Москва, 2025', price: '2 300 000 ₽', designer: 'Кирилл', designerFace: 'assets/804032ad4626bf1d42b4a683da1a4311.jpg',
         priceDate: 'октябрь 2026',
         reels: [V.kitchen, V.bath, V.wardrobe],
         items: [
@@ -344,6 +427,7 @@ class Component extends DCLogic {
       // второй комплексный проект: фото приходят по изделиям, страница — project-2.html
       {
         title: 'Квартира в светлом беже', href: 'project-2.html', cover: 'assets/p2-kitchen-1.jpg', complex: true,
+        place: 'Москва, 2026', price: '1 570 000 ₽', designer: 'Кирилл', designerFace: 'assets/804032ad4626bf1d42b4a683da1a4311.jpg',
         priceDate: 'октябрь 2026',
         reels: [
           { src: 'assets/p2-bath-reel-1.mp4', poster: 'assets/p2-bath-reel-1.jpg' },
@@ -376,6 +460,7 @@ class Component extends DCLogic {
     var prs = this.projects();
     prs.forEach(function (pr, pi) {
       if (pr.cover) photos.push(pr.cover);
+      if (pr.designerFace) photos.push(pr.designerFace);
       // у рилса два тега: REELS и изделие, к которому видео тоже относится (если есть)
       (pr.reels || []).forEach(function (r) {
         var zone = '';
@@ -638,13 +723,34 @@ class Component extends DCLogic {
         pins.push({ isVideo: true, src: r.src, poster: r.poster, label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
     } else if (f === 'Комплекс') {
-      D.projects.forEach(function (pr) { if (pr.complex && pr.href) pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title }); });
+      // «Комплекс» рисуется своими карточками (cxCards), не лентой
     } else {
       D.items.forEach(function (it) {
         if (it.type !== f || !it.photos.length) return;
         pins.push({ isPhoto: true, src: it.photos[0], label: it.project, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
       });
     }
+
+    // ---- «Комплекс»: карточка = мозаика изделий + сводка проекта ----
+    var mem = function (s) { return (self.mem && self.mem[s]) || s; };
+    var cxCards = D.projects.filter(function (pr) { return pr.complex && pr.href; }).map(function (pr) {
+      var items = (pr.items || []).filter(function (it) { return (it.photos || []).length; });
+      var nPh = 0, nV = (pr.reels || []).length;
+      items.forEach(function (it) { nPh += it.photos.length; });
+      // миниатюры: по одному фото каждого изделия (не то, что стоит на обложке); больше трёх — «+N» на последней
+      var th = items.map(function (it) { var s = it.photos[0] === pr.cover && it.photos[1] ? it.photos[1] : it.photos[0]; return { src: mem(s), name: it.name }; });
+      var thumbs = th.slice(0, 3).map(function (t) { return { src: t.src, name: t.name, tag: true, more: false, moreText: '' }; });
+      if (th.length > 3) { var last = thumbs[2]; last.more = true; last.tag = false; last.moreText = '+' + (th.length - 2); }
+      var zc = items.length;
+      return {
+        href: pr.href, title: pr.title, cover: mem(pr.cover), coverPos: 'center',
+        mediaCls: thumbs.length ? '' : 'one', thumbs: thumbs,
+        meta: [pr.place, zc + ' ' + self.plural(zc, 'зона', 'зоны', 'зон'), nPh + ' фото' + (nV ? ' + ' + nV + ' видео' : '')].filter(Boolean).join(' · '),
+        zones: items.map(function (it) { return { name: it.name, count: it.photos.length + (it.videos || []).length }; }),
+        hasPrice: !!pr.price, price: pr.price || '',
+        hasDesigner: !!pr.designer, designer: pr.designer || '', designerFace: mem(pr.designerFace || '')
+      };
+    });
 
     // разная высота плиток — эффект Pinterest, как в ленте проекта
     var ratios = ['4 / 5', '3 / 4', '1 / 1', '4 / 5', '2 / 3', '5 / 6', '3 / 4', '4 / 5'];
@@ -683,7 +789,7 @@ class Component extends DCLogic {
       var on = k === f;
       return { name: k, count: countOf(k), pressed: on ? 'true' : 'false', bg: on ? accent : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setFilter(k); } };
     });
-    var n = pins.length;
+    var n = f === 'Комплекс' ? D.projects.filter(function (p) { return p.complex && p.href; }).length : pins.length;
     var countLine = f === 'REELS' ? n + ' видео'
       : f === 'Комплекс' ? n + ' ' + this.plural(n, 'проект', 'проекта', 'проектов')
       : n + ' ' + this.plural(n, 'работа', 'работы', 'работ');
@@ -709,7 +815,8 @@ class Component extends DCLogic {
     return {
       accent: accent,
       countLine: countLine,
-      chips: chips, columns: columns, isEmpty: n === 0,
+      chips: chips, columns: f === 'Комплекс' ? [] : columns, isEmpty: f === 'Комплекс' ? !cxCards.length : n === 0,
+      isComplex: f === 'Комплекс', cxCards: cxCards,
       priceDate: view[li].priceDate || 'октябрь 2026',
       lbOpen: this.state.lb >= 0,
       lb: { src: view[li].src, zone: view[li].zone, text: view[li].text, price: view[li].price, korpus: view[li].korpus, fasady: view[li].fasady, furn: view[li].furn, project: view[li].project, href: view[li].href, hasPage: !!view[li].href, pos: pc > 1 ? (li + 1) + ' / ' + pc : '1 фото' },
