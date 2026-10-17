@@ -28,6 +28,8 @@ a{color:var(--text)}
 .chip{min-height:44px;padding:0 18px;border-radius:999px;border:0;font:inherit;font-size:15px;font-weight:500;cursor:pointer;
   background:var(--chip);color:var(--text);transition:background-color .2s ease,color .2s ease}
 .chip:hover{background:var(--chip-hover)}
+.chip:disabled{opacity:.4;cursor:default}
+.chip:disabled:hover{background:var(--chip)}
 .chip[aria-pressed="true"]{background:var(--text);color:var(--ink)}
 .chip .n{opacity:.6;font-weight:400;margin-left:4px}
 .chip:focus-visible,.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -40,6 +42,9 @@ a{color:var(--text)}
 .card{position:absolute;inset:0;display:block;border-radius:18px;overflow:hidden;background:var(--tile);text-decoration:none}
 .card img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s ease,filter .3s ease}
 .card:hover img{transform:scale(1.035);filter:brightness(.82)}
+.card video{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.reels{position:absolute;left:12px;top:12px;height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;
+  background:rgba(255,255,255,.94);color:var(--ink);font-size:13px;font-weight:500;letter-spacing:.04em}
 .meta{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
 .tag{height:32px;min-width:0;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;
   background:rgba(255,255,255,.95);color:var(--ink);font-size:13px;font-weight:500;
@@ -61,6 +66,7 @@ a{color:var(--text)}
   .meta{left:8px;right:8px;bottom:8px}
   .tag{height:28px;font-size:12px;padding:0 10px}
   .go{display:none}
+  .reels{left:8px;top:8px;height:28px;font-size:12px;padding:0 10px}
 }
 @media (prefers-reduced-motion:reduce){.card img{transition:none}.card:hover img{transform:none}}
 </style>
@@ -84,21 +90,26 @@ a{color:var(--text)}
 // Новые проекты добавлять сюда; порядок в списке = порядок в ленте.
 // Пока есть одна готовая страница проекта (index.html), поэтому все карточки ведут на неё,
 // а обложки и названия — временные, из фото этого же проекта.
+var REEL_KITCHEN  = { src: 'assets/b808bde975a2d936c5b588e3ccd832a6-preview.mp4', poster: 'assets/3e0259f301dba983b78349f5a604e115.jpg' };
+var REEL_BATH     = { src: 'assets/e973636b1be0fa442bd7abad4e80c1fc-preview.mp4', poster: 'assets/6c99a6c59a75e664d36f16d87121653d.jpg' };
+var REEL_WARDROBE = { src: 'assets/cc34b5de93f0f3885d7d5bb75804001d-preview.mp4', poster: 'assets/63fd036724736762c0d1b1c7c10fd77c.jpg' };
+// types — все фильтры, где показывать проект (комплекс попадает и в каждую свою зону);
+// reel — видео проекта для фильтра REELS (необязательно)
 var PROJECTS = [
-  { title: 'Квартира в тёплых тонах', type: 'Квартира целиком', cover: 'assets/51b3a741d39db0d4301d3aa373ff7deb.jpg', href: 'index.html' },
-  { title: '[Кухня в дубе и графите]', type: 'Кухни',          cover: 'assets/1df78be4ea18f381158d3b6f19fb0650.jpg', href: 'index.html' },
-  { title: '[Гардеробная в графите]',  type: 'Гардеробные',    cover: 'assets/61eb3ef72c07f95746daa6f6ca26a80a.jpg', href: 'index.html' },
-  { title: '[Гостиная со стеллажом]',  type: 'Шкафы',          cover: 'assets/852969a9418bd9af724aadd3b339a6a4.jpg', href: 'index.html' },
-  { title: '[Угловая кухня]',          type: 'Кухни',          cover: 'assets/bf2bd4491530627d1ddddc9a7168d603.jpg', href: 'index.html' },
-  { title: '[Прихожая до потолка]',    type: 'Шкафы',          cover: 'assets/3cfcf686eab5b7ab3072c5817360f51f.jpg', href: 'index.html' },
-  { title: '[Санузел в дубе]',         type: 'Шкафы',          cover: 'assets/afbdb40f8ab83b0c8cd8cbc128206fe6.jpg', href: 'index.html' },
-  { title: '[Кухня-гостиная]',         type: 'Кухни',          cover: 'assets/16c8149d74c21abbbe503503db9855c9.jpg', href: 'index.html' },
-  { title: '[Шкаф-купе в спальню]',    type: 'Шкафы',          cover: 'assets/4ba006136224ef583eb1266d27d9aa59.jpg', href: 'index.html' },
-  { title: '[Прихожая с банкеткой]',   type: 'Шкафы',          cover: 'assets/10a1df574d7617bbbecc858b0109f42e.jpg', href: 'index.html' },
-  { title: '[Ванная с пеналом]',       type: 'Шкафы',          cover: 'assets/b831b81840edffbf15c0404891a16a1e.jpg', href: 'index.html' },
-  { title: '[Кухня с островом]',       type: 'Кухни',          cover: 'assets/3c05a41db1716a4f183f4c2b81c98a08.jpg', href: 'index.html' }
+  { title: 'Квартира в тёплых тонах', types: ['Комплекс', 'Кухни', 'Шкафы', 'Гардеробные', 'Ванные', 'Гостиные'], cover: 'assets/51b3a741d39db0d4301d3aa373ff7deb.jpg', href: 'index.html', reel: REEL_KITCHEN },
+  { title: '[Кухня в дубе и графите]', types: ['Кухни'],               cover: 'assets/1df78be4ea18f381158d3b6f19fb0650.jpg', href: 'index.html' },
+  { title: '[Гардеробная в графите]',  types: ['Гардеробные'],         cover: 'assets/61eb3ef72c07f95746daa6f6ca26a80a.jpg', href: 'index.html', reel: REEL_WARDROBE },
+  { title: '[Гостиная со стеллажом]',  types: ['Гостиные'],            cover: 'assets/852969a9418bd9af724aadd3b339a6a4.jpg', href: 'index.html' },
+  { title: '[Угловая кухня]',          types: ['Кухни'],               cover: 'assets/bf2bd4491530627d1ddddc9a7168d603.jpg', href: 'index.html' },
+  { title: '[Прихожая до потолка]',    types: ['Шкафы'],               cover: 'assets/3cfcf686eab5b7ab3072c5817360f51f.jpg', href: 'index.html' },
+  { title: '[Ванная в дубе]',          types: ['Ванные'],              cover: 'assets/afbdb40f8ab83b0c8cd8cbc128206fe6.jpg', href: 'index.html', reel: REEL_BATH },
+  { title: '[Квартира-студия]',        types: ['Комплекс', 'Кухни', 'Гостиные'], cover: 'assets/16c8149d74c21abbbe503503db9855c9.jpg', href: 'index.html' },
+  { title: '[Детская с рабочим местом]', types: ['Детские'],           cover: 'assets/4ba006136224ef583eb1266d27d9aa59.jpg', href: 'index.html' },
+  { title: '[Прихожая с банкеткой]',   types: ['Шкафы'],               cover: 'assets/10a1df574d7617bbbecc858b0109f42e.jpg', href: 'index.html' },
+  { title: '[Ванная с пеналом]',       types: ['Ванные'],              cover: 'assets/b831b81840edffbf15c0404891a16a1e.jpg', href: 'index.html' },
+  { title: '[Кухня с островом]',       types: ['Кухни'],               cover: 'assets/3c05a41db1716a4f183f4c2b81c98a08.jpg', href: 'index.html' }
 ];
-var FILTERS = ['Все', 'Кухни', 'Шкафы', 'Гардеробные', 'Квартира целиком'];
+var FILTERS = ['REELS', 'Комплекс', 'Кухни', 'Шкафы', 'Гардеробные', 'Ванные', 'Детские', 'Гостиные'];
 
 // разная высота плиток — эффект Pinterest
 var RATIOS = [[4,5],[3,4],[1,1],[4,5],[2,3],[5,6],[3,4],[4,5]];
@@ -107,7 +118,7 @@ var POSES  = ['center','center 40%','center 65%','center','center 55%','center 3
 var feed = document.getElementById('feed');
 var chipsEl = document.getElementById('chips');
 var subEl = document.getElementById('sub');
-var filter = 'Все';
+var filter = ''; // '' — вся лента
 var lastKey = '';
 
 function plural(n, a, b, c) {
@@ -119,15 +130,20 @@ function plural(n, a, b, c) {
 
 function readFilter() {
   var h = decodeURIComponent((location.hash || '').slice(1));
-  filter = FILTERS.indexOf(h) > 0 ? h : 'Все';
+  filter = FILTERS.indexOf(h) >= 0 ? h : '';
+}
+
+function listFor(f) {
+  if (!f) return PROJECTS;
+  if (f === 'REELS') return PROJECTS.filter(function (p) { return p.reel; });
+  return PROJECTS.filter(function (p) { return p.types.indexOf(f) >= 0; });
 }
 
 function renderChips() {
   var html = '';
   FILTERS.forEach(function (f) {
-    var n = f === 'Все' ? PROJECTS.length : PROJECTS.filter(function (p) { return p.type === f; }).length;
-    if (!n) return;
-    html += '<button class="chip" type="button" data-f="' + f + '" aria-pressed="' + (f === filter) + '">' + f + '<span class="n">' + n + '</span></button>';
+    var n = listFor(f).length;
+    html += '<button class="chip" type="button" data-f="' + f + '" aria-pressed="' + (f === filter) + '"' + (n ? '' : ' disabled') + '>' + f + '<span class="n">' + n + '</span></button>';
   });
   chipsEl.innerHTML = html;
 }
@@ -138,7 +154,8 @@ function colsFor(vw, n) {
 }
 
 function renderFeed(force) {
-  var list = PROJECTS.filter(function (p) { return filter === 'Все' || p.type === filter; });
+  var list = listFor(filter);
+  var reels = filter === 'REELS';
   var vw = window.innerWidth;
   var cols = colsFor(vw, list.length);
   var key = filter + '|' + cols;
@@ -146,7 +163,7 @@ function renderFeed(force) {
   lastKey = key;
 
   var n = list.length;
-  subEl.textContent = n + ' ' + plural(n, 'проект', 'проекта', 'проектов');
+  subEl.textContent = reels ? n + ' ' + plural(n, 'видео', 'видео', 'видео') : n + ' ' + plural(n, 'проект', 'проекта', 'проектов');
   feed.style.maxWidth = { 1: '640px', 2: '900px', 3: '1400px', 4: '1920px' }[cols];
   if (!n) { feed.innerHTML = '<div class="empty">Пока нет проектов</div>'; return; }
 
@@ -154,7 +171,7 @@ function renderFeed(force) {
   var columns = [];
   for (var i = 0; i < cols; i++) columns.push({ items: [], h: 0 });
   list.forEach(function (p, k) {
-    var r = RATIOS[k % RATIOS.length], ratio = r[1] / r[0];
+    var r = reels ? [9, 16] : RATIOS[k % RATIOS.length], ratio = r[1] / r[0];
     var best = columns[0];
     columns.forEach(function (c) { if (c.h < best.h - 0.001) best = c; });
     best.items.push({ p: p, pad: (ratio * 100).toFixed(2) + '%', pos: POSES[k % POSES.length], eager: k < cols * 2 });
@@ -164,22 +181,42 @@ function renderFeed(force) {
   feed.innerHTML = columns.map(function (c) {
     return '<div class="col">' + c.items.map(function (it) {
       var t = it.p.title.replace(/"/g, '&quot;');
+      var media = reels
+        ? '<video data-src="' + it.p.reel.src + '" poster="' + it.p.reel.poster + '" preload="none" muted loop playsinline></video>' +
+          '<span class="reels">REELS</span>'
+        : '<img src="' + it.p.cover + '" alt="' + t + '" style="object-position:' + it.pos + '" ' +
+          (it.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async">';
       return '<div class="cell"><div aria-hidden="true" style="padding-top:' + it.pad + '"></div>' +
-        '<a class="card" href="' + it.p.href + '" aria-label="Открыть проект: ' + t + '">' +
-        '<img src="' + it.p.cover + '" alt="' + t + '" style="object-position:' + it.pos + '" ' +
-        (it.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async">' +
+        '<a class="card" href="' + it.p.href + '" aria-label="Открыть проект: ' + t + '">' + media +
         '<span class="meta"><span class="tag">' + it.p.title + '</span>' +
         '<span class="go"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></span>' +
         '</a></div>';
     }).join('') + '</div>';
   }).join('');
+  watchVideos();
+}
+
+// видео в ленте играют, только когда видны на экране
+var io = window.IntersectionObserver ? new IntersectionObserver(function (es) {
+  es.forEach(function (e) {
+    var v = e.target;
+    if (e.isIntersecting) {
+      if (!v.src) v.src = v.getAttribute('data-src');
+      var pr = v.play(); if (pr && pr.catch) pr.catch(function () {});
+    } else v.pause();
+  });
+}, { rootMargin: '200px 0px' }) : null;
+function watchVideos() {
+  feed.querySelectorAll('video').forEach(function (v) {
+    if (io) io.observe(v); else { v.src = v.getAttribute('data-src'); v.play(); }
+  });
 }
 
 chipsEl.addEventListener('click', function (e) {
   var b = e.target.closest('.chip'); if (!b) return;
   var f = b.getAttribute('data-f');
-  if (f === filter) return;
-  history.replaceState(null, '', f === 'Все' ? location.pathname : '#' + encodeURIComponent(f));
+  f = f === filter ? '' : f; // повторное нажатие — снова вся лента
+  history.replaceState(null, '', f ? '#' + encodeURIComponent(f) : location.pathname);
   filter = f; renderChips(); renderFeed(true);
 });
 window.addEventListener('hashchange', function () { readFilter(); renderChips(); renderFeed(true); });
