@@ -118,7 +118,7 @@ var POSES  = ['center','center 40%','center 65%','center','center 55%','center 3
 var feed = document.getElementById('feed');
 var chipsEl = document.getElementById('chips');
 var subEl = document.getElementById('sub');
-var filter = ''; // '' — вся лента
+var filter = FILTERS[0]; // общей ленты нет: всегда открыта одна из лент, по умолчанию первая
 var lastKey = '';
 
 function plural(n, a, b, c) {
@@ -130,11 +130,10 @@ function plural(n, a, b, c) {
 
 function readFilter() {
   var h = decodeURIComponent((location.hash || '').slice(1));
-  filter = FILTERS.indexOf(h) >= 0 ? h : '';
+  filter = FILTERS.indexOf(h) >= 0 ? h : FILTERS[0];
 }
 
 function listFor(f) {
-  if (!f) return PROJECTS;
   if (f === 'REELS') return PROJECTS.filter(function (p) { return p.reel; });
   return PROJECTS.filter(function (p) { return p.types.indexOf(f) >= 0; });
 }
@@ -215,8 +214,8 @@ function watchVideos() {
 chipsEl.addEventListener('click', function (e) {
   var b = e.target.closest('.chip'); if (!b) return;
   var f = b.getAttribute('data-f');
-  f = f === filter ? '' : f; // повторное нажатие — снова вся лента
-  history.replaceState(null, '', f ? '#' + encodeURIComponent(f) : location.pathname);
+  if (f === filter) return;
+  history.replaceState(null, '', f === FILTERS[0] ? location.pathname : '#' + encodeURIComponent(f));
   filter = f; renderChips(); renderFeed(true);
 });
 window.addEventListener('hashchange', function () { readFilter(); renderChips(); renderFeed(true); });
