@@ -216,7 +216,8 @@ chipsEl.addEventListener('click', function (e) {
   var b = e.target.closest('.chip'); if (!b) return;
   var f = b.getAttribute('data-f');
   if (f === filter) return;
-  history.replaceState(null, '', f === DEFAULT_FILTER ? location.pathname : '#' + encodeURIComponent(f));
+  // адрес обновляем, где это разрешено (во встроенных окнах превью — нельзя, лента всё равно переключится)
+  try { history.replaceState(null, '', f === DEFAULT_FILTER ? location.pathname : '#' + encodeURIComponent(f)); } catch (err) {}
   filter = f; renderChips(); renderFeed(true);
 });
 window.addEventListener('hashchange', function () { readFilter(); renderChips(); renderFeed(true); });
