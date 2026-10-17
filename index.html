@@ -963,5 +963,13 @@ class Component extends DCLogic {
   }
 }
 </script>
+<a id="to-portfolio" href="portfolio.html" aria-label="Закрыть проект и вернуться в портфолио" style="position:fixed;top:14px;right:14px;z-index:40;width:44px;height:44px;border-radius:50%;background:rgba(40,36,32,0.85);color:#f4f1ec;display:flex;align-items:center;justify-content:center;text-decoration:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+<style>@media (min-width:1000px){#to-portfolio{top:24px !important;right:24px !important}}@media (max-width:999px){h1.ttl{padding:0 48px;box-sizing:border-box}}</style>
+<script>
+// крестик: если пришли из портфолио — возвращаемся назад (с тем же местом прокрутки), иначе открываем портфолио
+document.getElementById('to-portfolio').addEventListener('click', function (e) {
+  try { var r = document.referrer; if (r && new URL(r).origin === location.origin && /portfolio\.html/.test(r) && history.length > 1) { e.preventDefault(); history.back(); } } catch (err) {}
+});
+</script>
 </body>
 </html>
