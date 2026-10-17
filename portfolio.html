@@ -250,7 +250,6 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
           <button onClick="{{closeLb}}" aria-label="Закрыть" style="width: 44px; height: 44px; border: 0; border-radius: 50%; background: #26221f; color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         </div>
         <h2 style="margin: 0; font-size: 40px; font-weight: 300; line-height: 1.05; letter-spacing: -0.01em">{{lb.zone}}</h2>
-        <a href="{{lb.href}}" style="margin-top: -10px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: #a39a8e">{{lb.projectLine}}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
         <p style="margin: 0; font-size: 16px; line-height: 1.65; color: #cfc7bb">{{lb.text}}</p>
         <dl style="margin: 0; display: flex; flex-direction: column">
           <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-top: 1px solid #262220; padding: 11px 0"><dt style="font-size: 14px; color: #a39a8e">Корпус</dt><dd style="margin: 0; font-size: 15px; text-align: right">{{lb.korpus}}</dd></div>
@@ -262,6 +261,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
           <span style="font-size: 30px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">{{lb.price}}</span>
           <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
         </div>
+        <a href="{{lb.href}}" aria-label="Открыть весь проект «{{lb.project}}»" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 999px; border: 1px solid rgba(244,241,236,0.35); color: #f4f1ec; font-weight: 500; font-size: 15px">Открыть весь проект<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
         <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
           <div class="lb-thumbs-grid" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-top: 6px; border-top: 1px solid #262220">
             <sc-for list="{{lbList}}" as="t" hint-placeholder-count="4">
@@ -677,7 +677,7 @@ class Component extends DCLogic {
       chips: chips, columns: columns, isEmpty: n === 0,
       priceDate: view[li].priceDate || 'октябрь 2026',
       lbOpen: this.state.lb >= 0,
-      lb: { src: view[li].src, zone: view[li].zone, text: view[li].text, price: view[li].price, korpus: view[li].korpus, fasady: view[li].fasady, furn: view[li].furn, projectLine: view[li].project ? 'Из проекта «' + view[li].project + '»' : '', href: view[li].href, pos: pc > 1 ? (li + 1) + ' / ' + pc : '1 фото' },
+      lb: { src: view[li].src, zone: view[li].zone, text: view[li].text, price: view[li].price, korpus: view[li].korpus, fasady: view[li].fasady, furn: view[li].furn, project: view[li].project, href: view[li].href, pos: pc > 1 ? (li + 1) + ' / ' + pc : '1 фото' },
       lbMulti: pc > 1,
       isReels: isReels, panelCls: isReels ? 'lb-hide' : '', trackCls: isReels ? 'lb-reels' : '',
       lbH: (function () { var r = (self.ratios || {})[view[li].src] || 1.25; return (r * 100).toFixed(2) + 'vw'; })(),
