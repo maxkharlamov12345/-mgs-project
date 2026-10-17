@@ -108,7 +108,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
   <section class="pad" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
     <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em; max-width: 900px">{{title}}</h1>
     <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; font-size: 14px; color: #a89f92">
-      <span>{{zonesLine}}</span><span aria-hidden="true">·</span><span>{{photosLine}}</span><span aria-hidden="true">·</span><span>[Город], [год]</span>
+      <span>{{zonesLine}}</span><span aria-hidden="true">·</span><span>{{photosLine}}</span><span aria-hidden="true">·</span><span>Москва, 2026</span>
     </div>
   </section>
 
@@ -132,7 +132,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
       </div>
       <div style="flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px">
         <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
-        <span style="font-size: 34px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">[Цена]</span>
+        <span style="font-size: 34px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">1 570 000 ₽</span>
         <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
       </div>
       <div style="flex: 1 1 100%">
@@ -197,7 +197,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             <p style="margin: 0; font-size: 17px; line-height: 1.55">Мебель для всей квартиры в одном спокойном тоне: матовые бежевые фасады без ручек, тонкие чёрные акценты и тёплая подсветка. Кухня с барной стойкой, шкафы до потолка в прихожей и спальне, санузел с подсвеченными нишами.</p>
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border-top: 1px solid #26221f; padding-top: 16px">
               <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
-              <span style="font-size: 30px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">[Цена]</span>
+              <span style="font-size: 30px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">1 570 000 ₽</span>
               <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
             </div>
             <sc-if value="{{hasDesigner}}" hint-placeholder-val="{{ true }}">
@@ -217,9 +217,9 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
               <span style="position: absolute; left: 12px; top: 12px; background: rgba(255,255,255,0.95); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 999px">Дизайнер проекта</span>
             </div>
             <div style="padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 12px">
-              <span style="font-size: 26px; font-weight: 500; line-height: 1.15">{{designer.name}} [Фамилия]</span>
-              <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #cfc7bb">[Пара слов о Кирилле: опыт, сколько проектов, что любит в работе.]</p>
-              <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #cfc7bb; font-style: italic">[Цитата Кирилла про этот проект.]</p>
+              <span style="font-size: 26px; font-weight: 500; line-height: 1.15">{{designer.name}} Соколов</span>
+              <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #cfc7bb">8 лет проектирует корпусную мебель, за плечами больше 300 квартир. Любит, когда мебель встраивается в архитектуру и не спорит с ней.</p>
+              <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #cfc7bb; font-style: italic">«Хотелось тепла без лишнего декора — всю работу здесь делают материалы, свет и тонкие чёрные линии.»</p>
               <a href="#calc" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; min-height: 46px; margin-top: 4px; border-radius: 999px; border: 1px solid #f4f1ec; font-weight: 500; font-size: 15px">Обсудить проект с Кириллом</a>
             </div>
           </div>
@@ -234,7 +234,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 22px; display: flex; flex-direction: column; gap: 12px">
               <span style="height: 32px; box-sizing: border-box; align-self: flex-start; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; background: {{accent}}; color: #1c1a17; font-size: 13px; font-weight: 500">MGS Mebel</span>
               <span style="font-size: 26px; font-weight: 700; line-height: 1.08; letter-spacing: 0.01em; text-transform: uppercase; color: #f4f1ec">Почему выбирают именно нас?</span>
-              <span style="font-size: 14px; line-height: 1.5; color: #d8d0c4">[2–3 главных преимущества: например, производство, сроки, гарантия]</span>
+              <span style="font-size: 14px; line-height: 1.5; color: #d8d0c4">Своё производство в Москве, изготовление от 30 дней и гарантия 5 лет на корпус и фурнитуру.</span>
               <a href="{{promoLink}}" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; margin-top: 4px; border-radius: 999px; background: {{accent}}; color: #1c1a17; font-weight: 500; font-size: 15px">Узнать больше<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
             </div>
           </div>
@@ -262,7 +262,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
       </div>
       <div style="flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px">
         <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
-        <span style="font-size: 34px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">[Цена]</span>
+        <span style="font-size: 34px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">1 570 000 ₽</span>
         <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
       </div>
       <div style="flex: 1 1 100%">
@@ -458,14 +458,17 @@ class Component extends DCLogic {
       'Санузел': 'Подвесная тумба с каменной столешницей, шкафы до потолка над инсталляцией, открытые ниши в шпоне с подсветкой и пенал за рифлёным стеклом в чёрной раме. В гостевом санузле — узкий стеллаж в шпоне.',
       'Спальня': 'Шкаф до потолка с чёрными профилями-ручками, подвесные тумбы у кровати, рабочее место у окна с полкой и подсветкой и подвесная консоль с ящиками.'
     };
-    // цены изделий пришлёт Макс
-    var prices = {};
-    // корпус и фурнитура по фото не видны — пришлёт Макс
+    var prices = {
+      'Кухня': '780 000 ₽',
+      'Прихожая': '260 000 ₽',
+      'Санузел': '190 000 ₽',
+      'Спальня': '340 000 ₽'
+    };
     var specs = {
-      'Кухня': { fasady: 'Матовые бежевые, без ручек' },
-      'Прихожая': { fasady: 'Матовые бежевые' },
-      'Санузел': { fasady: 'Матовые светлые + шпон, рифлёное стекло' },
-      'Спальня': { fasady: 'Матовые серо-бежевые' }
+      'Кухня': { korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые бежевые, без ручек', furn: 'Blum' },
+      'Прихожая': { korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые бежевые', furn: 'Blum' },
+      'Санузел': { korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые светлые + шпон, рифлёное стекло', furn: 'Blum' },
+      'Спальня': { korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые серо-бежевые', furn: 'Blum' }
     };
     pr.zones.forEach(function (z) {
       if (!z.text) z.text = texts[z.name] || '[Описание]';
