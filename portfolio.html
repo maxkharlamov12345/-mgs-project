@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Портфолио — MGS Mebel</title>
+<meta name="description" content="Портфолио MGS Mebel: кухни, шкафы и гардеробные на заказ.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0e0c; --text:#f4f1ec; --panel:#151311; --tile:#1f1c19; --muted:#a89f92;
+  --chip:#26221f; --chip-hover:#322d29; --accent:#bfd630; --ink:#1c1a17;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font-family:Onest,system-ui,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:var(--text)}
+
+/* заголовок */
+.top{padding:44px 32px 8px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.ttl{margin:0;font-weight:300;font-size:54px;line-height:1.05;letter-spacing:-0.02em}
+.sub{font-size:14px;color:var(--muted)}
+
+/* чипы-фильтры */
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:18px 32px 26px}
+.chip{min-height:44px;padding:0 18px;border-radius:999px;border:0;font:inherit;font-size:15px;font-weight:500;cursor:pointer;
+  background:var(--chip);color:var(--text);transition:background-color .2s ease,color .2s ease}
+.chip:hover{background:var(--chip-hover)}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--ink)}
+.chip .n{opacity:.6;font-weight:400;margin-left:4px}
+.chip:focus-visible,.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* лента */
+.pad{padding:0 12px 64px}
+.feed{display:flex;gap:16px;align-items:stretch;margin:0 auto}
+.col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:16px}
+.cell{position:relative;flex:1 0 auto}
+.card{position:absolute;inset:0;display:block;border-radius:18px;overflow:hidden;background:var(--tile);text-decoration:none}
+.card img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s ease,filter .3s ease}
+.card:hover img{transform:scale(1.035);filter:brightness(.82)}
+.meta{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
+.tag{height:32px;min-width:0;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;
+  background:rgba(255,255,255,.95);color:var(--ink);font-size:13px;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.go{flex:none;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.94);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;transition:background-color .2s ease}
+.card:hover .go{background:var(--accent)}
+.empty{text-align:center;color:var(--muted);padding:40px 0}
+
+@media (max-width:760px){
+  .top{padding:32px 16px 4px}
+  .ttl{font-size:34px}
+  .chips{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;padding:14px 12px 16px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;white-space:nowrap}
+  .pad{padding:0 5px 48px}
+  .feed,.col{gap:5px}
+  .card{border-radius:10px}
+  .meta{left:8px;right:8px;bottom:8px}
+  .tag{height:28px;font-size:12px;padding:0 10px}
+  .go{display:none}
+}
+@media (prefers-reduced-motion:reduce){.card img{transition:none}.card:hover img{transform:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 class="ttl">Портфолио</h1>
+  <div class="sub" id="sub"></div>
+</header>
+
+<nav class="chips" id="chips" aria-label="Тип мебели"></nav>
+
+<main class="pad">
+  <div class="feed" id="feed"></div>
+</main>
+
+<script>
+// ===== ПРОЕКТЫ ПОРТФОЛИО =====
+// Каждая карточка: обложка (1 фото), название, тип и ссылка на страницу проекта.
+// Новые проекты добавлять сюда; порядок в списке = порядок в ленте.
+// Пока есть одна готовая страница проекта (index.html), поэтому все карточки ведут на неё,
+// а обложки и названия — временные, из фото этого же проекта.
+var PROJECTS = [
+  { title: 'Квартира в тёплых тонах', type: 'Квартира целиком', cover: 'assets/51b3a741d39db0d4301d3aa373ff7deb.jpg', href: 'index.html' },
+  { title: '[Кухня в дубе и графите]', type: 'Кухни',          cover: 'assets/1df78be4ea18f381158d3b6f19fb0650.jpg', href: 'index.html' },
+  { title: '[Гардеробная в графите]',  type: 'Гардеробные',    cover: 'assets/61eb3ef72c07f95746daa6f6ca26a80a.jpg', href: 'index.html' },
+  { title: '[Гостиная со стеллажом]',  type: 'Шкафы',          cover: 'assets/852969a9418bd9af724aadd3b339a6a4.jpg', href: 'index.html' },
+  { title: '[Угловая кухня]',          type: 'Кухни',          cover: 'assets/bf2bd4491530627d1ddddc9a7168d603.jpg', href: 'index.html' },
+  { title: '[Прихожая до потолка]',    type: 'Шкафы',          cover: 'assets/3cfcf686eab5b7ab3072c5817360f51f.jpg', href: 'index.html' },
+  { title: '[Санузел в дубе]',         type: 'Шкафы',          cover: 'assets/afbdb40f8ab83b0c8cd8cbc128206fe6.jpg', href: 'index.html' },
+  { title: '[Кухня-гостиная]',         type: 'Кухни',          cover: 'assets/16c8149d74c21abbbe503503db9855c9.jpg', href: 'index.html' },
+  { title: '[Шкаф-купе в спальню]',    type: 'Шкафы',          cover: 'assets/4ba006136224ef583eb1266d27d9aa59.jpg', href: 'index.html' },
+  { title: '[Прихожая с банкеткой]',   type: 'Шкафы',          cover: 'assets/10a1df574d7617bbbecc858b0109f42e.jpg', href: 'index.html' },
+  { title: '[Ванная с пеналом]',       type: 'Шкафы',          cover: 'assets/b831b81840edffbf15c0404891a16a1e.jpg', href: 'index.html' },
+  { title: '[Кухня с островом]',       type: 'Кухни',          cover: 'assets/3c05a41db1716a4f183f4c2b81c98a08.jpg', href: 'index.html' }
+];
+var FILTERS = ['Все', 'Кухни', 'Шкафы', 'Гардеробные', 'Квартира целиком'];
+
+// разная высота плиток — эффект Pinterest
+var RATIOS = [[4,5],[3,4],[1,1],[4,5],[2,3],[5,6],[3,4],[4,5]];
+var POSES  = ['center','center 40%','center 65%','center','center 55%','center 35%'];
+
+var feed = document.getElementById('feed');
+var chipsEl = document.getElementById('chips');
+var subEl = document.getElementById('sub');
+var filter = 'Все';
+var lastKey = '';
+
+function plural(n, a, b, c) {
+  var m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return a;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return b;
+  return c;
+}
+
+function readFilter() {
+  var h = decodeURIComponent((location.hash || '').slice(1));
+  filter = FILTERS.indexOf(h) > 0 ? h : 'Все';
+}
+
+function renderChips() {
+  var html = '';
+  FILTERS.forEach(function (f) {
+    var n = f === 'Все' ? PROJECTS.length : PROJECTS.filter(function (p) { return p.type === f; }).length;
+    if (!n) return;
+    html += '<button class="chip" type="button" data-f="' + f + '" aria-pressed="' + (f === filter) + '">' + f + '<span class="n">' + n + '</span></button>';
+  });
+  chipsEl.innerHTML = html;
+}
+
+function colsFor(vw, n) {
+  var c = vw < 760 ? 2 : vw < 1100 ? 3 : 4;
+  return Math.max(1, Math.min(c, n));
+}
+
+function renderFeed(force) {
+  var list = PROJECTS.filter(function (p) { return filter === 'Все' || p.type === filter; });
+  var vw = window.innerWidth;
+  var cols = colsFor(vw, list.length);
+  var key = filter + '|' + cols;
+  if (!force && key === lastKey) return;
+  lastKey = key;
+
+  var n = list.length;
+  subEl.textContent = n + ' ' + plural(n, 'проект', 'проекта', 'проектов');
+  feed.style.maxWidth = { 1: '640px', 2: '900px', 3: '1400px', 4: '1920px' }[cols];
+  if (!n) { feed.innerHTML = '<div class="empty">Пока нет проектов</div>'; return; }
+
+  // каждую плитку — в самую короткую колонку; фото тянутся, и колонки кончаются ровно
+  var columns = [];
+  for (var i = 0; i < cols; i++) columns.push({ items: [], h: 0 });
+  list.forEach(function (p, k) {
+    var r = RATIOS[k % RATIOS.length], ratio = r[1] / r[0];
+    var best = columns[0];
+    columns.forEach(function (c) { if (c.h < best.h - 0.001) best = c; });
+    best.items.push({ p: p, pad: (ratio * 100).toFixed(2) + '%', pos: POSES[k % POSES.length], eager: k < cols * 2 });
+    best.h += ratio + 0.06;
+  });
+
+  feed.innerHTML = columns.map(function (c) {
+    return '<div class="col">' + c.items.map(function (it) {
+      var t = it.p.title.replace(/"/g, '&quot;');
+      return '<div class="cell"><div aria-hidden="true" style="padding-top:' + it.pad + '"></div>' +
+        '<a class="card" href="' + it.p.href + '" aria-label="Открыть проект: ' + t + '">' +
+        '<img src="' + it.p.cover + '" alt="' + t + '" style="object-position:' + it.pos + '" ' +
+        (it.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async">' +
+        '<span class="meta"><span class="tag">' + it.p.title + '</span>' +
+        '<span class="go"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></span>' +
+        '</a></div>';
+    }).join('') + '</div>';
+  }).join('');
+}
+
+chipsEl.addEventListener('click', function (e) {
+  var b = e.target.closest('.chip'); if (!b) return;
+  var f = b.getAttribute('data-f');
+  if (f === filter) return;
+  history.replaceState(null, '', f === 'Все' ? location.pathname : '#' + encodeURIComponent(f));
+  filter = f; renderChips(); renderFeed(true);
+});
+window.addEventListener('hashchange', function () { readFilter(); renderChips(); renderFeed(true); });
+var rz;
+window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { renderFeed(false); }, 80); });
+
+readFilter(); renderChips(); renderFeed(true);
+</script>
+</body>
+</html>
