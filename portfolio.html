@@ -146,7 +146,12 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
           <div class="pin" style="position: relative; flex: {{p.flex}}">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
-              <img class="pin-img" src="{{p.src}}" alt="{{p.label}}" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: {{p.pos}}">
+              <!-- превью проекта — 4 фото из разных изделий (кухня, прихожая, санузел, детская…) -->
+              <span class="quad" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; background: #0f0e0c">
+                <sc-for list="{{p.quad}}" as="q" hint-placeholder-count="4">
+                  <span style="position: relative; overflow: hidden; background: #1f1c19"><img class="pin-img" src="{{q.src}}" alt="{{q.alt}}" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></span>
+                </sc-for>
+              </span>
               <span class="pin-meta" style="position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px">
                 <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.95); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{p.label}}</span>
                 <span style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
@@ -892,7 +897,18 @@ class Component extends DCLogic {
         pins.push({ isVideo: true, src: r.src, poster: r.poster, label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
     } else if (f === 'Комплекс') {
-      D.projects.forEach(function (pr) { if (pr.complex && pr.href) pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title }); });
+      // превью проекта — 4 фото из разных изделий: сначала кухня, прихожая, санузел, детская, потом остальные
+      var pref = ['Кухни', 'Прихожие', 'Санузлы', 'Детские'].concat(this.FILTERS());
+      D.projects.forEach(function (pr) {
+        if (!pr.complex || !pr.href) return;
+        var its = D.items.filter(function (it) { return it.project === pr.title && it.photos.length; })
+          .sort(function (a, b) { return pref.indexOf(a.type) - pref.indexOf(b.type); });
+        var srcs = its.slice(0, 4).map(function (it) { return { src: it.photos[0], alt: it.name }; });
+        var k = 1; while (srcs.length && srcs.length < 4) { var it = its[(srcs.length) % its.length]; srcs.push({ src: it.photos[Math.min(k++, it.photos.length - 1)], alt: it.name }); }
+        if (!srcs.length) srcs = [{ src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }];
+        srcs.forEach(function (q) { q.src = (self.mem && self.mem[q.src]) || q.src; });
+        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, quad: srcs });
+      });
     } else {
       D.items.forEach(function (it) {
         if (it.type !== f || !it.photos.length) return;
