@@ -21,6 +21,8 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 .pin-btn:hover .pin-meta,.pin-btn:focus-visible .pin-meta{opacity:1}
 .cx-big{background:radial-gradient(ellipse at center, rgba(10,9,8,.72) 0%, rgba(10,9,8,.48) 60%, rgba(10,9,8,.25) 100%);transition:background .4s ease}
 .pin-btn:hover .cx-big{background:radial-gradient(ellipse at center, rgba(10,9,8,.5) 0%, rgba(10,9,8,.2) 60%, rgba(10,9,8,0) 100%)}
+.quad.one{display:block !important}
+.quad.one > span{position:absolute !important;top:0;left:0;right:0;bottom:0}
 .cx-more svg{transition:transform .25s ease}
 .pin-btn:hover .cx-more svg{transform:translateX(3px)}
 .chip{transition:background-color .2s ease,color .2s ease}
@@ -154,7 +156,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- превью проекта — 4 фото из разных изделий (кухня, прихожая, санузел, детская…) -->
-              <span class="quad" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; background: #0f0e0c">
+              <span class="quad {{p.quadCls}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; background: #0f0e0c">
                 <sc-for list="{{p.quad}}" as="q" hint-placeholder-count="4">
                   <span style="position: relative; overflow: hidden; background: #1f1c19"><img class="pin-img" src="{{q.src}}" alt="{{q.alt}}" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></span>
                 </sc-for>
@@ -333,7 +335,7 @@ class Component extends DCLogic {
     };
     return [
       {
-        title: 'Квартира в тёплых тонах', href: 'index.html', cover: 'assets/cover-warm-apartment.jpg', complex: true,
+        title: 'Квартира в тёплых тонах', href: 'index.html', cover: 'assets/cover-warm-apartment.jpg', complex: true, collage: 'assets/collage-warm.jpg',
         priceDate: 'октябрь 2026',
         reels: [V.kitchen, V.bath, V.wardrobe],
         items: [
@@ -356,7 +358,7 @@ class Component extends DCLogic {
       },
       // второй комплексный проект: фото приходят по изделиям, страница — project-2.html
       {
-        title: 'Квартира в светлом беже', href: 'project-2.html', cover: 'assets/p2-kitchen-1.jpg', complex: true,
+        title: 'Квартира в светлом беже', href: 'project-2.html', cover: 'assets/p2-kitchen-1.jpg', complex: true, collage: 'assets/collage-beige.jpg',
         priceDate: 'октябрь 2026',
         reels: [
           { src: 'assets/p2-bath-reel-1.mp4', poster: 'assets/p2-bath-reel-1.jpg' },
@@ -381,7 +383,7 @@ class Component extends DCLogic {
       },
       // третий комплексный проект — etopodbor.ru/product/1552 (интерьер целиком), страница — project-3.html
       {
-        title: 'Квартира с синими акцентами', href: 'project-3.html', cover: 'assets/cx1552-1.jpg', complex: true,
+        title: 'Квартира с синими акцентами', href: 'project-3.html', cover: 'assets/cx1552-1.jpg', complex: true, collage: 'assets/collage-blue.jpg',
         priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1552',
         items: [
           { name: 'Кухня', type: 'Кухни', photos: ['assets/cx1552-1.jpg', 'assets/cx1552-5.jpg', 'assets/cx1552-2.jpg'], price: '820 000 ₽',
@@ -627,6 +629,7 @@ class Component extends DCLogic {
     var reels = [], items = [], byKey = {}, photos = [], videos = [];
     var prs = this.projects();
     prs.forEach(function (pr, pi) {
+      if (pr.collage) photos.push(pr.collage);
       if (pr.cover) photos.push(pr.cover);
       // у рилса два тега: REELS и изделие, к которому видео тоже относится (если есть)
       (pr.reels || []).forEach(function (r) {
@@ -936,8 +939,10 @@ class Component extends DCLogic {
         var srcs = its.slice(0, 4).map(function (it) { return { src: it.photos[0], alt: it.name }; });
         var k = 1; while (srcs.length && srcs.length < 4) { var it = its[(srcs.length) % its.length]; srcs.push({ src: it.photos[Math.min(k++, it.photos.length - 1)], alt: it.name }); }
         if (!srcs.length) srcs = [{ src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }];
+        // готовый коллаж (tools/make_collage.py) — одна картинка вместо четырёх, грузится сразу
+        if (pr.collage) srcs = [{ src: pr.collage, alt: pr.title, one: true }];
         srcs.forEach(function (q) { q.src = (self.mem && self.mem[q.src]) || q.src; });
-        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, quad: srcs });
+        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, quad: srcs, quadCls: pr.collage ? 'one' : '' });
       });
     } else {
       D.items.forEach(function (it) {
