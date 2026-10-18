@@ -507,14 +507,15 @@ class Component extends DCLogic {
   // чтобы при листании по кругу они не загружались заново (без чёрной вспышки)
   // Полные фото качаем только когда открыли просмотр: сначала фото открытого изделия (с того, по которому нажали),
   // потом остальные — по 3 одновременно. В ленте — лёгкие превью assets/t/*.webp.
-  preloadPhotos(first) {
+  preloadPhotos(first, max) {
+    this._ppMax = Math.max(this._ppMax || 0, max || 3);
     var self = this; this.mem = this.mem || {}; this.keep = this.keep || []; if (!window.fetch) return;
     var all = []; Object.keys(this.P).forEach(function (k) { all.push(self.P[k]); });
     var q = (first || []).concat(all).filter(function (s, i, a) { return s && a.indexOf(s) === i && !self.mem[s] && !(self._ppSeen || {})[s]; });
     this._ppSeen = this._ppSeen || {}; q.forEach(function (s) { self._ppSeen[s] = 1; });
     this._ppQ = q.concat((this._ppQ || []).filter(function (s) { return q.indexOf(s) < 0; }));
     var run = function () {
-      if ((self._ppBusy || 0) >= 3 || !self._ppQ.length) return;
+      if ((self._ppBusy || 0) >= self._ppMax || !self._ppQ.length) return;
       var src = self._ppQ.shift(); self._ppBusy = (self._ppBusy || 0) + 1;
       var done = function () { self._ppBusy--; run(); };
       fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
@@ -534,6 +535,9 @@ class Component extends DCLogic {
     if (Array.isArray(v)) return v.map(function (x) { return self.webp(x); });
     if (v && typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype) { var o = {}; for (var k in v) o[k] = self.webp(v[k]); return o; } return v; }
   componentDidMount() {
+    // когда первый экран загрузился — тихо, по одному, докачиваем полные фото проекта: просмотр открывается уже с готовыми фото
+    var me = this, bg = function () { setTimeout(function () { me.preloadPhotos([], 1); }, 800); };
+    if (document.readyState === 'complete') bg(); else window.addEventListener('load', bg);
     var self = this;
     this.onResize = function () { self.setState({ vw: window.innerWidth }); clearTimeout(self._rz); self._rz = setTimeout(function () { self.resnap('auto'); }, 80); };
     window.addEventListener('resize', this.onResize);
@@ -617,7 +621,7 @@ class Component extends DCLogic {
   // движок страницы передаёт сюда только прошлые props, без прошлого state,
   // поэтому предыдущее состояние просмотра запоминаем сами
   componentDidUpdate(prev) {
-    if (this.state.lb >= 0 && this._ppFor !== (this.state.lbZone || '*')) { this._ppFor = this.state.lbZone || '*'; var lz = this.state.lbZone, zp = []; try { (this.project().zones || []).forEach(function (z) { if (!lz || z.name === lz) zp = zp.concat(z.photos || []); }); } catch (e) {} var st = this.state.lbStart || 0; this.preloadPhotos(zp.slice(st).concat(zp.slice(0, st))); }
+    if (this.state.lb >= 0 && this._ppFor !== (this.state.lbZone || '*')) { this._ppFor = this.state.lbZone || '*'; var lz = this.state.lbZone, zp = []; try { (this.project().zones || []).forEach(function (z) { if (!lz || z.name === lz) zp = zp.concat(z.photos || []); }); } catch (e) {} var st = this.state.lbStart || 0; this.preloadPhotos(zp.slice(st).concat(zp.slice(0, st)), 3); }
     if (prev.variant !== this.props.variant) this.setState({ filter: 'all', lb: -1 });
     if (this.state.lb < 0 && this._vpend) { var pd = this._vpend, ks = Object.keys(pd); if (ks.length) { var me = this; ks.forEach(function (k) { me.vurls[k] = pd[k]; if (me._vp) delete me._vp[k]; }); this._vpend = {}; } }
     this.syncTrack();
@@ -891,7 +895,7 @@ class Component extends DCLogic {
       // бесконечный слайдер: по краям стоят копии последнего и первого фото,
       // и когда свайп на них останавливается, лента незаметно перескакивает на настоящее фото
       lbLoop: (function () {
-        var base = view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || p.src), isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) return; self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); setTimeout(function () { self.resnap('auto'); }, 0); } }; });
+        var base = view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) return; self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); setTimeout(function () { self.resnap('auto'); }, 0); } }; });
         self.loopOff = pc > 1 ? 1 : 0;
         // после последнего фото — полная копия набора, чтобы справа всегда «подглядывало» следующее фото, а не пустота
         return pc > 1 ? [base[pc - 1]].concat(base, base) : base;
@@ -961,7 +965,7 @@ class Component extends DCLogic {
           }
         }, 140);
       },
-      lbList: view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) return; self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); }, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || p.src), ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, op: k === li ? '1' : '0.45', ring: k === li ? '2px solid ' + (self.props.accent ?? '#bfd630') : 'none', open: function () { if (k === li) return; self.dir = (k === (li + 1) % pc) ? 1 : (k === (li - 1 + pc) % pc) ? -1 : 0; self.setState({ lb: k }); } }; }),
+      lbList: view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) return; self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); }, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, op: k === li ? '1' : '0.45', ring: k === li ? '2px solid ' + (self.props.accent ?? '#bfd630') : 'none', open: function () { if (k === li) return; self.dir = (k === (li + 1) % pc) ? 1 : (k === (li - 1 + pc) % pc) ? -1 : 0; self.setState({ lb: k }); } }; }),
       closeLb: function () { self.setState({ lb: -1, lbZone: null, lbStart: 0 }); },
       lbPrev: function () { self.dir = -1; self.setState({ lb: (li - 1 + pc) % pc }); },
       lbNext: function () { self.dir = 1; self.setState({ lb: (li + 1) % pc }); }
