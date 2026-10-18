@@ -17,6 +17,9 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 .pin{display:block;margin:0}
 .pin-img{transition:transform .5s ease, filter .3s ease}
 .pin-btn:hover .pin-img{transform:scale(1.035)}
+/* видео-плитки: под видео — картинка его первого кадра; видео проявляется, только когда у него есть кадр (нет чёрного) */
+.feed-v{opacity:0;transition:opacity .2s ease}
+.feed-v.ready{opacity:1}
 /* плитки изделий: в покое — чистое фото; при наведении — затемнение, название по центру, значок «развернуть» */
 .ph-over{background:rgba(10,9,8,.55);opacity:0;transition:opacity .35s ease}
 .ph-exp{opacity:0;transform:scale(.85);transition:opacity .3s ease, transform .3s ease}
@@ -190,7 +193,8 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
               <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
-                <video class="pin-img" data-src="{{p.video}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+                <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" loading="lazy" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
+                <video class="pin-img feed-v" data-src="{{p.video}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
               </sc-if>
               <sc-if value="{{p.noVideo}}" hint-placeholder-val="{{ true }}">
                 <span class="cx-blank" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #26221f"></span>
@@ -207,7 +211,8 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <!-- рилс: открывает режим REELS, как на странице проекта -->
         <sc-if value="{{p.isVideo}}" hint-placeholder-val="{{ false }}">
           <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
-            <video data-src="{{p.src}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+            <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" loading="lazy" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
+            <video class="feed-v" data-src="{{p.src}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
             <span style="position: absolute; left: 12px; top: 12px; right: 56px; display: flex; flex-wrap: wrap; gap: 6px">
               <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
               <sc-if value="{{p.hasZone}}" hint-placeholder-val="{{ false }}"><span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px">{{p.zone}}</span></sc-if>
@@ -888,6 +893,10 @@ class Component extends DCLogic {
       if (v !== self._focusV && v.closest && v.closest('.feed')) v.pause();
     };
     document.addEventListener('play', this.onAnyPlay, true);
+    this.onVidFrame = function (e) { var v = e.target; if (v && v.classList && v.classList.contains('feed-v')) v.classList.add('ready'); };
+    this.onVidReset = function (e) { var v = e.target; if (v && v.classList && v.classList.contains('feed-v')) v.classList.remove('ready'); };
+    ['loadeddata', 'playing', 'seeked'].forEach(function (t) { document.addEventListener(t, self.onVidFrame, true); });
+    document.addEventListener('emptied', this.onVidReset, true);
     this.ensureVideo();
     this.watchNear();
   }
@@ -993,8 +1002,8 @@ class Component extends DCLogic {
             if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp);
               // подходит к экрану — заранее грузим видео (без запуска), чтобы по касанию оно стартовало сразу, без чёрного кадра
               if (el.preload !== 'auto') el.preload = 'auto'; s = self.feedSrc(el); if (s && el.getAttribute('src') !== s) el.src = s; else if (el.readyState === 0) { try { el.load(); } catch (x) {} } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
-            else if (!el.paused) el.pause(); });
-        }, { rootMargin: '0px 0px 20% 0px' });
+            else { if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
+        }, { rootMargin: '60% 0px 40% 0px' });
         self._io.observe(v); continue;
       }
       if (self.isLocal(orig) && window.fetch && window.URL && window.Blob) {
@@ -1006,8 +1015,8 @@ class Component extends DCLogic {
               if (!self._io) self._io = new IntersectionObserver(function (es) {
                 es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-src') || el.getAttribute('data-want');
                   if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) { el.src = s; } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
-                  else if (!el.paused) el.pause(); });
-              }, { rootMargin: '0px 0px 20% 0px' });
+                  else { if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
+              }, { rootMargin: '60% 0px 40% 0px' });
               v.setAttribute('data-want', u); self._io.observe(v); return;
             }
             if (v.getAttribute('src') !== u) { v.src = u; v.load(); }
@@ -1144,13 +1153,13 @@ class Component extends DCLogic {
     var pins = [];
     if (f === 'REELS') {
       D.reels.forEach(function (r, i) {
-        pins.push({ isVideo: true, src: r.src, poster: self.tilePoster(r.src, r.poster), label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
+        pins.push({ isVideo: true, src: r.src, poster: self.tilePoster(r.src, r.poster), ph: self.tilePoster(r.src, r.poster), label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
     } else if (f === 'Комплекс') {
       // обложка проекта — видео (coverVideo); пока видео нет — тёмная плитка с названием
       D.projects.forEach(function (pr) {
         if (!pr.complex || !pr.href) return;
-        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '' });
+        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '', ph: pr.coverPoster || '' });
       });
     } else {
       D.items.forEach(function (it) {
