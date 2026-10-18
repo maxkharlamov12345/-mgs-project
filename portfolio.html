@@ -33,6 +33,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 .quad .pin-img{filter:none !important}
 .pin-btn:hover .quad .pin-img{filter:brightness(1.06) !important}
 .quad.one{display:block !important}
+.quad.blank{background:#26221f !important}
 .quad.one > span{position:absolute !important;top:0;left:0;right:0;bottom:0}
 .cx-more svg{transition:transform .25s ease}
 .pin-btn:hover .cx-more svg{transform:translateX(3px)}
@@ -1044,8 +1045,11 @@ class Component extends DCLogic {
         if (!srcs.length) srcs = [{ src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }];
         // готовый коллаж (tools/make_collage.py) — одна картинка вместо четырёх, грузится сразу
         if (pr.collage) srcs = [{ src: pr.collage, alt: pr.title, one: true }];
+        // пока у проекта нет видео-обложки — вместо коллажа просто тёмная плитка (так попросил Макс; вернуть коллажи — true)
+        var SHOW_COLLAGES = false;
+        if (!pr.coverVideo && !SHOW_COLLAGES) srcs = [];
         srcs.forEach(function (q) { q.src = (self.mem && self.mem[q.src]) || q.src; });
-        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', quad: srcs, quadCls: pr.collage ? 'one' : '', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '' });
+        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', quad: srcs, quadCls: !srcs.length ? 'one blank' : pr.collage ? 'one' : '', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '' });
       });
     } else {
       D.items.forEach(function (it) {
