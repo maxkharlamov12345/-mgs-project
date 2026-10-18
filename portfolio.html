@@ -911,6 +911,8 @@ class Component extends DCLogic {
   // телефон «2 в ряд» в REELS/«Комплексе» — лёгкая копия <имя>-mini.mp4 (360px), иначе обычное превью
   gridMini() { try { var c = document.documentElement.classList; return c.contains('mgs-focus') && !c.contains('mgs-snap'); } catch (e) { return false; } }
   feedSrc(v) { var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; return this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; }
+  // заставка плитки рилса = первый кадр её превью (<имя>-preview.jpg), иначе при запуске картинка «прыгает»
+  tilePoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.jpg') : fallback; }
   slideOn() { try { return document.documentElement.classList.contains('mgs-focus'); } catch (e) { return false; } }
   focusPlay() {
     var self0 = this, pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
@@ -1125,7 +1127,7 @@ class Component extends DCLogic {
     var pins = [];
     if (f === 'REELS') {
       D.reels.forEach(function (r, i) {
-        pins.push({ isVideo: true, src: r.src, poster: r.poster, label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
+        pins.push({ isVideo: true, src: r.src, poster: self.tilePoster(r.src, r.poster), label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
     } else if (f === 'Комплекс') {
       // обложка проекта — видео (coverVideo); пока видео нет — тёмная плитка с названием
