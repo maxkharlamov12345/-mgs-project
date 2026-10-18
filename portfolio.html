@@ -372,9 +372,8 @@ class Component extends DCLogic {
   //                    клик — просмотр изделия со всеми его фото, описанием и ценой.
   // Обложка изделия в ленте — первое фото из photos.
   // на сайте показываем WebP-копии фото (на ~45% легче JPEG; делает tools/make_thumbs.py), JPEG остаётся исходником
-  webp(v) { var self = this; if (typeof v === 'string') return /^assets\/[^#?]+\.jpg$/.test(v) ? v.replace(/\.jpg$/, '.webp') : v;
-    if (Array.isArray(v)) return v.map(function (x) { return self.webp(x); });
-    if (v && typeof v === 'object') { var o = {}; for (var k in v) o[k] = self.webp(v[k]); return o; } return v; }
+  // полные фото в просмотре — оригинальные JPEG (WebP Максу заметно мутнее); WebP только у превью ленты (thumb())
+  webp(v) { return v; }
   projects() { return this._pjs || (this._pjs = this.webp(this.projectsRaw())); }
   projectsRaw() {
     var P = {
@@ -968,7 +967,7 @@ class Component extends DCLogic {
   // поэтому при запуске нет никакого скачка картинки
   feedSrc(v) { var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; if (!w) return w; w = this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; return w.indexOf('#') < 0 ? w + '#t=0.001' : w; }
   // заставка плитки рилса = первый кадр её превью (<имя>-preview.jpg), иначе при запуске картинка «прыгает»
-  tilePoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.webp') : fallback; }
+  tilePoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.jpg').replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : fallback; }
   slideOn() { try { return document.documentElement.classList.contains('mgs-focus'); } catch (e) { return false; } }
   focusPlay() {
     var self0 = this, pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;

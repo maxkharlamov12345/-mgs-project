@@ -528,9 +528,8 @@ class Component extends DCLogic {
   // лёгкое превью для плитки ленты (640px WebP, делает tools/make_thumbs.py)
   thumb(src) { return /^assets\/[^/]+\.(jpg|webp)$/.test(src || '') ? src.replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : src; }
   // на сайте показываем WebP-копии фото (на ~45% легче JPEG), JPEG остаётся исходником
-  webp(v) { var self = this; if (typeof v === 'string') return /^assets\/[^#?]+\.jpg$/.test(v) ? v.replace(/\.jpg$/, '.webp') : v;
-    if (Array.isArray(v)) return v.map(function (x) { return self.webp(x); });
-    if (v && typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype) { var o = {}; for (var k in v) o[k] = self.webp(v[k]); return o; } return v; }
+  // полные фото в просмотре — оригинальные JPEG (WebP Максу заметно мутнее); WebP только у превью ленты (thumb())
+  webp(v) { return v; }
   componentDidMount() {
     // когда первый экран загрузился — тихо, по одному, докачиваем полные фото проекта: просмотр открывается уже с готовыми фото
     var me = this, bg = function () { setTimeout(function () { me.preloadPhotos([], 1); }, 800); };
