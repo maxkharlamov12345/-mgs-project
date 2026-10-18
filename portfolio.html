@@ -30,11 +30,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 .cx-big::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at center, rgba(10,9,8,.45) 0%, rgba(10,9,8,.15) 55%, rgba(10,9,8,0) 80%)}
 .cx-big{isolation:isolate}
 .pin-btn:hover .cx-big,.pin-btn:focus-visible .cx-big{background-color:rgba(10,9,8,.08)}
-.quad .pin-img{filter:none !important}
-.pin-btn:hover .quad .pin-img{filter:brightness(1.06) !important}
-.quad.one{display:block !important}
-.quad.blank{background:#26221f !important}
-.quad.one > span{position:absolute !important;top:0;left:0;right:0;bottom:0}
+
 .cx-more svg{transition:transform .25s ease}
 .pin-btn:hover .cx-more svg{transform:translateX(3px)}
 .chip{transition:background-color .2s ease,color .2s ease}
@@ -177,12 +173,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
                 <video class="pin-img" data-src="{{p.video}}" poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
               </sc-if>
               <sc-if value="{{p.noVideo}}" hint-placeholder-val="{{ true }}">
-              <!-- превью проекта — 4 фото из разных изделий (кухня, прихожая, санузел, детская…) -->
-              <span class="quad {{p.quadCls}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; background: #0f0e0c">
-                <sc-for list="{{p.quad}}" as="q" hint-placeholder-count="4">
-                  <span style="position: relative; overflow: hidden; background: #1f1c19"><img class="pin-img" src="{{q.src}}" alt="{{q.alt}}" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></span>
-                </sc-for>
-              </span>
+                <span class="cx-blank" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #26221f"></span>
               </sc-if>
               <!-- «Крупный заголовок»: фото притемнены, по центру — крупное тонкое название и адрес (ЖК) со стрелкой -->
               <span class="cx-big" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 16px; color: #f4f1ec; pointer-events: none">
@@ -358,7 +349,7 @@ class Component extends DCLogic {
     };
     return [
       {
-        title: 'Квартира в тёплых тонах', href: 'index.html', coverVideo: 'assets/p1-preview.mp4', coverPoster: 'assets/p1-preview.jpg', address: 'ЖК Уно', cover: 'assets/cover-warm-apartment.jpg', complex: true, collage: 'assets/collage-warm.jpg',
+        title: 'Квартира в тёплых тонах', href: 'index.html', coverVideo: 'assets/p1-preview.mp4', coverPoster: 'assets/p1-preview.jpg', address: 'ЖК Уно', cover: 'assets/cover-warm-apartment.jpg', complex: true,
         priceDate: 'октябрь 2026',
         reels: [V.kitchen, V.bath, V.wardrobe],
         items: [
@@ -381,7 +372,7 @@ class Component extends DCLogic {
       },
       // второй комплексный проект: фото приходят по изделиям, страница — project-2.html
       {
-        title: 'Квартира в светлом беже', href: 'project-2.html', coverVideo: 'assets/p2-preview.mp4', coverPoster: 'assets/p2-preview.jpg', address: 'ЖК Символ', cover: 'assets/p2-kitchen-1.jpg', complex: true, collage: 'assets/collage-beige.jpg',
+        title: 'Квартира в светлом беже', href: 'project-2.html', coverVideo: 'assets/p2-preview.mp4', coverPoster: 'assets/p2-preview.jpg', address: 'ЖК Символ', cover: 'assets/p2-kitchen-1.jpg', complex: true,
         priceDate: 'октябрь 2026',
         reels: [
           { src: 'assets/p2-bath-reel-1.mp4', poster: 'assets/p2-bath-reel-1.jpg' },
@@ -406,7 +397,7 @@ class Component extends DCLogic {
       },
       // пятый комплексный проект — фото от Макса («Загрузки», 17 фото), страница — project-5.html
       {
-        title: 'Квартира в белом и дубе', href: 'project-5.html', address: 'ЖК Домашний', cover: 'assets/p5-kitchen-1.jpg', complex: true, collage: 'assets/collage-white.jpg',
+        title: 'Квартира в белом и дубе', href: 'project-5.html', address: 'ЖК Домашний', cover: 'assets/p5-kitchen-1.jpg', complex: true,
         priceDate: 'октябрь 2026',
         items: [
           { name: 'Кухня', type: 'Кухни', photos: ['assets/p5-kitchen-1.jpg', 'assets/p5-kitchen-2.jpg', 'assets/p5-kitchen-3.jpg', 'assets/p5-kitchen-4.jpg'], price: '850 000 ₽',
@@ -434,7 +425,7 @@ class Component extends DCLogic {
       },
       // шестой комплексный проект — фото от Макса («Загрузки», 15 фото), страница — project-6.html
       {
-        title: 'Квартира с перегородками', href: 'project-6.html', address: 'ЖК Люблинский Парк', cover: 'assets/p6-kitchen-1.jpg', complex: true, collage: 'assets/collage-glass.jpg',
+        title: 'Квартира с перегородками', href: 'project-6.html', address: 'ЖК Люблинский Парк', cover: 'assets/p6-kitchen-1.jpg', complex: true,
         priceDate: 'октябрь 2026',
         items: [
           { name: 'Кухня', type: 'Кухни', photos: ['assets/p6-kitchen-1.jpg', 'assets/p6-kitchen-2.jpg'], price: '920 000 ₽',
@@ -456,7 +447,7 @@ class Component extends DCLogic {
       },
       // седьмой комплексный проект — фото от Макса («Загрузки», 18 фото), страница — project-7.html
       {
-        title: 'Квартира в дубе и камне', href: 'project-7.html', address: 'ЖК Гармония', cover: 'assets/p7-kitchen-1.jpg', complex: true, collage: 'assets/collage-oak.jpg',
+        title: 'Квартира в дубе и камне', href: 'project-7.html', address: 'ЖК Гармония', cover: 'assets/p7-kitchen-1.jpg', complex: true,
         priceDate: 'октябрь 2026',
         items: [
           { name: 'Кухня', type: 'Кухни', photos: ['assets/p7-kitchen-1.jpg', 'assets/p7-kitchen-2.jpg', 'assets/p7-kitchen-3.jpg', 'assets/p7-kitchen-4.jpg'], price: '880 000 ₽',
@@ -484,7 +475,7 @@ class Component extends DCLogic {
       },
       // восьмой комплексный проект — фото от Макса («Загрузки», 15 фото; одно — почти дубль, не взято), страница — project-8.html
       {
-        title: 'Квартира с рейками', href: 'project-8.html', address: 'ЖК Шагал', cover: 'assets/p8-kitchen-1.jpg', complex: true, collage: 'assets/collage-slats.jpg',
+        title: 'Квартира с рейками', href: 'project-8.html', address: 'ЖК Шагал', cover: 'assets/p8-kitchen-1.jpg', complex: true,
         priceDate: 'октябрь 2026',
         items: [
           { name: 'Кухня', type: 'Кухни', photos: ['assets/p8-kitchen-1.jpg', 'assets/p8-kitchen-2.jpg', 'assets/p8-kitchen-3.jpg', 'assets/p8-kitchen-4.jpg'], price: '690 000 ₽',
@@ -733,7 +724,6 @@ class Component extends DCLogic {
     var reels = [], items = [], byKey = {}, photos = [], videos = [];
     var prs = this.projects();
     prs.forEach(function (pr, pi) {
-      if (pr.collage) photos.push(pr.collage);
       if (pr.cover) photos.push(pr.cover);
       // у рилса два тега: REELS и изделие, к которому видео тоже относится (если есть)
       (pr.reels || []).forEach(function (r) {
@@ -1034,22 +1024,10 @@ class Component extends DCLogic {
         pins.push({ isVideo: true, src: r.src, poster: r.poster, label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
     } else if (f === 'Комплекс') {
-      // превью проекта — 4 фото из разных изделий: сначала кухня, прихожая, санузел, детская, потом остальные
-      var pref = ['Кухни', 'Прихожие', 'Санузлы', 'Детские'].concat(this.FILTERS());
+      // обложка проекта — видео (coverVideo); пока видео нет — тёмная плитка с названием
       D.projects.forEach(function (pr) {
         if (!pr.complex || !pr.href) return;
-        var its = D.items.filter(function (it) { return it.project === pr.title && it.photos.length; })
-          .sort(function (a, b) { return pref.indexOf(a.type) - pref.indexOf(b.type); });
-        var srcs = its.slice(0, 4).map(function (it) { return { src: it.photos[0], alt: it.name }; });
-        var k = 1; while (srcs.length && srcs.length < 4) { var it = its[(srcs.length) % its.length]; srcs.push({ src: it.photos[Math.min(k++, it.photos.length - 1)], alt: it.name }); }
-        if (!srcs.length) srcs = [{ src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }, { src: pr.cover, alt: pr.title }];
-        // готовый коллаж (tools/make_collage.py) — одна картинка вместо четырёх, грузится сразу
-        if (pr.collage) srcs = [{ src: pr.collage, alt: pr.title, one: true }];
-        // пока у проекта нет видео-обложки — вместо коллажа просто тёмная плитка (так попросил Макс; вернуть коллажи — true)
-        var SHOW_COLLAGES = false;
-        if (!pr.coverVideo && !SHOW_COLLAGES) srcs = [];
-        srcs.forEach(function (q) { q.src = (self.mem && self.mem[q.src]) || q.src; });
-        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', quad: srcs, quadCls: !srcs.length ? 'one blank' : pr.collage ? 'one' : '', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '' });
+        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '' });
       });
     } else {
       D.items.forEach(function (it) {
