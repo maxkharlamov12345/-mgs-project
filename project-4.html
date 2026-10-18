@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="ru">
+<head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>Квартира в оливковых тонах — MGS Mebel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0f0e0c}
+a{color:#f4f1ec}a:hover{color:#bfd630}
+.pin{display:block;margin:0}
+.pin-img{transition:transform .5s ease, filter .3s ease}
+.pin-btn:hover .pin-img{transform:scale(1.035);filter:brightness(.82)}
+.pin-meta{opacity:0;transition:opacity .25s ease}
+.pin-btn:hover .pin-meta,.pin-btn:focus-visible .pin-meta{opacity:1}
+.chip{transition:background-color .2s ease,color .2s ease}
+.chip:hover{background:#322d29}
+.lb-thumbs{scrollbar-width:none}
+.lb-vlist,.lb-vcount,.lb-close-v{display:none}
+.lb-thumbs-grid{display:none !important}
+.lb-hide{display:none !important}
+.lb-wrap{overscroll-behavior:contain}
+.lb-track .lb-slide{transition:opacity .5s ease, filter .5s ease}
+.lb-track .lb-slide.rs-dim{filter:brightness(.28)}
+.lb-track.lb-reels ~ .lb-fade-r{background:linear-gradient(to right, rgba(11,10,9,0) 0%, rgba(11,10,9,0.03) 15%, rgba(11,10,9,0.09) 30%, rgba(11,10,9,0.2) 45%, rgba(11,10,9,0.36) 60%, rgba(11,10,9,0.56) 75%, rgba(11,10,9,0.78) 88%, rgba(11,10,9,1) 100%) !important}
+.lb-reels .lb-slide.rs-prev{opacity:0;pointer-events:none}
+.lb-reels .lb-slide.rs-next{filter:brightness(.28)}
+.lb-track.rs-nt .lb-slide{transition:none}
+.rr-strip{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rr-strip::-webkit-scrollbar{display:none}
+.rr-strip .rr-item{height:500px}
+.lb-track{position:relative;display:flex;gap:16px;width:100%;height:100%;box-sizing:border-box;padding:24px 0 24px 50%;overflow-x:hidden;scroll-snap-type:none;scroll-padding-left:24px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.lb-track::-webkit-scrollbar{display:none}
+.lb-slide{flex:none;height:100%;scroll-snap-align:start;scroll-snap-stop:always}
+.lb-slide-img{display:block;height:100%;width:auto;max-width:calc(100vw - 520px);object-fit:cover;border-radius:14px}
+.lb-reels .lb-slide-img{max-width:calc(100vw - 160px)}
+.lb-spacer{flex:0 0 70%}
+@media (max-width: 760px){
+  .feed,.feed-col{gap:5px !important}
+  .pad{padding-left:5px !important;padding-right:5px !important}
+  header.pad{padding-left:12px !important;padding-right:12px !important}
+  .pin-btn,.pin{border-radius:10px !important}
+  .about-band{border-radius:12px !important}
+  .ttl{font-size:34px !important}
+  .logo-img{width:52px !important;height:52px !important}
+  .hide-m{display:none}
+  .hdr-cta{padding:0 16px !important;font-size:14px !important;min-height:44px !important}
+  .chips-nav{flex-wrap:nowrap !important;justify-content:flex-start !important;overflow-x:auto;scrollbar-width:none;padding-top:14px !important;padding-bottom:16px !important}
+  .chips-nav .chip{flex:none;white-space:nowrap}
+  .about-band{padding:22px 18px !important}
+  .about-band p{font-size:16px !important}
+  .rr-list{gap:5px !important}
+  .rr-strip{gap:5px !important}
+  .rr-strip .rr-item{height:300px}
+  .rr-arrows{display:none !important}
+  .rr-item{border-radius:10px !important}
+  .rr-head{padding:22px 18px !important;border-radius:10px !important}
+  .rr-title{font-size:30px !important}
+}
+/* невысокие экраны ПК: компактнее блок описания, чтобы кнопка была видна без прокрутки */
+@media (min-width: 1000px) and (max-height: 720px){
+  .lb-panel{padding:20px 24px 22px !important;gap:14px !important}
+  .lb-panel h2{font-size:30px !important}
+  .lb-panel p{font-size:14px !important;line-height:1.5 !important}
+  .lb-panel dl > div{padding:7px 0 !important}
+}
+/* телефон боком: фото не выше экрана, иначе свайп застревает */
+@media (max-width: 999px) and (orientation: landscape){
+  .lb-vslide img{max-height:calc(100vh - 10px);max-height:calc(100svh - 10px);object-fit:contain !important;background:#0b0a09 !important}
+}
+/* просмотр: на телефонах и планшетах в портрете — вертикальный слайдер */
+@media (max-width: 999px){
+  .lb-img{max-height:60vh !important}
+  .lb-wrap{flex-direction:column !important;overflow-y:auto;scroll-snap-type:y mandatory;scroll-padding-top:5px;-webkit-overflow-scrolling:touch}
+  .lb-stage{display:none !important}
+  .lb-vlist{display:flex !important;flex-direction:column;gap:5px;flex:none;padding:5px 5px 0}
+  .lb-vslide img{border-radius:10px}
+  .lb-vslide .v-snd{top:auto !important;bottom:38px}
+  .lb-vvid{height:min(177.78vw, calc(100vh - 10px));height:min(177.78vw, calc(100svh - 10px))}
+  .lb-vslide{scroll-snap-align:start;scroll-snap-stop:always}
+  .lb-panel{scroll-snap-align:start}
+  .lb-vcount{display:inline-flex !important}
+  .lb-close-v{display:flex !important}
+  .lb-stage{flex:none !important;height:var(--lbh, 125vw);max-height:82vh;padding:0 !important;transition:height .3s ease}
+  .lb-desktop{display:none !important}
+  .lb-thumbs-grid{display:none !important}
+  .lb-track{gap:0 !important;padding:0 !important;scroll-padding-left:0 !important;overflow-x:auto !important;scroll-snap-type:x mandatory !important}
+  .lb-slide{flex:0 0 100% !important;scroll-snap-align:center !important}
+  .lb-slide-img{width:100% !important;height:100% !important;object-fit:cover;border-radius:0 !important}
+  .lb-spacer,.lb-fade{display:none !important}
+  .lb-count{left:50% !important;transform:translateX(-50%)}
+  .lb-panel{width:auto !important;border-left:0 !important;overflow:visible !important;padding:22px 16px 28px !important}
+  .lb-close-m{display:flex !important;position:fixed !important;top:14px !important;right:14px !important;z-index:60 !important}
+  .lb-panel-head{display:none !important}
+}
+</style>
+</helmet>
+
+<div style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100%">
+
+
+  <!-- заголовок проекта -->
+  <section class="pad" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
+    <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em; max-width: 900px">{{title}}</h1>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; font-size: 14px; color: #a89f92">
+      <span>{{zonesLine}}</span><span aria-hidden="true">·</span><span>{{photosLine}}</span><span aria-hidden="true">·</span><span>Москва, 2026</span>
+    </div>
+  </section>
+
+  <!-- фильтр по зонам -->
+  <sc-if value="{{multiZone}}" hint-placeholder-val="{{ true }}">
+    <nav aria-label="Зоны проекта" class="pad chips-nav" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 18px 32px 26px">
+      <sc-for list="{{chips}}" as="c" hint-placeholder-count="6">
+        <button class="chip" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; background: {{c.bg}}; color: {{c.fg}}">{{c.name}} <span style="opacity: 0.6; font-weight: 400">{{c.count}}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="margin-left: 8px; vertical-align: -2px; opacity: 0.7"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></button>
+      </sc-for>
+    </nav>
+  </sc-if>
+  <sc-if value="{{singleZone}}" hint-placeholder-val="{{ false }}"><div style="height: 24px"></div></sc-if>
+
+  <!-- о проекте: на всю ширину (телефон и маленькие проекты; на ПК — карточкой в ленте) -->
+  <sc-if value="{{showBandTop}}" hint-placeholder-val="{{ false }}">
+  <section class="pad" style="padding: 0 12px 16px">
+    <div class="about-band" style="max-width: {{maxW}}; margin: 0 auto; border-radius: 18px; background: #1b1916; padding: 28px 32px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 48px">
+      <div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px; max-width: 820px">
+        <span style="font-size: 13px; color: #a39a8e; letter-spacing: 0.08em; text-transform: uppercase">О проекте</span>
+        <p style="margin: 0; font-size: 18px; line-height: 1.55">Тёплая бежевая квартира с орехом и оливковыми акцентами: матовые фасады без ручек, тонкие чёрные профили и мягкая подсветка. Кухня-гостиная с витриной в чёрной раме, ТВ-стена с панелью под орех, прихожая со скрытыми шкафами, спальня с зеркальным шкафом-купе и санузел с тумбой в шпоне.</p>
+      </div>
+      <div style="flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px">
+        <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
+        <span style="font-size: 34px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">1 830 000 ₽</span>
+        <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
+      </div>
+      <div style="flex: 1 1 100%">
+        <sc-if value="{{hasDesigner}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid #26221f; padding-top: 16px">
+            <img src="{{designer.face}}" alt="" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block; flex: none">
+            <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #a39a8e">Дизайнер проекта</span><span style="font-size: 16px; font-weight: 500">{{designer.name}}</span></span>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- лента -->
+  <div class="pad" style="padding: 0 12px 64px">
+    <div class="feed" style="display: flex; gap: 16px; align-items: stretch; max-width: {{maxW}}; margin: 0 auto">
+      <sc-for list="{{columns}}" as="col" hint-placeholder-count="4">
+      <div class="feed-col" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+      <sc-for list="{{col.pins}}" as="p" hint-placeholder-count="3">
+
+        <!-- фото -->
+        <sc-if value="{{p.isPhoto}}" hint-placeholder-val="{{ true }}">
+          <div class="pin" style="position: relative; flex: 1 0 auto">
+            <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
+            <button class="pin-btn" onClick="{{p.open}}" aria-label="Открыть фото: {{p.zone}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 18px; overflow: hidden; background: #1f1c19; cursor: zoom-in">
+              <img class="pin-img" src="{{p.src}}" alt="{{p.zone}}" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: {{p.pos}}">
+              <span class="pin-meta" style="position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px">
+                <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.95); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px">{{p.zone}}</span>
+                <span style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
+              </span>
+            </button>
+          </div>
+        </sc-if>
+
+        <!-- карточка зоны -->
+        <sc-if value="{{p.isZone}}" hint-placeholder-val="{{ false }}">
+          <div class="pin" style="border-radius: 18px; background: #f4f1ec; color: #1c1a17; padding: 26px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+            <span style="font-size: 13px; color: {{accent}}; letter-spacing: 0.08em">{{p.num}}</span>
+            <span style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 30px; font-weight: 300; line-height: 1.1">{{p.zone}}</span>
+              <span style="font-size: 14px; color: #b3aa9e">{{p.countLabel}}</span>
+            </span>
+          </div>
+        </sc-if>
+
+        <!-- видео -->
+        <sc-if value="{{p.isVideo}}" hint-placeholder-val="{{ false }}">
+          <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
+            <video data-src="{{p.src}}" poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+            <span style="position: absolute; left: 12px; top: 12px; height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
+            <button onClick="{{p.open}}" aria-label="Открыть REELS" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer">
+              <span style="position: absolute; right: 12px; top: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
+            </button>
+          </div>
+        </sc-if>
+
+        <!-- карточка о проекте -->
+        <sc-if value="{{p.isAbout}}" hint-placeholder-val="{{ false }}">
+          <div class="pin" style="border-radius: 18px; background: #1b1916; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+            <span style="font-size: 13px; color: #a39a8e; letter-spacing: 0.08em; text-transform: uppercase">О проекте</span>
+            <p style="margin: 0; font-size: 17px; line-height: 1.55">Тёплая бежевая квартира с орехом и оливковыми акцентами: матовые фасады без ручек, тонкие чёрные профили и мягкая подсветка. Кухня-гостиная с витриной в чёрной раме, ТВ-стена с панелью под орех, прихожая со скрытыми шкафами, спальня с зеркальным шкафом-купе и санузел с тумбой в шпоне.</p>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border-top: 1px solid #26221f; padding-top: 16px">
+              <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
+              <span style="font-size: 30px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">1 830 000 ₽</span>
+              <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
+            </div>
+            <sc-if value="{{hasDesigner}}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid #26221f; padding-top: 16px">
+                <img src="{{designer.face}}" alt="" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block; flex: none">
+                <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #a39a8e">Дизайнер проекта</span><span style="font-size: 16px; font-weight: 500">{{designer.name}}</span></span>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- карточка дизайнера -->
+        <sc-if value="{{p.isDesigner}}" hint-placeholder-val="{{ false }}">
+          <div id="designer" class="pin" style="border-radius: 18px; background: #1b1916; overflow: hidden; display: flex; flex-direction: column">
+            <div style="position: relative; aspect-ratio: 4 / 5; background: #f4f1ec">
+              <img src="{{designer.photo}}" alt="{{designer.name}}, дизайнер проекта" style="display: block; width: 100%; height: 100%; object-fit: cover">
+              <span style="position: absolute; left: 12px; top: 12px; background: rgba(255,255,255,0.95); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 999px">Дизайнер проекта</span>
+            </div>
+            <div style="padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 12px">
+              <span style="font-size: 26px; font-weight: 500; line-height: 1.15">{{designer.name}} Соколов</span>
+              <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #cfc7bb">8 лет проектирует корпусную мебель, за плечами больше 300 квартир. Любит, когда мебель встраивается в архитектуру и не спорит с ней.</p>
+              <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #cfc7bb; font-style: italic">«Хотелось тепла без лишнего декора — всю работу здесь делают материалы, свет и тонкие чёрные линии.»</p>
+              <a href="#calc" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; min-height: 46px; margin-top: 4px; border-radius: 999px; border: 1px solid #f4f1ec; font-weight: 500; font-size: 15px">Обсудить проект с Кириллом</a>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- агитационный блок «Почему выбирают нас» -->
+        <sc-if value="{{p.isPromo}}" hint-placeholder-val="{{ false }}">
+          <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19">
+            <div aria-hidden="true" style="padding-top: 125%"></div>
+            <img src="{{promoImg}}" alt="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block">
+            <div aria-hidden="true" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, rgba(12,11,10,0.92) 0%, rgba(12,11,10,0.55) 45%, rgba(12,11,10,0.15) 100%)"></div>
+            <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+              <span style="height: 32px; box-sizing: border-box; align-self: flex-start; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; background: {{accent}}; color: #1c1a17; font-size: 13px; font-weight: 500">MGS Mebel</span>
+              <span style="font-size: 26px; font-weight: 700; line-height: 1.08; letter-spacing: 0.01em; text-transform: uppercase; color: #f4f1ec">Почему выбирают именно нас?</span>
+              <span style="font-size: 14px; line-height: 1.5; color: #d8d0c4">Своё производство в Москве, изготовление от 30 дней и гарантия 5 лет на корпус и фурнитуру.</span>
+              <a href="{{promoLink}}" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; margin-top: 4px; border-radius: 999px; background: {{accent}}; color: #1c1a17; font-weight: 500; font-size: 15px">Узнать больше<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- карточка заявки -->
+        <sc-if value="{{p.isCta}}" hint-placeholder-val="{{ false }}">
+          <div id="calc" class="pin" style="border-radius: 18px; background: {{accent}}; color: #1c1a17; padding: 26px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+            <span style="font-size: 26px; font-weight: 500; line-height: 1.15">Хотите так же?</span>
+            <span style="font-size: 15px; line-height: 1.5">Рассчитаем под ваши размеры и пришлём смету.</span>
+            <a href="#" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 999px; background: #1c1a17; color: #f4f1ec; font-weight: 500; font-size: 15px">Оставить заявку</a>
+          </div>
+        </sc-if>
+
+      </sc-for>
+      </div>
+      </sc-for>
+    </div>
+    <sc-if value="{{showBandBottom}}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top: 5px">
+      <div class="about-band" style="max-width: {{maxW}}; margin: 0 auto; border-radius: 18px; background: #1b1916; padding: 28px 32px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 48px">
+      <div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px; max-width: 820px">
+        <span style="font-size: 13px; color: #a39a8e; letter-spacing: 0.08em; text-transform: uppercase">О проекте</span>
+        <p style="margin: 0; font-size: 18px; line-height: 1.55">Тёплая бежевая квартира с орехом и оливковыми акцентами: матовые фасады без ручек, тонкие чёрные профили и мягкая подсветка. Кухня-гостиная с витриной в чёрной раме, ТВ-стена с панелью под орех, прихожая со скрытыми шкафами, спальня с зеркальным шкафом-купе и санузел с тумбой в шпоне.</p>
+      </div>
+      <div style="flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px">
+        <span style="font-size: 14px; color: #a39a8e">Стоимость проекта</span>
+        <span style="font-size: 34px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">1 830 000 ₽</span>
+        <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
+      </div>
+      <div style="flex: 1 1 100%">
+        <sc-if value="{{hasDesigner}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid #26221f; padding-top: 16px">
+            <img src="{{designer.face}}" alt="" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block; flex: none">
+            <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #a39a8e">Дизайнер проекта</span><span style="font-size: 16px; font-weight: 500">{{designer.name}}</span></span>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{small}}" hint-placeholder-val="{{ false }}">
+      <div style="max-width: {{maxW}}; margin: 16px auto 0; border-radius: 18px; background: {{accent}}; color: #1c1a17; padding: 22px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+        <span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 22px; font-weight: 500">Хотите так же?</span><span style="font-size: 15px">Рассчитаем под ваши размеры и пришлём смету.</span></span>
+        <a href="#" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 26px; border-radius: 999px; background: #1c1a17; color: #f4f1ec; font-weight: 500; font-size: 15px">Оставить заявку</a>
+      </div>
+    </sc-if>
+  </div>
+  
+
+  <!-- рендер → реализация: показываем, только если проект делали по дизайн-проекту -->
+  <sc-if value="{{hasRenders}}" hint-placeholder-val="{{ true }}">
+    <section class="pad" style="padding: 40px 12px 80px">
+      <div class="rr-list" style="max-width: {{maxW}}; margin: 0 auto; display: flex; flex-direction: column; gap: 16px">
+        <div class="rr-head" style="display: flex; flex-direction: column; gap: 12px; padding: 28px 32px; border-radius: 18px; background: #1b1916">
+          <span style="font-size: 13px; color: {{accent}}; letter-spacing: 0.08em; text-transform: uppercase">Дизайн-проект</span>
+          <h2 class="rr-title" style="margin: 0; font-size: 44px; font-weight: 300; line-height: 1.08; letter-spacing: -0.01em">Этот проект мы делали по дизайн-проекту</h2>
+          <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+            <p style="margin: 0; font-size: 17px; line-height: 1.55; color: #cfc7bb; max-width: 760px">Так проект выглядел на рендерах дизайнера, а выше — как он получился в жизни.</p>
+            <div class="rr-arrows" style="display: flex; gap: 8px">
+              <button onClick="{{rrPrev}}" aria-label="Листать рендеры назад" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(244,241,236,0.35); background: none; color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+              <button onClick="{{rrNext}}" aria-label="Листать рендеры вперёд" style="width: 48px; height: 48px; border-radius: 50%; border: 0; background: {{accent}}; color: #1c1a17; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
+          </div>
+        </div>
+        <div id="rr-strip" class="rr-strip">
+          <sc-for list="{{renderItems}}" as="c" hint-placeholder-count="4">
+            <div class="rr-item" style="position: relative; flex: none; aspect-ratio: {{c.ar}}; border-radius: 18px; overflow: hidden; background: #1f1c19; scroll-snap-align: start">
+              <img src="{{c.src}}" alt="{{c.label}}" onLoad="{{c.measure}}" draggable="false" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block">
+              <span style="position: absolute; left: 12px; top: 12px; height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; background: rgba(15,14,12,0.7); color: #f4f1ec; font-size: 13px; font-weight: 500; white-space: nowrap">{{c.label}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- видео на весь экран: только здесь можно ставить на паузу и перематывать -->
+  <sc-if value="{{vOpen}}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" aria-label="Видеообзор" style="position: fixed; inset: 0; z-index: 70; background: #000; display: flex; align-items: center; justify-content: center">
+      <div style="position: relative; width: 100%; height: 100%">
+        <video id="v-full" data-full="1" data-k="full" src="{{videoFull}}" poster="{{poster}}" playsinline="" loop="" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" style="display: block; width: 100%; height: 100%; object-fit: contain; cursor: pointer"></video>
+        <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 70px; right: 14px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{vf.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{vf.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{vf.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
+        <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center; bottom: 24px; left: 20px; right: 20px"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
+      </div>
+      <button onClick="{{closeVideo}}" aria-label="Закрыть видео" style="position: fixed; top: 14px; right: 14px; z-index: 71; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(40,36,32,0.8); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    </div>
+  </sc-if>
+
+  <!-- полноэкранный просмотр -->
+  <sc-if value="{{lbOpen}}" hint-placeholder-val="{{ false }}">
+    <div id="lb-wrap" class="lb-wrap" onScroll="{{vScroll}}" role="dialog" aria-modal="true" aria-label="Просмотр: {{lb.zone}}" style="position: fixed; inset: 0; z-index: 50; background: #0b0a09; color: #f4f1ec; display: flex">
+
+      <!-- фото -->
+      <div class="lb-stage" style="position: relative; flex: 1; min-width: 0; display: flex; align-items: stretch; padding: 0; --lbh: {{lbH}}">
+        <sc-if value="{{isReels}}" hint-placeholder-val="{{ false }}">
+          <button class="lb-desktop" onClick="{{closeLb}}" aria-label="Закрыть" style="position: absolute; z-index: 5; top: 24px; right: 24px; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(40,36,32,0.85); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        </sc-if>
+        <button class="lb-close-m" onClick="{{closeLb}}" aria-label="Закрыть" style="display: none; position: absolute; top: 20px; right: 20px; z-index: 2; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.7); color: #f4f1ec; cursor: pointer; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        <div id="lb-track" class="lb-track {{trackCls}}" onScroll="{{lbScroll}}" onWheel="{{lbWheel}}">
+          <sc-for list="{{lbLoop}}" as="t" hint-placeholder-count="3">
+            <div class="lb-slide">
+              <sc-if value="{{t.isImg}}" hint-placeholder-val="{{ true }}">
+                <img class="lb-slide-img" src="{{t.src}}" alt="Фото {{t.n}}" decoding="sync" onLoad="{{t.measure}}">
+              </sc-if>
+              <sc-if value="{{t.isVideo}}" hint-placeholder-val="{{ false }}">
+                <div style="position: relative; height: 100%">
+                  <video class="lb-slide-img" src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" style="aspect-ratio: {{t.ar}}; background: #000; cursor: pointer"></video>
+                  <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{t.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{t.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{t.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
+                  <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div class="lb-spacer" aria-hidden="true"></div>
+        </div>
+        <div class="lb-fade lb-fade-r" aria-hidden="true" style="position: absolute; z-index: 3; top: 0; bottom: 0; right: 0; width: 320px; pointer-events: none; background: linear-gradient(to right, rgba(21,19,17,0) 0%, rgba(21,19,17,0.03) 15%, rgba(21,19,17,0.09) 30%, rgba(21,19,17,0.2) 45%, rgba(21,19,17,0.36) 60%, rgba(21,19,17,0.56) 75%, rgba(21,19,17,0.78) 88%, rgba(21,19,17,1) 100%)"></div>
+        <div class="lb-fade" aria-hidden="true" style="position: absolute; z-index: 3; top: 0; bottom: 0; left: 0; width: 260px; pointer-events: none; background: linear-gradient(to left, rgba(11,10,9,0) 0%, rgba(11,10,9,0.03) 15%, rgba(11,10,9,0.09) 30%, rgba(11,10,9,0.2) 45%, rgba(11,10,9,0.36) 60%, rgba(11,10,9,0.56) 75%, rgba(11,10,9,0.78) 88%, rgba(11,10,9,1) 100%)"></div>
+        <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
+          <button class="lb-desktop" onClick="{{lbPrev}}" aria-label="Предыдущее фото" style="position: absolute; z-index: 4; left: 40px; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; border: 0; background: rgba(15,14,12,0.55); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+          <button class="lb-desktop" onClick="{{lbNext}}" aria-label="Следующее фото" style="position: absolute; z-index: 4; right: 40px; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; border: 0; background: rgba(15,14,12,0.55); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+          <span class="lb-count" style="position: absolute; z-index: 4; left: 40px; bottom: 72px; background: rgba(15,14,12,0.6); font-size: 13px; padding: 7px 14px; border-radius: 999px">{{lb.pos}}</span>
+        </sc-if>
+      </div>
+
+      <!-- телефон: фото одно под другим — свайп вверх поднимает следующее, описание открывается после последнего -->
+      <div class="lb-vlist" aria-label="Фото: {{lb.zone}}">
+        <sc-for list="{{lbList}}" as="t" hint-placeholder-count="3">
+          <div class="lb-vslide">
+            <sc-if value="{{t.isImg}}" hint-placeholder-val="{{ true }}">
+              <img src="{{t.src}}" alt="Фото {{t.n}}" decoding="sync" style="display: block; width: 100%; height: auto; aspect-ratio: {{t.ar}}; object-fit: cover; background: #1f1c19">
+            </sc-if>
+            <sc-if value="{{t.isVideo}}" hint-placeholder-val="{{ false }}">
+              <div style="position: relative">
+                <video src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" class="lb-vvid" style="display: block; width: 100%; object-fit: cover; background: #000; border-radius: 10px; cursor: pointer"></video>
+                <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{t.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{t.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{t.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
+                <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <button class="lb-close-v" onClick="{{closeLb}}" aria-label="Закрыть" style="position: fixed; top: 14px; right: 14px; z-index: 60; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.7); color: #f4f1ec; cursor: pointer; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+      <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
+        <span class="lb-vcount" style="position: fixed; top: 14px; left: 14px; z-index: 60; height: 32px; box-sizing: border-box; align-items: center; padding: 0 12px; border-radius: 999px; background: rgba(15,14,12,0.7); color: #f4f1ec; font-size: 13px">{{lb.pos}}</span>
+      </sc-if>
+
+      <!-- телефон: миниатюры сразу под слайдером -->
+      <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
+        <div class="lb-thumbs-m" style="display: none">
+          <sc-for list="{{lbList}}" as="t" hint-placeholder-count="4">
+            <button onClick="{{t.open}}" aria-label="Фото {{t.n}}" style="flex: none; width: 56px; height: 70px; padding: 0; border: 0; border-radius: 8px; overflow: hidden; background: #1f1c19; cursor: pointer; opacity: {{t.op}}; outline: {{t.ring}}; outline-offset: 2px">
+              <img src="{{t.src}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block">
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- панель изделия -->
+      <aside class="lb-panel {{panelCls}}" aria-label="Описание: {{lb.zone}}" style="position: relative; z-index: 3; flex: none; width: 400px; background: #151311; padding: 28px 32px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px; overflow-y: auto">
+        <div class="lb-panel-head" style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span></span>
+          <button onClick="{{closeLb}}" aria-label="Закрыть" style="width: 44px; height: 44px; border: 0; border-radius: 50%; background: #26221f; color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        </div>
+        <h2 style="margin: 0; font-size: 40px; font-weight: 300; line-height: 1.05; letter-spacing: -0.01em">{{lb.zone}}</h2>
+        <p style="margin: 0; font-size: 16px; line-height: 1.65; color: #cfc7bb">{{lb.text}}</p>
+        <dl style="margin: 0; display: flex; flex-direction: column">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-top: 1px solid #262220; padding: 11px 0"><dt style="font-size: 14px; color: #a39a8e">Корпус</dt><dd style="margin: 0; font-size: 15px; text-align: right">{{lb.korpus}}</dd></div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-top: 1px solid #262220; padding: 11px 0"><dt style="font-size: 14px; color: #a39a8e">Фасады</dt><dd style="margin: 0; font-size: 15px; text-align: right">{{lb.fasady}}</dd></div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-top: 1px solid #262220; padding: 11px 0"><dt style="font-size: 14px; color: #a39a8e">Фурнитура</dt><dd style="margin: 0; font-size: 15px; text-align: right">{{lb.furn}}</dd></div>
+        </dl>
+        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border-top: 1px solid #262220; padding-top: 16px">
+          <span style="font-size: 14px; color: #a39a8e">Стоимость</span>
+          <span style="font-size: 30px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">{{lb.price}}</span>
+          <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
+        </div>
+        <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
+          <div class="lb-thumbs-grid" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-top: 6px; border-top: 1px solid #262220">
+            <sc-for list="{{lbList}}" as="t" hint-placeholder-count="4">
+              <button onClick="{{t.open}}" aria-label="Фото {{t.n}}" style="aspect-ratio: 4 / 5; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: #1f1c19; cursor: pointer; margin-top: 8px; opacity: {{t.op}}; outline: {{t.ring}}; outline-offset: 2px">
+                <img src="{{t.src}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block">
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 8px">
+          <a href="#" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 999px; background: {{accent}}; color: #1c1a17; font-weight: 500; font-size: 16px">Хочу такую же</a>
+          <span style="font-size: 13px; color: #8f867a; text-align: center">Рассчитаем под ваши размеры</span>
+        </div>
+      </aside>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#bfd630","options":["#bfd630","#d8b98f","#f4f1ec"]},"$preview":{"width":1440,"height":3400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { filter: 'all', lb: -1 };
+    var B = 'assets/';
+    this.P = {
+      k1: 'assets/p4-kitchen-1.jpg', k2: 'assets/p4-kitchen-2.jpg',
+      l1: 'assets/p4-living-1.jpg',
+      h1: 'assets/p4-hall-1.jpg',
+      s1: 'assets/p4-bedroom-1.jpg',
+      b1: 'assets/p4-bath-1.jpg', b2: 'assets/p4-bath-2.jpg'
+    };
+    this.video = '';
+    this.poster = '';
+  }
+
+  // ===== ДАННЫЕ ПРОЕКТА: на сайте приходят из CMS =====
+  project() {
+    var pr = this.projectData();
+    // дизайнер проекта (нет дизайнера — блоки не показываются)
+    // описания изделий — на сайте приходят из CMS вместе с фото
+    // описания, цены и материалы изделий — пока заглушки, пришлёт Макс
+    var texts = {
+      'Кухня': 'Угловая кухня до потолка: верхний ярус в орехе с подсветкой, нижние фасады матовые бежевые с профилем-ручкой, тёмная столешница и фартук с узором. Колонна с духовым шкафом и микроволновкой, рядом — витрина в чёрной раме с подсветкой полок.',
+      'Гостиная': 'ТВ-стена: рейки в светлом тоне, панель под орех с подвесными полками в чёрном, низкая подвесная тумба и открытый стеллаж с подсветкой у окна.',
+      'Прихожая': 'Шкафы до потолка заподлицо со стеной с тонкими чёрными ручками-профилями, панель под орех с крючками и подвесная обувница.',
+      'Спальня': 'Шкаф-купе до потолка с зеркальной дверью в чёрном профиле, мягкая стеновая панель за кроватью и подвесные прикроватные тумбы.',
+      'Санузел': 'Подвесная тумба с рифлёными фасадами в шпоне и накладной раковиной, зеркало с подсветкой, пенал-стеллаж с подсветкой и шкаф над инсталляцией.'
+    };
+    var prices = {
+      'Кухня': '790 000 ₽',
+      'Гостиная': '280 000 ₽',
+      'Прихожая': '210 000 ₽',
+      'Спальня': '320 000 ₽',
+      'Санузел': '230 000 ₽'
+    };
+    var specs = {
+      'Кухня': { korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые бежевые + орех', furn: 'Blum' },
+      'Гостиная': { korpus: 'ЛДСП Egger 18 мм', fasady: 'Рейки + шпон ореха', furn: 'Blum' },
+      'Прихожая': { korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые бежевые, чёрные профили', furn: 'Blum' },
+      'Спальня': { korpus: 'ЛДСП Egger 18 мм', fasady: 'Зеркало в чёрном профиле', furn: 'Hettich' },
+      'Санузел': { korpus: 'ЛДСП Egger 18 мм, влагостойкая', fasady: 'Рифлёный шпон', furn: 'Blum' }
+    };
+    pr.zones.forEach(function (z) {
+      if (!z.text) z.text = texts[z.name] || '[Описание]';
+      if (!z.price) z.price = prices[z.name] || '[Цена]';
+      var sp = specs[z.name] || {};
+      z.korpus = z.korpus || sp.korpus || '[Материал]'; z.fasady = z.fasady || sp.fasady || '[Фасады]'; z.furn = z.furn || sp.furn || '[Бренд]';
+    });
+    // рендеры дизайн-проекта: пара «рендер → реализация» на изделие; нет пар — блок не показывается
+    return pr;
+  }
+  projectData() {
+    var P = this.P;
+    return { title: 'Квартира в оливковых тонах', video: '', videos: [], zones: [
+      { name: 'Кухня', photos: [P.k1, P.k2] },
+      { name: 'Гостиная', photos: [P.l1] },
+      { name: 'Прихожая', photos: [P.h1] },
+      { name: 'Спальня', photos: [P.s1] },
+      { name: 'Санузел', photos: [P.b1, P.b2] } ] };
+  }
+
+
+
+
+  // все фото проекта один раз скачиваем в память и держим там готовыми к показу,
+  // чтобы при листании по кругу они не загружались заново (без чёрной вспышки)
+  preloadPhotos() {
+    var self = this; this.mem = this.mem || {}; this.keep = this.keep || [];
+    Object.keys(this.P).forEach(function (k) {
+      var src = self.P[k];
+      if (self.mem[src] || !window.fetch) return;
+      fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
+        var u = URL.createObjectURL(b);
+        var im = new Image(); im.src = u; self.keep.push(im);
+        var ready = function () { self.mem[src] = u; if (im.naturalWidth) { self.ratios = self.ratios || {}; self.ratios[src] = im.naturalHeight / im.naturalWidth; } self.forceUpdate(); };
+        if (im.decode) im.decode().then(ready, ready); else im.onload = ready;
+      }).catch(function () {});
+    });
+  }
+  componentDidMount() {
+    this.preloadPhotos();
+    this.preloadVideos();
+    var self = this;
+    this.onResize = function () { self.setState({ vw: window.innerWidth }); clearTimeout(self._rz); self._rz = setTimeout(function () { self.resnap('auto'); }, 80); };
+    window.addEventListener('resize', this.onResize);
+    this.ensureVideo();
+  }
+  // iPhone/Android запускают видео сами только если оно без звука и «inline»;
+  // React не выставляет атрибут muted в HTML, поэтому ставим его вручную и запускаем
+  // каждое видео скачиваем ОДИН раз и дальше отдаём всем плеерам из памяти (лента, просмотр, полный экран)
+  videoURL(orig) {
+    var self = this; this._vp = this._vp || {}; this.vurls = this.vurls || {};
+    // играем потоком сразу; полную версию тем временем тихо докачиваем в память (bgLoadVideos)
+    if (!this._vp[orig]) { if (!self.vurls[orig]) self.vurls[orig] = orig; this._vp[orig] = Promise.resolve(self.vurls[orig]); }
+    return this._vp[orig];
+  }
+  preloadVideos() {
+    var self = this, pr = this.projectData ? this.projectData() : null; if (!pr || !window.fetch) return;
+    var list = [];
+    (pr.videos || []).forEach(function (v) { list.push(v.src || v); });
+    (pr.zones || []).forEach(function (z) { (z.videos || []).forEach(function (v) { list.push(v.src); }); });
+    list = list.filter(function (src, i) { return src && list.indexOf(src) === i; });
+    this.vurls = this.vurls || {}; this._vpend = this._vpend || {};
+    var next = function (i) {
+      if (i >= list.length) return;
+      var src = list[i];
+      fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
+        var u = URL.createObjectURL(new Blob([b], { type: 'video/mp4' }));
+        // пока окно просмотра открыто — не подменяем источник у играющего видео, подставим после закрытия
+        if (self.state.lb >= 0) self._vpend[src] = u; else { self.vurls[src] = u; if (self._vp) delete self._vp[src]; }
+        next(i + 1);
+      }).catch(function () { next(i + 1); });
+    };
+    var start = function () { setTimeout(function () { next(0); }, 1200); };
+    if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
+  }
+  // короткие 10-секундные превью для ленты (без звука, лёгкие)
+  previewOf(src) { return /\.mp4$/.test(src || '') ? src.replace(/\.mp4$/, '-preview.mp4') : src; }
+  ensureVideo() {
+    var self = this;
+    var vs = document.querySelectorAll('video');
+    for (var i = 0; i < vs.length; i++) {
+      var v = vs[i];
+      if (v.getAttribute('data-ready') || v.getAttribute('data-full')) continue;
+      v.setAttribute('data-ready', '1');
+      if (!v.getAttribute('data-lb')) { v.muted = true; v.defaultMuted = true; v.setAttribute('muted', ''); } v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
+      // iPhone требует от сервера отдачу видео кусками; если хранилище так не умеет,
+      // видео не грузится (зачёркнутый play). Поэтому скачиваем файл целиком и играем из памяти.
+      var orig = v.getAttribute('data-src') || v.getAttribute('src');
+      if (!v.getAttribute('data-lb') && window.IntersectionObserver && orig && orig.indexOf('assets/') === 0) {
+        v.preload = 'none'; v.setAttribute('data-want', self.previewOf(orig));
+        if (!self._io) self._io = new IntersectionObserver(function (es) {
+          es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-want');
+            if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) el.src = s; var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+            else if (!el.paused) el.pause(); });
+        }, { rootMargin: '200px 0px' });
+        self._io.observe(v); continue;
+      }
+      if (orig && orig.indexOf('assets/') === 0 && window.fetch && window.URL && window.Blob) {
+        (function (v, orig) {
+          self.videoURL(orig).then(function (u) {
+            if (!v.getAttribute('data-lb') && window.IntersectionObserver) {
+              // видео в ленте грузим и запускаем только когда оно на экране — страница открывается быстро
+              v.preload = 'none';
+              if (!self._io) self._io = new IntersectionObserver(function (es) {
+                es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-src') || el.getAttribute('data-want');
+                  if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) { el.src = s; } var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+                  else if (!el.paused) el.pause(); });
+              }, { rootMargin: '200px 0px' });
+              v.setAttribute('data-want', u); self._io.observe(v); return;
+            }
+            if (v.getAttribute('src') !== u) { v.src = u; v.load(); }
+            if (v === self._activeV) self.playWithSound(v);
+            else if (!v.getAttribute('data-lb')) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+          }).catch(function () {});
+        })(v, orig);
+      } else {
+        if (!v.getAttribute('data-lb')) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+      }
+    }
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); }
+  // движок страницы передаёт сюда только прошлые props, без прошлого state,
+  // поэтому предыдущее состояние просмотра запоминаем сами
+  componentDidUpdate(prev) {
+    if (prev.variant !== this.props.variant) this.setState({ filter: 'all', lb: -1 });
+    if (this.state.lb < 0 && this._vpend) { var pd = this._vpend, ks = Object.keys(pd); if (ks.length) { var me = this; ks.forEach(function (k) { me.vurls[k] = pd[k]; if (me._vp) delete me._vp[k]; }); this._vpend = {}; } }
+    this.syncTrack();
+    this.syncVideos();
+    this.ensureVideo();
+    var pv = this._pv; this._pv = this.state.vOpen;
+    if (this.state.vOpen && this.state.vOpen !== pv) {
+      var fv = document.getElementById('v-full');
+      if (fv) { fv.muted = false; var pp = fv.play(); if (pp && pp.catch) pp.catch(function () { fv.muted = true; fv.play().catch(function () {}); }); }
+    }
+  }
+  // телефон: слайдер свайпом — прокручиваем ленту слайдов к текущему фото
+  syncTrack() {
+    var lb = this.state.lb, z = (this.state.lbZone || '*') + '#' + (this.state.lbStart || 0);
+    var pl = (this._pl === undefined) ? -1 : this._pl, pz = (this._pz === undefined) ? null : this._pz;
+    this._pl = lb; this._pz = z;
+    if (lb < 0) return;
+    if (this.fromScroll) { this.fromScroll = false; return; }
+    if (pl === lb && pz === z) return;
+    var opened = pl < 0 || pz !== z;
+    if (opened) this.vsnap();
+    this.resnap(opened ? 'auto' : 'smooth', opened ? null : pl);
+  }
+  // в карусели играет только видео текущего слайда, остальные — на паузе
+  seekTo(e) {
+    var bar = e.currentTarget, v = bar.parentElement.querySelector('video'); if (!v || !v.duration) return;
+    var r = bar.getBoundingClientRect(), f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    v.currentTime = f * v.duration;
+    var fill = bar.querySelector('.v-fill'); if (fill) fill.style.width = (f * 100).toFixed(2) + '%';
+  }
+  playWithSound(v) {
+    v.muted = false;
+    var pp = v.play();
+    if (pp && pp.catch) pp.catch(function () { v.muted = true; var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {}); });
+  }
+  syncVideos() {
+    var all = document.querySelectorAll('video[data-lb]');
+    if (!all.length || this.state.lb < 0) { this._activeV = null; return; }
+    var phone = window.innerWidth < 1000, act = null;
+    if (phone) { var vs = document.querySelectorAll('.lb-vslide'); act = vs[this.state.lb] ? vs[this.state.lb].querySelector('video') : null; }
+    else { var sl = document.querySelectorAll('#lb-track .lb-slide'); var c = sl[this.state.lb + (this.loopOff || 0)]; act = c ? c.querySelector('video') : null; }
+    for (var i = 0; i < all.length; i++) if (all[i] !== act && !all[i].paused) all[i].pause();
+    if (this._atPanel && phone) act = null;
+    for (var j = 0; j < all.length; j++) if (all[j] !== act && !all[j].paused) all[j].pause();
+    if (act && act !== this._activeV) this.playWithSound(act);
+    this._activeV = act;
+  }
+  vsnap() {
+    this._atPanel = false;
+    if (window.innerWidth >= 1000) return;
+    var el = document.getElementById('lb-wrap'); if (!el) return;
+    var sl = el.querySelectorAll('.lb-vslide'), c = sl[this.state.lb];
+    el.style.scrollSnapType = 'none'; el.scrollTop = c ? Math.max(0, c.offsetTop - 5) : 0; el.style.scrollSnapType = '';
+  }
+  slideLeft(el, i) {
+    var sl = el.querySelectorAll('.lb-slide'); var c = sl[i]; if (!c) return 0;
+    if (window.innerWidth >= 1000) return Math.max(0, c.offsetLeft + c.offsetWidth / 2 - el.clientWidth / 2);
+    return c.offsetLeft - (parseFloat(getComputedStyle(el).paddingLeft) || 0);
+  }
+  resnap(behavior, fromLb) {
+    var el = document.getElementById('lb-track');
+    if (!el || !el.clientWidth || this.state.lb < 0) return;
+    var self = this, off = this.loopOff || 0, idx = this.state.lb + off, after = null;
+    var pc = off ? (el.querySelectorAll('.lb-slide').length - 1) / 2 : el.querySelectorAll('.lb-slide').length;
+    // по кругу: с последнего вперёд едем на копию первого, с первого назад — на копию последнего,
+    // а потом незаметно перескакиваем на настоящее фото
+    if (behavior === 'smooth' && off && typeof fromLb === 'number') {
+      if (this.dir === 1 && fromLb === pc - 1 && this.state.lb === 0) { idx = pc + 1; after = 1; }
+      else if (this.dir === -1 && fromLb === 0 && this.state.lb === pc - 1) { idx = 0; after = pc; }
+    }
+    this.dir = 0;
+    // далёкий переход (клик по миниатюре через несколько фото): не прокручиваем через все фото,
+    // а мягко растворяем и показываем нужное — без мелькания промежуточных кадров
+    if (behavior === 'smooth' && after === null && typeof fromLb === 'number' && Math.abs(idx - (fromLb + off)) > 1) {
+      cancelAnimationFrame(this.raf); this.animating = true;
+      el.style.transition = 'opacity .22s ease'; el.style.opacity = '0';
+      setTimeout(function () {
+        self.markSlides(el, idx, true);
+        el.style.scrollSnapType = 'none'; el.scrollLeft = self.slideLeft(el, idx); el.style.scrollSnapType = '';
+        el.style.opacity = '1';
+        setTimeout(function () { self.animating = false; el.style.transition = ''; }, 240);
+      }, 230);
+      return;
+    }
+    if (behavior !== 'smooth') { cancelAnimationFrame(this.raf); this.animating = false; this.markSlides(el, idx, true); el.scrollLeft = this.slideLeft(el, idx); return; }
+    this.markSlides(el, idx, false);
+    this.animateTo(el, this.slideLeft(el, idx), function () {
+      if (after !== null) { self.markSlides(el, after, true); el.style.scrollSnapType = 'none'; el.scrollLeft = self.slideLeft(el, after); el.style.scrollSnapType = ''; }
+    });
+  }
+  // REELS на ПК: текущее видео по центру, слева пусто, следующие справа затемнены
+  markSlides(el, idx, instant) {
+    var reels = this.state.lbZone === '__reels', sl = el.querySelectorAll('.lb-slide');
+    if (instant) el.classList.add('rs-nt');
+    for (var i = 0; i < sl.length; i++) {
+      sl[i].classList.toggle('rs-prev', reels && i < idx);
+      sl[i].classList.toggle('rs-next', reels && i > idx);
+      sl[i].classList.toggle('rs-dim', !reels && i !== idx);
+    }
+    if (instant) { void el.offsetWidth; requestAnimationFrame(function () { el.classList.remove('rs-nt'); }); }
+  }
+  // плавная прокрутка с мягким разгоном и торможением
+  animateTo(el, left, done) {
+    left = Math.round(left);
+    var self = this, start = el.scrollLeft, dist = left - start, t0 = null;
+    cancelAnimationFrame(this.raf);
+    if (Math.abs(dist) < 1) { if (done) done(); return; }
+    var dur = Math.min(1000, 550 + Math.abs(dist) * 0.2);
+    var ease = function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+    this.animating = true; el.style.scrollSnapType = 'none';
+    var step = function (ts) {
+      if (t0 === null) t0 = ts;
+      var pr = Math.min(1, (ts - t0) / dur);
+      el.scrollLeft = start + dist * ease(pr);
+      if (pr < 1) self.raf = requestAnimationFrame(step);
+      else { el.style.scrollSnapType = ''; self.animating = false; if (done) done(); }
+    };
+    this.raf = requestAnimationFrame(step);
+  }
+
+  plural(n, one, few, many) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
+  }
+
+  renderVals() {
+    var self = this, pr = this.project();
+    var pad = function (x) { return (x < 10 ? '0' : '') + x; };
+    var f = 'all';
+    var multi = pr.zones.length > 1;
+    if (f !== 'all' && !pr.zones.some(function (z) { return z.name === f; })) f = 'all';
+
+    // разная высота плиток — эффект Pinterest, даже если все фото одной пропорции
+    var ratios = ['4 / 5', '3 / 4', '1 / 1', '4 / 5', '2 / 3', '5 / 6', '3 / 4', '4 / 5'];
+    var poses = ['center', 'center 40%', 'center 65%', 'center', 'center 55%', 'center 35%'];
+
+    var lbList = [];
+    var pins = [];
+    var openAt = function (k) { return function () { self.setState({ lb: 0, lbStart: k, lbZone: null }); }; };
+    var gi = 0;
+    var videos = (pr.videos && pr.videos.length) ? pr.videos : (pr.video ? [pr.video] : []);
+    var mkVideo = function (v, vi) { var src = v.src || v; return { isVideo: true, src: src, poster: v.poster || self.poster, open: function () { self.setState({ lb: 0, lbStart: vi || 0, lbZone: '__reels' }); } }; };
+    if (videos.length && f === 'all') pins.push(mkVideo(videos[0], 0));
+
+    pr.zones.forEach(function (z, zi) {
+      if (f !== 'all' && z.name !== f) return;
+      var n = z.photos.length;
+      z.photos.forEach(function (src, pi) {
+        var k = lbList.length;
+        lbList.push({ src: src, zone: z.name, text: z.text || '', price: z.price || '', korpus: z.korpus, fasady: z.fasady, furn: z.furn, count: z.photos.length });
+        pins.push({ isPhoto: true, src: src, zone: z.name, ratio: ratios[gi % ratios.length], pos: poses[gi % poses.length], open: function () { self.setState({ lb: 0, lbStart: pi, lbZone: z.name }); } });
+        gi++;
+      });
+      // видео с тегом этого изделия — в карусель просмотра, следом за фото
+      (z.videos || []).forEach(function (v) {
+        lbList.push({ src: v.src, poster: v.poster || '', isVideo: true, zone: z.name, text: z.text || '', price: z.price || '', korpus: z.korpus, fasady: z.fasady, furn: z.furn, count: z.photos.length });
+      });
+    });
+
+    // остальные видео — равномерно по ленте (второе из двух — ровно в середину)
+    if (f === 'all' && videos.length > 1) {
+      var nPh = pins.length - 1;
+      for (var vi = 1; vi < videos.length; vi++) {
+        var vpos = 1 + Math.round(vi * nPh / videos.length) + (vi - 1);
+        pins.splice(Math.min(vpos, pins.length), 0, mkVideo(videos[vi], vi));
+      }
+    }
+    // карточки с текстом: «о проекте» — ближе к началу, заявка — в конце
+    // мало фото (фильтр по зоне или маленький проект): ровный ряд одинаковых плиток,
+    // без текстовых карточек — заявка уходит в полосу под фото
+    var small = lbList.length <= 4;
+    var mobile = (this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440)) < 760;
+    if (small) pins.forEach(function (pn) { if (pn.isPhoto) { pn.ratio = (pr.video && f === 'all') ? '9 / 16' : '4 / 5'; pn.pos = 'center'; } });
+    if (f === 'all' && !small && !mobile) pins.splice(Math.min(pins.length, multi ? 4 : 1), 0, { isAbout: true });
+    if (!small && !mobile && f === 'all') pins.push({ isCta: true });
+
+    // число колонок зависит от количества плиток — мало фото не дают пустых колонок
+    // высота плитки задаётся через padding-top в % от ширины — одинаково работает во всех браузерах, включая iPhone
+    pins.forEach(function (pn) { if (pn.isPhoto) { var r = pn.ratio.split('/'); pn.padTop = (parseFloat(r[1]) / parseFloat(r[0]) * 100).toFixed(2) + '%'; } });
+    var np = pins.length;
+    var cols = small ? np : (np <= 2 ? 2 : np <= 4 ? 3 : 4);
+    var vw = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
+    if (vw < 760) cols = Math.min(cols, 2); else if (vw < 1100) cols = Math.min(cols, 3);
+    cols = Math.max(1, Math.min(cols, np));
+    var maxW = small
+      ? { 1: '820px', 2: '1120px', 3: '1400px', 4: '1400px' }[cols]
+      : { 1: '640px', 2: '900px', 3: '1400px', 4: '1920px', 5: '1920px' }[cols];
+
+    // раскладка по колонкам: каждую плитку кладём в самую короткую колонку,
+    // а фото внутри колонки растягиваются, чтобы все колонки кончались на одном уровне
+    var est = function (pn) {
+      if (pn.isPhoto) { var r = pn.ratio.split('/'); return parseFloat(r[1]) / parseFloat(r[0]); }
+      if (pn.isVideo) return 16 / 9;
+      if (pn.isAbout) return 1.35;
+      if (pn.isCta) return 0.8;
+      if (pn.isPromo) return 1.25;
+      return 1;
+    };
+    var columns = [];
+    for (var ci = 0; ci < cols; ci++) columns.push({ pins: [], h: 0 });
+    // агитационный блок: всегда в левой колонке, по центру ленты — место под него резервируем заранее
+    var SHOW_PROMO = false; // агитационный блок пока выключен; true — вернуть
+    var promo = (SHOW_PROMO && f === 'all' && !small && cols > 1) ? { isPromo: true } : null;
+    if (promo) columns[0].h += est(promo) + 0.06;
+    pins.forEach(function (pn) {
+      var best = columns[0];
+      columns.forEach(function (c) { if (c.h < best.h - 0.001) best = c; });
+      best.pins.push(pn); best.h += est(pn) + 0.06;
+    });
+    // колонка без фото не может растянуться — отдаём ей фото из самой высокой колонки
+    columns.forEach(function (c) {
+      if (c.pins.some(function (x) { return x.isPhoto; })) return;
+      var donor = columns.slice().sort(function (a, b) { return b.h - a.h; })[0];
+      if (donor.pins.filter(function (x) { return x.isPhoto; }).length < 2) return;
+      for (var di = donor.pins.length - 1; di >= 0; di--) if (donor.pins[di].isPhoto) { c.pins.unshift(donor.pins.splice(di, 1)[0]); break; }
+    });
+    if (promo) columns[0].pins.splice(Math.floor(columns[0].pins.length / 2), 0, promo);
+    columns = columns.filter(function (c) { return c.pins.length > 0; });
+
+    var chips = [].concat(pr.zones.map(function (z) { return { name: z.name, key: z.name, count: z.photos.length + (z.videos || []).length }; }));
+    if (videos.length) chips.unshift({ name: 'REELS', key: '__reels', count: videos.length });
+    var total = pr.zones.reduce(function (s, z) { return s + z.photos.length; }, 0);
+    chips = chips.map(function (c) {
+      if (c.key === 'all') c.count = total;
+      var on = false;
+      return { name: c.name, count: c.count, pressed: on ? 'true' : 'false', bg: on ? (self.props.accent ?? '#bfd630') : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setState({ lbZone: c.key, lb: 0, lbStart: 0 }); } };
+    });
+
+    // полноэкранный просмотр: вся лента или только выбранная зона
+    var lz = this.state.lbZone || null;
+    var isReels = lz === '__reels';
+    var view = isReels ? videos.map(function (v) { return { src: v.src || v, poster: v.poster || self.poster, isVideo: true, zone: 'REELS', text: '', price: '', korpus: '', fasady: '', furn: '', count: videos.length }; })
+      : lz ? lbList.filter(function (x) { return x.zone === lz; }) : lbList;
+    if (!view.length) view = lbList;
+    // фото, по которому кликнули в ленте, всегда идёт первым; остальные — следом по кругу
+    var st = (this.state.lbStart || 0) % view.length;
+    if (st > 0) view = view.slice(st).concat(view.slice(0, st));
+    var pc = view.length, li = this.state.lb >= 0 ? this.state.lb % pc : 0;
+    var zc = pr.zones.length;
+    return {
+      accent: this.props.accent ?? '#bfd630',
+      title: pr.title,
+      hasRenders: false, // блок рендеров выключен
+      // ряды «рендер + реализация»: на ПК по два изделия в ряд, на телефоне по одному; в ряду все фото одной высоты
+      // рендеры одной лентой вправо: все одной высоты, ширина — по пропорциям картинки
+      renderItems: (pr.renders || []).filter(function (r) { return !!r.render; }).map(function (r) {
+        var ratio = (self.ratios || {})[r.render] || 0.75;
+        return { src: (self.mem && self.mem[r.render]) || r.render, label: 'Рендер · ' + r.zone, ar: '1 / ' + ratio.toFixed(4),
+          measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[r.render]) return; self.ratios[r.render] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); } };
+      }),
+      rrPrev: function () { var el = document.getElementById('rr-strip'); if (el) el.scrollBy({ left: -el.clientWidth * 0.8, behavior: 'smooth' }); },
+      rrNext: function () { var el = document.getElementById('rr-strip'); if (el) el.scrollBy({ left: el.clientWidth * 0.8, behavior: 'smooth' }); },
+      promoImg: this.P.l2, promoLink: '#',
+      priceDate: pr.priceDate || 'октябрь 2026',
+      hasDesigner: !!pr.designer,
+      designer: pr.designer || { name: '', face: '', photo: '' },
+      zonesLine: zc + ' ' + this.plural(zc, 'зона', 'зоны', 'зон'),
+      photosLine: total + ' фото' + (videos.length > 1 ? ' + ' + videos.length + ' видео' : videos.length ? ' + видео' : ''),
+      multiZone: multi, singleZone: !multi,
+      chips: chips, pins: pins, cols: cols, maxW: maxW, columns: columns, small: (small || mobile) && f === 'all', showBandTop: small && !mobile, showBandBottom: mobile,
+      video: pr.video || '', poster: this.poster,
+      vOpen: !!this.state.vOpen, videoFull: this.state.vOpen ? ((this.vurls || {})[this.state.vOpen] || this.state.vOpen) : '',
+      closeVideo: function () { self.setState({ vOpen: false }); },
+      lbOpen: this.state.lb >= 0,
+      lb: { src: view[li].src, zone: view[li].zone, text: view[li].text, price: view[li].price, korpus: view[li].korpus, fasady: view[li].fasady, furn: view[li].furn, zoneCount: view[li].count + ' фото', pos: pc > 1 ? (li + 1) + ' / ' + pc : '1 фото' },
+      lbMulti: pc > 1,
+      isReels: isReels, panelCls: isReels ? 'lb-hide' : '', trackCls: isReels ? 'lb-reels' : '',
+      lbH: (function () { var r = (self.ratios || {})[view[li].src] || 1.25; return (r * 100).toFixed(2) + 'vw'; })(),
+      // бесконечный слайдер: по краям стоят копии последнего и первого фото,
+      // и когда свайп на них останавливается, лента незаметно перескакивает на настоящее фото
+      lbLoop: (function () {
+        var base = view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || p.src), isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) return; self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); setTimeout(function () { self.resnap('auto'); }, 0); } }; });
+        self.loopOff = pc > 1 ? 1 : 0;
+        // после последнего фото — полная копия набора, чтобы справа всегда «подглядывало» следующее фото, а не пустота
+        return pc > 1 ? [base[pc - 1]].concat(base, base) : base;
+      })(),
+      // ПК: колесо и тачпад листают ровно на одно фото
+      // телефон: какое фото сейчас на экране — для счётчика
+      vScroll: function (e) {
+        if (window.innerWidth >= 1000) return;
+        var el = e.currentTarget, sl = el.querySelectorAll('.lb-vslide'), k = 0;
+        for (var i = 0; i < sl.length; i++) if (sl[i].offsetTop <= el.scrollTop + el.clientHeight * 0.4) k = i;
+        if (k !== li && k < pc) { self.fromScroll = true; self.setState({ lb: k }); }
+        // долистали до описания — видео на паузу; вернулись к фото — снова играет
+        var panel = el.querySelector('.lb-panel');
+        var atPanel = !!panel && panel.offsetParent !== null && el.scrollTop + el.clientHeight * 0.5 >= panel.offsetTop;
+        if (atPanel && !self._atPanel) {
+          self._atPanel = true; self._activeV = null;
+          var vv = el.querySelectorAll('video[data-lb]'); for (var j = 0; j < vv.length; j++) if (!vv[j].paused) vv[j].pause();
+        } else if (!atPanel && self._atPanel) { self._atPanel = false; self.syncVideos(); }
+      },
+      // своё управление видео: клик — пауза/запуск, кнопка звука в правом верхнем углу
+      // полоса проигрывания: показывает ход видео, тап/перетаскивание — перемотка
+      vTime: function (e) {
+        var v = e.currentTarget, f = v.parentElement && v.parentElement.querySelector('.v-fill');
+        if (f && v.duration) f.style.width = (v.currentTime / v.duration * 100).toFixed(2) + '%';
+      },
+      vSeekDown: function (e) { e.stopPropagation(); self._seek = true; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} self.seekTo(e); },
+      vSeekMove: function (e) { if (self._seek) self.seekTo(e); },
+      vSeekUp: function () { self._seek = false; },
+      vClick: function (e) { var v = e.currentTarget; if (v.paused) { var pp = v.play(); if (pp && pp.catch) pp.catch(function () {}); } else v.pause(); },
+      vSnd: function (e) {
+        e.stopPropagation();
+        var v = e.currentTarget.parentElement.querySelector('video'); if (!v) return;
+        v.muted = !v.muted; if (!v.muted && v.paused) { var pp = v.play(); if (pp && pp.catch) pp.catch(function () {}); }
+      },
+      vEv: function (e) {
+        var v = e.currentTarget, k = v.getAttribute('data-k') || '';
+        var st = Object.assign({}, self.state.vst || {}); var cur = st[k] || {};
+        if (cur.p === v.paused && cur.m === v.muted) return;
+        st[k] = { p: v.paused, m: v.muted }; self.setState({ vst: st });
+      },
+      vf: (function () { var c = (self.state.vst || {})['full'] || { p: false, m: false }; return { sndOn: !c.m, sndOff: !!c.m, paused: !!c.p }; })(),
+      lbWheel: function (e) {
+        if (window.innerWidth < 1000 || pc < 2) return;
+        var dlt = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        if (Math.abs(dlt) < 12) return;
+        var now = Date.now(); if (self._wt && now - self._wt < 700) return; self._wt = now;
+        self.dir = dlt > 0 ? 1 : -1; self.setState({ lb: dlt > 0 ? (li + 1) % pc : (li - 1 + pc) % pc });
+      },
+      lbScroll: function (e) {
+        var el = e.currentTarget; if (!el.clientWidth || self.animating) return;
+        var off = pc > 1 ? 1 : 0;
+        var nearest = function () {
+          var sl = el.querySelectorAll('.lb-slide'), pad = parseFloat(getComputedStyle(el).paddingLeft) || 0, best = 1e9, kk = 0;
+          for (var i = 0; i < sl.length; i++) { var d = Math.abs(self.slideLeft(el, i) - el.scrollLeft); if (d < best) { best = d; kk = i; } }
+          return kk;
+        };
+        var k = nearest();
+        var real = ((k - off) % pc + pc) % pc;
+        if (real !== li) { self.fromScroll = true; self.setState({ lb: real }); }
+        clearTimeout(self.loopT);
+        self.loopT = setTimeout(function () {
+          var kk = nearest();
+          if (off && (kk === 0 || kk >= pc + 1)) {
+            el.style.scrollSnapType = 'none';
+            el.scrollLeft = self.slideLeft(el, kk === 0 ? pc : kk - pc);
+            el.style.scrollSnapType = '';
+          }
+        }, 140);
+      },
+      lbList: view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) return; self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); }, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || p.src), ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, op: k === li ? '1' : '0.45', ring: k === li ? '2px solid ' + (self.props.accent ?? '#bfd630') : 'none', open: function () { if (k === li) return; self.dir = (k === (li + 1) % pc) ? 1 : (k === (li - 1 + pc) % pc) ? -1 : 0; self.setState({ lb: k }); } }; }),
+      closeLb: function () { self.setState({ lb: -1, lbZone: null, lbStart: 0 }); },
+      lbPrev: function () { self.dir = -1; self.setState({ lb: (li - 1 + pc) % pc }); },
+      lbNext: function () { self.dir = 1; self.setState({ lb: (li + 1) % pc }); }
+    };
+  }
+}
+</script>
+<a id="to-portfolio" href="portfolio.html" aria-label="Закрыть проект и вернуться в портфолио" style="position:fixed;top:14px;right:14px;z-index:40;width:44px;height:44px;border-radius:50%;background:rgba(40,36,32,0.85);color:#f4f1ec;display:flex;align-items:center;justify-content:center;text-decoration:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+<style>@media (min-width:1000px){#to-portfolio{top:24px !important;right:24px !important}}@media (max-width:999px){h1.ttl{padding:0 48px;box-sizing:border-box}}</style>
+<script>
+// крестик: если пришли из портфолио — возвращаемся назад (с тем же местом прокрутки), иначе открываем портфолио
+document.getElementById('to-portfolio').addEventListener('click', function (e) {
+  try { var r = document.referrer; if (r && new URL(r).origin === location.origin && /portfolio\.html/.test(r) && history.length > 1) { e.preventDefault(); history.back(); } } catch (err) {}
+});
+</script>
+</body>
+</html>
