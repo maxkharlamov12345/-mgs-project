@@ -19,6 +19,9 @@ body{margin:0;background:#0f0e0c}
 a{color:#f4f1ec}a:hover{color:#bfd630}
 .pin{display:block;margin:0}
 .pin-img{transition:transform .5s ease, filter .3s ease}
+/* видео-плитки: под видео — картинка его первого кадра; видео проявляется только когда показало кадр (Safari иначе мигает чёрным) */
+.feed-v{opacity:0;transition:opacity .2s ease}
+.feed-v.ready{opacity:1}
 .pin-btn:hover .pin-img{transform:scale(1.035);filter:brightness(.82)}
 .pin-meta{opacity:0;transition:opacity .25s ease}
 .pin-btn:hover .pin-meta,.pin-btn:focus-visible .pin-meta{opacity:1}
@@ -186,7 +189,8 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <!-- видео -->
         <sc-if value="{{p.isVideo}}" hint-placeholder-val="{{ false }}">
           <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
-            <video data-src="{{p.src}}" poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+            <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
+            <video class="feed-v" data-src="{{p.src}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
             <span style="position: absolute; left: 12px; top: 12px; height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
             <button onClick="{{p.open}}" aria-label="Открыть REELS" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer">
               <span style="position: absolute; right: 12px; top: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
@@ -346,7 +350,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
               </sc-if>
               <sc-if value="{{t.isVideo}}" hint-placeholder-val="{{ false }}">
                 <div style="position: relative; height: 100%">
-                  <video class="lb-slide-img" src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" style="aspect-ratio: {{t.ar}}; background: #000; cursor: pointer"></video>
+                  <video class="lb-slide-img" src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" style="aspect-ratio: {{t.ar}}; background: #000 url('{{t.pt}}') center / cover no-repeat; cursor: pointer"></video>
                   <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{t.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{t.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{t.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
                   <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
                 </div>
@@ -373,7 +377,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             </sc-if>
             <sc-if value="{{t.isVideo}}" hint-placeholder-val="{{ false }}">
               <div style="position: relative">
-                <video src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" class="lb-vvid" style="display: block; width: 100%; object-fit: cover; background: #000; border-radius: 10px; cursor: pointer"></video>
+                <video src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" class="lb-vvid" style="display: block; width: 100%; object-fit: cover; background: #000 url('{{t.pt}}') center / cover no-repeat; border-radius: 10px; cursor: pointer"></video>
                 <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{t.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{t.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{t.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
                 <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
               </div>
@@ -529,17 +533,27 @@ class Component extends DCLogic {
     };
     run(); run(); run();
   }
+  // картинка под видео-плиткой = первый кадр её 10-секундного превью (<имя>-preview → assets/t/<имя>-preview.webp)
+  reelPoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') ? src.replace(/\.mp4$/, '-preview.mp4').replace(/(-preview)+\.mp4$/, '-preview.webp').replace('assets/', 'assets/t/') : this.thumb(fallback); }
   // лёгкое превью для плитки ленты (640px WebP, делает tools/make_thumbs.py)
   thumb(src) { return /^assets\/[^/]+\.(jpg|webp)$/.test(src || '') ? src.replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : src; }
   // на сайте показываем WebP-копии фото (на ~45% легче JPEG), JPEG остаётся исходником
   // полные фото в просмотре — оригинальные JPEG (WebP Максу заметно мутнее); WebP только у превью ленты (thumb())
   webp(v) { return v; }
   componentDidMount() {
+    // видео-плитка проявляется только когда у видео есть кадр; сбросили источник — снова прячем (под ним картинка)
+    document.addEventListener('loadeddata', function (e) { var v = e.target; if (v.classList && v.classList.contains('feed-v')) v.classList.add('ready'); }, true);
+    document.addEventListener('playing', function (e) { var v = e.target; if (v.classList && v.classList.contains('feed-v')) v.classList.add('ready'); }, true);
+    document.addEventListener('emptied', function (e) { var v = e.target; if (v.classList && v.classList.contains('feed-v')) v.classList.remove('ready'); }, true);
     // когда первый экран загрузился — тихо, по одному, докачиваем полные фото проекта: просмотр открывается уже с готовыми фото
     var me = this, bg = function () { setTimeout(function () {
       // по изделиям в порядке ленты: сначала три фото, видные в слайдере при открытии (главное, второе, последнее), потом остальные
       var pri = [], rest = []; try { (me.project().zones || []).forEach(function (z) { var ps = z.photos || []; if (!ps.length) return;
         pri.push(ps[0]); if (ps.length > 1) pri.push(ps[1]); if (ps.length > 2) pri.push(ps[ps.length - 1]); rest = rest.concat(ps); }); } catch (e) {}
+      // маленькие заставки всех видео — сразу, чтобы в просмотре под видео была картинка, а не чёрный экран
+      try { var pr0 = me.project(), L = []; (pr0.videos || []).forEach(function (v) { L.push((v && v.poster) || me.poster); });
+        (pr0.zones || []).forEach(function (z) { (z.videos || []).forEach(function (v) { L.push((v && v.poster) || me.poster); }); });
+        me._pk = []; L.forEach(function (x, i) { if (!x || L.indexOf(x) !== i) return; var im = new Image(); im.src = me.thumb(x); me._pk.push(im); }); } catch (e) {}
       me.preloadPhotos(pri.concat(rest), 1); }, 800); };
     if (document.readyState === 'complete') bg(); else window.addEventListener('load', bg);
     var self = this;
@@ -774,7 +788,7 @@ class Component extends DCLogic {
     var openAt = function (k) { return function () { self.setState({ lb: 0, lbStart: k, lbZone: null }); }; };
     var gi = 0;
     var videos = (pr.videos && pr.videos.length) ? pr.videos : (pr.video ? [pr.video] : []);
-    var mkVideo = function (v, vi) { var src = v.src || v; return { isVideo: true, src: src, poster: self.thumb(v.poster || self.poster), open: function () { self.setState({ lb: 0, lbStart: vi || 0, lbZone: '__reels' }); } }; };
+    var mkVideo = function (v, vi) { var src = v.src || v; return { isVideo: true, src: src, poster: self.thumb(v.poster || self.poster), ph: self.reelPoster(src, v.poster || self.poster), open: function () { self.setState({ lb: 0, lbStart: vi || 0, lbZone: '__reels' }); } }; };
     if (videos.length && f === 'all') pins.push(mkVideo(videos[0], 0));
 
     pr.zones.forEach(function (z, zi) {
@@ -904,7 +918,7 @@ class Component extends DCLogic {
       // бесконечный слайдер: по краям стоят копии последнего и первого фото,
       // и когда свайп на них останавливается, лента незаметно перескакивает на настоящее фото
       lbLoop: (function () {
-        var base = view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) { self.snapSoon(); return; } self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); setTimeout(function () { self.resnap('auto'); }, 0); } }; });
+        var base = view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster ? self.thumb(p.poster) : '', pt: p.poster ? self.thumb(p.poster) : '', ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) { self.snapSoon(); return; } self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); setTimeout(function () { self.resnap('auto'); }, 0); } }; });
         self.loopOff = pc > 1 ? 1 : 0;
         // после последнего фото — полная копия набора, чтобы справа всегда «подглядывало» следующее фото, а не пустота
         return pc > 1 ? [base[pc - 1]].concat(base, base) : base;
@@ -974,7 +988,7 @@ class Component extends DCLogic {
           }
         }, 140);
       },
-      lbList: view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) { self.snapSoon(); return; } self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); }, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, op: k === li ? '1' : '0.45', ring: k === li ? '2px solid ' + (self.props.accent ?? '#bfd630') : 'none', open: function () { if (k === li) return; self.dir = (k === (li + 1) % pc) ? 1 : (k === (li - 1 + pc) % pc) ? -1 : 0; self.setState({ lb: k }); } }; }),
+      lbList: view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster ? self.thumb(p.poster) : '', pt: p.poster ? self.thumb(p.poster) : '', measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) { self.snapSoon(); return; } self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); }, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, op: k === li ? '1' : '0.45', ring: k === li ? '2px solid ' + (self.props.accent ?? '#bfd630') : 'none', open: function () { if (k === li) return; self.dir = (k === (li + 1) % pc) ? 1 : (k === (li - 1 + pc) % pc) ? -1 : 0; self.setState({ lb: k }); } }; }),
       closeLb: function () { self.setState({ lb: -1, lbZone: null, lbStart: 0 }); },
       lbPrev: function () { self.dir = -1; self.setState({ lb: (li - 1 + pc) % pc }); },
       lbNext: function () { self.dir = 1; self.setState({ lb: (li + 1) % pc }); }

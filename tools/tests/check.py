@@ -15,6 +15,7 @@
   one-video    телефон, REELS/Комплекс: одновременно играет не больше одного видео (было: играли все)
   after-viewer после просмотра изделия видео в «Комплексе» и REELS на месте (было: чёрные плитки)
   slider       медленный интернет: соседние фото в просмотре не перестраиваются, пока грузятся (было: «менялись»)
+  video-cover  у каждого видео есть подложка-картинка: в ленте (vid-ph) и в просмотре (фон под видео) — иначе Safari мигает чёрным
   ready        фоновая докачка: через несколько секунд на ленте все фото в просмотре уже готовы (даже без сети),
                в т.ч. у изделий, до которых пролистали (докачка идёт от экрана)
 """
@@ -197,6 +198,22 @@ async def check_ready(b, base):
     report('ready', not bad, 'не готовы: ' + ', '.join(bad) if bad else '')
 
 
+async def check_video_cover(b, base):
+    bad = []
+    for u in ['index.html', 'project-2.html', 'portfolio.html#REELS', 'portfolio.html']:
+        ctx = await b.new_context(**DESK); pg = await ctx.new_page()
+        await pg.goto(base + u); await pg.wait_for_timeout(2500)
+        n = await pg.evaluate("[...document.querySelectorAll('.pin video')].filter(v=>{const i=v.parentElement.querySelector('img.vid-ph');return !i||!(i.getAttribute('src')||'').length}).length")
+        if n: bad.append('%s: %d видео-плиток без картинки под видео' % (u, n))
+        op = pg.locator('button[aria-label="Открыть REELS"], .feed .pin-btn')
+        if 'Комплекс' not in u and u != 'portfolio.html' and await op.count():
+            await op.first.click(); await pg.wait_for_timeout(1500)
+            n2 = await pg.evaluate("[...document.querySelectorAll('#lb-wrap video')].filter(v=>!/url\\(/.test(getComputedStyle(v).backgroundImage)).length")
+            if n2: bad.append('%s: %d видео в просмотре без заставки-фона' % (u, n2))
+        await ctx.close()
+    report('video-cover', not bad, ', '.join(bad))
+
+
 async def main():
     from playwright.async_api import async_playwright
     s = socket.socket(); s.bind(('127.0.0.1', 0)); port = s.getsockname()[1]; s.close()
@@ -213,6 +230,7 @@ async def main():
             await check_feeds(b, base)
             await check_one_video(b, base)
             await check_after_viewer(b, base)
+            await check_video_cover(b, base)
             if not QUICK:
                 await check_slider(b, base)
                 await check_ready(b, base)
