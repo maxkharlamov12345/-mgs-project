@@ -864,6 +864,28 @@ class Component extends DCLogic {
       }).catch(function () {});
     });
   }
+  // Фоновая докачка полных фото изделий открытой ленты (как на страницах проектов): когда плитки на экране
+  // загрузились, по одному качаем сначала первое фото каждого изделия по порядку ленты, потом остальные.
+  // Только прогреваем кэш браузера (в памяти не держим — в ленте могут быть сотни работ); при открытии просмотра
+  // фото берётся из кэша мгновенно. Пока грузятся плитки/видео ленты — ждём. Режим экономии трафика — не качаем.
+  bgPhotos() {
+    var self = this; clearTimeout(this._bgT);
+    try { var cn = navigator.connection; if (cn && (cn.saveData || /2g/.test(cn.effectiveType || ''))) return; } catch (e) {}
+    if (!window.fetch) return;
+    var step = function () {
+      if (self._feedPhotosFor !== self.state.filter) return;
+      var lists = self._feedPhotos || [], q = [], seen = self._warm = self._warm || {}, mem = self.mem || {};
+      lists.forEach(function (ps) { if (ps[0]) q.push(ps[0]); });
+      lists.forEach(function (ps) { q = q.concat(ps.slice(1)); });
+      q = q.filter(function (x) { return x && !seen[x] && !mem[x] && x.indexOf('data:') !== 0; });
+      if (!q.length) return;
+      if (Object.keys(self._loading || {}).length || self._vBusy || document.hidden) { self._bgT = setTimeout(step, 600); return; }
+      var src = q[0]; seen[src] = 1;
+      var next = function () { self._bgT = setTimeout(step, 30); };
+      fetch(src).then(function (r) { return r.arrayBuffer(); }).then(next, next);
+    };
+    this._bgT = setTimeout(step, 1000);
+  }
   // полные видео тихо докачиваем в фоне — в просмотре они играют без задержек
   preloadVideos() {
     var self = this, list = this.data().videos.filter(function (s) { return s.indexOf('data:') !== 0; }); if (!window.fetch) return;
@@ -922,6 +944,7 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
   componentDidUpdate() {
+    if (this._bgFor !== this.state.filter) { this._bgFor = this.state.filter; this.bgPhotos(); }
     // открыли просмотр изделия — подгружаем в память только его фото (листание без вспышек)
     var lz = this.state.lbZone || '';
     if (lz !== this._lzPre) { this._lzPre = lz; if (lz.indexOf('item:') === 0) { var it = this.data().byKey[lz.slice(5)]; if (it) this.preloadPhotos(it.photos); } }
@@ -1212,8 +1235,10 @@ class Component extends DCLogic {
         pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '', ph: pr.coverPoster || '' });
       });
     } else {
+      self._feedPhotos = []; self._feedPhotosFor = f;
       D.items.forEach(function (it) {
         if (it.type !== f || !it.photos.length) return;
+        self._feedPhotos.push(it.photos);
         pins.push({ isPhoto: true, src: self.thumb(it.photos[0]), label: it.name, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
       });
     }

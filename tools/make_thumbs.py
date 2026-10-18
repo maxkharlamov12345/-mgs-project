@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Лёгкие копии фото для сайта (делает только недостающие / устаревшие):
-  assets/<имя>.webp    — то же фото в WebP (q76): на сайте показываем его, JPEG остаётся исходником;
+  assets/<имя>.webp    — то же фото в WebP (q85, почти как исходник): на сайте показываем его, JPEG остаётся исходником;
   assets/t/<имя>.webp  — превью для плиток ленты, 640px по ширине, q72.
-WebP на ~45% легче JPEG того же качества (iPhone — с iOS 14).
+Полные фото — на ~20% легче JPEG при том же качестве, превью — на ~45% (iPhone — с iOS 14).
 Запускать после добавления новых фото: python3 tools/make_thumbs.py"""
 import os, glob
 from PIL import Image
@@ -19,7 +19,7 @@ for f in sorted(glob.glob('assets/*.jpg')):
         continue
     im = Image.open(f).convert('RGB')
     if not fresh(full, f):
-        im.save(full, 'WEBP', quality=76, method=6); n += 1
+        im.save(full, 'WEBP', quality=85, method=6); n += 1
     if not fresh(th, f):
         s = im.resize((640, round(im.height * 640 / im.width)), Image.LANCZOS) if im.width > 640 else im
         s.save(th, 'WEBP', quality=72, method=6); t += 1
