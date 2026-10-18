@@ -190,7 +190,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
               <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
-                <video class="pin-img" data-src="{{p.video}}" data-poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+                <video class="pin-img" data-src="{{p.video}}" data-poster="{{p.poster}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
               </sc-if>
               <sc-if value="{{p.noVideo}}" hint-placeholder-val="{{ true }}">
                 <span class="cx-blank" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #26221f"></span>
@@ -207,7 +207,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <!-- рилс: открывает режим REELS, как на странице проекта -->
         <sc-if value="{{p.isVideo}}" hint-placeholder-val="{{ false }}">
           <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
-            <video data-src="{{p.src}}" poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+            <video data-src="{{p.src}}" poster="{{p.poster}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
             <span style="position: absolute; left: 12px; top: 12px; right: 56px; display: flex; flex-wrap: wrap; gap: 6px">
               <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
               <sc-if value="{{p.hasZone}}" hint-placeholder-val="{{ false }}"><span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px">{{p.zone}}</span></sc-if>
@@ -882,6 +882,12 @@ class Component extends DCLogic {
     };
     document.addEventListener('touchstart', this.onTouchPin, { passive: true });
     document.addEventListener('pointerdown', this.onTouchPin, { passive: true });
+    // страховка: в режимах «одно видео» любое другое видео ленты, которое запустилось само, ставим на паузу
+    this.onAnyPlay = function (e) {
+      var v = e.target; if (!v || v.tagName !== 'VIDEO' || v.getAttribute('data-lb') || !self.slideOn()) return;
+      if (v !== self._focusV && v.closest && v.closest('.feed')) v.pause();
+    };
+    document.addEventListener('play', this.onAnyPlay, true);
     this.ensureVideo();
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
@@ -924,6 +930,7 @@ class Component extends DCLogic {
       if (vis <= 0 || !p.querySelector('video')) return;  // вне экрана или без видео — не в фокусе
       if (vis > bestV + 0.02 || (Math.abs(vis - bestV) <= 0.02 && d < bestD)) { bestV = vis; bestD = d; best = p; } });
     }
+    this._focusV = best ? best.querySelector('video') : null;
     pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return;
       if (p === best) { var dp = v.getAttribute('data-poster'); if (dp && !v.getAttribute('poster')) v.setAttribute('poster', dp);
         var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w;
@@ -971,18 +978,18 @@ class Component extends DCLogic {
               v.preload = 'none';
               if (!self._io) self._io = new IntersectionObserver(function (es) {
                 es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-src') || el.getAttribute('data-want');
-                  if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) { el.src = s; } var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+                  if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) { el.src = s; } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
                   else if (!el.paused) el.pause(); });
               }, { rootMargin: '200px 0px' });
               v.setAttribute('data-want', u); self._io.observe(v); return;
             }
             if (v.getAttribute('src') !== u) { v.src = u; v.load(); }
             if (v === self._activeV) self.playWithSound(v);
-            else if (!v.getAttribute('data-lb')) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+            else if (!v.getAttribute('data-lb') && !self.slideOn()) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
           }).catch(function () {});
         })(v, orig);
       } else {
-        if (!v.getAttribute('data-lb')) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+        if (!v.getAttribute('data-lb') && !self.slideOn()) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
       }
     }
   }
