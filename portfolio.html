@@ -68,6 +68,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
   html.mgs-snap .top-sec{scroll-snap-align:start}
   .feed.slide .pin{flex:none !important;scroll-snap-align:start;scroll-snap-stop:always;padding-top:0 !important;height:min(177.78vw, calc(100svh - 10px))}
   .feed.slide .pin > div[aria-hidden="true"]{display:none}
+  .feed.slide .cx-pin{height:auto;aspect-ratio:4/5}  /* «Комплекс» в 1 ряд — родной формат видео 4:5 */
   .feed.slide .feed-col{gap:10px !important}
   .feed.slide .cx-title{font-size:32px !important}
   .feed.slide .cx-more{font-size:14px !important}
@@ -184,7 +185,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 
         <!-- комплексный проект: ведёт на страницу проекта -->
         <sc-if value="{{p.isLink}}" hint-placeholder-val="{{ false }}">
-          <div class="pin" style="position: relative; flex: {{p.flex}}">
+          <div class="pin cx-pin" style="position: relative; flex: {{p.flex}}">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
