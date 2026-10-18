@@ -794,7 +794,7 @@ class Component extends DCLogic {
     var np = pins.length;
     var cols = small ? np : (np <= 2 ? 2 : np <= 4 ? 3 : 4);
     var vw = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
-    if (vw < 760) cols = Math.min(cols, 2); else if (vw < 1100) cols = Math.min(cols, 3);
+    if (vw < 760) cols = Math.min(cols, window.MGS_ONECOL ? 1 : 2);  // кнопка «1 / 2 в ряд» — assets/feedcols.js else if (vw < 1100) cols = Math.min(cols, 3);
     cols = Math.max(1, Math.min(cols, np));
     var maxW = small
       ? { 1: '820px', 2: '1120px', 3: '1400px', 4: '1400px' }[cols]
@@ -969,5 +969,6 @@ document.getElementById('to-portfolio').addEventListener('click', function (e) {
   try { var r = document.referrer; if (r && new URL(r).origin === location.origin && /portfolio\.html/.test(r) && history.length > 1) { e.preventDefault(); history.back(); } } catch (err) {}
 });
 </script>
+<script src="assets/feedcols.js"></script>
 </body>
 </html>
