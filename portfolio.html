@@ -865,9 +865,8 @@ class Component extends DCLogic {
     });
   }
   // Фоновая докачка полных фото изделий открытой ленты (как на страницах проектов): когда плитки на экране
-  // загрузились, по одному качаем сначала первое фото каждого изделия по порядку ленты, потом остальные.
-  // Только прогреваем кэш браузера (в памяти не держим — в ленте могут быть сотни работ); при открытии просмотра
-  // фото берётся из кэша мгновенно. Пока грузятся плитки/видео ленты — ждём. Режим экономии трафика — не качаем.
+  // загрузились, по одному качаем сначала первое фото каждого изделия по порядку ленты, потом остальные,
+  // и сразу кладём в память для просмотра (mem) — при открытии изделия все его фото (и соседние в слайдере) уже готовы. Пока грузятся плитки/видео ленты — ждём. Режим экономии трафика — не качаем.
   bgPhotos() {
     var self = this; clearTimeout(this._bgT);
     try { var cn = navigator.connection; if (cn && (cn.saveData || /2g/.test(cn.effectiveType || ''))) return; } catch (e) {}
@@ -882,7 +881,10 @@ class Component extends DCLogic {
       if (Object.keys(self._loading || {}).length || self._vBusy || document.hidden) { self._bgT = setTimeout(step, 600); return; }
       var src = q[0]; seen[src] = 1;
       var next = function () { self._bgT = setTimeout(step, 30); };
-      fetch(src).then(function (r) { return r.arrayBuffer(); }).then(next, next);
+      // скачанное сразу отдаём просмотру (как ссылку на файл в памяти) — при открытии изделия все его фото уже на месте
+      fetch(src).then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
+        self.mem = self.mem || {}; if (!self.mem[src]) self.mem[src] = URL.createObjectURL(b);
+        if (self.state.lb >= 0) self.forceUpdate(); next(); }, next);
     };
     this._bgT = setTimeout(step, 1000);
   }
