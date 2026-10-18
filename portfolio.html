@@ -802,8 +802,13 @@ class Component extends DCLogic {
   setMode(on) {
     if (!!this.state.slide === on) return;
     try { localStorage.setItem('mgs-slide', on ? '1' : '0'); } catch (e) {}
-    // без анимации — лента перестраивается сразу (так попросил Макс)
-    this.setState({ slide: on }); try { window.scrollTo(0, 0); } catch (e) {}
+    var self = this, a = this.anim(), E = this.feedEls();
+    var go = function () { self._animIn = a; self.setState({ slide: on }); try { window.scrollTo(0, 0); } catch (e) {} };
+    if (!a || !E.feed || !E.feed.animate) { go(); return; }
+    (this._outA || []).forEach(function (x) { x.cancel(); });
+    this._animIn = null;
+    this._outA = E.pins.map(function (o) { return o.el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }], { duration: 170, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }); });
+    clearTimeout(this._swT); this._swT = setTimeout(go, 170);
   }
   switchFeed(f) {
     var self = this, a = this.anim(), E = this.feedEls();
