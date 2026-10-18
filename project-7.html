@@ -547,7 +547,11 @@ class Component extends DCLogic {
   webp(v) { return v; }
   componentDidMount() {
     // когда первый экран загрузился — тихо, по одному, докачиваем полные фото проекта: просмотр открывается уже с готовыми фото
-    var me = this, bg = function () { setTimeout(function () { me.preloadPhotos([], 1); }, 800); };
+    var me = this, bg = function () { setTimeout(function () {
+      // по изделиям в порядке ленты: сначала три фото, видные в слайдере при открытии (главное, второе, последнее), потом остальные
+      var pri = [], rest = []; try { (me.project().zones || []).forEach(function (z) { var ps = z.photos || []; if (!ps.length) return;
+        pri.push(ps[0]); if (ps.length > 1) pri.push(ps[1]); if (ps.length > 2) pri.push(ps[ps.length - 1]); rest = rest.concat(ps); }); } catch (e) {}
+      me.preloadPhotos(pri.concat(rest), 1); }, 800); };
     if (document.readyState === 'complete') bg(); else window.addEventListener('load', bg);
     var self = this;
     this.onResize = function () { self.setState({ vw: window.innerWidth }); clearTimeout(self._rz); self._rz = setTimeout(function () { self.resnap('auto'); }, 80); };

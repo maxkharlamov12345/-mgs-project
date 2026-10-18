@@ -15,7 +15,8 @@
   one-video    телефон, REELS/Комплекс: одновременно играет не больше одного видео (было: играли все)
   after-viewer после просмотра изделия видео в «Комплексе» и REELS на месте (было: чёрные плитки)
   slider       медленный интернет: соседние фото в просмотре не перестраиваются, пока грузятся (было: «менялись»)
-  ready        фоновая докачка: через несколько секунд на ленте все фото в просмотре уже готовы (даже без сети)
+  ready        фоновая докачка: через несколько секунд на ленте все фото в просмотре уже готовы (даже без сети),
+               в т.ч. у изделий, до которых пролистали (докачка идёт от экрана)
 """
 import asyncio, glob, json, os, random, re, socket, subprocess, sys, time
 
@@ -182,6 +183,17 @@ async def check_ready(b, base):
             r = await pg.evaluate(READY)
             if not r or not all(r): bad.append('%s %s %s' % (prof, u, r))
             await ctx.close()
+    # пролистали вниз — докачка должна переключиться на изделия у экрана (было: качала с верха, соседние фото пустые)
+    ctx = await b.new_context(**DESK); pg = await ctx.new_page()
+    cdp = await throttle(ctx, pg, {'offline': False, 'latency': 80, 'downloadThroughput': 800000, 'uploadThroughput': 300000})
+    await pg.goto(base + 'portfolio.html#Кухни'); await pg.wait_for_timeout(2500)
+    await pg.mouse.wheel(0, 1400); await pg.wait_for_timeout(8000)
+    await cdp.send('Network.emulateNetworkConditions', {'offline': True, 'latency': 0, 'downloadThroughput': -1, 'uploadThroughput': -1})
+    k = await pg.evaluate("(()=>{const b=[...document.querySelectorAll('.feed .pin-btn')];return b.findIndex(e=>{const r=e.getBoundingClientRect();return r.top>60&&r.bottom<innerHeight})})()")
+    await pg.locator('.feed .pin-btn').nth(max(k, 0)).click(); await pg.wait_for_timeout(80)
+    r = await pg.evaluate(READY)
+    if not r or not all(r): bad.append('ПК Кухни после прокрутки %s' % r)
+    await ctx.close()
     report('ready', not bad, 'не готовы: ' + ', '.join(bad) if bad else '')
 
 

@@ -874,8 +874,17 @@ class Component extends DCLogic {
     var step = function () {
       if (self._feedPhotosFor !== self.state.filter) return;
       var lists = self._feedPhotos || [], q = [], seen = self._warm = self._warm || {}, mem = self.mem || {};
-      lists.forEach(function (ps) { if (ps[0]) q.push(ps[0]); });
-      lists.forEach(function (ps) { q = q.concat(ps.slice(1)); });
+      // порядок: сначала изделия на экране (сверху вниз, слева направо), потом ближайшие к экрану — пересчитывается
+      // при каждом шаге, так что прокрутка сразу меняет очередь. У каждого изделия сначала три фото, видные в слайдере
+      // при открытии (главное, второе — справа, последнее — слева), потом остальные.
+      var H = window.innerHeight || 800, dist = function (ps) {
+        var el = document.querySelector('.feed .pin[data-key="' + self.thumb(ps[0]) + '"]'); if (!el) return 1e9;
+        var r = el.getBoundingClientRect(), d = r.bottom < 0 ? -r.bottom : r.top > H ? r.top - H : 0;
+        return d * 10000 + Math.max(0, Math.round(r.top)) * 4 + Math.round(r.left) / 1000; };
+      var ord = lists.filter(function (ps) { return ps && ps.length; }).map(function (ps) { return { ps: ps, d: dist(ps) }; })
+        .sort(function (a, b) { return a.d - b.d; });
+      ord.forEach(function (o) { var ps = o.ps; q.push(ps[0]); if (ps.length > 1) q.push(ps[1]); if (ps.length > 2) q.push(ps[ps.length - 1]); });
+      ord.forEach(function (o) { q = q.concat(o.ps.slice(2, -1)); });
       q = q.filter(function (x) { return x && !seen[x] && !mem[x] && x.indexOf('data:') !== 0; });
       if (!q.length) return;
       if (Object.keys(self._loading || {}).length || self._vBusy || document.hidden) { self._bgT = setTimeout(step, 600); return; }
