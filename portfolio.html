@@ -870,6 +870,8 @@ class Component extends DCLogic {
     window.addEventListener('resize', this.onResize);
     this.onHash = function () { var f = self.readHash(); if (f && f !== self.state.filter) self.switchFeed(f); };
     window.addEventListener('hashchange', this.onHash);
+    this.onFocusScroll = function () { if (self._fpRaf) return; self._fpRaf = requestAnimationFrame(function () { self._fpRaf = 0; if (self.slideOn()) self.focusPlay(); }); };
+    window.addEventListener('scroll', this.onFocusScroll, { passive: true });
     this.ensureVideo();
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
@@ -882,10 +884,28 @@ class Component extends DCLogic {
     this.syncTrack();
     this.syncVideos();
     this.ensureVideo();
+    var me2 = this, mode = (this.slideOn() ? 's' : 'g') + this.state.filter;
+    if (mode !== this._fpMode) { this._fpMode = mode; setTimeout(function () { me2.focusPlay(); }, 260); }
   }
   // свой файл или встроенный — такие видео грузим сами
   // лёгкое превью для плитки ленты (tools/make_thumbs.py), полное фото — только в просмотре
   thumb(src) { return /^assets\/[^/]+\.jpg$/.test(src || '') ? src.replace('assets/', 'assets/t/') : src; }
+  // режим «1 в ряд» (телефон, REELS / «Комплекс»): играет только карточка в фокусе, остальные на паузе
+  slideOn() { try { return document.documentElement.classList.contains('mgs-snap'); } catch (e) { return false; } }
+  focusPlay() {
+    var pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
+    if (!this.slideOn()) {  // обычная сетка — играют все видимые
+      pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return; var r = p.getBoundingClientRect();
+        if (r.bottom > 0 && r.top < vh) { var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w; var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } });
+      return;
+    }
+    pins.forEach(function (p) { var r = p.getBoundingClientRect(); var vis = Math.min(r.bottom, vh) - Math.max(r.top, 0); if (vis > bestV) { bestV = vis; best = p; } });
+    pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return;
+      if (p === best) { var dp = v.getAttribute('data-poster'); if (dp && !v.getAttribute('poster')) v.setAttribute('poster', dp);
+        var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w;
+        if (v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } }
+      else if (!v.paused) v.pause(); });
+  }
   isLocal(src) { return !!src && (src.indexOf('assets/') === 0 || src.indexOf('data:') === 0 || src.indexOf('blob:') === 0); }
 
   // iPhone/Android запускают видео сами только если оно без звука и «inline»;
@@ -914,7 +934,7 @@ class Component extends DCLogic {
         v.preload = 'none'; v.setAttribute('data-want', self.previewOf(orig));
         if (!self._io) self._io = new IntersectionObserver(function (es) {
           es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-want');
-            if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp); if (s && el.getAttribute('src') !== s) el.src = s; var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+            if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp); if (s && el.getAttribute('src') !== s) el.src = s; if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
             else if (!el.paused) el.pause(); });
         }, { rootMargin: '200px 0px' });
         self._io.observe(v); continue;
