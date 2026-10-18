@@ -122,7 +122,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
   <!-- ленты: у всех одинаковая сетка, а открытие разное (REELS — рилсы, Комплекс — страница проекта, остальные — просмотр изделия) -->
   <nav aria-label="Ленты портфолио" class="pad chips-nav" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 18px 32px 26px">
     <sc-for list="{{chips}}" as="c" hint-placeholder-count="8">
-      <button class="chip" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; background: {{c.bg}}; color: {{c.fg}}">{{c.name}} <span style="opacity: 0.6; font-weight: 400">{{c.count}}</span></button>
+      <button class="chip" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; background: {{c.bg}}; color: {{c.fg}}">{{c.label}} <span style="opacity: 0.6; font-weight: 400">{{c.count}}</span></button>
     </sc-for>
   </nav>
 
@@ -1067,7 +1067,7 @@ class Component extends DCLogic {
     };
     var chips = this.FILTERS().map(function (k) {
       var on = k === (self.state.chipF || f);  // плашка загорается сразу, лента меняется после анимации
-      return { name: k, count: countOf(k), pressed: on ? 'true' : 'false', bg: on ? accent : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setFilter(k); } };
+      return { name: k, label: k === 'Комплекс' ? '🔥 Комплекс' : k, count: countOf(k), pressed: on ? 'true' : 'false', bg: on ? accent : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setFilter(k); } };
     });
     var n = pins.length;
     var countLine = f === 'REELS' ? n + ' видео'
