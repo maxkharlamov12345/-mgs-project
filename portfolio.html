@@ -787,10 +787,8 @@ class Component extends DCLogic {
 
   // ===== ПЕРЕХОД МЕЖДУ ЛЕНТАМИ =====
   // переход — «Волна»: старые плитки гаснут, новые всплывают по очереди; при «уменьшить движение» — без анимации
-  anim() {
-    try { if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return 0; } catch (e) {}
-    return 1;
-  }
+  // переход между лентами: 0 — сразу, без анимации (Макс попросил убрать «волну»); 1 — вернуть «волну»
+  anim() { return 0; }
   feedEls() {
     var vh = window.innerHeight;
     var pins = [].slice.call(document.querySelectorAll('.feed .pin')).map(function (el) { return { el: el, r: el.getBoundingClientRect() }; })
