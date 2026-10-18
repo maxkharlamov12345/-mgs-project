@@ -48,9 +48,9 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
   .pad{padding-left:5px !important;padding-right:5px !important}
   header.pad{padding-left:12px !important;padding-right:12px !important}
   .pin-btn,.pin{border-radius:10px !important}
-  .cx-head{min-height:44px !important;padding:7px 6px 7px 11px !important}
-  .cx-title{font-size:13px !important;line-height:1.25;white-space:normal !important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .cx-arrow{width:26px !important;height:26px !important}
+  .cx-pill{width:calc(100% - 20px);justify-content:center;min-height:32px !important;padding:6px 10px !important;border-radius:16px !important}
+  .cx-title{font-size:12px !important;white-space:normal !important;text-align:center}
+  .cx-arrow{display:none !important}
   .about-band{border-radius:12px !important}
   .ttl{font-size:34px !important}
   .logo-img{width:52px !important;height:52px !important}
@@ -150,17 +150,17 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <sc-if value="{{p.isLink}}" hint-placeholder-val="{{ false }}">
           <div class="pin" style="position: relative; flex: {{p.flex}}">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
-            <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
-              <!-- название проекта сверху — одной карточкой с фото, без разрыва -->
-              <span class="cx-head" style="flex: none; min-height: 54px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px 0 18px; background: #151311; color: #f4f1ec">
-                <span class="cx-title" style="min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; font-weight: 500">{{p.label}}</span>
-                <span class="cx-arrow" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #bfd630; color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
-              </span>
+            <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- превью проекта — 4 фото из разных изделий (кухня, прихожая, санузел, детская…) -->
-              <span class="quad" style="flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; background: #0f0e0c">
+              <span class="quad" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; background: #0f0e0c">
                 <sc-for list="{{p.quad}}" as="q" hint-placeholder-count="4">
                   <span style="position: relative; overflow: hidden; background: #1f1c19"><img class="pin-img" src="{{q.src}}" alt="{{q.alt}}" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></span>
                 </sc-for>
+              </span>
+              <!-- название проекта — плашкой по центру коллажа -->
+              <span class="cx-pill" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: calc(100% - 24px); box-sizing: border-box; display: inline-flex; align-items: center; gap: 10px; min-height: 40px; padding: 4px 5px 4px 16px; border-radius: 999px; background: rgba(255,255,255,0.96); color: #1c1a17; box-shadow: 0 6px 24px rgba(0,0,0,0.35)">
+                <span class="cx-title" style="font-size: 14px; font-weight: 500; line-height: 1.2; white-space: nowrap">{{p.label}}</span>
+                <span class="cx-arrow" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #bfd630; color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
               </span>
             </a>
           </div>
