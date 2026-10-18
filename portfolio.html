@@ -171,12 +171,18 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
           <div class="pin" style="position: relative; flex: {{p.flex}}">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
+              <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
+              <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
+                <video class="pin-img" data-src="{{p.video}}" poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+              </sc-if>
+              <sc-if value="{{p.noVideo}}" hint-placeholder-val="{{ true }}">
               <!-- превью проекта — 4 фото из разных изделий (кухня, прихожая, санузел, детская…) -->
               <span class="quad {{p.quadCls}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; background: #0f0e0c">
                 <sc-for list="{{p.quad}}" as="q" hint-placeholder-count="4">
                   <span style="position: relative; overflow: hidden; background: #1f1c19"><img class="pin-img" src="{{q.src}}" alt="{{q.alt}}" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></span>
                 </sc-for>
               </span>
+              </sc-if>
               <!-- «Крупный заголовок»: фото притемнены, по центру — крупное тонкое название и адрес (ЖК) со стрелкой -->
               <span class="cx-big" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 16px; color: #f4f1ec; pointer-events: none">
                 <span class="cx-title" style="font-size: 30px; font-weight: 300; line-height: 1.08; letter-spacing: -0.01em; text-shadow: 0 2px 18px rgba(0,0,0,0.5); text-wrap: balance">{{p.label}}</span>
@@ -374,7 +380,7 @@ class Component extends DCLogic {
       },
       // второй комплексный проект: фото приходят по изделиям, страница — project-2.html
       {
-        title: 'Квартира в светлом беже', href: 'project-2.html', address: 'ЖК Символ', cover: 'assets/p2-kitchen-1.jpg', complex: true, collage: 'assets/collage-beige.jpg',
+        title: 'Квартира в светлом беже', href: 'project-2.html', coverVideo: 'assets/p2-preview.mp4', coverPoster: 'assets/p2-preview.jpg', address: 'ЖК Символ', cover: 'assets/p2-kitchen-1.jpg', complex: true, collage: 'assets/collage-beige.jpg',
         priceDate: 'октябрь 2026',
         reels: [
           { src: 'assets/p2-bath-reel-1.mp4', poster: 'assets/p2-bath-reel-1.jpg' },
@@ -1039,7 +1045,7 @@ class Component extends DCLogic {
         // готовый коллаж (tools/make_collage.py) — одна картинка вместо четырёх, грузится сразу
         if (pr.collage) srcs = [{ src: pr.collage, alt: pr.title, one: true }];
         srcs.forEach(function (q) { q.src = (self.mem && self.mem[q.src]) || q.src; });
-        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', quad: srcs, quadCls: pr.collage ? 'one' : '' });
+        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', quad: srcs, quadCls: pr.collage ? 'one' : '', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '' });
       });
     } else {
       D.items.forEach(function (it) {
