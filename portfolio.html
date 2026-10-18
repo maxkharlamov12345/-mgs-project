@@ -622,7 +622,74 @@ class Component extends DCLogic {
     if (f === this.state.filter) return;
     // адрес обновляем, где это разрешено (во встроенных окнах превью — нельзя, лента всё равно переключится)
     try { history.replaceState(null, '', f === this.DEFAULT() ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
-    this.setState({ filter: f, lb: -1, lbZone: null, lbStart: 0 });
+    this.switchFeed(f);
+  }
+
+  // ===== ПЕРЕХОД МЕЖДУ ЛЕНТАМИ =====
+  // варианты на выбор: ?t=1 … ?t=4 в адресе (с ?t внизу появляется переключатель); 0 — без анимации
+  ANIMS() { return ['Без анимации', 'Волна', 'Растворение', 'Каскад', 'Мозаика']; }
+  anim() {
+    if (this._anim == null) { var m = /[?&]t=(\d)/.exec(location.search || ''); this._anim = m ? Math.min(+m[1], 4) : 0; }
+    try { if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return 0; } catch (e) {}
+    return this._anim;
+  }
+  feedEls() {
+    var vh = window.innerHeight;
+    var pins = [].slice.call(document.querySelectorAll('.feed .pin')).map(function (el) { return { el: el, r: el.getBoundingClientRect() }; })
+      .filter(function (o) { return o.r.bottom > -40 && o.r.top < vh + 40; });  // анимируем только то, что видно
+    pins.sort(function (a, b) { return (a.r.top - b.r.top) || (a.r.left - b.r.left); });
+    return { feed: document.querySelector('.feed'), cols: [].slice.call(document.querySelectorAll('.feed .feed-col')), pins: pins };
+  }
+  switchFeed(f) {
+    var self = this, a = this.anim(), E = this.feedEls();
+    var go = function () { self._animIn = a; self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };
+    if (!a || !E.feed || !E.feed.animate) { go(); return; }
+    (this._outA || []).forEach(function (x) { x.cancel(); });
+    this._animIn = null; this.setState({ chipF: f });
+    var out = [], ease = 'cubic-bezier(.4,0,1,1)', dur = 170;
+    var fx = function (el, kf, o) { out.push(el.animate(kf, Object.assign({ duration: dur, easing: ease, fill: 'forwards' }, o || {}))); };
+    if (a === 1) E.pins.forEach(function (o) { fx(o.el, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }]); });
+    if (a === 2) fx(E.feed, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(8px)' }], { duration: 200 });
+    if (a === 3) E.cols.forEach(function (c, i) { fx(c, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(24px)' }], { delay: i * 30 }); });
+    if (a === 4) E.pins.forEach(function (o) { fx(o.el, [{ opacity: 1 }, { opacity: 0, transform: 'scale(.92)' }], { delay: Math.random() * 90 }); });
+    this._outA = out;
+    clearTimeout(this._swT); this._swT = setTimeout(go, a === 3 ? dur + E.cols.length * 30 : a === 4 ? dur + 90 : a === 2 ? 200 : dur);
+  }
+  animateIn() {
+    var a = this._animIn; this._animIn = 0;
+    (this._outA || []).forEach(function (x) { x.cancel(); }); this._outA = [];
+    if (!a) return;
+    var E = this.feedEls(); if (!E.feed || !E.feed.animate) return;
+    var ease = 'cubic-bezier(.2,.7,.2,1)';
+    if (a === 1) E.pins.forEach(function (o, i) {
+      o.el.animate([{ opacity: 0, transform: 'translateY(28px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: Math.min(i * 45, 450), easing: ease, fill: 'backwards' });
+    });
+    if (a === 2) E.feed.animate([{ opacity: 0, filter: 'blur(10px)', transform: 'scale(.985)' }, { opacity: 1, filter: 'blur(0)', transform: 'none' }], { duration: 460, easing: ease });
+    if (a === 3) E.cols.forEach(function (c, i) {
+      c.animate([{ opacity: 0, transform: 'translateY(70px)' }, { opacity: 1, transform: 'none' }], { duration: 640, delay: i * 80, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+    });
+    if (a === 4) E.pins.forEach(function (o) {
+      o.el.animate([{ opacity: 0, transform: 'scale(.86)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: Math.random() * 220, easing: 'cubic-bezier(.34,1.3,.5,1)', fill: 'backwards' });
+    });
+  }
+  // переключатель вариантов — только для выбора, виден с ?t в адресе
+  animPicker() {
+    if (!/[?&]t=\d/.test(location.search || '') || document.getElementById('anim-pick')) return;
+    var self = this, box = document.createElement('div'); box.id = 'anim-pick'; this.anim();
+    box.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:40;display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:4px;padding:5px;max-width:calc(100vw - 16px);box-sizing:border-box;background:rgba(21,19,17,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid #2c2824;border-radius:22px;font-family:Onest,system-ui,sans-serif';
+    var paint = function () { [].forEach.call(box.children, function (b, i) { var on = i === self._anim; b.style.background = on ? '#bfd630' : 'transparent'; b.style.color = on ? '#1c1a17' : '#f4f1ec'; }); };
+    this.ANIMS().forEach(function (name, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = window.innerWidth < 600 ? (i ? name : 'Без') : i + ' · ' + name;
+      b.style.cssText = 'flex:none;height:36px;padding:0 12px;border:0;border-radius:999px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap';
+      b.onclick = function () {
+        self._anim = i; paint();
+        try { history.replaceState(null, '', location.pathname + '?t=' + i + location.hash); } catch (e) {}
+        // показываем переход сразу: следующая лента по кругу
+        var F = self.FILTERS(), k = F[(F.indexOf(self.state.filter) + 1) % F.length]; self.setFilter(k);
+      };
+      box.appendChild(b);
+    });
+    paint(); document.body.appendChild(box);
   }
 
   // фото один раз скачиваем в память — при листании в просмотре они не грузятся заново
@@ -660,13 +727,15 @@ class Component extends DCLogic {
     var self = this;
     this.onResize = function () { self.setState({ vw: window.innerWidth }); clearTimeout(self._rz); self._rz = setTimeout(function () { self.resnap('auto'); }, 80); };
     window.addEventListener('resize', this.onResize);
-    this.onHash = function () { var f = self.readHash(); if (f && f !== self.state.filter) self.setState({ filter: f, lb: -1, lbZone: null, lbStart: 0 }); };
+    this.onHash = function () { var f = self.readHash(); if (f && f !== self.state.filter) self.switchFeed(f); };
     window.addEventListener('hashchange', this.onHash);
     this.ensureVideo();
+    this.animPicker();
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
   componentDidUpdate() {
     if (this.state.lb < 0 && this._vpend) { var pd = this._vpend, ks = Object.keys(pd); if (ks.length) { var me = this; ks.forEach(function (k) { me.vurls[k] = pd[k]; if (me._vp) delete me._vp[k]; }); this._vpend = {}; } }
+    if (this._animIn != null && this._animIn !== undefined && this._outA) this.animateIn();
     this.syncTrack();
     this.syncVideos();
     this.ensureVideo();
@@ -897,7 +966,7 @@ class Component extends DCLogic {
       return D.items.filter(function (it) { return it.type === k && it.photos.length; }).length;
     };
     var chips = this.FILTERS().map(function (k) {
-      var on = k === f;
+      var on = k === (self.state.chipF || f);  // плашка загорается сразу, лента меняется после анимации
       return { name: k, count: countOf(k), pressed: on ? 'true' : 'false', bg: on ? accent : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setFilter(k); } };
     });
     var n = pins.length;
