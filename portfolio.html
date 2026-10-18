@@ -190,7 +190,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
               <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
-                <video class="pin-img" data-src="{{p.video}}" data-poster="{{p.poster}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+                <video class="pin-img" data-src="{{p.video}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
               </sc-if>
               <sc-if value="{{p.noVideo}}" hint-placeholder-val="{{ true }}">
                 <span class="cx-blank" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #26221f"></span>
@@ -207,7 +207,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <!-- рилс: открывает режим REELS, как на странице проекта -->
         <sc-if value="{{p.isVideo}}" hint-placeholder-val="{{ false }}">
           <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
-            <video data-src="{{p.src}}" poster="{{p.poster}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+            <video data-src="{{p.src}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
             <span style="position: absolute; left: 12px; top: 12px; right: 56px; display: flex; flex-wrap: wrap; gap: 6px">
               <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
               <sc-if value="{{p.hasZone}}" hint-placeholder-val="{{ false }}"><span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px">{{p.zone}}</span></sc-if>
@@ -910,7 +910,9 @@ class Component extends DCLogic {
   // телефон, REELS / «Комплекс»: «1 в ряд» — играет карточка в фокусе; «2 в ряд» — та, которой коснулись
   // телефон «2 в ряд» в REELS/«Комплексе» — лёгкая копия <имя>-mini.mp4 (360px), иначе обычное превью
   gridMini() { try { var c = document.documentElement.classList; return c.contains('mgs-focus') && !c.contains('mgs-snap'); } catch (e) { return false; } }
-  feedSrc(v) { var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; return this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; }
+  // без заставки: плитка показывает первый кадр самого видео (#t=0.001 — iPhone тогда рисует кадр, а не чёрное),
+  // поэтому при запуске нет никакого скачка картинки
+  feedSrc(v) { var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; if (!w) return w; w = this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; return w.indexOf('#') < 0 ? w + '#t=0.001' : w; }
   // заставка плитки рилса = первый кадр её превью (<имя>-preview.jpg), иначе при запуске картинка «прыгает»
   tilePoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.jpg') : fallback; }
   slideOn() { try { return document.documentElement.classList.contains('mgs-focus'); } catch (e) { return false; } }
