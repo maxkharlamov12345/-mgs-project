@@ -188,12 +188,12 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 
         <!-- комплексный проект: ведёт на страницу проекта -->
         <sc-if value="{{p.isLink}}" hint-placeholder-val="{{ false }}">
-          <div class="pin cx-pin" style="position: relative; flex: {{p.flex}}">
+          <div class="pin cx-pin" data-key="{{p.key}}" style="position: relative; flex: {{p.flex}}">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
               <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
-                <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" loading="lazy" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
+                <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
                 <video class="pin-img feed-v" data-src="{{p.video}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
               </sc-if>
               <sc-if value="{{p.noVideo}}" hint-placeholder-val="{{ true }}">
@@ -210,8 +210,8 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 
         <!-- рилс: открывает режим REELS, как на странице проекта -->
         <sc-if value="{{p.isVideo}}" hint-placeholder-val="{{ false }}">
-          <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
-            <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" loading="lazy" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
+          <div class="pin" data-key="{{p.key}}" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
+            <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
             <video class="feed-v" data-src="{{p.src}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
             <span style="position: absolute; left: 12px; top: 12px; right: 56px; display: flex; flex-wrap: wrap; gap: 6px">
               <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
@@ -808,6 +808,7 @@ class Component extends DCLogic {
   setMode(on) {
     if (!!this.state.slide === on) return;
     this._touchPin = null;  // после смены вида/ленты в «2 в ряд» снова ничего не играет, пока не коснутся
+    this._loading = {}; this._vBusy = null; this._vq = [];  // очередь загрузки — заново, с верха новой ленты
     try { localStorage.setItem('mgs-slide', on ? '1' : '0'); } catch (e) {}
     var self = this, a = this.anim(), E = this.feedEls();
     var go = function () { self._animIn = a; self.setState({ slide: on }); try { window.scrollTo(0, 0); } catch (e) {} };
@@ -819,6 +820,7 @@ class Component extends DCLogic {
   }
   switchFeed(f) {
     this._touchPin = null;  // после смены вида/ленты в «2 в ряд» снова ничего не играет, пока не коснутся
+    this._loading = {}; this._vBusy = null; this._vq = [];  // очередь загрузки — заново, с верха новой ленты
     var self = this, a = this.anim(), E = this.feedEls();
     var go = function () { self._animIn = a; self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };
     if (!a || !E.feed || !E.feed.animate) { go(); return; }
@@ -893,7 +895,13 @@ class Component extends DCLogic {
       if (v !== self._focusV && v.closest && v.closest('.feed')) v.pause();
     };
     document.addEventListener('play', this.onAnyPlay, true);
-    this.onVidFrame = function (e) { var v = e.target; if (v && v.classList && v.classList.contains('feed-v')) v.classList.add('ready'); };
+    this.onVidFrame = function (e) { var v = e.target; if (v && v.classList && v.classList.contains('feed-v')) { v.classList.add('ready'); if (self._vBusy && self._vBusy.el === v) { self._vBusy = null; self.pumpVid(); } } };
+    // фото загрузилось (или не смогло) — освобождаем место в очереди и берём следующее по порядку
+    this.onImgDone = function (e) { var im = e.target; if (!im || im.tagName !== 'IMG' || !im.closest) return; var pin = im.closest('.feed .pin[data-key]'); if (!pin) return;
+      if ((im.getAttribute('src') || '').indexOf('data:image/gif') === 0) return;
+      var k = pin.getAttribute('data-key'); if (self._loading && self._loading[k]) { delete self._loading[k]; self.pumpImg(); } };
+    document.addEventListener('load', this.onImgDone, true); document.addEventListener('error', this.onImgDone, true);
+    document.addEventListener('error', function (e) { var v = e.target; if (v && v.tagName === 'VIDEO' && self._vBusy && self._vBusy.el === v) { self._vBusy = null; self.pumpVid(); } }, true);
     this.onVidReset = function (e) { var v = e.target; if (v && v.classList && v.classList.contains('feed-v')) v.classList.remove('ready'); };
     ['loadeddata', 'playing', 'seeked'].forEach(function (t) { document.addEventListener(t, self.onVidFrame, true); });
     document.addEventListener('emptied', this.onVidReset, true);
@@ -960,16 +968,46 @@ class Component extends DCLogic {
   }
   // догрузка фото ленты: плитка на экране или в пределах ~60% экрана ниже — разрешаем её картинку
   watchNear() {
-    var self = this; this._near = this._near || {};
+    var self = this; this._near = this._near || {}; this._want = this._want || {}; this._loading = this._loading || {};
     if (!window.IntersectionObserver) { var all = document.querySelectorAll('.feed .pin[data-key]'); for (var i = 0; i < all.length; i++) this._near[all[i].getAttribute('data-key')] = 1; return; }
     if (!this._nio) this._nio = new IntersectionObserver(function (es) {
       var add = false;
-      es.forEach(function (e) { if (!e.isIntersecting) return; var k = e.target.getAttribute('data-key'); if (k && !self._near[k]) { self._near[k] = 1; add = true; } self._nio.unobserve(e.target); });
-      if (add && !self._nearRaf) self._nearRaf = requestAnimationFrame(function () { self._nearRaf = 0; self.forceUpdate(); });
+      es.forEach(function (e) { if (!e.isIntersecting) return; var k = e.target.getAttribute('data-key'); if (k && !self._near[k]) self._want[k] = 1; self._nio.unobserve(e.target); });
+      self.pumpImg();
     }, { rootMargin: '0px 0px 100% 0px' });
     var ps = document.querySelectorAll('.feed .pin[data-key]');
     // плитки переиспользуются при смене ленты — следим по паре «плитка + её фото», а не по плитке
     for (var j = 0; j < ps.length; j++) { var el = ps[j], k = el.getAttribute('data-key'); if (!k || self._near[k] || el._nk === k) continue; el._nk = k; this._nio.unobserve(el); this._nio.observe(el); }
+  }
+  // ПО ПОРЯДКУ: фото грузятся по 2 за раз, сверху вниз и слева направо, как стоят плитки; следующее — когда загрузилось предыдущее
+  pumpImg() {
+    var self = this, now = Date.now(), busy = 0, k;
+    for (k in this._loading) { if (now - this._loading[k] > 4000) delete this._loading[k]; else busy++; }  // зависшее — не ждём дольше 4 с
+    if (busy >= 2) return;
+    var ps = [].slice.call(document.querySelectorAll('.feed .pin[data-key]')).filter(function (el) { var kk = el.getAttribute('data-key'); return kk && self._want[kk] && !self._near[kk]; });
+    if (!ps.length) return;
+    ps.sort(function (a, b) { var ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); return (Math.round(ra.top / 40) - Math.round(rb.top / 40)) || (ra.left - rb.left); });
+    var changed = false;
+    for (var i = 0; i < ps.length && busy < 2; i++) { var kk = ps[i].getAttribute('data-key'); if (self._near[kk]) continue; self._near[kk] = 1; changed = true;
+      if (ps[i].classList.contains('cx-pin') && !ps[i].querySelector('video')) continue;  // тёмная плитка без видео — грузить нечего, место в очереди не занимает
+      self._loading[kk] = now; busy++; }
+    if (changed && !this._nearRaf) this._nearRaf = requestAnimationFrame(function () { self._nearRaf = 0; self.forceUpdate(); });
+    clearTimeout(this._pumpT); this._pumpT = setTimeout(function () { self.pumpImg(); }, 4100);
+  }
+  // ПО ПОРЯДКУ: видео ленты грузятся по одному, в порядке плиток; следующее — когда у текущего появился кадр
+  pumpVid() {
+    var self = this, b = this._vBusy;
+    if (b && document.body.contains(b.el) && !b.el.classList.contains('ready') && Date.now() - b.t < 6000) return;
+    this._vBusy = null;
+    var list = []; (this._vq || []).forEach(function (el) { if (document.body.contains(el)) list.push(el); });
+    this._vq = list;
+    var next = null, bestR = null;
+    list.forEach(function (el) { var w = self.feedSrc(el); if (!w || el.getAttribute('src') === w) return; var r = el.getBoundingClientRect();
+      if (!next || (Math.round(r.top / 40) - Math.round(bestR.top / 40)) < 0 || (Math.round(r.top / 40) === Math.round(bestR.top / 40) && r.left < bestR.left)) { next = el; bestR = r; } });
+    if (!next) return;
+    next.preload = 'auto'; next.src = self.feedSrc(next); this._vBusy = { el: next, t: Date.now() };
+    if (!self.slideOn()) { var pr = next.play(); if (pr && pr.catch) pr.catch(function () {}); }
+    clearTimeout(this._vT); this._vT = setTimeout(function () { self.pumpVid(); }, 6100);
   }
   isLocal(src) { return !!src && (src.indexOf('assets/') === 0 || src.indexOf('data:') === 0 || src.indexOf('blob:') === 0); }
 
@@ -1001,8 +1039,8 @@ class Component extends DCLogic {
           es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-want');
             if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp);
               // подходит к экрану — заранее грузим видео (без запуска), чтобы по касанию оно стартовало сразу, без чёрного кадра
-              if (el.preload !== 'auto') el.preload = 'auto'; s = self.feedSrc(el); if (s && el.getAttribute('src') !== s) el.src = s; else if (el.readyState === 0) { try { el.load(); } catch (x) {} } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
-            else { if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
+              s = self.feedSrc(el); if (s && el.getAttribute('src') !== s) { self._vq = self._vq || []; if (self._vq.indexOf(el) < 0) self._vq.push(el); self.pumpVid(); } else if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
+            else { if (self._vq) { var qi = self._vq.indexOf(el); if (qi >= 0) self._vq.splice(qi, 1); } if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
         }, { rootMargin: '60% 0px 40% 0px' });
         self._io.observe(v); continue;
       }
@@ -1015,7 +1053,7 @@ class Component extends DCLogic {
               if (!self._io) self._io = new IntersectionObserver(function (es) {
                 es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-src') || el.getAttribute('data-want');
                   if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) { el.src = s; } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
-                  else { if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
+                  else { if (self._vq) { var qi = self._vq.indexOf(el); if (qi >= 0) self._vq.splice(qi, 1); } if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
               }, { rootMargin: '60% 0px 40% 0px' });
               v.setAttribute('data-want', u); self._io.observe(v); return;
             }
@@ -1173,11 +1211,12 @@ class Component extends DCLogic {
     var poses = ['center', 'center 40%', 'center 65%', 'center', 'center 55%', 'center 35%'];
     var gi = 0;
     pins.forEach(function (pn) {
+      if (pn.ph) { self._near = self._near || {}; pn.key = pn.ph; pn.ph = self._near[pn.key] ? pn.ph : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; }
       if (pn.isVideo) return;
       pn.ratio = ratios[gi % ratios.length]; pn.pos = poses[gi % poses.length]; gi++;
       var r = pn.ratio.split('/'); pn.padTop = (parseFloat(r[1]) / parseFloat(r[0]) * 100).toFixed(2) + '%';
       // фото грузим только у плиток на экране и чуть ниже (watchNear), остальные — пустышка до подхода к экрану
-      pn.key = pn.src; self._near = self._near || {};
+      var phKey = pn.key; pn.key = phKey || pn.src; self._near = self._near || {};
       pn.src = self._near[pn.key] ? ((self.mem && self.mem[pn.src]) || pn.src) : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
     });
 
