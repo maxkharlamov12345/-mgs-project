@@ -3,13 +3,16 @@
 <head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta charset="utf-8">
 <title>Квартира в светлом беже — MGS Mebel</title>
+<link rel="preload" href="assets/fonts/onest-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/onest-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+20BD}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}</style>
+<script>window.__resources={}</script>
+<script>if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))addEventListener('load',function(){try{navigator.serviceWorker.register('sw.js')}catch(e){}})</script>
 <script src="./support.js"></script>
 </head>
 <body>
-<x-dc>
+<template data-dc>
 <helmet>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#0f0e0c}
 a{color:#f4f1ec}a:hover{color:#bfd630}
@@ -159,7 +162,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
           <div class="pin" style="position: relative; flex: 1 0 auto">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
             <button class="pin-btn" onClick="{{p.open}}" aria-label="Открыть фото: {{p.zone}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 18px; overflow: hidden; background: #1f1c19; cursor: zoom-in">
-              <img class="pin-img" src="{{p.src}}" alt="{{p.zone}}" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: {{p.pos}}">
+              <img class="pin-img" src="{{p.src}}" loading="lazy" decoding="async" alt="{{p.zone}}" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: {{p.pos}}">
               <span class="pin-meta" style="position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px">
                 <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.95); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px">{{p.zone}}</span>
                 <span style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
@@ -213,7 +216,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <sc-if value="{{p.isDesigner}}" hint-placeholder-val="{{ false }}">
           <div id="designer" class="pin" style="border-radius: 18px; background: #1b1916; overflow: hidden; display: flex; flex-direction: column">
             <div style="position: relative; aspect-ratio: 4 / 5; background: #f4f1ec">
-              <img src="{{designer.photo}}" alt="{{designer.name}}, дизайнер проекта" style="display: block; width: 100%; height: 100%; object-fit: cover">
+              <img loading="lazy" decoding="async" src="{{designer.photo}}" alt="{{designer.name}}, дизайнер проекта" style="display: block; width: 100%; height: 100%; object-fit: cover">
               <span style="position: absolute; left: 12px; top: 12px; background: rgba(255,255,255,0.95); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 999px">Дизайнер проекта</span>
             </div>
             <div style="padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 12px">
@@ -229,7 +232,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
         <sc-if value="{{p.isPromo}}" hint-placeholder-val="{{ false }}">
           <div class="pin" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19">
             <div aria-hidden="true" style="padding-top: 125%"></div>
-            <img src="{{promoImg}}" alt="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block">
+            <img loading="lazy" decoding="async" src="{{promoImg}}" alt="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block">
             <div aria-hidden="true" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, rgba(12,11,10,0.92) 0%, rgba(12,11,10,0.55) 45%, rgba(12,11,10,0.15) 100%)"></div>
             <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 22px; display: flex; flex-direction: column; gap: 12px">
               <span style="height: 32px; box-sizing: border-box; align-self: flex-start; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; background: {{accent}}; color: #1c1a17; font-size: 13px; font-weight: 500">MGS Mebel</span>
@@ -429,7 +432,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
   </sc-if>
 
 </div>
-</x-dc>
+</template>
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#bfd630","options":["#bfd630","#d8b98f","#f4f1ec"]},"$preview":{"width":1440,"height":3400}}'>
 class Component extends DCLogic {
   constructor(props) {
@@ -444,10 +447,12 @@ class Component extends DCLogic {
     };
     this.video = 'assets/p2-bath-reel-1.mp4';
     this.poster = 'assets/p2-bath-reel-1.jpg';
+    this.P = this.webp(this.P); this.poster = this.webp(this.poster);
   }
 
   // ===== ДАННЫЕ ПРОЕКТА: на сайте приходят из CMS =====
-  project() {
+  project() { return this.webp(this.projectRaw()); }
+  projectRaw() {
     var pr = this.projectData();
     // дизайнер проекта (нет дизайнера — блоки не показываются)
     // описания изделий — на сайте приходят из CMS вместе с фото
@@ -497,22 +502,35 @@ class Component extends DCLogic {
 
   // все фото проекта один раз скачиваем в память и держим там готовыми к показу,
   // чтобы при листании по кругу они не загружались заново (без чёрной вспышки)
-  preloadPhotos() {
-    var self = this; this.mem = this.mem || {}; this.keep = this.keep || [];
-    Object.keys(this.P).forEach(function (k) {
-      var src = self.P[k];
-      if (self.mem[src] || !window.fetch) return;
+  // Полные фото качаем только когда открыли просмотр: сначала фото открытого изделия (с того, по которому нажали),
+  // потом остальные — по 3 одновременно. В ленте — лёгкие превью assets/t/*.webp.
+  preloadPhotos(first) {
+    var self = this; this.mem = this.mem || {}; this.keep = this.keep || []; if (!window.fetch) return;
+    var all = []; Object.keys(this.P).forEach(function (k) { all.push(self.P[k]); });
+    var q = (first || []).concat(all).filter(function (s, i, a) { return s && a.indexOf(s) === i && !self.mem[s] && !(self._ppSeen || {})[s]; });
+    this._ppSeen = this._ppSeen || {}; q.forEach(function (s) { self._ppSeen[s] = 1; });
+    this._ppQ = q.concat((this._ppQ || []).filter(function (s) { return q.indexOf(s) < 0; }));
+    var run = function () {
+      if ((self._ppBusy || 0) >= 3 || !self._ppQ.length) return;
+      var src = self._ppQ.shift(); self._ppBusy = (self._ppBusy || 0) + 1;
+      var done = function () { self._ppBusy--; run(); };
       fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
         var u = URL.createObjectURL(b);
         var im = new Image(); im.src = u; self.keep.push(im);
-        var ready = function () { self.mem[src] = u; if (im.naturalWidth) { self.ratios = self.ratios || {}; self.ratios[src] = im.naturalHeight / im.naturalWidth; } self.forceUpdate(); };
+        var ready = function () { self.mem[src] = u; if (im.naturalWidth) { self.ratios = self.ratios || {}; self.ratios[src] = im.naturalHeight / im.naturalWidth; } if (!self._ppRaf) self._ppRaf = requestAnimationFrame(function () { self._ppRaf = 0; self.forceUpdate(); }); done(); };
         if (im.decode) im.decode().then(ready, ready); else im.onload = ready;
-      }).catch(function () {});
-    });
+      }).catch(done);
+      run();
+    };
+    run(); run(); run();
   }
+  // лёгкое превью для плитки ленты (640px WebP, делает tools/make_thumbs.py)
+  thumb(src) { return /^assets\/[^/]+\.(jpg|webp)$/.test(src || '') ? src.replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : src; }
+  // на сайте показываем WebP-копии фото (на ~45% легче JPEG), JPEG остаётся исходником
+  webp(v) { var self = this; if (typeof v === 'string') return /^assets\/[^#?]+\.jpg$/.test(v) ? v.replace(/\.jpg$/, '.webp') : v;
+    if (Array.isArray(v)) return v.map(function (x) { return self.webp(x); });
+    if (v && typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype) { var o = {}; for (var k in v) o[k] = self.webp(v[k]); return o; } return v; }
   componentDidMount() {
-    this.preloadPhotos();
-    this.preloadVideos();
     var self = this;
     this.onResize = function () { self.setState({ vw: window.innerWidth }); clearTimeout(self._rz); self._rz = setTimeout(function () { self.resnap('auto'); }, 80); };
     window.addEventListener('resize', this.onResize);
@@ -596,6 +614,7 @@ class Component extends DCLogic {
   // движок страницы передаёт сюда только прошлые props, без прошлого state,
   // поэтому предыдущее состояние просмотра запоминаем сами
   componentDidUpdate(prev) {
+    if (this.state.lb >= 0 && this._ppFor !== (this.state.lbZone || '*')) { this._ppFor = this.state.lbZone || '*'; var lz = this.state.lbZone, zp = []; try { (this.project().zones || []).forEach(function (z) { if (!lz || z.name === lz) zp = zp.concat(z.photos || []); }); } catch (e) {} var st = this.state.lbStart || 0; this.preloadPhotos(zp.slice(st).concat(zp.slice(0, st))); }
     if (prev.variant !== this.props.variant) this.setState({ filter: 'all', lb: -1 });
     if (this.state.lb < 0 && this._vpend) { var pd = this._vpend, ks = Object.keys(pd); if (ks.length) { var me = this; ks.forEach(function (k) { me.vurls[k] = pd[k]; if (me._vp) delete me._vp[k]; }); this._vpend = {}; } }
     this.syncTrack();
@@ -739,7 +758,7 @@ class Component extends DCLogic {
     var openAt = function (k) { return function () { self.setState({ lb: 0, lbStart: k, lbZone: null }); }; };
     var gi = 0;
     var videos = (pr.videos && pr.videos.length) ? pr.videos : (pr.video ? [pr.video] : []);
-    var mkVideo = function (v, vi) { var src = v.src || v; return { isVideo: true, src: src, poster: v.poster || self.poster, open: function () { self.setState({ lb: 0, lbStart: vi || 0, lbZone: '__reels' }); } }; };
+    var mkVideo = function (v, vi) { var src = v.src || v; return { isVideo: true, src: src, poster: self.thumb(v.poster || self.poster), open: function () { self.setState({ lb: 0, lbStart: vi || 0, lbZone: '__reels' }); } }; };
     if (videos.length && f === 'all') pins.push(mkVideo(videos[0], 0));
 
     pr.zones.forEach(function (z, zi) {
@@ -748,7 +767,7 @@ class Component extends DCLogic {
       z.photos.forEach(function (src, pi) {
         var k = lbList.length;
         lbList.push({ src: src, zone: z.name, text: z.text || '', price: z.price || '', korpus: z.korpus, fasady: z.fasady, furn: z.furn, count: z.photos.length });
-        pins.push({ isPhoto: true, src: src, zone: z.name, ratio: ratios[gi % ratios.length], pos: poses[gi % poses.length], open: function () { self.setState({ lb: 0, lbStart: pi, lbZone: z.name }); } });
+        pins.push({ isPhoto: true, src: self.thumb(src), zone: z.name, ratio: ratios[gi % ratios.length], pos: poses[gi % poses.length], open: function () { self.setState({ lb: 0, lbStart: pi, lbZone: z.name }); } });
         gi++;
       });
       // видео с тегом этого изделия — в карусель просмотра, следом за фото
