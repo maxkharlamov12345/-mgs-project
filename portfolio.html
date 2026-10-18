@@ -1044,7 +1044,7 @@ class Component extends DCLogic {
     } else {
       D.items.forEach(function (it) {
         if (it.type !== f || !it.photos.length) return;
-        pins.push({ isPhoto: true, src: it.photos[0], label: it.project, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
+        pins.push({ isPhoto: true, src: it.photos[0], label: it.name, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
       });
     }
 
