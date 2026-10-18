@@ -802,6 +802,7 @@ class Component extends DCLogic {
   // телефон, ленты REELS и «Комплекс»: «плитка» (2 в ряд) или «слайдер» (1 в ряд, листается вниз по одной карточке)
   setMode(on) {
     if (!!this.state.slide === on) return;
+    this._touchPin = null;  // после смены вида/ленты в «2 в ряд» снова ничего не играет, пока не коснутся
     try { localStorage.setItem('mgs-slide', on ? '1' : '0'); } catch (e) {}
     var self = this, a = this.anim(), E = this.feedEls();
     var go = function () { self._animIn = a; self.setState({ slide: on }); try { window.scrollTo(0, 0); } catch (e) {} };
@@ -812,6 +813,7 @@ class Component extends DCLogic {
     clearTimeout(this._swT); this._swT = setTimeout(go, 170);
   }
   switchFeed(f) {
+    this._touchPin = null;  // после смены вида/ленты в «2 в ряд» снова ничего не играет, пока не коснутся
     var self = this, a = this.anim(), E = this.feedEls();
     var go = function () { self._animIn = a; self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };
     if (!a || !E.feed || !E.feed.animate) { go(); return; }
@@ -872,6 +874,14 @@ class Component extends DCLogic {
     window.addEventListener('hashchange', this.onHash);
     this.onFocusScroll = function () { if (self._fpRaf) return; self._fpRaf = requestAnimationFrame(function () { self._fpRaf = 0; if (self.slideOn()) self.focusPlay(); }); };
     window.addEventListener('scroll', this.onFocusScroll, { passive: true });
+    // касание пальцем видео-плитки в «2 в ряд» — запускаем её, остальные на паузу
+    this.onTouchPin = function (e) {
+      if (!self.slideOn()) return;
+      var t = e.target && e.target.closest ? e.target.closest('.feed .pin') : null;
+      if (t && t.querySelector('video')) { self._touchPin = t; self.focusPlay(); }
+    };
+    document.addEventListener('touchstart', this.onTouchPin, { passive: true });
+    document.addEventListener('pointerdown', this.onTouchPin, { passive: true });
     this.ensureVideo();
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
@@ -884,14 +894,14 @@ class Component extends DCLogic {
     this.syncTrack();
     this.syncVideos();
     this.ensureVideo();
-    var me2 = this, mode = (this.slideOn() ? 's' : 'g') + this.state.filter;
+    var me2 = this, mode = (this.state.slide ? 's' : 'g') + (this.slideOn() ? 'f' : '') + this.state.filter;
     if (mode !== this._fpMode) { this._fpMode = mode; setTimeout(function () { me2.focusPlay(); }, 260); }
   }
   // свой файл или встроенный — такие видео грузим сами
   // лёгкое превью для плитки ленты (tools/make_thumbs.py), полное фото — только в просмотре
   thumb(src) { return /^assets\/[^/]+\.jpg$/.test(src || '') ? src.replace('assets/', 'assets/t/') : src; }
   // режим «1 в ряд» (телефон, REELS / «Комплекс»): играет только карточка в фокусе, остальные на паузе
-  // телефон, REELS / «Комплекс» (и в 2, и в 1 в ряд): играет одно видео — в фокусе
+  // телефон, REELS / «Комплекс»: «1 в ряд» — играет карточка в фокусе; «2 в ряд» — та, которой коснулись
   slideOn() { try { return document.documentElement.classList.contains('mgs-focus'); } catch (e) { return false; } }
   focusPlay() {
     var pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
@@ -900,12 +910,20 @@ class Component extends DCLogic {
         if (r.bottom > 0 && r.top < vh) { var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w; var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } });
       return;
     }
-    // в фокусе — карточка, которая видна больше всех; при равенстве — верхняя/левая (как читаем)
+    var snap = false; try { snap = document.documentElement.classList.contains('mgs-snap'); } catch (e) {}
+    if (!snap) {
+      // «2 в ряд» на телефоне: играет только то видео, которого коснулись пальцем (пока оно на экране)
+      var tp = this._touchPin && document.body.contains(this._touchPin) ? this._touchPin : null;
+      if (tp) { var tr = tp.getBoundingClientRect(); if (tr.bottom <= 0 || tr.top >= vh) tp = null; }
+      best = tp;
+    } else {
+    // «1 в ряд»: в фокусе — карточка, которая видна больше всех; при равенстве — верхняя/левая
     var bestD = 1e9;
     pins.forEach(function (p) { var r = p.getBoundingClientRect(); var vis = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)) / Math.max(1, r.height);
       var d = Math.max(r.top, 0) * 4 + r.left;  // при равенстве — та, что выше (а в ряду — левее)
       if (vis <= 0 || !p.querySelector('video')) return;  // вне экрана или без видео — не в фокусе
       if (vis > bestV + 0.02 || (Math.abs(vis - bestV) <= 0.02 && d < bestD)) { bestV = vis; bestD = d; best = p; } });
+    }
     pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return;
       if (p === best) { var dp = v.getAttribute('data-poster'); if (dp && !v.getAttribute('poster')) v.setAttribute('poster', dp);
         var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w;
