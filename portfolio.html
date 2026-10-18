@@ -16,7 +16,13 @@ body{margin:0;background:#0f0e0c}
 a{color:#f4f1ec}a:hover{color:#bfd630}
 .pin{display:block;margin:0}
 .pin-img{transition:transform .5s ease, filter .3s ease}
-.pin-btn:hover .pin-img{transform:scale(1.035);filter:brightness(.82)}
+.pin-btn:hover .pin-img{transform:scale(1.035)}
+/* плитки изделий: в покое — чистое фото; при наведении — затемнение, название по центру, значок «развернуть» */
+.ph-over{background:rgba(10,9,8,.55);opacity:0;transition:opacity .35s ease}
+.ph-exp{opacity:0;transform:scale(.85);transition:opacity .3s ease, transform .3s ease}
+.pin-btn:hover .ph-over,.pin-btn:focus-visible .ph-over{opacity:1}
+.pin-btn:hover .ph-exp,.pin-btn:focus-visible .ph-exp{opacity:1;transform:none}
+.ph-sub:empty{display:none}
 .pin-meta{opacity:0;transition:opacity .25s ease}
 .pin-btn:hover .pin-meta,.pin-btn:focus-visible .pin-meta{opacity:1}
 /* «Комплекс»: в покое фото притемнены сильнее, при наведении — светлеют (затемнение остаётся только под текстом) */
@@ -58,6 +64,9 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
   header.pad{padding-left:12px !important;padding-right:12px !important}
   .pin-btn,.pin{border-radius:10px !important}
   .cx-big{gap:6px !important;padding:8px !important}
+  .ph-title{font-size:16px !important}
+  .ph-sub{font-size:11px !important}
+  .ph-exp{width:26px !important;height:26px !important;right:7px !important;top:7px !important}
   .cx-title{font-size:17px !important}
   .cx-more{font-size:11px !important}
   .about-band{border-radius:12px !important}
@@ -147,10 +156,12 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
             <button class="pin-btn" onClick="{{p.open}}" aria-label="Открыть: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 18px; overflow: hidden; background: #1f1c19; cursor: zoom-in">
               <img class="pin-img" src="{{p.src}}" alt="{{p.label}}" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: {{p.pos}}">
-              <span class="pin-meta" style="position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px">
-                <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.95); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{p.label}}</span>
-                <span style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
+              <!-- при наведении: затемнение, название по центру, значок «развернуть» в правом верхнем углу -->
+              <span class="ph-over" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; text-align: center; color: #f4f1ec; pointer-events: none">
+                <span class="ph-title" style="font-size: 24px; font-weight: 300; line-height: 1.1; letter-spacing: -0.01em; text-wrap: balance; text-shadow: 0 2px 16px rgba(0,0,0,0.45)">{{p.label}}</span>
+                <span class="ph-sub" style="font-size: 13px; font-weight: 500; color: #bfd630">{{p.sub}}</span>
               </span>
+              <span class="ph-exp" style="position: absolute; right: 12px; top: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
             </button>
           </div>
         </sc-if>
@@ -726,7 +737,7 @@ class Component extends DCLogic {
       (pr.items || []).forEach(function (it, ii) {
         var key = pi + '-' + ii;
         var x = { key: key, name: it.name, type: it.type, photos: it.photos || [], videos: it.videos || [], text: it.text || '', price: it.price || '',
-          korpus: it.korpus || '—', fasady: it.fasady || '—', furn: it.furn || '—', project: pr.title, href: pr.href, priceDate: pr.priceDate || '' };
+          korpus: it.korpus || '—', fasady: it.fasady || '—', furn: it.furn || '—', project: pr.title, href: pr.href, address: pr.address || '', priceDate: pr.priceDate || '' };
         items.push(x); byKey[key] = x;
         x.photos.forEach(function (s) { photos.push(s); });
         x.videos.forEach(function (v) { videos.push(v.src); });
@@ -1033,7 +1044,7 @@ class Component extends DCLogic {
     } else {
       D.items.forEach(function (it) {
         if (it.type !== f || !it.photos.length) return;
-        pins.push({ isPhoto: true, src: it.photos[0], label: it.project, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
+        pins.push({ isPhoto: true, src: it.photos[0], label: it.project, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
       });
     }
 
