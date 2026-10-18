@@ -965,7 +965,9 @@ class Component extends DCLogic {
         v.preload = 'none'; v.setAttribute('data-want', self.previewOf(orig));
         if (!self._io) self._io = new IntersectionObserver(function (es) {
           es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-want');
-            if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp); if (s && el.getAttribute('src') !== s) el.src = s; if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
+            if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp);
+              // подходит к экрану — заранее грузим видео (без запуска), чтобы по касанию оно стартовало сразу, без чёрного кадра
+              if (el.preload !== 'auto') el.preload = 'auto'; if (s && el.getAttribute('src') !== s) el.src = s; else if (el.readyState === 0) { try { el.load(); } catch (x) {} } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
             else if (!el.paused) el.pause(); });
         }, { rootMargin: '200px 0px' });
         self._io.observe(v); continue;
