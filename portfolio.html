@@ -152,7 +152,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
           <div class="pin" style="position: relative; flex: {{p.flex}}">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
             <button class="pin-btn" onClick="{{p.open}}" aria-label="Открыть: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 18px; overflow: hidden; background: #1f1c19; cursor: zoom-in">
-              <img class="pin-img" src="{{p.src}}" alt="{{p.label}}" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: {{p.pos}}">
+              <img class="pin-img" src="{{p.src}}" alt="{{p.label}}" loading="lazy" decoding="async" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: {{p.pos}}">
               <!-- при наведении: затемнение, название по центру, значок «развернуть» в правом верхнем углу -->
               <span class="ph-over" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; text-align: center; color: #f4f1ec; pointer-events: none">
                 <span class="ph-title" style="font-size: 24px; font-weight: 300; line-height: 1.1; letter-spacing: -0.01em; text-wrap: balance; text-shadow: 0 2px 16px rgba(0,0,0,0.45)">{{p.label}}</span>
@@ -170,7 +170,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
               <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
-                <video class="pin-img" data-src="{{p.video}}" poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
+                <video class="pin-img" data-src="{{p.video}}" data-poster="{{p.poster}}" preload="none" autoplay="" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
               </sc-if>
               <sc-if value="{{p.noVideo}}" hint-placeholder-val="{{ true }}">
                 <span class="cx-blank" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #26221f"></span>
@@ -794,9 +794,9 @@ class Component extends DCLogic {
   }
 
   // фото один раз скачиваем в память — при листании в просмотре они не грузятся заново
-  preloadPhotos() {
+  preloadPhotos(list) {
     var self = this; this.mem = this.mem || {}; this.keep = this.keep || [];
-    this.data().photos.forEach(function (src) {
+    (list || []).forEach(function (src) {
       if (self.mem[src] || !window.fetch || src.indexOf('data:') === 0) return; // встроенные фото уже в памяти
       fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
         var u = URL.createObjectURL(b);
@@ -823,8 +823,7 @@ class Component extends DCLogic {
     if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
   }
   componentDidMount() {
-    this.preloadPhotos();
-    this.preloadVideos();
+    // ничего не качаем заранее: фото изделия — при открытии просмотра, видео — потоком по требованию
     var self = this;
     this.onResize = function () { self.setState({ vw: window.innerWidth }); clearTimeout(self._rz); self._rz = setTimeout(function () { self.resnap('auto'); }, 80); };
     window.addEventListener('resize', this.onResize);
@@ -834,6 +833,9 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
   componentDidUpdate() {
+    // открыли просмотр изделия — подгружаем в память только его фото (листание без вспышек)
+    var lz = this.state.lbZone || '';
+    if (lz !== this._lzPre) { this._lzPre = lz; if (lz.indexOf('item:') === 0) { var it = this.data().byKey[lz.slice(5)]; if (it) this.preloadPhotos(it.photos); } }
     if (this.state.lb < 0 && this._vpend) { var pd = this._vpend, ks = Object.keys(pd); if (ks.length) { var me = this; ks.forEach(function (k) { me.vurls[k] = pd[k]; if (me._vp) delete me._vp[k]; }); this._vpend = {}; } }
     if (this._animIn != null && this._animIn !== undefined && this._outA) this.animateIn();
     this.syncTrack();
@@ -841,6 +843,8 @@ class Component extends DCLogic {
     this.ensureVideo();
   }
   // свой файл или встроенный — такие видео грузим сами
+  // лёгкое превью для плитки ленты (tools/make_thumbs.py), полное фото — только в просмотре
+  thumb(src) { return /^assets\/[^/]+\.jpg$/.test(src || '') ? src.replace('assets/', 'assets/t/') : src; }
   isLocal(src) { return !!src && (src.indexOf('assets/') === 0 || src.indexOf('data:') === 0 || src.indexOf('blob:') === 0); }
 
   // iPhone/Android запускают видео сами только если оно без звука и «inline»;
@@ -869,7 +873,7 @@ class Component extends DCLogic {
         v.preload = 'none'; v.setAttribute('data-want', self.previewOf(orig));
         if (!self._io) self._io = new IntersectionObserver(function (es) {
           es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-want');
-            if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) el.src = s; var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
+            if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp); if (s && el.getAttribute('src') !== s) el.src = s; var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); }
             else if (!el.paused) el.pause(); });
         }, { rootMargin: '200px 0px' });
         self._io.observe(v); continue;
@@ -1032,7 +1036,7 @@ class Component extends DCLogic {
     } else {
       D.items.forEach(function (it) {
         if (it.type !== f || !it.photos.length) return;
-        pins.push({ isPhoto: true, src: it.photos[0], label: it.name, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
+        pins.push({ isPhoto: true, src: self.thumb(it.photos[0]), label: it.name, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
       });
     }
 
