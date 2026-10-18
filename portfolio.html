@@ -18,7 +18,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 .pin-img{transition:transform .5s ease, filter .3s ease}
 .pin-btn:hover .pin-img{transform:scale(1.035);filter:brightness(.82)}
 .pin-meta{opacity:0;transition:opacity .25s ease}
-.pin-btn:hover .pin-meta,.pin-btn:focus-visible .pin-meta{opacity:1}
+.pin-btn:hover .pin-meta,.pin-btn:focus-visible .pin-meta,.pin-meta-on{opacity:1}
 .chip{transition:background-color .2s ease,color .2s ease}
 .chip:hover{background:#322d29}
 .lb-thumbs{scrollbar-width:none}
@@ -152,7 +152,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
                   <span style="position: relative; overflow: hidden; background: #1f1c19"><img class="pin-img" src="{{q.src}}" alt="{{q.alt}}" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></span>
                 </sc-for>
               </span>
-              <span class="pin-meta" style="position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px">
+              <span class="pin-meta pin-meta-on" style="position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px">
                 <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.95); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{p.label}}</span>
                 <span style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
               </span>
