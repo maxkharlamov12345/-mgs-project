@@ -908,12 +908,15 @@ class Component extends DCLogic {
   thumb(src) { return /^assets\/[^/]+\.jpg$/.test(src || '') ? src.replace('assets/', 'assets/t/') : src; }
   // режим «1 в ряд» (телефон, REELS / «Комплекс»): играет только карточка в фокусе, остальные на паузе
   // телефон, REELS / «Комплекс»: «1 в ряд» — играет карточка в фокусе; «2 в ряд» — та, которой коснулись
+  // телефон «2 в ряд» в REELS/«Комплексе» — лёгкая копия <имя>-mini.mp4 (360px), иначе обычное превью
+  gridMini() { try { var c = document.documentElement.classList; return c.contains('mgs-focus') && !c.contains('mgs-snap'); } catch (e) { return false; } }
+  feedSrc(v) { var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; return this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; }
   slideOn() { try { return document.documentElement.classList.contains('mgs-focus'); } catch (e) { return false; } }
   focusPlay() {
-    var pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
+    var self0 = this, pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
     if (!this.slideOn()) {  // обычная сетка — играют все видимые
       pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return; var r = p.getBoundingClientRect();
-        if (r.bottom > 0 && r.top < vh) { var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w; var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } });
+        if (r.bottom > 0 && r.top < vh) { var w = self0.feedSrc(v); if (w && v.getAttribute('src') !== w) v.src = w; var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } });
       return;
     }
     var snap = false; try { snap = document.documentElement.classList.contains('mgs-snap'); } catch (e) {}
@@ -931,9 +934,12 @@ class Component extends DCLogic {
       if (vis > bestV + 0.02 || (Math.abs(vis - bestV) <= 0.02 && d < bestD)) { bestV = vis; bestD = d; best = p; } });
     }
     this._focusV = best ? best.querySelector('video') : null;
+    // плитки у экрана — заранее нужная версия файла (после смены «2/1 в ряд» иначе был бы чёрный кадр)
+    pins.forEach(function (p) { var v = p.querySelector('video'); if (!v || !v.getAttribute('src')) return; var r = p.getBoundingClientRect();
+      if (r.bottom > -vh && r.top < 2 * vh) { var w = self0.feedSrc(v); if (w && v.getAttribute('src') !== w && v !== self0._focusV) { v.preload = 'auto'; v.src = w; } } });
     pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return;
       if (p === best) { var dp = v.getAttribute('data-poster'); if (dp && !v.getAttribute('poster')) v.setAttribute('poster', dp);
-        var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w;
+        var w = self0.feedSrc(v); if (w && v.getAttribute('src') !== w) v.src = w;
         if (v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } }
       else if (!v.paused) v.pause(); });
   }
@@ -967,7 +973,7 @@ class Component extends DCLogic {
           es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-want');
             if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp);
               // подходит к экрану — заранее грузим видео (без запуска), чтобы по касанию оно стартовало сразу, без чёрного кадра
-              if (el.preload !== 'auto') el.preload = 'auto'; if (s && el.getAttribute('src') !== s) el.src = s; else if (el.readyState === 0) { try { el.load(); } catch (x) {} } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
+              if (el.preload !== 'auto') el.preload = 'auto'; s = self.feedSrc(el); if (s && el.getAttribute('src') !== s) el.src = s; else if (el.readyState === 0) { try { el.load(); } catch (x) {} } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
             else if (!el.paused) el.pause(); });
         }, { rootMargin: '200px 0px' });
         self._io.observe(v); continue;
