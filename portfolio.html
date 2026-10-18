@@ -1023,7 +1023,6 @@ class Component extends DCLogic {
 
     // ---- плитки выбранной ленты ----
     var pins = [];
-    var vw0 = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
     if (f === 'REELS') {
       D.reels.forEach(function (r, i) {
         pins.push({ isVideo: true, src: r.src, poster: r.poster, label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
@@ -1037,7 +1036,7 @@ class Component extends DCLogic {
     } else {
       D.items.forEach(function (it) {
         if (it.type !== f || !it.photos.length) return;
-        pins.push({ isPhoto: true, src: (window.MGS_ONECOL && vw0 < 760) ? it.photos[0] : self.thumb(it.photos[0]),  /* 1 в ряд — полное фото, иначе мыльно */ label: it.name, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
+        pins.push({ isPhoto: true, src: self.thumb(it.photos[0]), label: it.name, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
       });
     }
 
@@ -1054,7 +1053,7 @@ class Component extends DCLogic {
 
     // сетка как в ленте проекта: ПК — 4 колонки, планшет — 3, телефон — 2, при любом числе плиток
     var vw = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
-    var cols = vw < 760 ? (window.MGS_ONECOL ? 1 : 2) : vw < 1100 ? 3 : 4;  // на телефоне — 1 или 2 (кнопка assets/feedcols.js)
+    var cols = vw < 760 ? 2 : vw < 1100 ? 3 : 4;
     var est = function (pn) { if (pn.isVideo) return 16 / 9; var r = pn.ratio.split('/'); return parseFloat(r[1]) / parseFloat(r[0]); };
     var columns = [];
     for (var ci = 0; ci < cols; ci++) columns.push({ pins: [], h: 0 });
@@ -1192,6 +1191,5 @@ class Component extends DCLogic {
   }
 }
 </script>
-<script src="assets/feedcols.js"></script>
 </body>
 </html>
