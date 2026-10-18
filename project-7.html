@@ -691,6 +691,9 @@ class Component extends DCLogic {
     if (window.innerWidth >= 1000) return Math.max(0, c.offsetLeft + c.offsetWidth / 2 - el.clientWidth / 2);
     return c.offsetLeft - (parseFloat(getComputedStyle(el).paddingLeft) || 0);
   }
+  // в просмотре фото догружаются после открытия (и копии по краям для бесконечной прокрутки) и меняют ширину —
+  // после каждой загрузки возвращаем слайдер точно на текущее фото, иначе оно «уезжает»
+  snapSoon() { var self = this; clearTimeout(this._snapT); this._snapT = setTimeout(function () { if (!self.animating && self.state.lb >= 0) self.resnap('auto'); }, 30); }
   resnap(behavior, fromLb) {
     var el = document.getElementById('lb-track');
     if (!el || !el.clientWidth || this.state.lb < 0) return;
@@ -905,7 +908,7 @@ class Component extends DCLogic {
       // бесконечный слайдер: по краям стоят копии последнего и первого фото,
       // и когда свайп на них останавливается, лента незаметно перескакивает на настоящее фото
       lbLoop: (function () {
-        var base = view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) return; self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); setTimeout(function () { self.resnap('auto'); }, 0); } }; });
+        var base = view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) { self.snapSoon(); return; } self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); setTimeout(function () { self.resnap('auto'); }, 0); } }; });
         self.loopOff = pc > 1 ? 1 : 0;
         // после последнего фото — полная копия набора, чтобы справа всегда «подглядывало» следующее фото, а не пустота
         return pc > 1 ? [base[pc - 1]].concat(base, base) : base;
@@ -975,7 +978,7 @@ class Component extends DCLogic {
           }
         }, 140);
       },
-      lbList: view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) return; self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); }, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, op: k === li ? '1' : '0.45', ring: k === li ? '2px solid ' + (self.props.accent ?? '#bfd630') : 'none', open: function () { if (k === li) return; self.dir = (k === (li + 1) % pc) ? 1 : (k === (li - 1 + pc) % pc) ? -1 : 0; self.setState({ lb: k }); } }; }),
+      lbList: view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster || '', measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) { self.snapSoon(); return; } self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); }, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, op: k === li ? '1' : '0.45', ring: k === li ? '2px solid ' + (self.props.accent ?? '#bfd630') : 'none', open: function () { if (k === li) return; self.dir = (k === (li + 1) % pc) ? 1 : (k === (li - 1 + pc) % pc) ? -1 : 0; self.setState({ lb: k }); } }; }),
       closeLb: function () { self.setState({ lb: -1, lbZone: null, lbStart: 0 }); },
       lbPrev: function () { self.dir = -1; self.setState({ lb: (li - 1 + pc) % pc }); },
       lbNext: function () { self.dir = 1; self.setState({ lb: (li + 1) % pc }); }
