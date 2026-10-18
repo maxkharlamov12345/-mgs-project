@@ -953,14 +953,14 @@ class Component extends DCLogic {
   watchNear() {
     var self = this; this._near = this._near || {};
     if (!window.IntersectionObserver) { var all = document.querySelectorAll('.feed .pin[data-key]'); for (var i = 0; i < all.length; i++) this._near[all[i].getAttribute('data-key')] = 1; return; }
-    this._seen = this._seen || new WeakSet();
     if (!this._nio) this._nio = new IntersectionObserver(function (es) {
       var add = false;
       es.forEach(function (e) { if (!e.isIntersecting) return; var k = e.target.getAttribute('data-key'); if (k && !self._near[k]) { self._near[k] = 1; add = true; } self._nio.unobserve(e.target); });
       if (add && !self._nearRaf) self._nearRaf = requestAnimationFrame(function () { self._nearRaf = 0; self.forceUpdate(); });
-    }, { rootMargin: '0px 0px 30% 0px' });
+    }, { rootMargin: '0px 0px 100% 0px' });
     var ps = document.querySelectorAll('.feed .pin[data-key]');
-    for (var j = 0; j < ps.length; j++) { var el = ps[j], k = el.getAttribute('data-key'); if (self._near[k] || self._seen.has(el)) continue; self._seen.add(el); this._nio.observe(el); }
+    // плитки переиспользуются при смене ленты — следим по паре «плитка + её фото», а не по плитке
+    for (var j = 0; j < ps.length; j++) { var el = ps[j], k = el.getAttribute('data-key'); if (!k || self._near[k] || el._nk === k) continue; el._nk = k; this._nio.unobserve(el); this._nio.observe(el); }
   }
   isLocal(src) { return !!src && (src.indexOf('assets/') === 0 || src.indexOf('data:') === 0 || src.indexOf('blob:') === 0); }
 
