@@ -891,7 +891,8 @@ class Component extends DCLogic {
   // лёгкое превью для плитки ленты (tools/make_thumbs.py), полное фото — только в просмотре
   thumb(src) { return /^assets\/[^/]+\.jpg$/.test(src || '') ? src.replace('assets/', 'assets/t/') : src; }
   // режим «1 в ряд» (телефон, REELS / «Комплекс»): играет только карточка в фокусе, остальные на паузе
-  slideOn() { try { return document.documentElement.classList.contains('mgs-snap'); } catch (e) { return false; } }
+  // телефон, REELS / «Комплекс» (и в 2, и в 1 в ряд): играет одно видео — в фокусе
+  slideOn() { try { return document.documentElement.classList.contains('mgs-focus'); } catch (e) { return false; } }
   focusPlay() {
     var pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
     if (!this.slideOn()) {  // обычная сетка — играют все видимые
@@ -899,7 +900,11 @@ class Component extends DCLogic {
         if (r.bottom > 0 && r.top < vh) { var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w; var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } });
       return;
     }
-    pins.forEach(function (p) { var r = p.getBoundingClientRect(); var vis = Math.min(r.bottom, vh) - Math.max(r.top, 0); if (vis > bestV) { bestV = vis; best = p; } });
+    // в фокусе — карточка, которая видна больше всех; при равенстве — верхняя/левая (как читаем)
+    var bestD = 1e9;
+    pins.forEach(function (p) { var r = p.getBoundingClientRect(); var vis = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)) / Math.max(1, r.height);
+      var d = Math.max(r.top, 0) * 4 + r.left;  // при равенстве — та, что выше (а в ряду — левее)
+      if (vis > bestV + 0.02 || (Math.abs(vis - bestV) <= 0.02 && d < bestD)) { bestV = vis; bestD = d; best = p; } });
     pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return;
       if (p === best) { var dp = v.getAttribute('data-poster'); if (dp && !v.getAttribute('poster')) v.setAttribute('poster', dp);
         var w = v.getAttribute('data-want') || v.getAttribute('data-src'); if (w && v.getAttribute('src') !== w) v.src = w;
@@ -1130,7 +1135,7 @@ class Component extends DCLogic {
     var maxH = 0; columns.forEach(function (c) { if (c.h > maxH) maxH = c.h; });
     columns.forEach(function (c) { var st = c.h >= maxH * 0.8; c.pins.forEach(function (pn) { pn.flex = st ? '1 0 auto' : 'none'; }); });
 
-    try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); } catch (e) {}
+    try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); document.documentElement.classList.toggle('mgs-focus', modeFeed); } catch (e) {}
 
     // ---- плашки ----
     var countOf = function (k) {
