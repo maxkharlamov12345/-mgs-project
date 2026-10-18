@@ -55,6 +55,25 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 .lb-slide-img{display:block;height:100%;width:auto;max-width:calc(100vw - 520px);object-fit:cover;border-radius:14px}
 .lb-reels .lb-slide-img{max-width:calc(100vw - 160px)}
 .lb-spacer{flex:0 0 70%}
+/* переключатель вида ленты (только телефон, REELS и «Комплекс») */
+.mode-pick{display:none}
+@media (max-width: 759px){
+  .mode-pick{display:flex;position:fixed;z-index:30;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    gap:4px;padding:4px;border-radius:999px;background:rgba(21,19,17,.9);border:1px solid #2c2824;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  .mode-btn{width:44px;height:40px;border:0;border-radius:999px;background:transparent;color:#a89f92;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .2s,color .2s}
+  .mode-btn[aria-pressed="true"]{background:#bfd630;color:#1c1a17}
+  .mode-btn:focus-visible{outline:2px solid #bfd630;outline-offset:2px}
+  /* «слайдер»: по одной карточке, страница листается вниз с примагничиванием, как просмотр */
+  html.mgs-snap{scroll-snap-type:y mandatory;scroll-padding-top:5px}
+  html.mgs-snap .top-sec{scroll-snap-align:start}
+  .feed.slide .pin{flex:none !important;scroll-snap-align:start;scroll-snap-stop:always;padding-top:0 !important;height:min(177.78vw, calc(100svh - 10px))}
+  .feed.slide .pin > div[aria-hidden="true"]{display:none}
+  .feed.slide .feed-col{gap:10px !important}
+  .feed.slide .cx-title{font-size:32px !important}
+  .feed.slide .cx-more{font-size:14px !important}
+  .feed.slide .cx-big{gap:12px !important}
+  .feed.slide .pin-btn,.feed.slide .pin{border-radius:14px !important}
+}
 @media (max-width: 760px){
   .feed,.feed-col{gap:5px !important}
   .pad{padding-left:5px !important;padding-right:5px !important}
@@ -125,7 +144,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 <div style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100vh">
 
   <!-- заголовок -->
-  <section class="pad" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
+  <section class="pad top-sec" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
     <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em">Портфолио</h1>
     <div style="font-size: 14px; color: #a89f92">{{countLine}}</div>
   </section>
@@ -142,7 +161,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
     <sc-if value="{{isEmpty}}" hint-placeholder-val="{{ false }}">
       <div style="text-align: center; color: #a89f92; font-size: 15px; padding: 40px 0">Скоро здесь появятся проекты</div>
     </sc-if>
-    <div class="feed" style="display: flex; gap: 16px; align-items: stretch; max-width: 1920px; margin: 0 auto">
+    <div class="{{feedCls}}" style="display: flex; gap: 16px; align-items: stretch; max-width: 1920px; margin: 0 auto">
       <sc-for list="{{columns}}" as="col" hint-placeholder-count="4">
       <div class="feed-col" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 16px">
       <sc-for list="{{col.pins}}" as="p" hint-placeholder-count="3">
@@ -204,6 +223,14 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
     </div>
   </div>
 
+
+  <!-- телефон, REELS и «Комплекс»: переключатель вида ленты — 2 в ряд / 1 в ряд слайдером -->
+  <sc-if value="{{showModes}}" hint-placeholder-val="{{ false }}">
+    <div class="mode-pick" role="group" aria-label="Вид ленты">
+      <button class="mode-btn" onClick="{{setGrid}}" aria-pressed="{{gridOn}}" aria-label="По 2 в ряд"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="7" height="7" rx="1.6"></rect><rect x="11" y="2" width="7" height="7" rx="1.6"></rect><rect x="2" y="11" width="7" height="7" rx="1.6"></rect><rect x="11" y="11" width="7" height="7" rx="1.6"></rect></svg></button>
+      <button class="mode-btn" onClick="{{setSlide}}" aria-pressed="{{slideOn}}" aria-label="По 1 в ряд, листать вниз"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2.5"></rect></svg></button>
+    </div>
+  </sc-if>
 
   <!-- полноэкранный просмотр: как на странице проекта -->
   <!-- полноэкранный просмотр -->
@@ -319,7 +346,8 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { filter: this.readHash() || this.DEFAULT(), lb: -1 };
+    var sl = false; try { sl = localStorage.getItem('mgs-slide') === '1'; } catch (e) {}
+    this.state = { filter: this.readHash() || this.DEFAULT(), lb: -1, slide: sl };
   }
 
   // ===== ЛЕНТЫ =====
@@ -770,6 +798,18 @@ class Component extends DCLogic {
     pins.sort(function (a, b) { return (a.r.top - b.r.top) || (a.r.left - b.r.left); });
     return { feed: document.querySelector('.feed'), cols: [].slice.call(document.querySelectorAll('.feed .feed-col')), pins: pins };
   }
+  // телефон, ленты REELS и «Комплекс»: «плитка» (2 в ряд) или «слайдер» (1 в ряд, листается вниз по одной карточке)
+  setMode(on) {
+    if (!!this.state.slide === on) return;
+    try { localStorage.setItem('mgs-slide', on ? '1' : '0'); } catch (e) {}
+    var self = this, a = this.anim(), E = this.feedEls();
+    var go = function () { self._animIn = a; self.setState({ slide: on }); try { window.scrollTo(0, 0); } catch (e) {} };
+    if (!a || !E.feed || !E.feed.animate) { go(); return; }
+    (this._outA || []).forEach(function (x) { x.cancel(); });
+    this._animIn = null;
+    this._outA = E.pins.map(function (o) { return o.el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }], { duration: 170, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }); });
+    clearTimeout(this._swT); this._swT = setTimeout(go, 170);
+  }
   switchFeed(f) {
     var self = this, a = this.anim(), E = this.feedEls();
     var go = function () { self._animIn = a; self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };
@@ -1053,7 +1093,9 @@ class Component extends DCLogic {
 
     // сетка как в ленте проекта: ПК — 4 колонки, планшет — 3, телефон — 2, при любом числе плиток
     var vw = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
-    var cols = vw < 760 ? 2 : vw < 1100 ? 3 : 4;
+    var modeFeed = vw < 760 && (f === 'REELS' || f === 'Комплекс');
+    var slide = modeFeed && !!this.state.slide;
+    var cols = slide ? 1 : vw < 760 ? 2 : vw < 1100 ? 3 : 4;
     var est = function (pn) { if (pn.isVideo) return 16 / 9; var r = pn.ratio.split('/'); return parseFloat(r[1]) / parseFloat(r[0]); };
     var columns = [];
     for (var ci = 0; ci < cols; ci++) columns.push({ pins: [], h: 0 });
@@ -1066,6 +1108,8 @@ class Component extends DCLogic {
     // одна плитка рядом с длинной колонкой не раздувается
     var maxH = 0; columns.forEach(function (c) { if (c.h > maxH) maxH = c.h; });
     columns.forEach(function (c) { var st = c.h >= maxH * 0.8; c.pins.forEach(function (pn) { pn.flex = st ? '1 0 auto' : 'none'; }); });
+
+    try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); } catch (e) {}
 
     // ---- плашки ----
     var countOf = function (k) {
@@ -1104,6 +1148,8 @@ class Component extends DCLogic {
       accent: accent,
       countLine: countLine,
       chips: chips, columns: columns, isEmpty: n === 0,
+      feedCls: slide ? 'feed slide' : 'feed', showModes: modeFeed, gridOn: slide ? 'false' : 'true', slideOn: slide ? 'true' : 'false',
+      setGrid: function () { self.setMode(false); }, setSlide: function () { self.setMode(true); },
       priceDate: view[li].priceDate || 'октябрь 2026',
       lbOpen: this.state.lb >= 0,
       lb: { src: view[li].src, zone: view[li].zone, text: view[li].text, price: view[li].price, korpus: view[li].korpus, fasady: view[li].fasady, furn: view[li].furn, project: view[li].project, href: view[li].href, hasPage: !!view[li].href, pos: pc > 1 ? (li + 1) + ' / ' + pc : '1 фото' },
