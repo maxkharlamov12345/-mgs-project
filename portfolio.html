@@ -862,7 +862,7 @@ class Component extends DCLogic {
     return this._vp[orig];
   }
   // короткие 10-секундные превью для ленты (без звука, лёгкие)
-  previewOf(src) { return /\.mp4$/.test(src || '') ? src.replace(/\.mp4$/, '-preview.mp4') : src; }
+  previewOf(src) { return /\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.mp4') : src; }  // уже превью — не трогаем
   ensureVideo() {
     var self = this;
     var vs = document.querySelectorAll('video');
