@@ -241,6 +241,22 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .metro-chip .m{min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:#d52b1e;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
 .metro-chip .t{color:#6f685f;font-weight:400}
 
+
+/* телефон/планшет: карточка салона не наплывает на карту, а раскрывается под ней */
+@media (max-width:999px){
+  .map-wrap{height:auto!important;overflow:visible;background:none;border-radius:0}
+  #map{position:relative!important;inset:auto;height:420px;border-radius:18px;overflow:hidden}
+  .map-fallback{height:420px;bottom:auto}
+  .salon-card{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;width:auto!important;max-width:none!important;margin-top:0;box-shadow:none;
+    transform:none;opacity:0;max-height:0;overflow:hidden;padding-top:0;padding-bottom:0;
+    transition:max-height .5s ease,opacity .35s ease,margin-top .5s ease,padding .5s ease}
+  .salon-card.open{opacity:1;max-height:640px;margin-top:12px;padding-top:12px;padding-bottom:22px}
+  .salon-photo{aspect-ratio:16/9}
+  /* список салонов — над картой, чтобы переключаться, не листая */
+  #salons{display:flex;flex-direction:column}
+  #salons .section-head{order:0} #salons .salon-list{order:1;margin:0 0 14px} #salons .map-wrap{order:2} #salons .map-credit{order:3}
+}
+
 /* адаптив */
 @media (max-width:1200px){.nav a{font-size:14px;padding:0 10px}}
 @media (max-width:999px){
@@ -622,6 +638,7 @@ function showSalon(i){
   $('#sName').textContent = s.name; $('#sAddr').textContent = s.addr;
   $('#sPhone').textContent = s.phone; $('#sPhone').href = 'tel:' + s.phone.replace(/\D/g,'');
   card.classList.add('open');
+  if(innerWidth<1000){ const wrap=document.querySelector('.map-wrap'); setTimeout(()=>{ const r=wrap.getBoundingClientRect(); if(r.top<0 || r.top>innerHeight*0.35) scrollTo({top:scrollY+r.top-80, behavior:'smooth'}); },60); }
   document.querySelectorAll('.pin').forEach((p,j)=>p.classList.toggle('on', j===i));
   list.querySelectorAll('.salon-chip').forEach((c,j)=>c.classList.toggle('on', j===i));
   if (lmap) showRoute(s);
@@ -724,7 +741,7 @@ function showRoute(s){
   if(!lmap || !lmap.isStyleLoaded()) return;   // карта ещё грузится — маршрут покажется сам после загрузки
   clearRoute();
   const m=s.metro, desk=innerWidth>=1000;
-  const pad = desk ? {top:80,bottom:80,left:440,right:80} : {top:60,bottom:300,left:40,right:40};
+  const pad = desk ? {top:80,bottom:80,left:440,right:80} : {top:70,bottom:50,left:40,right:40};
   const b=new maplibregl.LngLatBounds(); b.extend([s.lng,s.lat]); if(m) m.path.forEach(p=>b.extend(p));
   const cam=lmap.cameraForBounds(b,{padding:pad, maxZoom:16.5});
   lmap.flyTo({center:cam.center, zoom:Math.min(cam.zoom,16.5), padding:{top:0,bottom:0,left:0,right:0}, speed:0.9, curve:1.3, essential:true});
