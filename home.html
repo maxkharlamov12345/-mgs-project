@@ -135,7 +135,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .map-wrap{position:relative;height:580px;border-radius:18px;overflow:hidden;background:var(--panel)}
 #map{position:absolute;inset:0;background:var(--panel)}
 .leaflet-container{font-family:Onest,sans-serif}
-.leaflet-tile-pane{filter:sepia(.25) saturate(.5) brightness(.92)}
+.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) grayscale(.85) brightness(.82) contrast(1.05) sepia(.12)}
 .leaflet-control-zoom{border:0!important}
 .leaflet-control-zoom a{background:var(--chip)!important;color:var(--text)!important;border:0!important;border-radius:999px!important;width:40px!important;height:40px!important;line-height:40px!important;margin-bottom:6px}
 .leaflet-control-zoom a:hover{background:var(--chip-h)!important}
@@ -603,8 +603,9 @@ $('#salonClose').onclick = () => { card.classList.remove('open'); document.query
 let lmap = null;
 try {
   const map = lmap = L.map('map', {zoomControl:true, scrollWheelZoom:false, attributionControl:true, dragging: !('ontouchstart' in window), tap:false}).setView([55.72, 37.6], 10);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'© OpenStreetMap, © CARTO', subdomains:'abcd', maxZoom:19
+  // тайлы OpenStreetMap (без ключа), в тёмный фирменный вид — CSS-фильтром
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© OpenStreetMap', maxZoom:19
   }).addTo(map);
   const icon = L.divIcon({className:'', html:'<div class="pin"></div>', iconSize:[30,30], iconAnchor:[15,30]});
   SALONS.forEach((s,i) => L.marker([s.lat, s.lng], {icon}).addTo(map).on('click', () => showSalon(i)));
