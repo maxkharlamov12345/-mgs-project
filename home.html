@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MGS MEBEL — мебельная фабрика</title>
 <link rel="preload" href="assets/fonts/onest-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 @font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
 @font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+20BD}
@@ -134,14 +133,18 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* карта салонов */
 .map-wrap{position:relative;height:580px;border-radius:18px;overflow:hidden;background:var(--panel)}
 #map{position:absolute;inset:0;background:var(--panel)}
-.leaflet-container{font-family:Onest,sans-serif}
-.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) grayscale(.85) brightness(.82) contrast(1.05) sepia(.12)}
-.leaflet-control-zoom{border:0!important}
-.leaflet-control-zoom a{background:var(--chip)!important;color:var(--text)!important;border:0!important;border-radius:999px!important;width:40px!important;height:40px!important;line-height:40px!important;margin-bottom:6px}
-.leaflet-control-zoom a:hover{background:var(--chip-h)!important}
-.leaflet-control-attribution{background:rgba(15,14,12,.6)!important;color:#6f685f!important;font-size:9px}
-.leaflet-control-attribution a{color:#8a8277!important}
-.pin{width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--accent);transform:rotate(-45deg);display:grid;place-items:center;box-shadow:0 0 0 5px rgba(191,214,48,.22),0 4px 12px rgba(0,0,0,.6);transition:transform .2s}
+.maplibregl-map{font-family:Onest,sans-serif}
+.maplibregl-ctrl-group{background:transparent!important;box-shadow:none!important;display:flex;flex-direction:column;gap:6px}
+.maplibregl-ctrl-group button{width:40px!important;height:40px!important;border-radius:999px!important;background:var(--chip)!important;border:0!important}
+.maplibregl-ctrl-group button:hover{background:var(--chip-h)!important}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon{filter:invert(1)}
+.maplibregl-ctrl-attrib{background:rgba(15,14,12,.6)!important;color:#6f685f!important;font-size:9px}
+.maplibregl-ctrl-attrib a{color:#8a8277!important}
+.maplibregl-ctrl-attrib-button{filter:invert(1)}
+#map{opacity:0;transition:opacity .6s ease}
+#map.ready{opacity:1}
+.pin-wrap{width:30px;height:38px;cursor:pointer}
+.pin{margin:0 auto;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--accent);transform:rotate(-45deg);display:grid;place-items:center;box-shadow:0 0 0 5px rgba(191,214,48,.22),0 4px 12px rgba(0,0,0,.6);transition:transform .2s}
 .pin::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--ink)}
 .pin.on{transform:rotate(-45deg) scale(1.2)}
 .salon-card{position:absolute;left:20px;bottom:20px;z-index:500;width:360px;max-width:calc(100% - 40px);background:var(--panel);border-radius:18px;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.55);transform:translateY(12px);opacity:0;pointer-events:none;transition:.25s}
@@ -429,7 +432,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   <div class="viewer-track" id="viewerTrack"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 /* ===== ДАННЫЕ (потом заменить на реальные) =====
    preview — короткий 10-сек ролик для карточки, video — полное видео */
@@ -602,30 +604,71 @@ function showSalon(i){
   card.classList.add('open');
   document.querySelectorAll('.pin').forEach((p,j)=>p.classList.toggle('on', j===i));
   list.querySelectorAll('.salon-chip').forEach((c,j)=>c.classList.toggle('on', j===i));
-  if (lmap) lmap.flyTo([s.lat, s.lng], 14, {duration:1.2});
+  if (lmap) lmap.flyTo({center:[s.lng, s.lat], zoom:14.5, speed:0.9, curve:1.3, essential:true});
 }
 list.innerHTML = SALONS.map((s,i)=>`<button class="chip salon-chip" data-i="${i}">${s.short}</button>`).join('');
 list.querySelectorAll('.salon-chip').forEach(c => c.onclick = () => showSalon(+c.dataset.i));
-$('#salonClose').onclick = () => { card.classList.remove('open'); document.querySelectorAll('.pin,.salon-chip').forEach(p=>p.classList.remove('on')); if (lmap) lmap.flyToBounds(SALONS.map(s=>[s.lat,s.lng]), {padding:[60,60], duration:1.2}); };
+$('#salonClose').onclick = () => { card.classList.remove('open'); document.querySelectorAll('.pin,.salon-chip').forEach(p=>p.classList.remove('on')); if (lmap) fitAll(true); };
 
+/* Векторная карта (MapLibre + OpenFreeMap, без ключей). Грузится, когда до карты осталось ~1,5 экрана. */
 let lmap = null;
-try {
-  const map = lmap = L.map('map', {zoomControl:true, scrollWheelZoom:false, attributionControl:true, dragging: !('ontouchstart' in window), tap:false}).setView([55.72, 37.6], 10);
-  // тайлы OpenStreetMap (без ключа), в тёмный фирменный вид — CSS-фильтром
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution:'© OpenStreetMap', maxZoom:19
-  }).addTo(map);
-  const icon = L.divIcon({className:'', html:'<div class="pin"></div>', iconSize:[30,30], iconAnchor:[15,30]});
-  SALONS.forEach((s,i) => L.marker([s.lat, s.lng], {icon}).addTo(map).on('click', () => showSalon(i)));
-  const fitAll=()=>{ map.invalidateSize(); map.fitBounds(SALONS.map(s=>[s.lat,s.lng]), {padding:[60,60]}); };
-  fitAll();
-  // если карта создалась, пока блок был скрыт/нулевого размера — подстроить, когда появится на экране
-  let fitted=false;
-  new IntersectionObserver(es=>{ if(es[0].isIntersecting && !fitted){ fitted=true; fitAll(); } }).observe(document.getElementById('map'));
-} catch(e) {
-  $('#mapFallback').style.display = 'flex';
+const salonBounds = () => { const b=new maplibregl.LngLatBounds(); SALONS.forEach(s=>b.extend([s.lng,s.lat])); return b; };
+function fitAll(animate){ if(!lmap) return; lmap.fitBounds(salonBounds(), {padding:innerWidth<1000?50:90, duration: animate?1400:0, essential:true}); }
+// фирменная тёмная палитра поверх стиля OpenFreeMap «dark»
+function brandStyle(st){
+  const C={bg:'#0f0e0c', water:'#17191b', park:'#151712', build:'#191714', minor:'#24211d', major:'#2f2b26', motor:'#3a352f', casing:'#2a2622', rail:'#26231f', text:'#a89f92', textDim:'#7a7268', halo:'#0f0e0c'};
+  const name=['coalesce',['get','name:ru'],['get','name']];
+  st.layers.forEach(l=>{
+    const p=l.paint=l.paint||{}, id=l.id;
+    if(l.type==='background') p['background-color']=C.bg;
+    if(id==='water'||id==='waterway'){ if(l.type==='fill') p['fill-color']=C.water; else p['line-color']=C.water; }
+    if(/landcover_wood|landuse_park/.test(id)) p['fill-color']=C.park;
+    if(id==='landuse_residential') p['fill-color']='#12110f';
+    if(id==='building'){ p['fill-color']=C.build; p['fill-outline-color']='#211e1a'; }
+    if(id==='highway_minor'||id==='highway_path') p['line-color']=C.minor;
+    if(id==='highway_major_inner') p['line-color']=C.major;
+    if(id==='highway_major_casing'||id==='highway_motorway_casing') p['line-color']=C.casing;
+    if(id==='highway_motorway_inner') p['line-color']=C.motor;
+    if(id==='highway_major_subtle'||id==='highway_motorway_subtle') p['line-color']=C.major;
+    if(/^railway/.test(id) && !/dashline/.test(id)) p['line-color']=C.rail;
+    if(/dashline/.test(id)) p['line-color']=C.bg;
+    if(l.type==='symbol'){
+      if(l.layout && l.layout['text-field'] && !/motorway/.test(id)) l.layout['text-field']=name;
+      if(l.layout) l.layout['text-font']=l.layout['text-font']||['Noto Sans Regular'];
+      p['text-color'] = /place_city|place_town|place_state/.test(id) ? C.text : C.textDim;
+      p['text-halo-color']=C.halo; p['text-halo-width']=1.2; p['text-halo-blur']=0.5;
+    }
+  });
+  st.layers = st.layers.filter(l=>l.source!=='ne2_shaded');
+  return st;
 }
-
+function loadMapLib(){
+  return new Promise((res,rej)=>{
+    const css=document.createElement('link'); css.rel='stylesheet'; css.href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css'; document.head.appendChild(css);
+    const js=document.createElement('script'); js.src='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js'; js.onload=res; js.onerror=rej; document.head.appendChild(js);
+  });
+}
+async function initMap(){
+  try{
+    const [_, style] = await Promise.all([ loadMapLib(), fetch('https://tiles.openfreemap.org/styles/dark').then(r=>r.json()) ]);
+    const touch = 'ontouchstart' in window;
+    lmap = new maplibregl.Map({
+      container:'map', style:brandStyle(style), center:[37.58,55.75], zoom:9.5,
+      attributionControl:{compact:true}, dragRotate:false, pitchWithRotate:false,
+      scrollZoom:false, dragPan:!touch, cooperativeGestures:false, fadeDuration:200
+    });
+    lmap.touchZoomRotate.disableRotation();
+    lmap.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-left');
+    SALONS.forEach((s,i)=>{
+      const el=document.createElement('div'); el.className='pin-wrap'; el.innerHTML='<div class="pin"></div>';
+      el.addEventListener('click', ev=>{ ev.stopPropagation(); showSalon(i); });
+      new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([s.lng,s.lat]).addTo(lmap);
+    });
+    lmap.once('load', ()=>{ lmap.resize(); fitAll(false); document.getElementById('map').classList.add('ready'); });
+    new ResizeObserver(()=>lmap && lmap.resize()).observe(document.getElementById('map'));
+  }catch(e){ $('#mapFallback').style.display='flex'; }
+}
+new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); initMap(); } },{rootMargin:'150% 0px'}).observe(document.getElementById('map'));
 
 /* ===== Окно расчёта (отправка пока не подключена) ===== */
 const modal = $('#calcModal');
