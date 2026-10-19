@@ -224,6 +224,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 #news,#salons{padding-top:calc(var(--header-h) + 36px)}
 
+.map-credit{margin-top:14px;font-size:11px;color:#5f5850}
+.map-credit a{color:#5f5850;text-decoration:underline}
+
 /* адаптив */
 @media (max-width:1200px){.nav a{font-size:14px;padding:0 10px}}
 @media (max-width:999px){
@@ -342,6 +345,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     </div>
   </div>
   <div class="salon-list" id="salonList"></div>
+  <div class="map-credit">Карта: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, OpenFreeMap</div>
 </section>
 
 <!-- ПОДВАЛ -->
@@ -656,7 +660,7 @@ async function initMap(){
     const touch = 'ontouchstart' in window;
     lmap = new maplibregl.Map({
       container:'map', style:brandStyle(style), center:[37.58,55.75], zoom:9.5,
-      attributionControl:{compact:true}, dragRotate:false, pitchWithRotate:false,
+      attributionControl:false, dragRotate:false, pitchWithRotate:false,
       scrollZoom:false, dragPan:!touch, cooperativeGestures:false, fadeDuration:200
     });
     lmap.touchZoomRotate.disableRotation();
