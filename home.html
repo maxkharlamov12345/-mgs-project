@@ -219,6 +219,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hero .media video.ready{opacity:1}
 .hero .media{background:#0f0e0c center/cover no-repeat}
 
+#news,#salons{padding-top:calc(var(--header-h) + 36px)}
+
 /* адаптив */
 @media (max-width:1200px){.nav a{font-size:14px;padding:0 10px}}
 @media (max-width:999px){
@@ -321,7 +323,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 </section>
 
 <!-- ФИРМЕННЫЕ САЛОНЫ -->
-<section class="section" id="salons" style="padding-top:20px">
+<section class="section" id="salons">
   <div class="section-head"><div><div class="tag">#Фирменные салоны</div><h2>Приходите посмотреть вживую</h2></div></div>
   <div class="map-wrap">
     <div id="map"></div>
@@ -366,7 +368,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       <h5>Контакты</h5>
       <ul>
         <li><a class="big-phone" href="tel:84957773575">8-495-777-35-75</a></li>
-        <li>Москва, Котляковский пер., 2А к3</li>
+        <li>4 салона в Москве и Химках</li>
         <li><div class="socials"><a href="#">TG</a><a href="#">VK</a><a href="#">WA</a></div></li>
       </ul>
     </div>
@@ -437,9 +439,10 @@ const NEWS = [
   {date:"Новости", title:"Открытие салона", text:"Текст-заглушка: описание новости появится здесь.", preview:"", video:"", g:"g5"}
 ];
 const SALONS = [
-  {name:"ЖК Варшавская LIFE, салон MGS MEBEL", addr:"Москва, Котляковский переулок, 2А к3", phone:"8-495-777-35-75", lat:55.6435, lng:37.6255, short:"Москва, Варшавская LIFE"},
-  {name:"Салон MGS MEBEL (заглушка)", addr:"Адрес уточняется", phone:"8-495-777-35-75", lat:55.7558, lng:37.4,   short:"Салон 2 (заглушка)"},
-  {name:"Салон MGS MEBEL (заглушка)", addr:"Адрес уточняется", phone:"8-495-777-35-75", lat:55.82,   lng:37.75,  short:"Салон 3 (заглушка)"}
+  {short:"Пражская",     name:"Салон MGS MEBEL — Пражская",     addr:"Москва, Кировоградская ул., 15, ТЦ «Гранд Юг», 2 этаж",                   phone:"8-495-777-35-75", lat:55.60962, lng:37.60525},
+  {short:"Авиамоторная", name:"Салон MGS MEBEL — Авиамоторная", addr:"Москва, шоссе Энтузиастов, 12 к2, ТЦ «Город», 4 этаж",                    phone:"8-495-777-35-75", lat:55.74745, lng:37.70712},
+  {short:"Химки",        name:"Салон MGS MEBEL — Химки",        addr:"Химки, ул. Бутаково, 4, ТЦ «Гранд», 2 этаж",                            phone:"8-495-777-35-75", lat:55.88628, lng:37.43692},
+  {short:"Румянцево",    name:"Салон MGS MEBEL — Румянцево",    addr:"Москва, Киевское шоссе, 22 км, БП «Румянцево», блок В, вход 5, 3 этаж", phone:"8-495-777-35-75", lat:55.63603, lng:37.43654}
 ];
 
 const $ = s => document.querySelector(s);
@@ -591,19 +594,21 @@ function showSalon(i){
   card.classList.add('open');
   document.querySelectorAll('.pin').forEach((p,j)=>p.classList.toggle('on', j===i));
   list.querySelectorAll('.salon-chip').forEach((c,j)=>c.classList.toggle('on', j===i));
-  if (window.map) map.flyTo([s.lat, s.lng], 13, {duration:.8});
+  if (lmap) lmap.flyTo([s.lat, s.lng], 14, {duration:1.2});
 }
 list.innerHTML = SALONS.map((s,i)=>`<button class="chip salon-chip" data-i="${i}">${s.short}</button>`).join('');
 list.querySelectorAll('.salon-chip').forEach(c => c.onclick = () => showSalon(+c.dataset.i));
 $('#salonClose').onclick = () => { card.classList.remove('open'); document.querySelectorAll('.pin,.salon-chip').forEach(p=>p.classList.remove('on')); };
 
+let lmap = null;
 try {
-  window.map = L.map('map', {zoomControl:true, scrollWheelZoom:false, attributionControl:true, dragging: !('ontouchstart' in window), tap:false}).setView([55.72, 37.6], 10);
+  const map = lmap = L.map('map', {zoomControl:true, scrollWheelZoom:false, attributionControl:true, dragging: !('ontouchstart' in window), tap:false}).setView([55.72, 37.6], 10);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution:'© OpenStreetMap, © CARTO', subdomains:'abcd', maxZoom:19
   }).addTo(map);
   const icon = L.divIcon({className:'', html:'<div class="pin"></div>', iconSize:[30,30], iconAnchor:[15,30]});
   SALONS.forEach((s,i) => L.marker([s.lat, s.lng], {icon}).addTo(map).on('click', () => showSalon(i)));
+  map.fitBounds(SALONS.map(s=>[s.lat,s.lng]), {padding:[60,60]});
 } catch(e) {
   $('#mapFallback').style.display = 'flex';
 }
