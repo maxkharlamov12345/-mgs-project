@@ -683,7 +683,9 @@ async function initMap(){
     new ResizeObserver(()=>{ if(!lmap) return; lmap.resize(); if(!card.classList.contains('open')) fitAll(false); }).observe(document.getElementById('map'));
   }catch(e){ $('#mapFallback').style.display='flex'; }
 }
-new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); initMap(); } },{rootMargin:'150% 0px'}).observe(document.getElementById('map'));
+let mapStarted=false; const startMap=()=>{ if(mapStarted) return; mapStarted=true; initMap(); };
+new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); startMap(); } },{rootMargin:'150% 0px'}).observe(document.getElementById('map'));
+addEventListener('load', ()=>setTimeout(startMap, 3000));   // страховка: если наблюдатель не сработал — грузим в фоне после загрузки страницы
 
 /* ===== Окно расчёта (отправка пока не подключена) ===== */
 const modal = $('#calcModal');
