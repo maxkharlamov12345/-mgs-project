@@ -254,7 +254,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .salon-photo{aspect-ratio:16/9}
   /* список салонов — над картой, чтобы переключаться, не листая */
   #salons{display:flex;flex-direction:column}
-  #salons .section-head{order:0} #salons .salon-list{order:1;margin:0 0 14px} #salons .map-wrap{order:2} #salons .map-credit{order:3}
+  #salons .section-head{order:0} #salons .salon-list{order:1;margin:0 -16px 14px;padding:0 16px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none} #salons .salon-list .chip{flex:none} #salons .map-wrap{order:2} #salons .map-credit{order:3}
 }
 
 /* адаптив */
@@ -638,7 +638,7 @@ function showSalon(i){
   $('#sName').textContent = s.name; $('#sAddr').textContent = s.addr;
   $('#sPhone').textContent = s.phone; $('#sPhone').href = 'tel:' + s.phone.replace(/\D/g,'');
   card.classList.add('open');
-  if(innerWidth<1000){ const wrap=document.querySelector('.map-wrap'); setTimeout(()=>{ const r=wrap.getBoundingClientRect(); if(r.top<0 || r.top>innerHeight*0.35) scrollTo({top:scrollY+r.top-80, behavior:'smooth'}); },60); }
+  if(innerWidth<1000){ const top=document.querySelector('#salonList'); setTimeout(()=>{ const r=top.getBoundingClientRect(); if(r.top<60 || r.top>innerHeight*0.3) scrollTo({top:scrollY+r.top-76, behavior:'smooth'}); },60); }
   document.querySelectorAll('.pin').forEach((p,j)=>p.classList.toggle('on', j===i));
   list.querySelectorAll('.salon-chip').forEach((c,j)=>c.classList.toggle('on', j===i));
   if (lmap) showRoute(s);
