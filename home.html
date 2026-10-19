@@ -617,7 +617,16 @@ $('#salonClose').onclick = () => { card.classList.remove('open'); document.query
 /* Векторная карта (MapLibre + OpenFreeMap, без ключей). Грузится, когда до карты осталось ~1,5 экрана. */
 let lmap = null;
 const salonBounds = () => { const b=new maplibregl.LngLatBounds(); SALONS.forEach(s=>b.extend([s.lng,s.lat])); return b; };
-function fitAll(animate){ if(!lmap) return; lmap.fitBounds(salonBounds(), {padding:innerWidth<1000?50:90, duration: animate?1400:0, essential:true}); }
+let homeView=null;   // исходный вид «все 4 салона» — сюда же возвращаемся по крестику
+function fitAll(animate){
+  if(!lmap) return;
+  const zero={top:0,bottom:0,left:0,right:0};
+  if(animate && homeView){ lmap.flyTo({center:homeView.center, zoom:homeView.zoom, padding:zero, speed:0.9, curve:1.3, essential:true}); return; }
+  lmap.setPadding(zero);
+  const cam=lmap.cameraForBounds(salonBounds(), {padding:innerWidth<1000?50:90});
+  lmap.jumpTo({center:cam.center, zoom:cam.zoom});
+  homeView={center:cam.center, zoom:cam.zoom};
+}
 // заранее прогреваем карту вокруг салонов (данные скачиваются в фоне, перелёт без пустых кусков)
 function warmSalons(){ SALONS.forEach(s=>{ ['13','14'].forEach(z=>{ const n=2**+z, x=Math.floor((s.lng+180)/360*n), y=Math.floor((1-Math.log(Math.tan(s.lat*Math.PI/180)+1/Math.cos(s.lat*Math.PI/180))/Math.PI)/2*n); for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++){ const src=lmap.getSource('openmaptiles'); const url=src && src.tiles && src.tiles[0]; if(url) fetch(url.replace('{z}',z).replace('{x}',x+dx).replace('{y}',y+dy)).catch(()=>{}); } }); }); }
 // фирменная тёмная палитра поверх стиля OpenFreeMap «dark»
@@ -671,7 +680,7 @@ async function initMap(){
       new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([s.lng,s.lat]).addTo(lmap);
     });
     lmap.once('load', ()=>{ lmap.resize(); fitAll(false); document.getElementById('map').classList.add('ready'); setTimeout(()=>{ try{ warmSalons(); }catch(e){} }, 800); });
-    new ResizeObserver(()=>lmap && lmap.resize()).observe(document.getElementById('map'));
+    new ResizeObserver(()=>{ if(!lmap) return; lmap.resize(); if(!card.classList.contains('open')) fitAll(false); }).observe(document.getElementById('map'));
   }catch(e){ $('#mapFallback').style.display='flex'; }
 }
 new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); initMap(); } },{rootMargin:'150% 0px'}).observe(document.getElementById('map'));
