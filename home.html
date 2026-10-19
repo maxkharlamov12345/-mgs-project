@@ -604,7 +604,7 @@ function showSalon(i){
   card.classList.add('open');
   document.querySelectorAll('.pin').forEach((p,j)=>p.classList.toggle('on', j===i));
   list.querySelectorAll('.salon-chip').forEach((c,j)=>c.classList.toggle('on', j===i));
-  if (lmap) lmap.flyTo({center:[s.lng, s.lat], zoom:14.5, speed:0.9, curve:1.3, essential:true});
+  if (lmap) lmap.flyTo({center:[s.lng, s.lat], zoom:14, speed:0.9, curve:1.3, essential:true, padding: innerWidth>=1000 ? {left:380,top:0,right:0,bottom:0} : {left:0,top:0,right:0,bottom:220}});
 }
 list.innerHTML = SALONS.map((s,i)=>`<button class="chip salon-chip" data-i="${i}">${s.short}</button>`).join('');
 list.querySelectorAll('.salon-chip').forEach(c => c.onclick = () => showSalon(+c.dataset.i));
@@ -614,6 +614,8 @@ $('#salonClose').onclick = () => { card.classList.remove('open'); document.query
 let lmap = null;
 const salonBounds = () => { const b=new maplibregl.LngLatBounds(); SALONS.forEach(s=>b.extend([s.lng,s.lat])); return b; };
 function fitAll(animate){ if(!lmap) return; lmap.fitBounds(salonBounds(), {padding:innerWidth<1000?50:90, duration: animate?1400:0, essential:true}); }
+// заранее прогреваем карту вокруг салонов (данные скачиваются в фоне, перелёт без пустых кусков)
+function warmSalons(){ SALONS.forEach(s=>{ ['13','14'].forEach(z=>{ const n=2**+z, x=Math.floor((s.lng+180)/360*n), y=Math.floor((1-Math.log(Math.tan(s.lat*Math.PI/180)+1/Math.cos(s.lat*Math.PI/180))/Math.PI)/2*n); for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++){ const src=lmap.getSource('openmaptiles'); const url=src && src.tiles && src.tiles[0]; if(url) fetch(url.replace('{z}',z).replace('{x}',x+dx).replace('{y}',y+dy)).catch(()=>{}); } }); }); }
 // фирменная тёмная палитра поверх стиля OpenFreeMap «dark»
 function brandStyle(st){
   const C={bg:'#0f0e0c', water:'#17191b', park:'#151712', build:'#191714', minor:'#24211d', major:'#2f2b26', motor:'#3a352f', casing:'#2a2622', rail:'#26231f', text:'#a89f92', textDim:'#7a7268', halo:'#0f0e0c'};
@@ -664,7 +666,7 @@ async function initMap(){
       el.addEventListener('click', ev=>{ ev.stopPropagation(); showSalon(i); });
       new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([s.lng,s.lat]).addTo(lmap);
     });
-    lmap.once('load', ()=>{ lmap.resize(); fitAll(false); document.getElementById('map').classList.add('ready'); });
+    lmap.once('load', ()=>{ lmap.resize(); fitAll(false); document.getElementById('map').classList.add('ready'); setTimeout(()=>{ try{ warmSalons(); }catch(e){} }, 800); });
     new ResizeObserver(()=>lmap && lmap.resize()).observe(document.getElementById('map'));
   }catch(e){ $('#mapFallback').style.display='flex'; }
 }
