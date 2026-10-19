@@ -721,6 +721,7 @@ function clearRoute(){
 function cumLen(c){ const out=[0]; for(let i=1;i<c.length;i++){ const dx=(c[i][0]-c[i-1][0])*Math.cos(c[i][1]*Math.PI/180), dy=c[i][1]-c[i-1][1]; out.push(out[i-1]+Math.hypot(dx,dy)); } return out; }
 function partial(c,L,t){ const goal=L[L.length-1]*t, out=[c[0]]; for(let i=1;i<c.length;i++){ if(L[i]<=goal){ out.push(c[i]); continue; } const k=(goal-L[i-1])/((L[i]-L[i-1])||1); out.push([c[i-1][0]+(c[i][0]-c[i-1][0])*k, c[i-1][1]+(c[i][1]-c[i-1][1])*k]); break; } return out; }
 function showRoute(s){
+  if(!lmap || !lmap.isStyleLoaded()) return;   // карта ещё грузится — маршрут покажется сам после загрузки
   clearRoute();
   const m=s.metro, desk=innerWidth>=1000;
   const pad = desk ? {top:80,bottom:80,left:440,right:80} : {top:60,bottom:300,left:40,right:40};
