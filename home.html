@@ -609,7 +609,11 @@ try {
   }).addTo(map);
   const icon = L.divIcon({className:'', html:'<div class="pin"></div>', iconSize:[30,30], iconAnchor:[15,30]});
   SALONS.forEach((s,i) => L.marker([s.lat, s.lng], {icon}).addTo(map).on('click', () => showSalon(i)));
-  map.fitBounds(SALONS.map(s=>[s.lat,s.lng]), {padding:[60,60]});
+  const fitAll=()=>{ map.invalidateSize(); map.fitBounds(SALONS.map(s=>[s.lat,s.lng]), {padding:[60,60]}); };
+  fitAll();
+  // если карта создалась, пока блок был скрыт/нулевого размера — подстроить, когда появится на экране
+  let fitted=false;
+  new IntersectionObserver(es=>{ if(es[0].isIntersecting && !fitted){ fitted=true; fitAll(); } }).observe(document.getElementById('map'));
 } catch(e) {
   $('#mapFallback').style.display = 'flex';
 }
