@@ -17,7 +17,7 @@
   --line:rgba(244,241,236,.12); --header-h:72px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:auto}
 body{background:var(--bg);color:var(--text);font-family:Onest,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
@@ -207,6 +207,16 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .sent{display:none;text-align:center;padding:24px 0}
 .sent b{display:block;font-size:34px;font-weight:300;letter-spacing:-.01em;margin-bottom:10px}
 .sent p{color:var(--muted);font-size:15px}
+
+
+/* экраны-слайды: свайп/колесо листает по одному экрану */
+html{scroll-snap-type:y mandatory;scroll-behavior:auto}
+.hero{scroll-snap-align:start;scroll-snap-stop:always}
+#news,#salons{scroll-snap-align:start}
+.footer{scroll-snap-align:end}
+.hero .media video{opacity:0;transition:opacity .4s ease}
+.hero .media video.ready{opacity:1}
+.hero .media{background:#0f0e0c center/cover no-repeat}
 
 /* адаптив */
 @media (max-width:1200px){.nav a{font-size:14px;padding:0 10px}}
@@ -439,6 +449,39 @@ document.querySelectorAll('video.bg-video').forEach(v => {
   const src = (innerWidth < 1000 && v.dataset.srcMobile) ? v.dataset.srcMobile : v.dataset.src;
   v.src = src; v.muted = true; v.play().catch(()=>{});
 });
+
+
+/* ===== Экраны-слайды: играет только видео на экране ===== */
+const heroVids=[...document.querySelectorAll('.hero video')];
+heroVids.forEach(v=>{ v.addEventListener('playing',()=>v.classList.add('ready')); if(v.poster) v.parentElement.style.backgroundImage=`url("${v.poster}")`; });
+const heroIO=new IntersectionObserver(es=>es.forEach(e=>{ const v=e.target.querySelector('video'); if(!v) return; if(e.intersectionRatio>0.5){ v.play().catch(()=>{}) } else { v.pause() } }),{threshold:[0,0.5,1]});
+document.querySelectorAll('.hero').forEach(h=>heroIO.observe(h));
+
+
+/* ===== Колесо мыши: один щелчок — один экран (тачпад/палец — CSS-примагничивание) ===== */
+(function(){
+  let lock=false, acc=0, t0=0;
+  const points=()=>{
+    const pts=[...document.querySelectorAll('.hero,#news,#salons')].map(el=>el.offsetTop);
+    pts.push(document.documentElement.scrollHeight-innerHeight);
+    return [...new Set(pts.map(Math.round))].sort((a,b)=>a-b);
+  };
+  addEventListener('wheel',e=>{
+    if (viewer.classList.contains('open') || document.querySelector('.modal.open') || document.querySelector('.mobile-menu.open')) return;
+    if (Math.abs(e.deltaX)>Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    if (lock) return;
+    const now=performance.now(); if (now-t0>250) acc=0; t0=now; acc+=e.deltaY;
+    if (Math.abs(acc)<30) return;
+    const pts=points(), y=scrollY, dir=Math.sign(acc); acc=0;
+    let target = dir>0 ? pts.find(p=>p>y+5) : [...pts].reverse().find(p=>p<y-5);
+    if (target===undefined) return;
+    lock=true;
+    document.documentElement.style.scrollSnapType='none';
+    scrollTo({top:target,behavior:'smooth'});
+    setTimeout(()=>{ document.documentElement.style.scrollSnapType=''; lock=false; }, 750);
+  },{passive:false});
+})();
 
 /* ===== Шапка ===== */
 const header = $('#header');
