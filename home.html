@@ -227,6 +227,15 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .map-credit{margin-top:14px;font-size:11px;color:#5f5850}
 .map-credit a{color:#5f5850;text-decoration:underline}
 
+.salon-card{padding:12px 12px 22px}
+.salon-card > :not(.salon-photo):not(.x){margin-left:12px;margin-right:12px}
+.salon-card .btn{width:calc(100% - 24px)}
+.salon-photo{aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:var(--tile);margin-bottom:16px}
+.salon-photo img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s ease}
+.salon-photo img.ok{opacity:1}
+.salon-card .x{top:20px;right:20px;background:rgba(15,14,12,.6);backdrop-filter:blur(6px);z-index:2}
+@media (max-width:999px){ .salon-photo{aspect-ratio:21/9} }
+
 /* адаптив */
 @media (max-width:1200px){.nav a{font-size:14px;padding:0 10px}}
 @media (max-width:999px){
@@ -336,6 +345,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     <div class="map-fallback" id="mapFallback">карта загрузится на сайте</div>
     <div class="salon-card" id="salonCard">
       <button class="x" id="salonClose" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div class="salon-photo"><img id="sPhoto" alt="" decoding="async"></div>
       <div class="kind">Фирменный салон</div>
       <h4 id="sName"></h4>
       <div class="addr" id="sAddr"></div>
@@ -445,10 +455,10 @@ const NEWS = [
   {date:"Новости", title:"Открытие салона", text:"Текст-заглушка: описание новости появится здесь.", preview:"", video:"", g:"g5"}
 ];
 const SALONS = [
-  {short:"Пражская",     name:"Салон MGS MEBEL — Пражская",     addr:"Москва, Кировоградская ул., 15, ТЦ «Гранд Юг», 2 этаж",                   phone:"8-495-777-35-75", lat:55.60962, lng:37.60525},
-  {short:"Авиамоторная", name:"Салон MGS MEBEL — Авиамоторная", addr:"Москва, шоссе Энтузиастов, 12 к2, ТЦ «Город», 4 этаж",                    phone:"8-495-777-35-75", lat:55.74745, lng:37.70712},
-  {short:"Химки",        name:"Салон MGS MEBEL — Химки",        addr:"Химки, ул. Бутаково, 4, ТЦ «Гранд», 2 этаж",                            phone:"8-495-777-35-75", lat:55.88628, lng:37.43692},
-  {short:"Румянцево",    name:"Салон MGS MEBEL — Румянцево",    addr:"Москва, Киевское шоссе, 22 км, БП «Румянцево», блок В, вход 5, 3 этаж", phone:"8-495-777-35-75", lat:55.63603, lng:37.43654}
+  {short:"Пражская", photo:"assets/salons/prazhskaya.webp",     name:"Салон MGS MEBEL — Пражская",     addr:"Москва, Кировоградская ул., 15, ТЦ «Гранд Юг», 2 этаж",                   phone:"8-495-777-35-75", lat:55.60962, lng:37.60525},
+  {short:"Авиамоторная", photo:"assets/salons/aviamotornaya.webp", name:"Салон MGS MEBEL — Авиамоторная", addr:"Москва, шоссе Энтузиастов, 12 к2, ТЦ «Город», 4 этаж",                    phone:"8-495-777-35-75", lat:55.74745, lng:37.70712},
+  {short:"Химки", photo:"assets/salons/khimki.webp",        name:"Салон MGS MEBEL — Химки",        addr:"Химки, ул. Бутаково, 4, ТЦ «Гранд», 2 этаж",                            phone:"8-495-777-35-75", lat:55.88628, lng:37.43692},
+  {short:"Румянцево", photo:"assets/salons/rumyantsevo.webp",    name:"Салон MGS MEBEL — Румянцево",    addr:"Москва, Киевское шоссе, 22 км, БП «Румянцево», блок В, вход 5, 3 этаж", phone:"8-495-777-35-75", lat:55.63603, lng:37.43654}
 ];
 
 const $ = s => document.querySelector(s);
@@ -603,6 +613,7 @@ addEventListener('keydown', e => {
 const card = $('#salonCard'), list = $('#salonList');
 function showSalon(i){
   const s = SALONS[i];
+  const ph=$('#sPhoto'); if(ph.dataset.src!==s.photo){ ph.classList.remove('ok'); ph.dataset.src=s.photo; ph.onload=()=>ph.classList.add('ok'); ph.src=s.photo; ph.alt=s.name; }
   $('#sName').textContent = s.name; $('#sAddr').textContent = s.addr;
   $('#sPhone').textContent = s.phone; $('#sPhone').href = 'tel:' + s.phone.replace(/\D/g,'');
   card.classList.add('open');
@@ -679,7 +690,7 @@ async function initMap(){
       el.addEventListener('click', ev=>{ ev.stopPropagation(); showSalon(i); });
       new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([s.lng,s.lat]).addTo(lmap);
     });
-    lmap.once('load', ()=>{ lmap.resize(); fitAll(false); document.getElementById('map').classList.add('ready'); setTimeout(()=>{ try{ warmSalons(); }catch(e){} }, 800); });
+    lmap.once('load', ()=>{ lmap.resize(); fitAll(false); document.getElementById('map').classList.add('ready'); setTimeout(()=>{ try{ warmSalons(); }catch(e){} SALONS.forEach(x=>{ const i=new Image(); i.src=x.photo; }); }, 800); });
     new ResizeObserver(()=>{ if(!lmap) return; lmap.resize(); if(!card.classList.contains('open')) fitAll(false); }).observe(document.getElementById('map'));
   }catch(e){ $('#mapFallback').style.display='flex'; }
 }
