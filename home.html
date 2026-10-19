@@ -236,6 +236,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .salon-card .x{top:20px;right:20px;background:rgba(15,14,12,.6);backdrop-filter:blur(6px);z-index:2}
 @media (max-width:999px){ .salon-photo{aspect-ratio:21/9} }
 
+.metro-chip{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 5px;border-radius:999px;background:rgba(244,241,236,.96);color:var(--ink);font-size:13px;font-weight:500;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.45);opacity:0;transform:translateY(6px) scale(.96);transition:opacity .4s ease,transform .4s ease}
+.metro-chip.show{opacity:1;transform:none}
+.metro-chip .m{min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:#d52b1e;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+.metro-chip .t{color:#6f685f;font-weight:400}
+
 /* адаптив */
 @media (max-width:1200px){.nav a{font-size:14px;padding:0 10px}}
 @media (max-width:999px){
@@ -455,10 +460,10 @@ const NEWS = [
   {date:"Новости", title:"Открытие салона", text:"Текст-заглушка: описание новости появится здесь.", preview:"", video:"", g:"g5"}
 ];
 const SALONS = [
-  {short:"Пражская", photo:"assets/salons/prazhskaya.webp",     name:"Салон MGS MEBEL — Пражская",     addr:"Москва, Кировоградская ул., 15, ТЦ «Гранд Юг», 2 этаж",                   phone:"8-495-777-35-75", lat:55.60962, lng:37.60525},
-  {short:"Авиамоторная", photo:"assets/salons/aviamotornaya.webp", name:"Салон MGS MEBEL — Авиамоторная", addr:"Москва, шоссе Энтузиастов, 12 к2, ТЦ «Город», 4 этаж",                    phone:"8-495-777-35-75", lat:55.74745, lng:37.70712},
-  {short:"Химки", photo:"assets/salons/khimki.webp",        name:"Салон MGS MEBEL — Химки",        addr:"Химки, ул. Бутаково, 4, ТЦ «Гранд», 2 этаж",                            phone:"8-495-777-35-75", lat:55.88628, lng:37.43692},
-  {short:"Румянцево", photo:"assets/salons/rumyantsevo.webp",    name:"Салон MGS MEBEL — Румянцево",    addr:"Москва, Киевское шоссе, 22 км, БП «Румянцево», блок В, вход 5, 3 этаж", phone:"8-495-777-35-75", lat:55.63603, lng:37.43654}
+  {short:"Пражская", metro:{kind:"М", name:"Пражская", min:7, path:[[37.60453,55.61237],[37.60446,55.61223],[37.60426,55.6121],[37.60416,55.61196],[37.60415,55.61188],[37.60421,55.6118],[37.60436,55.61173],[37.60467,55.61168],[37.60464,55.61162],[37.60446,55.61155],[37.60442,55.61149],[37.60426,55.61116],[37.60435,55.61115],[37.60414,55.61067],[37.60452,55.61061],[37.60459,55.6106],[37.60477,55.61062],[37.60484,55.61077],[37.60559,55.61066],[37.60571,55.61064],[37.60585,55.61062],[37.60645,55.61054],[37.60631,55.61026],[37.6056,55.61037],[37.60556,55.61038],[37.60549,55.61023],[37.60543,55.6101],[37.60538,55.61],[37.60538,55.61]]}, photo:"assets/salons/prazhskaya.webp",     name:"Салон MGS MEBEL — Пражская",     addr:"Москва, Кировоградская ул., 15, ТЦ «Гранд Юг», 2 этаж",                   phone:"8-495-777-35-75", lat:55.60962, lng:37.60525},
+  {short:"Авиамоторная", metro:{kind:"М", name:"Авиамоторная", min:17, path:[[37.71659,55.75172],[37.71654,55.75171],[37.7166,55.75161],[37.7168,55.75129],[37.71651,55.75123],[37.71643,55.75122],[37.71644,55.75119],[37.71538,55.75098],[37.71428,55.75077],[37.71415,55.75075],[37.71373,55.75065],[37.71363,55.75059],[37.71363,55.75058],[37.71347,55.75055],[37.71335,55.75052],[37.71287,55.75043],[37.71277,55.75041],[37.71166,55.7502],[37.71109,55.7501],[37.71103,55.75012],[37.71099,55.75013],[37.71085,55.75014],[37.7108,55.75015],[37.7107,55.75014],[37.71064,55.75013],[37.70902,55.74981],[37.70618,55.74925],[37.70593,55.74917],[37.70589,55.74916],[37.70578,55.74914],[37.70411,55.7488],[37.70405,55.74876],[37.70404,55.74873],[37.70405,55.74869],[37.70436,55.74813],[37.70439,55.74807],[37.70441,55.74804],[37.70442,55.74802],[37.70459,55.74796],[37.70481,55.74796],[37.70489,55.74796],[37.70526,55.74802],[37.70579,55.74796],[37.70639,55.74805],[37.70691,55.74815],[37.70727,55.74748]]}, photo:"assets/salons/aviamotornaya.webp", name:"Салон MGS MEBEL — Авиамоторная", addr:"Москва, шоссе Энтузиастов, 12 к2, ТЦ «Город», 4 этаж",                    phone:"8-495-777-35-75", lat:55.74745, lng:37.70712},
+  {short:"Химки", metro:{kind:"МЦД", name:"Химки", min:26, path:[[37.45381,55.89374],[37.45231,55.89437],[37.45236,55.89441],[37.4526,55.89431],[37.45261,55.89431],[37.45262,55.89432],[37.4524,55.89442],[37.45238,55.89442],[37.45214,55.89453],[37.45211,55.89451],[37.45186,55.89432],[37.45172,55.89422],[37.45154,55.89408],[37.45149,55.89404],[37.45137,55.89409],[37.45117,55.89418],[37.45112,55.89419],[37.45108,55.89416],[37.45103,55.89415],[37.45083,55.89399],[37.45078,55.89395],[37.45073,55.89391],[37.45058,55.89396],[37.45052,55.89397],[37.45042,55.89394],[37.44947,55.8932],[37.44832,55.89235],[37.44776,55.89193],[37.44767,55.89187],[37.44762,55.89184],[37.44691,55.89128],[37.44639,55.8909],[37.44527,55.89007],[37.44531,55.88998],[37.4453,55.88992],[37.4453,55.88982],[37.44492,55.88935],[37.44457,55.88891],[37.44449,55.88883],[37.44439,55.88875],[37.44391,55.88803],[37.44356,55.88759],[37.44276,55.88657],[37.44233,55.88603],[37.44221,55.88601],[37.44204,55.88605],[37.44156,55.88545],[37.4414,55.8856],[37.44127,55.88549],[37.44116,55.88541],[37.44105,55.88534],[37.44089,55.88528],[37.44082,55.8853],[37.44069,55.88541],[37.44016,55.88521],[37.4403,55.8851],[37.44063,55.88483],[37.44057,55.88477],[37.44045,55.88472],[37.4404,55.88476],[37.44016,55.88496],[37.43995,55.88512],[37.43989,55.88517],[37.43973,55.8851],[37.43961,55.88506],[37.43872,55.88575],[37.43852,55.88591],[37.43842,55.88601],[37.43838,55.88602],[37.43834,55.88604],[37.43832,55.88607],[37.43832,55.8861],[37.43821,55.88616],[37.43817,55.88623],[37.43819,55.88629],[37.43779,55.88661]]}, photo:"assets/salons/khimki.webp",        name:"Салон MGS MEBEL — Химки",        addr:"Химки, ул. Бутаково, 4, ТЦ «Гранд», 2 этаж",                            phone:"8-495-777-35-75", lat:55.88628, lng:37.43692},
+  {short:"Румянцево", metro:{kind:"М", name:"Румянцево", min:11, path:[[37.44159,55.63295],[37.44084,55.63287],[37.44052,55.63283],[37.44022,55.6328],[37.44016,55.633],[37.43991,55.63297],[37.43987,55.63297],[37.43966,55.63295],[37.43963,55.63294],[37.43945,55.63292],[37.43936,55.6329],[37.43927,55.63302],[37.43917,55.63315],[37.43912,55.63321],[37.43854,55.63307],[37.43845,55.63306],[37.43838,55.63306],[37.43827,55.63311],[37.4382,55.63309],[37.43812,55.63318],[37.43799,55.63333],[37.43777,55.63359],[37.43769,55.63369],[37.43756,55.63383],[37.43747,55.63394],[37.43724,55.634],[37.43689,55.63404],[37.43518,55.6362],[37.43638,55.6365],[37.43649,55.63637],[37.43671,55.63607]]}, photo:"assets/salons/rumyantsevo.webp",    name:"Салон MGS MEBEL — Румянцево",    addr:"Москва, Киевское шоссе, 22 км, БП «Румянцево», блок В, вход 5, 3 этаж", phone:"8-495-777-35-75", lat:55.63603, lng:37.43654}
 ];
 
 const $ = s => document.querySelector(s);
@@ -619,11 +624,11 @@ function showSalon(i){
   card.classList.add('open');
   document.querySelectorAll('.pin').forEach((p,j)=>p.classList.toggle('on', j===i));
   list.querySelectorAll('.salon-chip').forEach((c,j)=>c.classList.toggle('on', j===i));
-  if (lmap) lmap.flyTo({center:[s.lng, s.lat], zoom:14, speed:0.9, curve:1.3, essential:true, padding: innerWidth>=1000 ? {left:380,top:0,right:0,bottom:0} : {left:0,top:0,right:0,bottom:220}});
+  if (lmap) showRoute(s);
 }
 list.innerHTML = SALONS.map((s,i)=>`<button class="chip salon-chip" data-i="${i}">${s.short}</button>`).join('');
 list.querySelectorAll('.salon-chip').forEach(c => c.onclick = () => showSalon(+c.dataset.i));
-$('#salonClose').onclick = () => { card.classList.remove('open'); document.querySelectorAll('.pin,.salon-chip').forEach(p=>p.classList.remove('on')); if (lmap) fitAll(true); };
+$('#salonClose').onclick = () => { card.classList.remove('open'); document.querySelectorAll('.pin,.salon-chip').forEach(p=>p.classList.remove('on')); if (lmap) { clearRoute(); fitAll(true); } };
 
 /* Векторная карта (MapLibre + OpenFreeMap, без ключей). Грузится, когда до карты осталось ~1,5 экрана. */
 let lmap = null;
@@ -697,6 +702,51 @@ async function initMap(){
 let mapStarted=false; const startMap=()=>{ if(mapStarted) return; mapStarted=true; initMap(); };
 new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); startMap(); } },{rootMargin:'150% 0px'}).observe(document.getElementById('map'));
 addEventListener('load', ()=>setTimeout(startMap, 3000));   // страховка: если наблюдатель не сработал — грузим в фоне после загрузки страницы
+
+
+/* ===== Метро и анимированный пешеходный путь до ТЦ ===== */
+let metroMarker=null, routeAnim=null;
+function ensureRouteLayers(){
+  if(lmap.getSource('route')) return;
+  lmap.addSource('route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+  lmap.addLayer({id:'route-glow',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#bfd630','line-width':12,'line-opacity':0.18,'line-blur':4}});
+  lmap.addLayer({id:'route-line',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#bfd630','line-width':4}});
+}
+function clearRoute(){
+  if(routeAnim) cancelAnimationFrame(routeAnim), routeAnim=null;
+  if(metroMarker){ const el=metroMarker.getElement(); el.firstChild && el.firstChild.classList.remove('show'); const m=metroMarker; setTimeout(()=>m.remove(),400); metroMarker=null; }
+  if(lmap && lmap.getSource('route')) lmap.getSource('route').setData({type:'FeatureCollection',features:[]});
+}
+// длины участков пути — чтобы линия «рисовалась» с равной скоростью
+function cumLen(c){ const out=[0]; for(let i=1;i<c.length;i++){ const dx=(c[i][0]-c[i-1][0])*Math.cos(c[i][1]*Math.PI/180), dy=c[i][1]-c[i-1][1]; out.push(out[i-1]+Math.hypot(dx,dy)); } return out; }
+function partial(c,L,t){ const goal=L[L.length-1]*t, out=[c[0]]; for(let i=1;i<c.length;i++){ if(L[i]<=goal){ out.push(c[i]); continue; } const k=(goal-L[i-1])/((L[i]-L[i-1])||1); out.push([c[i-1][0]+(c[i][0]-c[i-1][0])*k, c[i-1][1]+(c[i][1]-c[i-1][1])*k]); break; } return out; }
+function showRoute(s){
+  clearRoute();
+  const m=s.metro, desk=innerWidth>=1000;
+  const pad = desk ? {top:80,bottom:80,left:440,right:80} : {top:60,bottom:300,left:40,right:40};
+  const b=new maplibregl.LngLatBounds(); b.extend([s.lng,s.lat]); if(m) m.path.forEach(p=>b.extend(p));
+  const cam=lmap.cameraForBounds(b,{padding:pad, maxZoom:16.5});
+  lmap.flyTo({center:cam.center, zoom:Math.min(cam.zoom,16.5), padding:{top:0,bottom:0,left:0,right:0}, speed:0.9, curve:1.3, essential:true});
+  if(!m) return;
+  const myId=s.name;
+  lmap.once('moveend',()=>{
+    if($('#sName').textContent!==myId) return;           // пока летели, выбрали другой салон
+    ensureRouteLayers();
+    // метка метро
+    const el=document.createElement('div');
+    el.innerHTML=`<div class="metro-chip"><span class="m">${m.kind}</span>${m.name}<span class="t">· ${m.min} мин пешком</span></div>`;
+    metroMarker=new maplibregl.Marker({element:el, anchor:'bottom', offset:[0,-6]}).setLngLat(m.path[0]).addTo(lmap);
+    requestAnimationFrame(()=>el.firstChild.classList.add('show'));
+    // путь рисуется от метро к ТЦ
+    const L=cumLen(m.path), DUR=1600, st=performance.now(), ease=t=>1-Math.pow(1-t,3);
+    const src=lmap.getSource('route');
+    (function step(now){
+      const k=Math.min(1,(now-st)/DUR);
+      src.setData({type:'Feature',geometry:{type:'LineString',coordinates:partial(m.path,L,ease(k))}});
+      if(k<1) routeAnim=requestAnimationFrame(step); else routeAnim=null;
+    })(st);
+  });
+}
 
 /* ===== Окно расчёта (отправка пока не подключена) ===== */
 const modal = $('#calcModal');
