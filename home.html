@@ -598,7 +598,7 @@ function showSalon(i){
 }
 list.innerHTML = SALONS.map((s,i)=>`<button class="chip salon-chip" data-i="${i}">${s.short}</button>`).join('');
 list.querySelectorAll('.salon-chip').forEach(c => c.onclick = () => showSalon(+c.dataset.i));
-$('#salonClose').onclick = () => { card.classList.remove('open'); document.querySelectorAll('.pin,.salon-chip').forEach(p=>p.classList.remove('on')); };
+$('#salonClose').onclick = () => { card.classList.remove('open'); document.querySelectorAll('.pin,.salon-chip').forEach(p=>p.classList.remove('on')); if (lmap) lmap.flyToBounds(SALONS.map(s=>[s.lat,s.lng]), {padding:[60,60], duration:1.2}); };
 
 let lmap = null;
 try {
