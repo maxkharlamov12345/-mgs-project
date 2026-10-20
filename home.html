@@ -268,6 +268,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .salons-list .salon-card .btn{width:100%}
 }
 
+
+/* слайдер двух видео-экранов: как полноэкранный просмотр новостей — прокрутка с примагничиванием внутри блока;
+   после второго видео прокрутка сама переходит на страницу (Новости и ниже — обычный скролл) */
+.hero-stack{height:100vh;height:100svh;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.hero-stack::-webkit-scrollbar{display:none}
+.hero-stack .hero{height:100%;min-height:0;scroll-snap-align:start;scroll-snap-stop:always}
+
 /* адаптив */
 @media (max-width:1200px){.nav a{font-size:14px;padding:0 10px}}
 @media (max-width:999px){
@@ -327,6 +334,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   <a href="#">Новости / новинки</a>
 </div>
 
+<!-- Два видео-экрана — свой вертикальный слайдер, как просмотр новостей (CSS scroll-snap) -->
+<div class="hero-stack" id="heroStack">
 <!-- О НАС: видео про фабрику -->
 <section class="hero" id="about">
   <div class="media">
@@ -354,6 +363,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     <div class="cta"><button class="btn" data-calc>Сделать расчёт</button><a class="btn btn-ghost" href="portfolio.html">Как мы делали — портфолио<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
   </div>
 </section>
+</div>
 
 <!-- НОВОСТИ -->
 <section class="section" id="news">
@@ -509,75 +519,10 @@ const heroIO=new IntersectionObserver(es=>es.forEach(e=>{ const v=e.target.query
 document.querySelectorAll('.hero').forEach(h=>heroIO.observe(h));
 
 
-/* ===== Слайдер только на двух видео-экранах; дальше (Новости и ниже) — обычная прокрутка ===== */
+/* ===== Видео-экраны: текст проявляется, когда экран встал на место ===== */
 (function(){
-  const DUR=1100;
-  const ease=t=>t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
-  let busy=false, acc=0, t0=0;
-  const blocked=()=>viewer.classList.contains('open')||document.querySelector('.modal.open')||document.querySelector('.mobile-menu.open');
-  const heroesEls=[...document.querySelectorAll('.hero')];
-  const pts=()=>heroesEls.map(h=>h.offsetTop).concat([document.querySelector('#news').offsetTop]); // 0, экран 2, начало обычной части
-  const end=()=>document.querySelector('#news').offsetTop;
-  // слайдер работает, если мы внутри видео-экранов, или стоим ровно в начале обычной части и листаем вверх
-  const sliderFor=dir=> scrollY < end()-5 || (dir<0 && scrollY <= end()+5);
-  function glide(to){
-    const from=scrollY, d=to-from; if(Math.abs(d)<2) return;
-    busy=true; const st=performance.now();
-    (function step(now){
-      const k=Math.min(1,(now-st)/DUR); scrollTo(0, from+d*ease(k));
-      if(k<1) requestAnimationFrame(step); else setTimeout(()=>busy=false,120);
-    })(st);
-  }
-  function go(dir){
-    const p=pts(), y=scrollY;
-    const t = dir>0 ? p.find(v=>v>y+5) : [...p].reverse().find(v=>v<y-5);
-    if(t!==undefined) glide(t);
-  }
-  // колесо / тачпад
-  addEventListener('wheel',e=>{
-    if(blocked() || Math.abs(e.deltaX)>Math.abs(e.deltaY)) return;
-    const dir=Math.sign(e.deltaY);
-    if(!busy && !sliderFor(dir)) return;          // обычная прокрутка
-    e.preventDefault();
-    if(busy) return;
-    const now=performance.now(); if(now-t0>200) acc=0; t0=now; acc+=e.deltaY;
-    if(Math.abs(acc)<25) return;
-    const d=Math.sign(acc); acc=0; go(d);
-  },{passive:false});
-  // палец
-  let sx=0, sy=0, axis=null, active=false;
-  addEventListener('touchstart',e=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; axis=null; active=false; },{passive:true});
-  addEventListener('touchmove',e=>{
-    if(blocked()) return;
-    const t=e.touches[0], dx=t.clientX-sx, dy=t.clientY-sy;
-    if(!axis && (Math.abs(dx)>8||Math.abs(dy)>8)){ axis = Math.abs(dx)>Math.abs(dy) ? 'x' : 'y'; active = axis==='y' && (busy || sliderFor(dy<0?1:-1)); }
-    if(active) e.preventDefault();
-  },{passive:false});
-  addEventListener('touchend',e=>{
-    if(!active || busy) return;
-    const dy=e.changedTouches[0].clientY-sy;
-    if(Math.abs(dy)>40) go(dy<0?1:-1);
-  },{passive:true});
-  // клавиатура
-  addEventListener('keydown',e=>{
-    if(blocked() || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
-    const dir = ['ArrowDown','PageDown',' '].includes(e.key) ? 1 : ['ArrowUp','PageUp'].includes(e.key) ? -1 : 0;
-    if(!dir || !sliderFor(dir)) return;
-    e.preventDefault(); if(!busy) go(dir);
-  });
-  // если обычной прокруткой (инерцией) остановились посередине видео-экранов — мягко доводим до ближайшего
-  let tm=null;
-  addEventListener('scroll',()=>{
-    if(busy) return; clearTimeout(tm);
-    tm=setTimeout(()=>{ if(busy||blocked()) return; const y=scrollY, p=pts(); if(y>=end()-2) return;
-      const near=p.reduce((a,v)=>Math.abs(v-y)<Math.abs(a-y)?v:a,p[0]); if(Math.abs(near-y)>2) glide(near); },160);
-  },{passive:true});
-  // текст экрана проявляется, когда экран почти на месте; лёгкий параллакс видео
-  const heroes=[...document.querySelectorAll('.hero')];
   const io=new IntersectionObserver(es=>es.forEach(en=>en.target.classList.toggle('in', en.intersectionRatio>0.6)),{threshold:[0,0.6,1]});
-  heroes.forEach(h=>io.observe(h));
-  const par=()=>{ heroes.forEach(h=>{ const r=h.getBoundingClientRect(); if(r.bottom>0 && r.top<innerHeight){ h.querySelector('.media').style.transform=`translate3d(0,${(-r.top*0.25).toFixed(1)}px,0)`; } }); };
-  addEventListener('scroll',()=>requestAnimationFrame(par),{passive:true}); par();
+  document.querySelectorAll('.hero').forEach(h=>io.observe(h));
 })();
 
 /* ===== Шапка ===== */
