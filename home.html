@@ -243,12 +243,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .salon-card .x:hover{background:rgba(15,14,12,.85)}
 .salon-card .x svg{width:16px;height:16px}
 /* вид «Списком»: карточки друг за другом */
-.salons-list{display:flex;flex-direction:column;gap:16px}
+.salons-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .salons-list[hidden],.salons-map[hidden]{display:none!important}
-.salons-list .salon-card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:center;padding:12px;opacity:0;transform:translateY(18px);animation:cardIn .55s cubic-bezier(.22,.61,.36,1) forwards}
-.salons-list .salon-card .salon-photo{margin:0}
-.salons-list .salon-card .body{padding:12px 16px 12px 0}
-.salons-list .salon-card .btn{width:auto}
+.salons-list .salon-card{display:flex;flex-direction:column;padding:12px 12px 22px;opacity:0;transform:translateY(18px);animation:cardIn .55s cubic-bezier(.22,.61,.36,1) forwards}
+.salons-list .salon-card .salon-photo{margin:0 0 16px}
+.salons-list .salon-card .body{padding:0 12px;display:flex;flex-direction:column;flex:1}
+.salons-list .salon-card .body .btn{margin-top:auto}
+.salons-list .salon-card .btn{width:100%}
 @keyframes cardIn{to{opacity:1;transform:none}}
 @media (max-width:999px){
   .section-head:has(.seg){flex-direction:column;align-items:flex-start;gap:18px}
@@ -261,7 +262,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .salon-overlay .salon-card .addr{margin-bottom:10px}
   .salon-overlay .metro{margin-bottom:12px}
   .salon-overlay .salon-card .phone{margin-bottom:14px}
-  .salons-list .salon-card{grid-template-columns:1fr;gap:0;padding:12px 12px 22px}
+  .salons-list{grid-template-columns:1fr}
   .salons-list .salon-card .salon-photo{margin-bottom:16px}
   .salons-list .salon-card .body{padding:0 12px}
   .salons-list .salon-card .btn{width:100%}
