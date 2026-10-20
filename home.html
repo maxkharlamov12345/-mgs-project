@@ -275,6 +275,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hero-stack::-webkit-scrollbar{display:none}
 .hero-stack .hero{height:100%;min-height:0;scroll-snap-align:start;scroll-snap-stop:always}
 
+.viewer-sound{position:fixed;left:50%;transform:translateX(-50%);top:24px;z-index:101;height:32px;padding:0 14px;border-radius:999px;background:rgba(15,14,12,.55);color:var(--text);font-size:13px;font-weight:500;backdrop-filter:blur(6px)}
+.viewer-sound.on{background:var(--accent);color:var(--ink)}
+.v-slide video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0b0a09}
+.news-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.viewer-sound[hidden]{display:none}
+@media (max-width:999px) and (orientation:portrait){ .v-slide video{object-fit:contain} }
+
 /* адаптив */
 @media (max-width:1200px){.nav a{font-size:14px;padding:0 10px}}
 @media (max-width:999px){
@@ -479,6 +486,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 <!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР НОВОСТЕЙ -->
 <div class="viewer" id="viewer" aria-hidden="true">
   <div class="viewer-count" id="viewerCount"></div>
+  <button class="viewer-sound" id="viewerSound" hidden>Звук: вкл</button>
   <button class="viewer-close" id="viewerClose" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div class="viewer-nav">
     <button class="arrow" data-v="-1" aria-label="Предыдущая"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 15l6-6 6 6"/></svg></button>
@@ -491,7 +499,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* ===== ДАННЫЕ (потом заменить на реальные) =====
    preview — короткий 10-сек ролик для карточки, video — полное видео */
 const NEWS = [
-  {date:"2026", title:"Выставка 2026", text:"В текущем году компания MGS MEBEL выступила официальным партнёром ALVIC CENTER на международной дизайнерской выставке ARTDOM.", preview:"", video:"", g:"g3"},
+  {date:"2026", title:"Выставка 2026", text:"В текущем году компания MGS MEBEL выступила официальным партнёром ALVIC CENTER на международной дизайнерской выставке ARTDOM.", preview:"assets/news/expo2026-preview.mp4", poster:"assets/news/expo2026-preview.jpg", video:"assets/news/expo2026.mp4", g:"g3"},
   {date:"Новинка", title:"Новая коллекция фасадов", text:"Текст-заглушка: описание новинки появится здесь.", preview:"", video:"", g:"g4"},
   {date:"Новости", title:"Открытие салона", text:"Текст-заглушка: описание новости появится здесь.", preview:"", video:"", g:"g5"}
 ];
@@ -532,8 +540,8 @@ addEventListener('scroll', onScroll, {passive:true}); onScroll();
 $('#burger').onclick = e => { e.currentTarget.classList.toggle('open'); $('#mobileMenu').classList.toggle('open'); };
 
 /* ===== Медиа: видео или заглушка ===== */
-function media(src, g, label){
-  if (src) return `<video src="${src}" autoplay muted loop playsinline preload="metadata"></video>`;
+function media(src, g, label, poster){
+  if (src) return `<video src="${src}" ${poster?`poster="${poster}"`:''} autoplay muted loop playsinline preload="metadata"></video>`;
   return `<div class="ph ${g}"><span>${label}</span></div>`;
 }
 
@@ -541,7 +549,7 @@ function media(src, g, label){
 const track = $('#newsTrack');
 track.innerHTML = NEWS.map((n,i)=>`
   <button class="news-card" data-i="${i}">
-    <div class="media">${media(n.preview, n.g, 'превью 10 сек')}</div>
+    <div class="media">${media(n.preview, n.g, 'превью 10 сек', n.poster)}</div>
     <span class="date">${n.date}</span>
     <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></span>
     <div class="info"><h3>${n.title}</h3><p>${n.text}</p></div>
@@ -557,27 +565,38 @@ document.querySelectorAll('#news .arrow').forEach(b => b.onclick = () => {
 const viewer = $('#viewer'), vTrack = $('#viewerTrack');
 vTrack.innerHTML = NEWS.map(n=>`
   <div class="v-slide">
-    <div class="media">${media(n.video, n.g, 'полное видео')}</div>
+    <div class="media">${n.video ? `<video data-src="${n.video}" ${n.poster?`poster="${n.poster}"`:''} loop playsinline preload="none"></video>` : media('', n.g, 'полное видео')}</div>
     <div class="info"><span class="tag">#Новости · ${n.date}</span><h3>${n.title}</h3><p>${n.text}</p></div>
   </div>`).join('');
 const slides = [...vTrack.children];
 let cur = 0;
 function setCount(){ $('#viewerCount').textContent = `${cur+1} / ${NEWS.length}`; }
+// полное видео грузится только когда его открыли; играет только текущее
+let soundOn=false;
+function playCurrent(){
+  slides.forEach((sl,k)=>{ const v=sl.querySelector('video'); if(!v) return;
+    if(k===cur){ if(!v.src && v.dataset.src) v.src=v.dataset.src; v.muted=!soundOn; v.play().catch(()=>{ v.muted=true; v.play().catch(()=>{}); }); }
+    else v.pause(); });
+  const v=slides[cur].querySelector('video'); $('#viewerSound').hidden=!v;
+}
 function openViewer(i){
   viewer.classList.add('open'); viewer.setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
   cur = i; vTrack.scrollTo({top: slides[i].offsetTop}); setCount();
+  soundOn=true; updSound(); playCurrent();      // открыли сами — включаем со звуком
 }
 function closeViewer(){
   viewer.classList.remove('open'); viewer.setAttribute('aria-hidden','true');
   document.body.style.overflow='';
   vTrack.querySelectorAll('video').forEach(v=>v.pause());
 }
+function updSound(){ const b=$('#viewerSound'); b.textContent = soundOn ? 'Звук: вкл' : 'Звук: выкл'; b.classList.toggle('on',soundOn); }
+$('#viewerSound').onclick=()=>{ soundOn=!soundOn; updSound(); const v=slides[cur].querySelector('video'); if(v){ v.muted=!soundOn; if(v.paused) v.play().catch(()=>{}); } };
 function go(d){ cur = Math.max(0, Math.min(NEWS.length-1, cur+d)); slides[cur].scrollIntoView({behavior:'smooth'}); }
 track.querySelectorAll('.news-card').forEach(c => c.onclick = () => openViewer(+c.dataset.i));
 $('#viewerClose').onclick = closeViewer;
 document.querySelectorAll('.viewer-nav .arrow').forEach(b => b.onclick = () => go(+b.dataset.v));
-vTrack.addEventListener('scroll', () => { cur = Math.round(vTrack.scrollTop / vTrack.clientHeight); setCount(); }, {passive:true});
+vTrack.addEventListener('scroll', () => { const c=Math.round(vTrack.scrollTop / vTrack.clientHeight); if(c!==cur){ cur=c; setCount(); if(viewer.classList.contains('open')) playCurrent(); } }, {passive:true});
 addEventListener('keydown', e => {
   if (!viewer.classList.contains('open')) return;
   if (e.key==='Escape') closeViewer();
