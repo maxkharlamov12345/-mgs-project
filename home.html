@@ -131,8 +131,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .viewer-count b{font-weight:500}
 
 /* карта салонов */
-.map-wrap{position:relative;height:580px;border-radius:18px;overflow:hidden;background:var(--panel)}
-#map{position:absolute;inset:0;background:var(--panel)}
 .maplibregl-map{font-family:Onest,sans-serif}
 .maplibregl-ctrl-group{background:transparent!important;box-shadow:none!important;display:flex;flex-direction:column;gap:6px}
 .maplibregl-ctrl-group button{width:40px!important;height:40px!important;border-radius:999px!important;background:var(--chip)!important;border:0!important}
@@ -141,25 +139,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .maplibregl-ctrl-attrib{background:rgba(15,14,12,.6)!important;color:#6f685f!important;font-size:9px}
 .maplibregl-ctrl-attrib a{color:#8a8277!important}
 .maplibregl-ctrl-attrib-button{filter:invert(1)}
-#map{opacity:0;transition:opacity .6s ease}
-#map.ready{opacity:1}
-.pin-wrap{width:30px;height:38px;cursor:pointer}
-.pin{margin:0 auto;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--accent);transform:rotate(-45deg);display:grid;place-items:center;box-shadow:0 0 0 5px rgba(191,214,48,.22),0 4px 12px rgba(0,0,0,.6);transition:transform .2s}
-.pin::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--ink)}
-.pin.on{transform:rotate(-45deg) scale(1.2)}
-.salon-card{position:absolute;left:20px;bottom:20px;z-index:500;width:360px;max-width:calc(100% - 40px);background:var(--panel);border-radius:18px;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.55);transform:translateY(12px);opacity:0;pointer-events:none;transition:.25s}
-.salon-card.open{transform:none;opacity:1;pointer-events:auto}
-.salon-card .kind{color:var(--accent);font-size:13px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px}
-.salon-card h4{font-size:24px;font-weight:300;line-height:1.15;letter-spacing:-.01em;margin-bottom:8px}
-.salon-card .addr{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:16px}
-.salon-card .lbl{font-size:13px;color:var(--muted);margin-bottom:4px}
-.salon-card .phone{font-size:18px;font-weight:500;display:block;margin-bottom:18px}
-.salon-card .phone:hover{color:var(--accent)}
-.salon-card .x{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--chip);display:grid;place-items:center}
-.salon-card .x:hover{background:var(--chip-h)}
-.salon-card .x svg{width:14px;height:14px}
-.salon-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.map-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--muted);font-size:15px}
 
 /* подвал */
 .footer{padding:56px 32px 32px;background:var(--panel)}
@@ -227,34 +206,69 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .map-credit{margin-top:14px;font-size:11px;color:#5f5850}
 .map-credit a{color:#5f5850;text-decoration:underline}
 
-.salon-card{padding:12px 12px 22px}
-.salon-card > :not(.salon-photo):not(.x){margin-left:12px;margin-right:12px}
-.salon-card .btn{width:calc(100% - 24px)}
+
+
+
+
+
+/* ===== Фирменные салоны: два вида — «На карте» и «Списком» ===== */
+.seg{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--chip)}
+.seg-btn{min-height:40px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:500;color:var(--text);transition:background-color .2s ease,color .2s ease}
+.seg-btn:hover{background:var(--chip-h)}
+.seg-btn.on{background:var(--accent);color:var(--ink)}
+.salons-map{position:relative;height:600px;border-radius:18px;overflow:hidden;background:var(--panel)}
+#map{position:absolute;inset:0;background:var(--panel);opacity:0;transition:opacity .6s ease}
+#map.ready{opacity:1}
+.map-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--muted);font-size:15px}
+.map-credit{margin-top:14px;font-size:11px;color:#5f5850}
+.map-credit a{color:#5f5850;text-decoration:underline}
+/* метки: мигают мягкой пульсацией, рядом подпись */
+.pin-wrap{position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.pin{position:relative;width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(15,14,12,.85);z-index:1;transition:transform .2s ease}
+.pin::before,.pin::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--accent);animation:pulse 2.2s ease-out infinite;z-index:-1}
+.pin::after{animation-delay:1.1s}
+@keyframes pulse{0%{transform:scale(1);opacity:.55}100%{transform:scale(3.6);opacity:0}}
+.pin-wrap:hover .pin{transform:scale(1.2)}
+.pin-label{margin-top:10px;height:28px;display:inline-flex;align-items:center;padding:0 11px;border-radius:999px;background:rgba(244,241,236,.94);color:var(--ink);font-size:13px;font-weight:500;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+/* карточка поверх карты */
+.salon-overlay{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,14,12,.55);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s ease}
+.salon-overlay.open{opacity:1;pointer-events:auto}
+.salon-overlay .salon-card{width:400px;max-width:100%;max-height:100%;overflow:auto;transform:translateY(14px) scale(.98);transition:transform .35s cubic-bezier(.22,.61,.36,1);box-shadow:0 16px 50px rgba(0,0,0,.6)}
+.salon-overlay.open .salon-card{transform:none}
+.salon-card{position:relative;background:var(--panel);border-radius:18px;padding:12px 12px 22px}
+.salon-card .body{padding:0 12px}
 .salon-photo{aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:var(--tile);margin-bottom:16px}
 .salon-photo img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s ease}
 .salon-photo img.ok{opacity:1}
-.salon-card .x{top:20px;right:20px;background:rgba(15,14,12,.6);backdrop-filter:blur(6px);z-index:2}
-@media (max-width:999px){ .salon-photo{aspect-ratio:21/9} }
-
-.metro-chip{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 5px;border-radius:999px;background:rgba(244,241,236,.96);color:var(--ink);font-size:13px;font-weight:500;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.45);opacity:0;transform:translateY(6px) scale(.96);transition:opacity .4s ease,transform .4s ease}
-.metro-chip.show{opacity:1;transform:none}
-.metro-chip .m{min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:#d52b1e;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
-.metro-chip .t{color:#6f685f;font-weight:400}
-
-
-/* телефон/планшет: карточка салона не наплывает на карту, а раскрывается под ней */
+.salon-card .kind{color:var(--accent);font-size:13px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px}
+.salon-card h4{font-size:26px;font-weight:300;line-height:1.15;letter-spacing:-.01em;margin-bottom:8px}
+.salon-card .addr{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.metro{display:inline-flex;align-items:center;gap:8px;font-size:14px;margin-bottom:16px}
+.metro .m{min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:#d52b1e;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+.metro .t{color:var(--muted)}
+.salon-card .lbl{font-size:13px;color:var(--muted);margin-bottom:4px}
+.salon-card .phone{font-size:18px;font-weight:500;display:block;margin-bottom:18px}
+.salon-card .phone:hover{color:var(--accent)}
+.salon-card .x{position:absolute;top:20px;right:20px;z-index:2;width:36px;height:36px;border-radius:50%;background:rgba(15,14,12,.6);backdrop-filter:blur(6px);display:grid;place-items:center}
+.salon-card .x:hover{background:rgba(15,14,12,.85)}
+.salon-card .x svg{width:16px;height:16px}
+/* вид «Списком»: карточки друг за другом */
+.salons-list{display:flex;flex-direction:column;gap:16px}
+.salons-list[hidden],.salons-map[hidden],.map-credit[hidden]{display:none!important}
+.salons-list .salon-card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:center;padding:12px;opacity:0;transform:translateY(18px);animation:cardIn .55s cubic-bezier(.22,.61,.36,1) forwards}
+.salons-list .salon-card .salon-photo{margin:0}
+.salons-list .salon-card .body{padding:12px 16px 12px 0}
+.salons-list .salon-card .btn{width:auto}
+@keyframes cardIn{to{opacity:1;transform:none}}
 @media (max-width:999px){
-  .map-wrap{height:auto!important;overflow:visible;background:none;border-radius:0}
-  #map{position:relative!important;inset:auto;height:420px;border-radius:18px;overflow:hidden}
-  .map-fallback{height:420px;bottom:auto}
-  .salon-card{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;width:auto!important;max-width:none!important;margin-top:0;box-shadow:none;
-    transform:none;opacity:0;max-height:0;overflow:hidden;padding-top:0;padding-bottom:0;
-    transition:max-height .5s ease,opacity .35s ease,margin-top .5s ease,padding .5s ease}
-  .salon-card.open{opacity:1;max-height:640px;margin-top:12px;padding-top:12px;padding-bottom:22px}
-  .salon-photo{aspect-ratio:16/9}
-  /* список салонов — над картой, чтобы переключаться, не листая */
-  #salons{display:flex;flex-direction:column}
-  #salons .section-head{order:0} #salons .salon-list{order:1;margin:0 -16px 14px;padding:0 16px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none} #salons .salon-list .chip{flex:none} #salons .map-wrap{order:2} #salons .map-credit{order:3}
+  .section-head:has(.seg){flex-direction:column;align-items:flex-start;gap:18px}
+  .salons-map{height:560px}
+  .salon-overlay{padding:10px;align-items:flex-end}
+  .salon-overlay .salon-card{width:100%}
+  .salons-list .salon-card{grid-template-columns:1fr;gap:0;padding:12px 12px 22px}
+  .salons-list .salon-card .salon-photo{margin-bottom:16px}
+  .salons-list .salon-card .body{padding:0 12px}
+  .salons-list .salon-card .btn{width:100%}
 }
 
 /* адаптив */
@@ -280,8 +294,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .v-slide .info{padding:0 16px 40px}
   .viewer-nav{display:none}
   .viewer-count{left:16px;top:20px}
-  .map-wrap{height:500px}
-  .salon-card{left:10px;right:10px;bottom:10px;width:auto;max-width:none}
   .footer{padding:44px 16px 100px}
   .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
   .footer-grid > div:first-child{grid-column:1/-1}
@@ -360,23 +372,22 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 <!-- ФИРМЕННЫЕ САЛОНЫ -->
 <section class="section" id="salons">
-  <div class="section-head"><div><div class="tag">#Фирменные салоны</div><h2>Приходите посмотреть вживую</h2></div></div>
-  <div class="map-wrap">
-    <div id="map"></div>
-    <div class="map-fallback" id="mapFallback">карта загрузится на сайте</div>
-    <div class="salon-card" id="salonCard">
-      <button class="x" id="salonClose" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      <div class="salon-photo"><img id="sPhoto" alt="" decoding="async"></div>
-      <div class="kind">Фирменный салон</div>
-      <h4 id="sName"></h4>
-      <div class="addr" id="sAddr"></div>
-      <div class="lbl">Телефон</div>
-      <a class="phone" id="sPhone" href="#"></a>
-      <button class="btn" data-calc>Заказать персональный дизайн</button>
+  <div class="section-head">
+    <div><div class="tag">#Фирменные салоны</div><h2>Приходите посмотреть вживую</h2></div>
+    <div class="seg" role="tablist" aria-label="Вид">
+      <button class="seg-btn on" data-view="map" role="tab" aria-selected="true">На карте</button>
+      <button class="seg-btn" data-view="list" role="tab" aria-selected="false">Списком</button>
     </div>
   </div>
-  <div class="salon-list" id="salonList"></div>
-  <div class="map-credit">Карта: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, OpenFreeMap</div>
+  <div class="salons-map" id="salonsMap">
+    <div id="map"></div>
+    <div class="map-fallback" id="mapFallback">карта загрузится на сайте</div>
+    <div class="salon-overlay" id="salonOverlay" aria-hidden="true">
+      <div class="salon-card" id="salonCard" role="dialog" aria-modal="true"></div>
+    </div>
+  </div>
+  <div class="salons-list" id="salonsList" hidden></div>
+  <div class="map-credit" id="mapCredit">Карта: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, OpenFreeMap</div>
 </section>
 
 <!-- ПОДВАЛ -->
@@ -476,10 +487,10 @@ const NEWS = [
   {date:"Новости", title:"Открытие салона", text:"Текст-заглушка: описание новости появится здесь.", preview:"", video:"", g:"g5"}
 ];
 const SALONS = [
-  {short:"Пражская", metro:{kind:"М", name:"Пражская", min:2, path:[[37.60414,55.61067],[37.60452,55.61061],[37.60477,55.61062],[37.6053,55.61055],[37.60556,55.61038],[37.60549,55.61023],[37.60543,55.6101],[37.60538,55.61]]}, photo:"assets/salons/prazhskaya.webp",     name:"Салон MGS MEBEL — Пражская",     addr:"Москва, Кировоградская ул., 15, ТЦ «Гранд Юг», 2 этаж",                   phone:"8-495-777-35-75", lat:55.60962, lng:37.60525},
-  {short:"Авиамоторная", metro:{kind:"М", name:"Авиамоторная", min:17, path:[[37.71659,55.75172],[37.71654,55.75171],[37.7166,55.75161],[37.7168,55.75129],[37.71651,55.75123],[37.71643,55.75122],[37.71644,55.75119],[37.71538,55.75098],[37.71428,55.75077],[37.71415,55.75075],[37.71373,55.75065],[37.71363,55.75059],[37.71363,55.75058],[37.71347,55.75055],[37.71335,55.75052],[37.71287,55.75043],[37.71277,55.75041],[37.71166,55.7502],[37.71109,55.7501],[37.71103,55.75012],[37.71099,55.75013],[37.71085,55.75014],[37.7108,55.75015],[37.7107,55.75014],[37.71064,55.75013],[37.70902,55.74981],[37.70618,55.74925],[37.70593,55.74917],[37.70589,55.74916],[37.70578,55.74914],[37.70411,55.7488],[37.70405,55.74876],[37.70404,55.74873],[37.70405,55.74869],[37.70436,55.74813],[37.70439,55.74807],[37.70441,55.74804],[37.70442,55.74802],[37.70459,55.74796],[37.70481,55.74796],[37.70489,55.74796],[37.70526,55.74802],[37.70579,55.74796],[37.70639,55.74805],[37.70691,55.74815],[37.70727,55.74748]]}, photo:"assets/salons/aviamotornaya.webp", name:"Салон MGS MEBEL — Авиамоторная", addr:"Москва, шоссе Энтузиастов, 12 к2, ТЦ «Город», 4 этаж",                    phone:"8-495-777-35-75", lat:55.74745, lng:37.70712},
-  {short:"Химки", metro:{kind:"МЦД", name:"Химки", min:26, path:[[37.45381,55.89374],[37.45231,55.89437],[37.45236,55.89441],[37.4526,55.89431],[37.45261,55.89431],[37.45262,55.89432],[37.4524,55.89442],[37.45238,55.89442],[37.45214,55.89453],[37.45211,55.89451],[37.45186,55.89432],[37.45172,55.89422],[37.45154,55.89408],[37.45149,55.89404],[37.45137,55.89409],[37.45117,55.89418],[37.45112,55.89419],[37.45108,55.89416],[37.45103,55.89415],[37.45083,55.89399],[37.45078,55.89395],[37.45073,55.89391],[37.45058,55.89396],[37.45052,55.89397],[37.45042,55.89394],[37.44947,55.8932],[37.44832,55.89235],[37.44776,55.89193],[37.44767,55.89187],[37.44762,55.89184],[37.44691,55.89128],[37.44639,55.8909],[37.44527,55.89007],[37.44531,55.88998],[37.4453,55.88992],[37.4453,55.88982],[37.44492,55.88935],[37.44457,55.88891],[37.44449,55.88883],[37.44439,55.88875],[37.44391,55.88803],[37.44356,55.88759],[37.44276,55.88657],[37.44233,55.88603],[37.44221,55.88601],[37.44204,55.88605],[37.44156,55.88545],[37.4414,55.8856],[37.44127,55.88549],[37.44116,55.88541],[37.44105,55.88534],[37.44089,55.88528],[37.44082,55.8853],[37.44069,55.88541],[37.44016,55.88521],[37.4403,55.8851],[37.44063,55.88483],[37.44057,55.88477],[37.44045,55.88472],[37.4404,55.88476],[37.44016,55.88496],[37.43995,55.88512],[37.43989,55.88517],[37.43973,55.8851],[37.43961,55.88506],[37.43872,55.88575],[37.43852,55.88591],[37.43842,55.88601],[37.43838,55.88602],[37.43834,55.88604],[37.43832,55.88607],[37.43832,55.8861],[37.43821,55.88616],[37.43817,55.88623],[37.43819,55.88629],[37.43779,55.88661]]}, photo:"assets/salons/khimki.webp",        name:"Салон MGS MEBEL — Химки",        addr:"Химки, ул. Бутаково, 4, ТЦ «Гранд», 2 этаж",                            phone:"8-495-777-35-75", lat:55.88628, lng:37.43692},
-  {short:"Румянцево", metro:{kind:"М", name:"Румянцево", min:3, path:[[37.44003,55.63324],[37.43985,55.63353],[37.44048,55.63373],[37.44038,55.63381],[37.43964,55.63457],[37.43921,55.63474]]}, photo:"assets/salons/rumyantsevo.webp",    name:"Салон MGS MEBEL — Румянцево",    addr:"Москва, Киевское шоссе, 22 км, БП «Румянцево», блок В, вход 5, 3 этаж", phone:"8-495-777-35-75", lat:55.63474, lng:37.43921}
+  {short:"Пражская", metro:{kind:"М", name:"Пражская", min:2}, photo:"assets/salons/prazhskaya.webp",     name:"Салон MGS MEBEL — Пражская",     addr:"Москва, Кировоградская ул., 15, ТЦ «Гранд Юг», 2 этаж",                   phone:"8-495-777-35-75", lat:55.60962, lng:37.60525},
+  {short:"Авиамоторная", metro:{kind:"М", name:"Авиамоторная", min:17}, photo:"assets/salons/aviamotornaya.webp", name:"Салон MGS MEBEL — Авиамоторная", addr:"Москва, шоссе Энтузиастов, 12 к2, ТЦ «Город», 4 этаж",                    phone:"8-495-777-35-75", lat:55.74745, lng:37.70712},
+  {short:"Химки", metro:{kind:"МЦД", name:"Химки", min:26}, photo:"assets/salons/khimki.webp",        name:"Салон MGS MEBEL — Химки",        addr:"Химки, ул. Бутаково, 4, ТЦ «Гранд», 2 этаж",                            phone:"8-495-777-35-75", lat:55.88628, lng:37.43692},
+  {short:"Румянцево", metro:{kind:"М", name:"Румянцево", min:3}, photo:"assets/salons/rumyantsevo.webp",    name:"Салон MGS MEBEL — Румянцево",    addr:"Москва, Киевское шоссе, 22 км, БП «Румянцево», блок В, вход 5, 3 этаж", phone:"8-495-777-35-75", lat:55.63474, lng:37.43921}
 ];
 
 const $ = s => document.querySelector(s);
@@ -630,38 +641,50 @@ addEventListener('keydown', e => {
   if (e.key==='ArrowUp')   { e.preventDefault(); go(-1); }
 });
 
-/* ===== Карта салонов ===== */
-const card = $('#salonCard'), list = $('#salonList');
+/* ===== Фирменные салоны ===== */
+const X_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function salonCardHTML(s, withClose){
+  const m=s.metro;
+  return `${withClose?`<button class="x" data-close aria-label="Закрыть">${X_SVG}</button>`:''}
+    <div class="salon-photo"><img src="${s.photo}" alt="${s.name}" decoding="async" loading="lazy" onload="this.classList.add('ok')"></div>
+    <div class="body">
+      <div class="kind">Фирменный салон</div>
+      <h4>${s.name}</h4>
+      <div class="addr">${s.addr}</div>
+      ${m?`<div class="metro"><span class="m">${m.kind}</span>${m.name}<span class="t">· ${m.min} мин пешком</span></div>`:''}
+      <div class="lbl">Телефон</div>
+      <a class="phone" href="tel:${s.phone.replace(/\D/g,'')}">${s.phone}</a>
+      <button class="btn" data-calc>Заказать персональный дизайн</button>
+    </div>`;
+}
+const overlay=$('#salonOverlay'), card=$('#salonCard');
 function showSalon(i){
-  const s = SALONS[i];
-  const ph=$('#sPhoto'); if(ph.dataset.src!==s.photo){ ph.classList.remove('ok'); ph.dataset.src=s.photo; ph.onload=()=>ph.classList.add('ok'); ph.src=s.photo; ph.alt=s.name; }
-  $('#sName').textContent = s.name; $('#sAddr').textContent = s.addr;
-  $('#sPhone').textContent = s.phone; $('#sPhone').href = 'tel:' + s.phone.replace(/\D/g,'');
-  card.classList.add('open');
-  if(innerWidth<1000){ const top=document.querySelector('#salonList'); setTimeout(()=>{ const r=top.getBoundingClientRect(); if(r.top<60 || r.top>innerHeight*0.3) scrollTo({top:scrollY+r.top-76, behavior:'smooth'}); },60); }
-  document.querySelectorAll('.pin').forEach((p,j)=>p.classList.toggle('on', j===i));
-  list.querySelectorAll('.salon-chip').forEach((c,j)=>c.classList.toggle('on', j===i));
-  if (lmap) showRoute(s);
+  card.innerHTML=salonCardHTML(SALONS[i], true);
+  card.querySelector('[data-calc]').addEventListener('click', openCalc);
+  card.querySelector('[data-close]').addEventListener('click', closeSalon);
+  overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
 }
-list.innerHTML = SALONS.map((s,i)=>`<button class="chip salon-chip" data-i="${i}">${s.short}</button>`).join('');
-list.querySelectorAll('.salon-chip').forEach(c => c.onclick = () => showSalon(+c.dataset.i));
-$('#salonClose').onclick = () => { card.classList.remove('open'); document.querySelectorAll('.pin,.salon-chip').forEach(p=>p.classList.remove('on')); if (lmap) { clearRoute(); fitAll(true); } };
+function closeSalon(){ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); }
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeSalon(); });
+addEventListener('keydown', e=>{ if(e.key==='Escape' && overlay.classList.contains('open')) closeSalon(); });
 
-/* Векторная карта (MapLibre + OpenFreeMap, без ключей). Грузится, когда до карты осталось ~1,5 экрана. */
-let lmap = null;
-const salonBounds = () => { const b=new maplibregl.LngLatBounds(); SALONS.forEach(s=>b.extend([s.lng,s.lat])); return b; };
-let homeView=null;   // исходный вид «все 4 салона» — сюда же возвращаемся по крестику
-function fitAll(animate){
-  if(!lmap) return;
-  const zero={top:0,bottom:0,left:0,right:0};
-  if(animate && homeView){ lmap.flyTo({center:homeView.center, zoom:homeView.zoom, padding:zero, speed:0.9, curve:1.3, essential:true}); return; }
-  lmap.setPadding(zero);
-  const cam=lmap.cameraForBounds(salonBounds(), {padding:innerWidth<1000?50:90});
-  lmap.jumpTo({center:cam.center, zoom:cam.zoom});
-  homeView={center:cam.center, zoom:cam.zoom};
-}
-// заранее прогреваем карту вокруг салонов (данные скачиваются в фоне, перелёт без пустых кусков)
-function warmSalons(){ SALONS.forEach(s=>{ ['13','14'].forEach(z=>{ const n=2**+z, x=Math.floor((s.lng+180)/360*n), y=Math.floor((1-Math.log(Math.tan(s.lat*Math.PI/180)+1/Math.cos(s.lat*Math.PI/180))/Math.PI)/2*n); for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++){ const src=lmap.getSource('openmaptiles'); const url=src && src.tiles && src.tiles[0]; if(url) fetch(url.replace('{z}',z).replace('{x}',x+dx).replace('{y}',y+dy)).catch(()=>{}); } }); }); }
+// вид «Списком»
+const listEl=$('#salonsList');
+listEl.innerHTML=SALONS.map((s,i)=>`<article class="salon-card" style="animation-delay:${i*90}ms">${salonCardHTML(s,false)}</article>`).join('');
+listEl.querySelectorAll('[data-calc]').forEach(b=>b.addEventListener('click', openCalc));
+// переключатель вида
+document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  const v=btn.dataset.view;
+  document.querySelectorAll('.seg-btn').forEach(b=>{ const on=b===btn; b.classList.toggle('on',on); b.setAttribute('aria-selected',on); });
+  $('#salonsMap').hidden = v!=='map'; $('#mapCredit').hidden = v!=='map';
+  listEl.hidden = v!=='list';
+  if(v==='list'){ listEl.querySelectorAll('.salon-card').forEach(c=>{ c.style.animation='none'; c.offsetHeight; c.style.animation=''; }); }
+  else { closeSalon(); if(lmap){ lmap.resize(); fitAll(); } }
+}));
+
+/* Карта: векторная (MapLibre + OpenFreeMap, без ключей), БЕЗ приближения и перетаскивания — просто вид со всеми салонами */
+let lmap=null;
+function fitAll(){ if(!lmap) return; const b=new maplibregl.LngLatBounds(); SALONS.forEach(s=>b.extend([s.lng,s.lat])); lmap.fitBounds(b,{padding:{top:70,bottom:90,left:90,right:90}, duration:0}); }
 // фирменная тёмная палитра поверх стиля OpenFreeMap «dark»
 function brandStyle(st){
   const C={bg:'#0f0e0c', water:'#17191b', park:'#151712', build:'#191714', minor:'#24211d', major:'#2f2b26', motor:'#3a352f', casing:'#2a2622', rail:'#26231f', text:'#a89f92', textDim:'#7a7268', halo:'#0f0e0c'};
@@ -699,75 +722,23 @@ function loadMapLib(){
 async function initMap(){
   try{
     const [_, style] = await Promise.all([ loadMapLib(), fetch('https://tiles.openfreemap.org/styles/dark').then(r=>r.json()) ]);
-    const touch = 'ontouchstart' in window;
-    lmap = new maplibregl.Map({
-      container:'map', style:brandStyle(style), center:[37.58,55.75], zoom:9.5,
-      attributionControl:false, dragRotate:false, pitchWithRotate:false,
-      scrollZoom:false, dragPan:!touch, cooperativeGestures:false, fadeDuration:200
-    });
-    lmap.touchZoomRotate.disableRotation();
-    lmap.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-left');
+    lmap = new maplibregl.Map({ container:'map', style:brandStyle(style), center:[37.58,55.75], zoom:9.5, interactive:false, attributionControl:false, fadeDuration:200 });
     SALONS.forEach((s,i)=>{
-      const el=document.createElement('div'); el.className='pin-wrap'; el.innerHTML='<div class="pin"></div>';
+      const el=document.createElement('button'); el.className='pin-wrap'; el.setAttribute('aria-label',s.name);
+      el.innerHTML=`<span class="pin"></span><span class="pin-label">${s.short}</span>`;
+      el.style.animationDelay=(i*0.3)+'s';
       el.addEventListener('click', ev=>{ ev.stopPropagation(); showSalon(i); });
-      new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([s.lng,s.lat]).addTo(lmap);
+      new maplibregl.Marker({element:el, anchor:'top', offset:[0,-9]}).setLngLat([s.lng,s.lat]).addTo(lmap);
     });
-    lmap.once('load', ()=>{ lmap.resize(); fitAll(false); document.getElementById('map').classList.add('ready'); const cur=SALONS.find(x=>x.name===$('#sName').textContent); if(cur && card.classList.contains('open')) showRoute(cur); setTimeout(()=>{ try{ warmSalons(); }catch(e){} SALONS.forEach(x=>{ const i=new Image(); i.src=x.photo; }); }, 800); });
-    new ResizeObserver(()=>{ if(!lmap) return; lmap.resize(); if(!card.classList.contains('open')) fitAll(false); }).observe(document.getElementById('map'));
+    lmap.once('load', ()=>{ lmap.resize(); fitAll(); document.getElementById('map').classList.add('ready'); });
+    new ResizeObserver(()=>{ if(lmap){ lmap.resize(); fitAll(); } }).observe(document.getElementById('map'));
   }catch(e){ $('#mapFallback').style.display='flex'; }
 }
 let mapStarted=false; const startMap=()=>{ if(mapStarted) return; mapStarted=true; initMap(); };
 new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); startMap(); } },{rootMargin:'150% 0px'}).observe(document.getElementById('map'));
-setTimeout(startMap, 2500);   // страховка: если наблюдатель не сработал — грузим в фоне после загрузки страницы
-
-
-/* ===== Метро и анимированный пешеходный путь до ТЦ ===== */
-let metroMarker=null, routeAnim=null;
-function ensureRouteLayers(){
-  if(lmap.getSource('route')) return;
-  lmap.addSource('route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-  lmap.addLayer({id:'route-glow',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#bfd630','line-width':12,'line-opacity':0.18,'line-blur':4}});
-  lmap.addLayer({id:'route-line',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#bfd630','line-width':4}});
-}
-function clearRoute(){
-  if(routeAnim) cancelAnimationFrame(routeAnim), routeAnim=null;
-  if(metroMarker){ const el=metroMarker.getElement(); el.firstChild && el.firstChild.classList.remove('show'); const m=metroMarker; setTimeout(()=>m.remove(),400); metroMarker=null; }
-  if(lmap && lmap.getSource('route')) lmap.getSource('route').setData({type:'FeatureCollection',features:[]});
-}
-// длины участков пути — чтобы линия «рисовалась» с равной скоростью
-function cumLen(c){ const out=[0]; for(let i=1;i<c.length;i++){ const dx=(c[i][0]-c[i-1][0])*Math.cos(c[i][1]*Math.PI/180), dy=c[i][1]-c[i-1][1]; out.push(out[i-1]+Math.hypot(dx,dy)); } return out; }
-function partial(c,L,t){ const goal=L[L.length-1]*t, out=[c[0]]; for(let i=1;i<c.length;i++){ if(L[i]<=goal){ out.push(c[i]); continue; } const k=(goal-L[i-1])/((L[i]-L[i-1])||1); out.push([c[i-1][0]+(c[i][0]-c[i-1][0])*k, c[i-1][1]+(c[i][1]-c[i-1][1])*k]); break; } return out; }
-function showRoute(s){
-  if(!lmap || !lmap.isStyleLoaded()) return;   // карта ещё грузится — маршрут покажется сам после загрузки
-  clearRoute();
-  const m=s.metro, desk=innerWidth>=1000;
-  const pad = desk ? {top:80,bottom:80,left:440,right:80} : {top:70,bottom:50,left:40,right:40};
-  const b=new maplibregl.LngLatBounds(); b.extend([s.lng,s.lat]); if(m) m.path.forEach(p=>b.extend(p));
-  const cam=lmap.cameraForBounds(b,{padding:pad, maxZoom:16.5});
-  lmap.flyTo({center:cam.center, zoom:Math.min(cam.zoom,16.5), padding:{top:0,bottom:0,left:0,right:0}, speed:0.9, curve:1.3, essential:true});
-  if(!m) return;
-  const myId=s.name; let done=false;
-  const run=()=>{
-    if(done) return; done=true;
-    if($('#sName').textContent!==myId || !card.classList.contains('open')) return;   // пока летели, выбрали другой салон / закрыли
-    ensureRouteLayers();
-    // метка метро
-    const el=document.createElement('div');
-    el.innerHTML=`<div class="metro-chip"><span class="m">${m.kind}</span>${m.name}<span class="t">· ${m.min} мин пешком</span></div>`;
-    metroMarker=new maplibregl.Marker({element:el, anchor:'bottom', offset:[0,-6]}).setLngLat(m.path[0]).addTo(lmap);
-    requestAnimationFrame(()=>el.firstChild.classList.add('show'));
-    // путь рисуется от метро к ТЦ
-    const L=cumLen(m.path), DUR=1600, st=performance.now(), ease=t=>1-Math.pow(1-t,3);
-    const src=lmap.getSource('route');
-    (function step(now){
-      const k=Math.min(1,(now-st)/DUR);
-      src.setData({type:'Feature',geometry:{type:'LineString',coordinates:partial(m.path,L,ease(k))}});
-      if(k<1) routeAnim=requestAnimationFrame(step); else routeAnim=null;
-    })(st);
-  };
-  lmap.once('moveend', run);
-  setTimeout(run, 2600);   // если камера уже стояла на месте — moveend не придёт
-}
+setTimeout(startMap, 2500);
+// фото салонов — заранее, чтобы карточка открывалась сразу с картинкой
+setTimeout(()=>SALONS.forEach(x=>{ const i=new Image(); i.src=x.photo; }), 3000);
 
 /* ===== Окно расчёта (отправка пока не подключена) ===== */
 const modal = $('#calcModal');
