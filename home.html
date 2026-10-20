@@ -254,7 +254,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .section-head:has(.seg){flex-direction:column;align-items:flex-start;gap:18px}
   .salons-map{aspect-ratio:9/16;margin:0 -16px}
   .pins .pin-wrap{left:var(--xt);top:var(--yt)}
-  .salon-overlay{padding:12px 16px;align-items:flex-end}
+  .salon-overlay{padding:12px 16px;align-items:center}
   .salon-overlay .salon-card{width:100%;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   .salon-overlay .salon-photo{aspect-ratio:2/1;margin-bottom:12px}
   .salon-overlay .salon-card h4{font-size:22px}
@@ -661,6 +661,10 @@ function showSalon(i){
   card.querySelector('[data-calc]').addEventListener('click', openCalc);
   card.querySelector('[data-close]').addEventListener('click', closeSalon);
   overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
+  card.scrollTop=0;
+  // если карта видна не целиком — плавно ставим её по центру экрана, чтобы карточка была ровно посередине
+  const r=$('#salonsMap').getBoundingClientRect(), head=document.querySelector('.header').offsetHeight;
+  if(r.top<head || r.bottom>innerHeight){ const y=scrollY+r.top-head-Math.max(0,(innerHeight-head-r.height)/2); scrollTo({top:y,behavior:'smooth'}); }
 }
 function closeSalon(){ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); }
 overlay.addEventListener('click', e=>{ if(e.target===overlay) closeSalon(); });
