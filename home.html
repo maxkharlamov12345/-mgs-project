@@ -263,9 +263,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 @keyframes cardIn{to{opacity:1;transform:none}}
 @media (max-width:999px){
   .section-head:has(.seg){flex-direction:column;align-items:flex-start;gap:18px}
-  .salons-map{height:560px}
+  .salons-map{height:min(640px,calc(100svh - 150px))}
   .salon-overlay{padding:10px;align-items:flex-end}
-  .salon-overlay .salon-card{width:100%}
+  .salon-overlay .salon-card{width:100%;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .salon-overlay .salon-photo{aspect-ratio:2/1;margin-bottom:12px}
+  .salon-overlay .salon-card h4{font-size:22px}
+  .salon-overlay .salon-card .addr{margin-bottom:10px}
+  .salon-overlay .metro{margin-bottom:12px}
+  .salon-overlay .salon-card .phone{margin-bottom:14px}
   .salons-list .salon-card{grid-template-columns:1fr;gap:0;padding:12px 12px 22px}
   .salons-list .salon-card .salon-photo{margin-bottom:16px}
   .salons-list .salon-card .body{padding:0 12px}
@@ -728,7 +733,9 @@ async function initMap(){
       const el=document.createElement('button'); el.className='pin-wrap'; el.setAttribute('aria-label',s.name);
       el.innerHTML=`<span class="pin"></span><span class="pin-label">${s.short}</span>`;
       el.style.animationDelay=(i*0.3)+'s';
-      el.addEventListener('click', ev=>{ ev.stopPropagation(); showSalon(i); });
+      // на телефоне надёжнее ловить и касание, и клик (iOS иногда не присылает click внутри карты)
+      let last=0; const open=ev=>{ ev.preventDefault(); ev.stopPropagation(); const t=Date.now(); if(t-last<400) return; last=t; showSalon(i); };
+      el.addEventListener('click', open); el.addEventListener('touchend', open, {passive:false});
       new maplibregl.Marker({element:el, anchor:'top', offset:[0,-9]}).setLngLat([s.lng,s.lat]).addTo(lmap);
     });
     lmap.once('load', ()=>{ lmap.resize(); fitAll(); document.getElementById('map').classList.add('ready'); });
