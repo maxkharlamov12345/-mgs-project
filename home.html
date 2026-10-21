@@ -495,6 +495,16 @@ html{scroll-snap-type:none!important}
 #news .section-head,#salons .section-head{align-items:center!important}
 #news{--nc-avail:calc(var(--ph,100svh) - var(--header-h) - 20px - 28px - 70px)!important}
 @media (max-width:999px){ #news{--nc-avail:calc(var(--ph,100svh) - var(--header-h) - 14px - 18px - 50px)!important} }
+
+/* более сильные и мягкие градиенты карты сверху и снизу (Макс 21.10) */
+.salons-map::before{height:32%!important;background:linear-gradient(to bottom,var(--bg) 0%,rgba(15,14,12,.92) 18%,rgba(15,14,12,.72) 40%,rgba(15,14,12,.42) 62%,rgba(15,14,12,.16) 82%,rgba(15,14,12,0) 100%)!important}
+.salons-map::after{height:28%!important;background:linear-gradient(to top,var(--bg) 0%,rgba(15,14,12,.92) 18%,rgba(15,14,12,.7) 40%,rgba(15,14,12,.4) 62%,rgba(15,14,12,.14) 82%,rgba(15,14,12,0) 100%)!important}
+@media (max-width:999px){
+  .salons-map::before{height:36%!important}
+  .salons-map::after{height:26%!important}
+}
+
+@media (max-width:999px){ #news .section-head,#salons .section-head{align-items:flex-start!important} }
 </style>
 </head>
 <body>
