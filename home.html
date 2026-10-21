@@ -476,6 +476,25 @@ html{scroll-snap-type:none!important}
 .salons-list .salon-card .btn{margin-top:auto!important}
 @media (max-width:999px){ .salon-card .btn{white-space:nowrap;font-size:15px;padding:0 10px} }
 @media (max-width:359px){ .salon-card .btn{font-size:13px;padding:0 6px} }
+
+/* iPhone, «Списком»: горизонтальная лента внутри экрана с transform/overflow давала чёрный фон после 2-й карточки.
+   У экрана салонов нет своего слоя, у карточек нет внутренней прокрутки, у ленты — свой слой. */
+.page > #salons{transform:none!important;-webkit-backface-visibility:visible;backface-visibility:visible}
+#salons{overflow:visible!important}
+.salons-list .salon-card{max-height:none!important;overflow:hidden!important}
+.salons-list{-webkit-transform:translateZ(0);transform:translateZ(0);overscroll-behavior-x:contain}
+.salon-photo img{opacity:1!important}
+
+@media (max-width:999px) and (max-height:700px){
+  .salons-list .salon-photo{aspect-ratio:21/9!important;margin-bottom:8px!important}
+  .salons-list .salon-card{padding:8px 8px 14px!important}
+  .salons-list .salon-card .kind{display:none}
+  .salons-list .salon-card h4{font-size:19px!important;min-height:2.3em;margin-bottom:4px}
+  .salons-list .salon-card .addr{font-size:13px;margin-bottom:6px!important}
+  .salons-list .metro{font-size:13px;margin-bottom:6px!important}
+  .salons-list .salon-card .phone{font-size:16px;margin-bottom:10px!important}
+  .salons-list .salon-card .btn{min-height:44px}
+}
 </style>
 </head>
 <body>
@@ -777,7 +796,7 @@ const X_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
 function salonCardHTML(s, withClose){
   const m=s.metro;
   return `${withClose?`<button class="x" data-close aria-label="Закрыть">${X_SVG}</button>`:''}
-    <div class="salon-photo"><img src="${s.photo}" alt="${s.name}" decoding="async" loading="lazy" onload="this.classList.add('ok')"></div>
+    <div class="salon-photo"><img src="${s.photo}" alt="${s.name}" decoding="async" onload="this.classList.add('ok')"></div>
     <div class="body">
       <div class="kind">Фирменный салон</div>
       <h4>${s.name}</h4>
