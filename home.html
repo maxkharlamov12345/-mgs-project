@@ -1001,7 +1001,7 @@ function liveFit(){ if(!lmap) return; const b=new maplibregl.LngLatBounds(); SAL
   const mob=innerWidth<1000, cam=lmap.cameraForBounds(b,{padding:mob?{top:170,bottom:150,left:70,right:90}:{top:180,bottom:170,left:160,right:160}});
   if(!cam) return;
   // центр Москвы — по центру экрана по высоте, по ширине — по центру салонов
-  lmap.jumpTo({center:[cam.center.lng,55.7558], zoom:cam.zoom}); }
+  lmap.jumpTo({center:[cam.center.lng,55.7558], zoom:cam.zoom-(mob?0.5:0)}); }   // на телефоне чуть отдалить (Макс 21.10)
 async function initLiveMap(){
   try{
     const [_, style]=await Promise.all([loadMapLib(), fetch('https://tiles.openfreemap.org/styles/dark').then(r=>r.json())]);
