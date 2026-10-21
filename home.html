@@ -423,21 +423,30 @@ html{scroll-snap-type:none!important}
 }
 /* «Списком» — отступ снизу остаётся */
 .salons-list{margin-bottom:24px!important}
-/* ===== Подвал на телефоне — компактный, целиком в один экран ===== */
+/* ===== Подвал на телефоне — отдельный экран ровно по размеру телефона, как остальные ===== */
 @media (max-width:999px){
-  .footer{padding:26px 16px 92px!important}
-  .footer-grid{grid-template-columns:1fr 1fr!important;gap:18px 16px!important}
-  .footer-grid > div:first-child{grid-column:1/-1;display:flex;align-items:center;gap:14px}
-  .footer .logo img{height:38px!important}
-  .footer .about{margin:0!important;font-size:12px;line-height:1.45}
-  .footer h5{margin-bottom:8px;font-size:11px}
+  .footer{height:var(--ph,100svh);scroll-snap-align:start!important;scroll-snap-stop:always;display:flex;flex-direction:column;
+    padding:calc(var(--header-h) + 28px) 16px 96px!important}
+  .footer-grid{flex:1;grid-template-columns:1fr 1fr!important;align-content:space-evenly;gap:28px 16px!important}
+  .footer-grid > div:first-child{grid-column:1/-1}
+  .footer .logo img{height:52px!important}
+  .footer .about{margin-top:14px!important;font-size:14px;line-height:1.55;max-width:320px}
+  .footer h5{margin-bottom:12px}
+  .footer ul{gap:10px}
+  .footer li a,.footer li{font-size:16px}
+  .footer-grid > div:nth-child(3) h5{visibility:hidden}
+  .footer-grid > div:last-child{grid-column:1/-1}
+  .footer .big-phone{font-size:24px}
+  .footer-bottom{margin-top:0!important;padding-top:16px!important;font-size:12px;gap:8px}
+}
+@media (max-width:999px) and (max-height:700px){
+  .footer{padding-top:calc(var(--header-h) + 12px)!important;padding-bottom:84px!important}
+  .footer-grid{gap:14px 16px!important}
+  .footer .about{display:none}
+  .footer .logo img{height:40px!important}
   .footer ul{gap:6px}
   .footer li a,.footer li{font-size:14px}
-  .footer-grid > div:nth-child(3) h5{display:none}
-  .footer-grid > div:nth-child(3){padding-top:22px}
-  .footer-grid > div:last-child{grid-column:1/-1}
   .footer .big-phone{font-size:20px}
-  .footer-bottom{margin-top:18px!important;padding-top:12px!important;font-size:11px;gap:6px}
 }
 </style>
 </head>
