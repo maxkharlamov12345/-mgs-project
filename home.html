@@ -561,6 +561,9 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 /* карта салонов — на весь экран без нижнего отступа */
 #salons{padding-bottom:0!important}
 #salons .salons-list{margin-bottom:calc(var(--tb) + var(--dock) + 10px)!important}
+
+/* логотип по центру (Макс 21.10) */
+.header{justify-content:center!important}
 </style>
 </head>
 <body>
@@ -591,9 +594,8 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
   <div class="content">
     <h1>Мы — MGS MEBEL</h1>
     <p>Мебельная фабрика, специализирующаяся на производстве комплексных заказов. Дизайнерская мебель доступная каждому!</p>
-    <div class="cta"><button class="btn" data-calc>Сделать расчёт</button><a class="btn btn-ghost" href="portfolio.html">Смотреть наши работы<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    <div class="cta"><a class="btn btn-ghost" href="portfolio.html">Смотреть наши работы<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
   </div>
-  <div class="scroll-hint">листайте</div>
 </section>
 
 <!-- НАШИ ВОЗМОЖНОСТИ: видео про изделия -->
@@ -606,7 +608,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
   <div class="content">
     <h2>Кухни, шкафы, гардеробные и не только</h2>
     <p>Текст-заглушка: здесь будет описание того, что производит фабрика — от отдельной кухни до мебели для всего дома под ключ.</p>
-    <div class="cta"><button class="btn" data-calc>Сделать расчёт</button><a class="btn btn-ghost" href="portfolio.html">Как мы делали — портфолио<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    <div class="cta"><a class="btn btn-ghost" href="portfolio.html">Как мы делали — портфолио<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
   </div>
 </section>
 
