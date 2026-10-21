@@ -386,7 +386,7 @@ html{scroll-snap-type:y mandatory}
 /* ===== Контейнер страницы (Макс 21.10: на телефоне экраны не совпадали с размером экрана) ===== */
 html,body{height:100%;overflow:hidden}
 html{scroll-snap-type:none!important}
-.page{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior-y:none;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.page{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior-y:none;scrollbar-width:none}
 .page::-webkit-scrollbar{display:none}
 .hero,#news,#salons{height:var(--ph,100svh)!important;min-height:0!important}
 
@@ -395,6 +395,17 @@ html{scroll-snap-type:none!important}
 .salon-overlay .salon-card{width:400px;max-width:100%}
 @media (max-width:999px){ .salon-overlay{align-items:center!important} .salon-overlay .salon-card{width:100%} }
 .salon-card .btn{white-space:normal;text-align:center;line-height:1.2}
+
+/* iPhone: при быстром листании туда-сюда Safari «терял» содержимое экранов (карта, заголовок новостей).
+   Каждому экрану — свой постоянный слой; размытие под шапкой и кнопками на телефонах выключено (главный виновник таких пропаданий). */
+.page > section,.page > footer{transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.salons-map,.map-img,.pins{transform:translateZ(0)}
+@media (hover:none),(max-width:999px){
+  .header.solid{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,14,12,.97)}
+  .hero .btn-ghost{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,14,12,.45)}
+  .salon-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(15,14,12,.7)!important}
+  .salon-card .x{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,14,12,.75)}
+}
 </style>
 </head>
 <body>
@@ -477,7 +488,7 @@ html{scroll-snap-type:none!important}
   <div class="salons-map" id="salonsMap">
     <picture>
       <source media="(max-width:999px)" srcset="assets/salons/map-tall.webp">
-      <img class="map-img" src="assets/salons/map-wide.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" loading="lazy" decoding="async">
+      <img class="map-img" src="assets/salons/map-wide.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="async">
     </picture>
     <div class="pins" id="pins"></div>
     <div class="salon-overlay" id="salonOverlay" aria-hidden="true">
