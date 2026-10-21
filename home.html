@@ -643,7 +643,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
   <div class="content">
     <h2>Выставка 2026</h2>
     <p>В текущем году компания MGS MEBEL выступила официальным партнёром ALVIC CENTER на международной дизайнерской выставке ARTDOM.</p>
-    <div class="cta"><button class="btn btn-ghost" id="newsMore">Другие новости и новинки<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+    <div class="cta"><a class="btn btn-ghost" id="newsMore" href="news.html">Другие новости и новинки<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
   </div>
 </section>
 
@@ -757,26 +757,8 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
   </div>
 </div>
 
-<!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР НОВОСТЕЙ -->
-<div class="viewer" id="viewer" aria-hidden="true">
-  <div class="viewer-count" id="viewerCount"></div>
-  <button class="viewer-sound" id="viewerSound" hidden>Звук: вкл</button>
-  <button class="viewer-close" id="viewerClose" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  <div class="viewer-nav">
-    <button class="arrow" data-v="-1" aria-label="Предыдущая"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 15l6-6 6 6"/></svg></button>
-    <button class="arrow" data-v="1" aria-label="Следующая"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
-  </div>
-  <div class="viewer-track" id="viewerTrack"></div>
-</div>
 
 <script>
-/* ===== ДАННЫЕ (потом заменить на реальные) =====
-   preview — короткий 10-сек ролик для карточки, video — полное видео */
-const NEWS = [
-  {date:"2026", title:"Выставка 2026", text:"В текущем году компания MGS MEBEL выступила официальным партнёром ALVIC CENTER на международной дизайнерской выставке ARTDOM.", preview:"assets/news/expo2026-preview.mp4", poster:"assets/news/expo2026-preview.jpg", video:"assets/news/expo2026.mp4", g:"g3"},
-  {date:"2025", title:"Презентация 2025", text:"Отчёт о прошедшей презентации 2025 в шоу-руме MGS MEBEL.", preview:"assets/news/presentation2025-preview.mp4", poster:"assets/news/presentation2025-preview.jpg", video:"assets/news/presentation2025.mp4", g:"g4"},
-  {date:"Новости", title:"Открытие салона", text:"Текст-заглушка: описание новости появится здесь.", preview:"", video:"", g:"g5"}
-];
 const SALONS = [
   {short:"Пражская", metro:{kind:"М", name:"Пражская", min:2}, photo:"assets/salons/prazhskaya.webp",     name:"Салон MGS MEBEL — Пражская",     addr:"Москва, Кировоградская ул., 15, ТЦ «Гранд Юг», 2 этаж",                   phone:"8-495-777-35-75", lat:55.60962, lng:37.60525},
   {short:"Авиамоторная", metro:{kind:"М", name:"Авиамоторная", min:17}, photo:"assets/salons/aviamotornaya.webp", name:"Салон MGS MEBEL — Авиамоторная", addr:"Москва, шоссе Энтузиастов, 12 к2, ТЦ «Город», 4 этаж",                    phone:"8-495-777-35-75", lat:55.74745, lng:37.70712},
@@ -818,73 +800,6 @@ addEventListener('scroll', onScroll, {passive:true}); onScroll();
 
 
 /* ===== Медиа: видео или заглушка ===== */
-function media(src, g, label, poster){
-  if (src) return `<video src="${src}" ${poster?`poster="${poster}"`:''} autoplay muted loop playsinline preload="metadata"></video>`;
-  return `<div class="ph ${g}"><span>${label}</span></div>`;
-}
-
-/* ===== Новости: карточки ===== */
-const track = $('#newsTrack') || document.createElement('div');
-track.innerHTML = NEWS.map((n,i)=>`
-  <button class="news-card" data-i="${i}">
-    <div class="nc-media">
-      <div class="media">${media(n.preview, n.g, 'превью 10 сек', n.poster)}</div>
-      <span class="date">${n.date}</span>
-      <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></span>
-    </div>
-    <div class="info"><h3>${n.title}</h3><p>${n.text}</p></div>
-  </button>`).join('') + `
-  <a class="news-all" href="#"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Все новости</a>`;
-
-document.querySelectorAll('#news .arrow').forEach(b => b.onclick = () => {
-  const card = track.querySelector('.news-card'); if(!card) return;
-  track.scrollBy({left:(card.offsetWidth+16)*+b.dataset.dir, behavior:'smooth'});
-});
-
-/* ===== Новости: полноэкранный просмотр ===== */
-const viewer = $('#viewer'), vTrack = $('#viewerTrack');
-vTrack.innerHTML = NEWS.map(n=>`
-  <div class="v-slide">
-    <div class="media">${n.video ? `<video data-src="${n.video}" ${n.poster?`poster="${n.poster}"`:''} loop playsinline preload="none"></video>` : media('', n.g, 'полное видео')}</div>
-    <div class="info"><span class="tag">#Новости · ${n.date}</span><h3>${n.title}</h3><p>${n.text}</p></div>
-  </div>`).join('');
-const slides = [...vTrack.children];
-let cur = 0;
-function setCount(){ $('#viewerCount').textContent = `${cur+1} / ${NEWS.length}`; }
-// полное видео грузится только когда его открыли; играет только текущее
-let soundOn=false;
-function playCurrent(){
-  slides.forEach((sl,k)=>{ const v=sl.querySelector('video'); if(!v) return;
-    if(k===cur){ if(!v.src && v.dataset.src) v.src=v.dataset.src; v.muted=!soundOn; v.play().catch(()=>{ v.muted=true; v.play().catch(()=>{}); }); }
-    else v.pause(); });
-  const v=slides[cur].querySelector('video'); $('#viewerSound').hidden=!v;
-}
-function openViewer(i){
-  viewer.classList.add('open'); viewer.setAttribute('aria-hidden','false');
-  document.body.style.overflow='hidden';
-  cur = i; vTrack.scrollTo({top: slides[i].offsetTop}); setCount();
-  soundOn=true; updSound(); playCurrent();      // открыли сами — включаем со звуком
-}
-function closeViewer(){
-  viewer.classList.remove('open'); viewer.setAttribute('aria-hidden','true');
-  document.body.style.overflow='';
-  vTrack.querySelectorAll('video').forEach(v=>v.pause());
-}
-function updSound(){ const b=$('#viewerSound'); b.textContent = soundOn ? 'Звук: вкл' : 'Звук: выкл'; b.classList.toggle('on',soundOn); }
-$('#viewerSound').onclick=()=>{ soundOn=!soundOn; updSound(); const v=slides[cur].querySelector('video'); if(v){ v.muted=!soundOn; if(v.paused) v.play().catch(()=>{}); } };
-function go(d){ cur = Math.max(0, Math.min(NEWS.length-1, cur+d)); slides[cur].scrollIntoView({behavior:'smooth'}); }
-track.querySelectorAll('.news-card').forEach(c => c.onclick = () => openViewer(+c.dataset.i));
-$('#viewerClose').onclick = closeViewer;
-document.querySelectorAll('.viewer-nav .arrow').forEach(b => b.onclick = () => go(+b.dataset.v));
-vTrack.addEventListener('scroll', () => { const c=Math.round(vTrack.scrollTop / vTrack.clientHeight); if(c!==cur){ cur=c; setCount(); if(viewer.classList.contains('open')) playCurrent(); } }, {passive:true});
-addEventListener('keydown', e => {
-  if (!viewer.classList.contains('open')) return;
-  if (e.key==='Escape') closeViewer();
-  if (e.key==='ArrowDown') { e.preventDefault(); go(1); }
-  if (e.key==='ArrowUp')   { e.preventDefault(); go(-1); }
-});
-
-$('#newsMore').onclick = () => openViewer(Math.min(1, NEWS.length-1));   // другие новости — полноэкранный просмотр
 
 /* ===== Фирменные салоны ===== */
 const X_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>';
