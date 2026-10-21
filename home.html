@@ -406,6 +406,39 @@ html{scroll-snap-type:none!important}
   .salon-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(15,14,12,.7)!important}
   .salon-card .x{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,14,12,.75)}
 }
+
+/* ===== Карта салонов на весь экран (Макс 21.10): карта дорисована по краям, плавные градиенты сверху и снизу ===== */
+#salons{padding-bottom:0!important}
+.salons-map{flex:1 1 auto!important;min-height:0;width:auto!important;height:auto!important;margin:0 -32px!important;border-radius:0!important;align-self:stretch!important;background:var(--bg)!important}
+.map-img{object-fit:cover;object-position:center}
+.salons-map::before,.salons-map::after{content:"";position:absolute;left:0;right:0;z-index:1;pointer-events:none}
+.salons-map::before{top:0;height:18%;background:linear-gradient(to bottom,var(--bg) 0%,rgba(15,14,12,.6) 45%,rgba(15,14,12,0) 100%)}
+.salons-map::after{bottom:0;height:22%;background:linear-gradient(to top,var(--bg) 0%,rgba(15,14,12,.6) 45%,rgba(15,14,12,0) 100%)}
+.pins{z-index:2}
+.pins .pin-wrap{left:0;top:0}
+@media (max-width:999px){
+  .salons-map{margin:0 -16px!important}
+  .salons-map::before{height:14%}
+  .salons-map::after{height:18%}
+}
+/* «Списком» — отступ снизу остаётся */
+.salons-list{margin-bottom:24px!important}
+/* ===== Подвал на телефоне — компактный, целиком в один экран ===== */
+@media (max-width:999px){
+  .footer{padding:26px 16px 92px!important}
+  .footer-grid{grid-template-columns:1fr 1fr!important;gap:18px 16px!important}
+  .footer-grid > div:first-child{grid-column:1/-1;display:flex;align-items:center;gap:14px}
+  .footer .logo img{height:38px!important}
+  .footer .about{margin:0!important;font-size:12px;line-height:1.45}
+  .footer h5{margin-bottom:8px;font-size:11px}
+  .footer ul{gap:6px}
+  .footer li a,.footer li{font-size:14px}
+  .footer-grid > div:nth-child(3) h5{display:none}
+  .footer-grid > div:nth-child(3){padding-top:22px}
+  .footer-grid > div:last-child{grid-column:1/-1}
+  .footer .big-phone{font-size:20px}
+  .footer-bottom{margin-top:18px!important;padding-top:12px!important;font-size:11px;gap:6px}
+}
 </style>
 </head>
 <body>
@@ -749,27 +782,25 @@ document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',
 }));
 
 /* Карта — лёгкая картинка (assets/salons/map-wide.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
-const PIN_POS={wide:[[51.93, 81.67], [57.85, 48.51], [42.15, 15], [42.28, 75.63]], tall:[[58.2, 82.55], [83.33, 48.62], [16.67, 14.33], [17.23, 76.37]]};
+const PIN_POS={wide:[[51.94,78.75],[57.9,50.15],[42.1,21.25],[42.23,73.55]], tall:[[53.36,72.73],[71.32,49.22],[23.68,25.45],[24.08,68.45]]};
+const MAP_RATIO={wide:1600/800, tall:600/1100};   // пропорции картинок карты
 const pinsEl=$('#pins');
 pinsEl.innerHTML=SALONS.map((s,i)=>`<button class="pin-wrap" data-i="${i}" aria-label="${s.name}" style="--xw:${PIN_POS.wide[i][0]}%;--yw:${PIN_POS.wide[i][1]}%;--xt:${PIN_POS.tall[i][0]}%;--yt:${PIN_POS.tall[i][1]}%"><span class="pin" style="animation-delay:${i*.3}s"></span><span class="pin-label">${s.short}</span></button>`).join('');
 pinsEl.querySelectorAll('.pin-wrap').forEach(el=>el.addEventListener('click',()=>showSalon(+el.dataset.i)));
 // подписи у краёв карты не вылезают за экран
 function fitPinLabels(){ const box=$('#salonsMap').getBoundingClientRect(); pinsEl.querySelectorAll('.pin-label').forEach(l=>{ l.style.setProperty('--lx','0px'); const r=l.getBoundingClientRect(); let dx=0; if(r.right>box.right-8) dx=box.right-8-r.right; if(r.left<box.left+8) dx=box.left+8-r.left; l.style.setProperty('--lx',dx+'px'); }); }
 addEventListener('resize', fitPinLabels); setTimeout(fitPinLabels, 50);
-// карта салонов: максимально большая, но целиком в одном экране и без искажения меток
+// карта салонов: заполняет весь экран (картинка «cover» — с запасом карты по краям), метки ставим с учётом обрезки
 function sizeMap(){
-  const sec=$('#salons'), map=$('#salonsMap'); if(map.hidden) return;
-  const cs=getComputedStyle(sec), head=sec.querySelector('.section-head');
-  const avail=sec.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-head.offsetHeight-parseFloat(getComputedStyle(head).marginBottom);
-  const pad=parseFloat(cs.paddingLeft), full=sec.clientWidth;            // во всю ширину экрана
-  const ratio = innerWidth<1000 ? 9/16 : 7/3;
-  let w=full, h=w/ratio; if(h>avail){ h=avail; w=h*ratio; }
-  map.style.width=w+'px'; map.style.height=h+'px';
-  map.style.margin = w>=full-1 ? `0 -${pad}px` : '0 auto';
-  map.style.borderRadius = w>=full-1 ? '0' : '18px';
+  const map=$('#salonsMap'); if(map.hidden) return;
+  const W=map.clientWidth, H=map.clientHeight; if(!W||!H) return;
+  const mode = innerWidth<1000 ? 'tall' : 'wide', r=MAP_RATIO[mode];
+  let iw=W, ih=W/r; if(ih<H){ ih=H; iw=H*r; }          // как object-fit:cover
+  const ox=(W-iw)/2, oy=(H-ih)/2;
+  pinsEl.querySelectorAll('.pin-wrap').forEach((el,i)=>{ const p=PIN_POS[mode][i]; el.style.left=(ox+iw*p[0]/100)+'px'; el.style.top=(oy+ih*p[1]/100)+'px'; });
   fitPinLabels();
 }
-addEventListener('resize', sizeMap); setTimeout(sizeMap,30);
+addEventListener('resize', sizeMap); setTimeout(sizeMap,30); if(window.ResizeObserver) new ResizeObserver(sizeMap).observe($('#salonsMap'));
 
 
 // фото салонов — заранее, чтобы карточка открывалась сразу с картинкой
