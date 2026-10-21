@@ -318,7 +318,7 @@ html{scroll-snap-type:y mandatory}
 #news .section-head,#salons .section-head{margin-bottom:22px;flex:none}
 .footer{scroll-snap-align:end}
 /* новости: карточка по высоте помещается в экран */
-.news-card{flex:0 0 min(78%,calc((100svh - var(--header-h) - 240px)*16/9));aspect-ratio:16/9}
+.news-card{flex:0 0 min(78%,calc((var(--ph,100svh) - var(--header-h) - 240px)*16/9));aspect-ratio:16/9}
 /* салоны: карта подгоняется под оставшуюся высоту экрана (размер считает sizeMap) */
 .salons-map{aspect-ratio:auto!important;flex:none;align-self:center}
 /* «Списком» — карточки листаются вбок, чтобы всё помещалось в один экран */
@@ -330,7 +330,7 @@ html{scroll-snap-type:y mandatory}
 .salons-list .salon-card .body{flex:none}
 @media (max-width:999px){
   #news,#salons{padding-top:calc(var(--header-h) + 14px);padding-bottom:18px}
-  .news-card{flex:0 0 min(86%,calc((100svh - var(--header-h) - 230px)*4/5));aspect-ratio:4/5}
+  .news-card{flex:0 0 min(86%,calc((var(--ph,100svh) - var(--header-h) - 230px)*4/5));aspect-ratio:4/5}
   .salons-list{margin:0 -16px;padding:0 16px;scroll-padding:0 16px;gap:10px}
   .salons-list .salon-card{flex:0 0 86%}
   .salons-list .salon-card h4{font-size:22px}
@@ -356,7 +356,7 @@ html{scroll-snap-type:y mandatory}
 }
 
 /* новости (Макс 21.10): название и описание ПОД превью, превью крупнее и занимает высоту экрана */
-#news{--nc-text:150px;--nc-avail:calc(100svh - var(--header-h) - 20px - 28px - 120px)}
+#news{--nc-text:150px;--nc-avail:calc(var(--ph,100svh) - var(--header-h) - 20px - 28px - 120px)}
 .news-track{flex:1 1 auto;min-height:0;align-items:stretch}
 .news-card{display:flex!important;flex-direction:column;gap:18px;aspect-ratio:auto!important;overflow:visible!important;background:none!important;border-radius:0!important;cursor:zoom-in;
   flex:0 0 min(80%,calc((var(--nc-avail) - var(--nc-text)) * 16/9))!important}
@@ -370,7 +370,7 @@ html{scroll-snap-type:y mandatory}
 .news-card:hover h3{color:var(--accent)}
 .news-all{align-self:flex-start;aspect-ratio:9/16;height:auto;max-height:calc(var(--nc-avail) - var(--nc-text))}
 @media (max-width:999px){
-  #news{--nc-text:140px;--nc-avail:calc(100svh - var(--header-h) - 14px - 18px - 90px)}
+  #news{--nc-text:140px;--nc-avail:calc(var(--ph,100svh) - var(--header-h) - 14px - 18px - 90px)}
   .news-card{gap:14px;flex:0 0 86%!important}
   .nc-media{aspect-ratio:auto;height:min(calc(var(--nc-avail) - var(--nc-text)),150vw)}
   .news-card h3{font-size:24px}
@@ -382,6 +382,19 @@ html{scroll-snap-type:y mandatory}
   .news-card h3{font-size:clamp(20px,2.2vw,28px)}
   .news-card p{-webkit-line-clamp:2}
 }
+
+/* ===== Контейнер страницы (Макс 21.10: на телефоне экраны не совпадали с размером экрана) ===== */
+html,body{height:100%;overflow:hidden}
+html{scroll-snap-type:none!important}
+.page{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior-y:none;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.page::-webkit-scrollbar{display:none}
+.hero,#news,#salons{height:var(--ph,100svh)!important;min-height:0!important}
+
+#salons{position:relative}
+.salon-overlay{padding-top:calc(var(--header-h) + 12px)!important}
+.salon-overlay .salon-card{width:400px;max-width:100%}
+@media (max-width:999px){ .salon-overlay{align-items:center!important} .salon-overlay .salon-card{width:100%} }
+.salon-card .btn{white-space:normal;text-align:center;line-height:1.2}
 </style>
 </head>
 <body>
@@ -410,6 +423,8 @@ html{scroll-snap-type:y mandatory}
   <a href="#">Новости / новинки</a>
 </div>
 
+<!-- Вся страница — свой контейнер прокрутки (как просмотр новостей): на телефоне панели браузера не прячутся, экран всегда ровно по размеру -->
+<main class="page" id="page">
 <!-- О НАС: видео про фабрику -->
 <section class="hero" id="about">
   <div class="media">
@@ -509,6 +524,7 @@ html{scroll-snap-type:y mandatory}
     <a href="#">Политика конфиденциальности</a>
   </div>
 </footer>
+</main>
 
 <!-- КНОПКА СВЯЗАТЬСЯ -->
 <div class="fab" id="fab">
@@ -601,8 +617,11 @@ document.querySelectorAll('.hero').forEach(h=>heroIO.observe(h));
 
 /* ===== Шапка ===== */
 const header = $('#header');
-const onScroll = () => header.classList.toggle('solid', scrollY > 40);
-addEventListener('scroll', onScroll, {passive:true}); onScroll();
+const page = $('#page');
+const setPH = () => document.documentElement.style.setProperty('--ph', page.clientHeight+'px');
+setPH(); addEventListener('resize', setPH); if (window.visualViewport) visualViewport.addEventListener('resize', setPH);
+const onScroll = () => header.classList.toggle('solid', page.scrollTop > 40);
+page.addEventListener('scroll', onScroll, {passive:true}); onScroll();
 $('#burger').onclick = e => { e.currentTarget.classList.toggle('open'); $('#mobileMenu').classList.toggle('open'); };
 
 /* ===== Медиа: видео или заглушка ===== */
@@ -689,6 +708,7 @@ function salonCardHTML(s, withClose){
     </div>`;
 }
 const overlay=$('#salonOverlay'), card=$('#salonCard');
+$('#salons').appendChild(overlay);   // карточка поверх всего экрана салонов — не ограничена шириной карты
 function showSalon(i){
   card.innerHTML=salonCardHTML(SALONS[i], true);
   card.querySelector('[data-calc]').addEventListener('click', openCalc);
@@ -697,7 +717,7 @@ function showSalon(i){
   card.scrollTop=0;
   // если карта видна не целиком — плавно ставим её по центру экрана, чтобы карточка была ровно посередине
   const r=$('#salonsMap').getBoundingClientRect(), head=document.querySelector('.header').offsetHeight;
-  if(r.top<head || r.bottom>innerHeight){ const y=scrollY+r.top-head-Math.max(0,(innerHeight-head-r.height)/2); scrollTo({top:y,behavior:'smooth'}); }
+  if(r.top<head || r.bottom>innerHeight){ const y=page.scrollTop+r.top-head-Math.max(0,(innerHeight-head-r.height)/2); page.scrollTo({top:y,behavior:'smooth'}); }
 }
 function closeSalon(){ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); }
 overlay.addEventListener('click', e=>{ if(e.target===overlay) closeSalon(); });
