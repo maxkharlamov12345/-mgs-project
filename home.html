@@ -613,7 +613,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 <!-- О НАС: видео про фабрику -->
 <section class="hero" id="about">
   <div class="media">
-    <video class="bg-video" muted loop playsinline preload="auto" poster="assets/factory.jpg" data-src="assets/factory.mp4" data-src-mobile="assets/factory-m.mp4"></video>
+    <video class="bg-video" muted loop playsinline preload="auto" poster="assets/factory.jpg" data-src=""></video>
   </div>
   <div class="content">
     <h1>Мы — MGS MEBEL</h1>
@@ -638,7 +638,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 <!-- НОВОСТИ -->
 <section class="hero" id="news">
   <div class="media">
-    <video class="bg-video" data-lazy="1" muted loop playsinline preload="none" poster="assets/news/expo2026-preview.jpg" data-src="assets/news/expo2026-bg.mp4" data-src-mobile="assets/news/expo2026-bg-m.mp4"></video>
+    <video class="bg-video" data-lazy="1" muted loop playsinline preload="none" poster="assets/news/expo2026-preview.jpg" data-src=""></video>
   </div>
   <div class="content">
     <h2>Выставка 2026</h2>
@@ -796,7 +796,7 @@ document.querySelectorAll('.hero video').forEach(v=>{
   if(v.poster) v.parentElement.style.backgroundImage=`url("${v.poster}")`;
   v.addEventListener('playing',()=>v.classList.add('ready'));
   const src = (isMob && v.dataset.srcMobile) ? v.dataset.srcMobile : v.dataset.src;
-  const load=()=>{ if(!v.getAttribute('src')){ v.src=src; } };
+  const load=()=>{ if(src && !v.getAttribute('src')){ v.src=src; } };
   const unload=()=>{ if(v.getAttribute('src')){ v.pause(); v.removeAttribute('src'); v.load(); v.classList.remove('ready'); } };
   const sec=v.closest('section');
   new IntersectionObserver(es=>{ es[0].isIntersecting ? load() : unload(); },{rootMargin:'60% 0px'}).observe(sec);
