@@ -327,7 +327,7 @@ html{scroll-snap-type:y mandatory}
 .salons-list{min-height:0;flex:0 1 auto!important}
 .salons-list .salon-card{flex:0 0 calc((100% - 32px)/3);scroll-snap-align:start;max-height:100%;overflow:auto;scrollbar-width:none}
 .salons-list .salon-photo{aspect-ratio:16/10;flex:none}
-.salons-list .salon-card .body{flex:none}
+.salons-list .salon-card .body{flex:1 1 auto}
 @media (max-width:999px){
   #news,#salons{padding-top:calc(var(--header-h) + 14px);padding-bottom:18px}
   .news-card{flex:0 0 min(86%,calc((var(--ph,100svh) - var(--header-h) - 230px)*4/5));aspect-ratio:4/5}
@@ -464,6 +464,18 @@ html{scroll-snap-type:none!important}
 
 /* iPhone: карта пропадала при свайпе — без лишних слоёв у карты и меток, картинка меньше по памяти */
 .salons-map,.salons-map .map-img,.pins{transform:none!important;will-change:auto!important}
+
+/* «Списком»: все карточки одинаковые — название и адрес фиксированной высоты (2 строки), кнопка всегда внизу на одной линии.
+   Без анимации появления: на iPhone карточки за краем экрана оставались невидимыми (чёрный фон). */
+.salons-list{align-items:stretch}
+.salons-list .salon-card{opacity:1!important;transform:none!important;animation:none!important;display:flex!important;flex-direction:column}
+.salons-list .salon-card .body{display:flex;flex-direction:column;min-height:0}
+.salons-list .salon-card h4{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.3em}
+.salons-list .salon-card .addr{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:3em}
+.salons-list .metro{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.salons-list .salon-card .btn{margin-top:auto!important}
+@media (max-width:999px){ .salon-card .btn{white-space:nowrap;font-size:15px;padding:0 10px} }
+@media (max-width:359px){ .salon-card .btn{font-size:13px;padding:0 6px} }
 </style>
 </head>
 <body>
@@ -802,7 +814,7 @@ document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',
   document.querySelectorAll('.seg-btn').forEach(b=>{ const on=b===btn; b.classList.toggle('on',on); b.setAttribute('aria-selected',on); });
   $('#salonsMap').hidden = v!=='map';
   listEl.hidden = v!=='list';
-  if(v==='list'){ listEl.querySelectorAll('.salon-card').forEach(c=>{ c.style.animation='none'; c.offsetHeight; c.style.animation=''; }); }
+  if(v==='list'){ listEl.scrollLeft=0; }
   else { closeSalon(); setTimeout(sizeMap,30); }
 }));
 
