@@ -586,6 +586,9 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 
 /* «Списком» — без кнопки «Заказать персональный дизайн» (Макс 21.10) */
 .salons-list .salon-card .btn{display:none!important}
+
+/* метки разделов убраны (Макс 21.10); переключатель «На карте / Списком» — по центру */
+#salons .section-head{justify-content:center!important;align-items:center!important}
 </style>
 </head>
 <body>
@@ -612,7 +615,6 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
   <div class="media">
     <video class="bg-video" autoplay muted loop playsinline preload="auto" poster="assets/factory.jpg" data-src="assets/factory.mp4"></video>
   </div>
-  <div class="tag">#О нас</div>
   <div class="content">
     <h1>Мы — MGS MEBEL</h1>
     <p>Мебельная фабрика, специализирующаяся на производстве комплексных заказов. Дизайнерская мебель доступная каждому!</p>
@@ -626,7 +628,6 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
     <!-- сюда: <video src="video/products.mp4" autoplay muted loop playsinline poster="img/products.jpg"></video> -->
     <div class="ph g2"><span>видео про изделия</span></div>
   </div>
-  <div class="tag">#Наши возможности</div>
   <div class="content">
     <h2>Кухни, шкафы, гардеробные и не только</h2>
     <p>Текст-заглушка: здесь будет описание того, что производит фабрика — от отдельной кухни до мебели для всего дома под ключ.</p>
@@ -639,7 +640,6 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
   <div class="media">
     <video class="bg-video" data-lazy="1" muted loop playsinline preload="none" poster="assets/news/expo2026-preview.jpg" data-src="assets/news/expo2026-bg.mp4"></video>
   </div>
-  <div class="tag">#Новости</div>
   <div class="content">
     <h2>Выставка 2026</h2>
     <p>В текущем году компания MGS MEBEL выступила официальным партнёром ALVIC CENTER на международной дизайнерской выставке ARTDOM.</p>
@@ -650,7 +650,6 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 <!-- ФИРМЕННЫЕ САЛОНЫ -->
 <section class="section" id="salons">
   <div class="section-head">
-    <div><div class="tag">#Фирменные салоны</div></div>
     <div class="seg" role="tablist" aria-label="Вид">
       <button class="seg-btn on" data-view="map" role="tab" aria-selected="true">На карте</button>
       <button class="seg-btn" data-view="list" role="tab" aria-selected="false">Списком</button>
