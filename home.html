@@ -481,6 +481,11 @@ html{scroll-snap-type:none!important}
 .salons-list{-webkit-transform:translateZ(0);transform:translateZ(0);overscroll-behavior-x:contain}
 .salon-photo img{opacity:1!important}
 
+
+/* ===== Карта видна от самого верха экрана (Макс 21.10): лёгкий градиент под шапкой и заголовком, шапка над картой прозрачная ===== */
+.salons-map::before{height:var(--fade-top,30%)!important;background:linear-gradient(to bottom,rgba(15,14,12,.78) 0%,rgba(15,14,12,.45) 40%,rgba(15,14,12,.15) 80%,rgba(15,14,12,0) 100%)!important}
+#salons .section-head .tag,#salons .section-head h2{text-shadow:0 2px 14px rgba(15,14,12,.9),0 0 2px rgba(15,14,12,.6)}
+.header.over-map{background:linear-gradient(to bottom,rgba(15,14,12,.75),rgba(15,14,12,0))!important;border-color:transparent!important;backdrop-filter:none!important}
 </style>
 </head>
 <body>
@@ -562,8 +567,8 @@ html{scroll-snap-type:none!important}
   </div>
   <div class="salons-map" id="salonsMap">
     <picture>
-      <source media="(max-width:999px)" srcset="assets/salons/map-tall-v4.webp">
-      <img class="map-img" src="assets/salons/map-wide-v4.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="sync" fetchpriority="high">
+      <source media="(max-width:999px)" srcset="assets/salons/map-tall-v5.webp">
+      <img class="map-img" src="assets/salons/map-wide-v5.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="sync" fetchpriority="high">
     </picture>
     <div class="pins" id="pins"></div>
     <div class="salon-overlay" id="salonOverlay" aria-hidden="true">
@@ -708,6 +713,8 @@ const setPH = () => document.documentElement.style.setProperty('--ph', page.clie
 setPH(); addEventListener('resize', setPH); if (window.visualViewport) visualViewport.addEventListener('resize', setPH);
 const onScroll = () => header.classList.toggle('solid', page.scrollTop > 40);
 page.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+// над картой салонов шапка прозрачная, чтобы карта была видна от самого верха
+new IntersectionObserver(es=>es.forEach(e=>header.classList.toggle('over-map', e.isIntersecting && e.intersectionRatio>0.55 && !$('#salonsMap').hidden)),{root:page,threshold:[0,0.55,1]}).observe($('#salons'));
 $('#burger').onclick = e => { e.currentTarget.classList.toggle('open'); $('#mobileMenu').classList.toggle('open'); };
 
 /* ===== Медиа: видео или заглушка ===== */
@@ -817,7 +824,7 @@ listEl.querySelectorAll('[data-calc]').forEach(b=>b.addEventListener('click', op
 document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',()=>{
   const v=btn.dataset.view;
   document.querySelectorAll('.seg-btn').forEach(b=>{ const on=b===btn; b.classList.toggle('on',on); b.setAttribute('aria-selected',on); });
-  $('#salonsMap').hidden = v!=='map';
+  $('#salonsMap').hidden = v!=='map'; header.classList.toggle('over-map', v==='map');
   listEl.hidden = v!=='list';
   if(v==='list'){ listEl.scrollLeft=0; }
   else { closeSalon(); setTimeout(sizeMap,30); }
@@ -827,10 +834,10 @@ document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',
   fix(); requestAnimationFrame(fix); setTimeout(fix,120); setTimeout(fix,400);
 }));
 
-/* Карта — лёгкая картинка (assets/salons/map-wide-v4.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
-const PIN_POS={wide:[[51.94,70.91],[57.9,50.11],[42.1,29.09],[42.23,67.12]], tall:[[53.36,64.71],[71.32,49.49],[23.68,34.12],[24.08,61.94]]};
+/* Карта — лёгкая картинка (assets/salons/map-wide-v5.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
+const PIN_POS={wide:[[51.94,65.33],[57.9,50.08],[42.1,34.67],[42.23,62.56]], tall:[[53.36,62.5],[71.32,49.57],[23.68,36.5],[24.08,60.15]]};
 // картинки карты с запасом сверху/снизу; core — прежняя область (по ней карта «стоит на месте»)
-const MAP_DIM={wide:{w:1600,h:1100,coreY:150,coreH:800}, tall:{w:600,h:1700,coreY:300,coreH:1100}};
+const MAP_DIM={wide:{w:1600,h:1500,coreY:350,coreH:800}, tall:{w:600,h:2000,coreY:450,coreH:1100}};
 const pinsEl=$('#pins');
 pinsEl.innerHTML=SALONS.map((s,i)=>`<button class="pin-wrap" data-i="${i}" aria-label="${s.name}" style="--xw:${PIN_POS.wide[i][0]}%;--yw:${PIN_POS.wide[i][1]}%;--xt:${PIN_POS.tall[i][0]}%;--yt:${PIN_POS.tall[i][1]}%"><span class="pin" style="animation-delay:${i*.3}s"></span><span class="pin-label">${s.short}</span></button>`).join('');
 pinsEl.querySelectorAll('.pin-wrap').forEach(el=>el.addEventListener('click',()=>showSalon(+el.dataset.i)));
@@ -847,7 +854,7 @@ function sizeMap(){
   const sc=Math.max(W/d.w, boxH/d.coreH);
   const iw=d.w*sc, ih=d.h*sc, left=(W-iw)/2, top=boxTop+boxH/2-(d.coreY+d.coreH/2)*sc;
   Object.assign(img.style,{left:left+'px',top:top+'px',width:iw+'px',height:ih+'px'});
-  map.style.setProperty('--fade-top', (boxTop+24)+'px');
+  map.style.setProperty('--fade-top', (boxTop)+'px');
   pinsEl.querySelectorAll('.pin-wrap').forEach((el,i)=>{ const p=PIN_POS[mode][i]; el.style.left=(left+iw*p[0]/100)+'px'; el.style.top=(top+ih*p[1]/100)+'px'; });
   fitPinLabels();
 }
