@@ -564,6 +564,25 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 
 /* логотип по центру (Макс 21.10) */
 .header{justify-content:center!important}
+
+/* ===== Экран 3 — видео «Выставка 2026» на весь экран ===== */
+#news{padding:0!important;display:flex!important;flex-direction:row!important;justify-content:flex-start!important}
+/* ===== Экран 4 — интерактивная карта на весь экран, без градиентов ===== */
+.salons-map::before,.salons-map::after{display:none!important}
+#map{position:absolute;inset:0;z-index:1;opacity:0;transition:opacity .5s ease;background:var(--bg)}
+.salons-map.live #map{opacity:1}
+.salons-map.live .map-img,.salons-map.live .pins{visibility:hidden}
+.salon-overlay{z-index:6}
+#salons .section-head{pointer-events:none} #salons .section-head > *{pointer-events:auto}
+#map .pin-wrap{position:relative}
+.maplibregl-ctrl-bottom-right{bottom:calc(var(--tb) + var(--dock) + 14px)!important;right:12px}
+.maplibregl-ctrl-group{background:rgba(30,27,24,.75)!important;border-radius:16px!important;box-shadow:none!important;border:1px solid rgba(244,241,236,.1)}
+.maplibregl-ctrl-group button{width:40px!important;height:40px!important;background:transparent!important}
+.maplibregl-ctrl-group button+button{border-top:1px solid rgba(244,241,236,.1)!important}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon{filter:invert(1)}
+.maplibregl-cooperative-gesture-screen{background:rgba(15,14,12,.6)!important;color:var(--text);font-family:Onest,sans-serif;font-size:18px}
+
+#news::after{background:linear-gradient(to top,rgba(15,14,12,.92) 0%,rgba(15,14,12,.45) 50%,rgba(15,14,12,.35) 100%)!important}
 </style>
 </head>
 <body>
@@ -613,15 +632,16 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 </section>
 
 <!-- НОВОСТИ -->
-<section class="section" id="news">
-  <div class="section-head">
-    <div><div class="tag">#Новости</div></div>
-    <div class="arrows">
-      <button class="arrow" data-dir="-1" aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <button class="arrow" data-dir="1" aria-label="Вперёд"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-    </div>
+<section class="hero" id="news">
+  <div class="media">
+    <video class="bg-video" data-lazy="1" muted loop playsinline preload="none" poster="assets/news/expo2026-preview.jpg" data-src="assets/news/expo2026-bg.mp4"></video>
   </div>
-  <div class="news-track" id="newsTrack"></div>
+  <div class="tag">#Новости</div>
+  <div class="content">
+    <h2>Выставка 2026</h2>
+    <p>В текущем году компания MGS MEBEL выступила официальным партнёром ALVIC CENTER на международной дизайнерской выставке ARTDOM.</p>
+    <div class="cta"><button class="btn btn-ghost" id="newsMore">Другие новости и новинки<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+  </div>
 </section>
 
 <!-- ФИРМЕННЫЕ САЛОНЫ -->
@@ -639,6 +659,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
       <img class="map-img" src="assets/salons/map-wide-v5.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="sync" fetchpriority="high">
     </picture>
     <div class="pins" id="pins"></div>
+    <div id="map" aria-label="Интерактивная карта салонов"></div>
     <div class="salon-overlay" id="salonOverlay" aria-hidden="true">
       <div class="salon-card" id="salonCard" role="dialog" aria-modal="true"></div>
     </div>
@@ -679,7 +700,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 MGS MEBEL · Карта: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></span>
+    <span>© 2026 MGS MEBEL · Карта: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, OpenFreeMap</span>
     <a href="#">Политика конфиденциальности</a>
   </div>
 </footer>
@@ -766,8 +787,9 @@ const $ = s => document.querySelector(s);
 
 /* ===== Фоновые видео: на телефоне — лёгкая версия ===== */
 document.querySelectorAll('video.bg-video').forEach(v => {
-  const src = (innerWidth < 1000 && v.dataset.srcMobile) ? v.dataset.srcMobile : v.dataset.src;
-  v.src = src; v.muted = true; v.play().catch(()=>{});
+  const load=()=>{ if(v.src) return; v.src = (innerWidth < 1000 && v.dataset.srcMobile) ? v.dataset.srcMobile : v.dataset.src; v.muted = true; };
+  if(v.dataset.lazy){ new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); load(); } },{rootMargin:'100% 0px'}).observe(v.closest('section')); }
+  else { load(); v.play().catch(()=>{}); }
 });
 
 
@@ -798,7 +820,7 @@ function media(src, g, label, poster){
 }
 
 /* ===== Новости: карточки ===== */
-const track = $('#newsTrack');
+const track = $('#newsTrack') || document.createElement('div');
 track.innerHTML = NEWS.map((n,i)=>`
   <button class="news-card" data-i="${i}">
     <div class="nc-media">
@@ -811,7 +833,7 @@ track.innerHTML = NEWS.map((n,i)=>`
   <a class="news-all" href="#"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Все новости</a>`;
 
 document.querySelectorAll('#news .arrow').forEach(b => b.onclick = () => {
-  const card = track.querySelector('.news-card');
+  const card = track.querySelector('.news-card'); if(!card) return;
   track.scrollBy({left:(card.offsetWidth+16)*+b.dataset.dir, behavior:'smooth'});
 });
 
@@ -857,6 +879,8 @@ addEventListener('keydown', e => {
   if (e.key==='ArrowDown') { e.preventDefault(); go(1); }
   if (e.key==='ArrowUp')   { e.preventDefault(); go(-1); }
 });
+
+$('#newsMore').onclick = () => openViewer(Math.min(1, NEWS.length-1));   // другие новости — полноэкранный просмотр
 
 /* ===== Фирменные салоны ===== */
 const X_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -934,6 +958,67 @@ function sizeMap(){
   fitPinLabels();
 }
 addEventListener('resize', sizeMap); setTimeout(sizeMap,30); if(window.ResizeObserver) new ResizeObserver(sizeMap).observe($('#salonsMap'));
+
+/* Интерактивная карта (Макс 21.10): MapLibre (assets/maplibre — свой файл, не с CDN) + OpenFreeMap.
+   Пока не загрузилась (или если не загрузится) — показывается картинка карты с метками. */
+let lmap=null;
+function brandStyle(st){
+  const C={bg:'#0f0e0c', water:'#17191b', park:'#151712', build:'#191714', minor:'#24211d', major:'#2f2b26', motor:'#3a352f', casing:'#2a2622', rail:'#26231f', text:'#a89f92', textDim:'#7a7268', halo:'#0f0e0c'};
+  const name=['coalesce',['get','name:ru'],['get','name']];
+  st.layers.forEach(l=>{
+    const p=l.paint=l.paint||{}, id=l.id;
+    if(l.type==='background') p['background-color']=C.bg;
+    if(id==='water'||id==='waterway'){ if(l.type==='fill') p['fill-color']=C.water; else p['line-color']=C.water; }
+    if(/landcover_wood|landuse_park/.test(id)) p['fill-color']=C.park;
+    if(id==='landuse_residential') p['fill-color']='#12110f';
+    if(id==='building'){ p['fill-color']=C.build; p['fill-outline-color']='#211e1a'; }
+    if(id==='highway_minor'||id==='highway_path') p['line-color']=C.minor;
+    if(id==='highway_major_inner') p['line-color']=C.major;
+    if(id==='highway_major_casing'||id==='highway_motorway_casing') p['line-color']=C.casing;
+    if(id==='highway_motorway_inner') p['line-color']=C.motor;
+    if(id==='highway_major_subtle'||id==='highway_motorway_subtle') p['line-color']=C.major;
+    if(/^railway/.test(id) && !/dashline/.test(id)) p['line-color']=C.rail;
+    if(/dashline/.test(id)) p['line-color']=C.bg;
+    if(l.type==='symbol'){
+      if(l.layout && l.layout['text-field'] && !/motorway/.test(id)) l.layout['text-field']=name;
+      if(l.layout) l.layout['text-font']=l.layout['text-font']||['Noto Sans Regular'];
+      p['text-color'] = /place_city|place_town|place_state/.test(id) ? C.text : C.textDim;
+      p['text-halo-color']=C.halo; p['text-halo-width']=1.2; p['text-halo-blur']=0.5;
+    }
+  });
+  st.layers = st.layers.filter(l=>l.source!=='ne2_shaded');
+  return st;
+}
+
+function loadMapLib(){ return new Promise((res,rej)=>{ if(window.maplibregl) return res();
+  const css=document.createElement('link'); css.rel='stylesheet'; css.href='assets/maplibre/maplibre-gl.css'; document.head.appendChild(css);
+  const js=document.createElement('script'); js.src='assets/maplibre/maplibre-gl.js'; js.onload=res; js.onerror=rej; document.head.appendChild(js); }); }
+function liveFit(){ if(!lmap) return; const b=new maplibregl.LngLatBounds(); SALONS.forEach(s=>b.extend([s.lng,s.lat]));
+  const mob=innerWidth<1000; lmap.fitBounds(b,{padding:mob?{top:150,bottom:120,left:40,right:40}:{top:160,bottom:150,left:120,right:120},duration:0});
+  // центр Москвы — по центру экрана по высоте
+  const c=lmap.getCenter(); lmap.jumpTo({center:[c.lng,55.7558]}); }
+async function initLiveMap(){
+  try{
+    const [_, style]=await Promise.all([loadMapLib(), fetch('https://tiles.openfreemap.org/styles/dark').then(r=>r.json())]);
+    lmap=new maplibregl.Map({container:'map', style:brandStyle(style), center:[37.6173,55.7558], zoom:9.3, attributionControl:false,
+      dragRotate:false, pitchWithRotate:false, scrollZoom:false, cooperativeGestures:true, fadeDuration:150,
+      locale:{'CooperativeGesturesHandler.WindowsHelpText':'Приближайте карту: Ctrl + колесо мыши','CooperativeGesturesHandler.MacHelpText':'Приближайте карту: ⌘ + колесо мыши','CooperativeGesturesHandler.MobileHelpText':'Двигайте карту двумя пальцами'}});
+    lmap.touchZoomRotate.disableRotation();
+    lmap.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+    SALONS.forEach((s,i)=>{
+      const el=document.createElement('button'); el.className='pin-wrap'; el.setAttribute('aria-label',s.name);
+      el.innerHTML=`<span class="pin" style="animation-delay:${i*.3}s"></span><span class="pin-label">${s.short}</span>`;
+      el.addEventListener('click',ev=>{ ev.stopPropagation(); showSalon(i); });
+      new maplibregl.Marker({element:el, anchor:'top', offset:[0,-9]}).setLngLat([s.lng,s.lat]).addTo(lmap);
+    });
+    lmap.once('load',()=>{ lmap.resize(); liveFit(); $('#salonsMap').classList.add('live'); });
+    new ResizeObserver(()=>{ if(lmap) lmap.resize(); }).observe($('#map'));
+    addEventListener('resize', ()=>setTimeout(liveFit,50));
+  }catch(e){ /* остаётся картинка с метками */ }
+}
+let liveStarted=false; const startLive=()=>{ if(liveStarted) return; liveStarted=true; initLiveMap(); };
+new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); startLive(); } },{rootMargin:'150% 0px'}).observe($('#salons'));
+setTimeout(startLive, 3500);
 
 
 // фото салонов — заранее, чтобы карточка открывалась сразу с картинкой
