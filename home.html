@@ -490,6 +490,11 @@ html{scroll-snap-type:none!important}
 /* низ карты — как верх (Макс 21.10): карта видна до самого низа экрана, лёгкий градиент только у края */
 .salons-map::after{height:14%!important;background:linear-gradient(to top,var(--bg) 0%,rgba(15,14,12,.6) 18%,rgba(15,14,12,.2) 55%,rgba(15,14,12,0) 100%)!important}
 @media (max-width:999px){ .salons-map::after{height:12%!important} }
+
+/* заголовки «Новости и новинки» / «Приходите посмотреть вживую» убраны (Макс 21.10): метка и кнопки в одну линию, превью новостей крупнее */
+#news .section-head,#salons .section-head{align-items:center!important}
+#news{--nc-avail:calc(var(--ph,100svh) - var(--header-h) - 20px - 28px - 70px)!important}
+@media (max-width:999px){ #news{--nc-avail:calc(var(--ph,100svh) - var(--header-h) - 14px - 18px - 50px)!important} }
 </style>
 </head>
 <body>
@@ -551,7 +556,7 @@ html{scroll-snap-type:none!important}
 <!-- НОВОСТИ -->
 <section class="section" id="news">
   <div class="section-head">
-    <div><div class="tag">#Новости</div><h2>Новости и новинки</h2></div>
+    <div><div class="tag">#Новости</div></div>
     <div class="arrows">
       <button class="arrow" data-dir="-1" aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
       <button class="arrow" data-dir="1" aria-label="Вперёд"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
@@ -563,7 +568,7 @@ html{scroll-snap-type:none!important}
 <!-- ФИРМЕННЫЕ САЛОНЫ -->
 <section class="section" id="salons">
   <div class="section-head">
-    <div><div class="tag">#Фирменные салоны</div><h2>Приходите посмотреть вживую</h2></div>
+    <div><div class="tag">#Фирменные салоны</div></div>
     <div class="seg" role="tablist" aria-label="Вид">
       <button class="seg-btn on" data-view="map" role="tab" aria-selected="true">На карте</button>
       <button class="seg-btn" data-view="list" role="tab" aria-selected="false">Списком</button>
@@ -841,6 +846,7 @@ document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',
 /* Карта — лёгкая картинка (assets/salons/map-wide-v5.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
 const PIN_POS={wide:[[51.94,65.33],[57.9,50.08],[42.1,34.67],[42.23,62.56]], tall:[[53.36,62.5],[71.32,49.57],[23.68,36.5],[24.08,60.15]]};
 // картинки карты с запасом сверху/снизу; core — прежняя область (по ней карта «стоит на месте»)
+const MSK_Y={wide:49.16, tall:48.79};   // где на картинках карты центр Москвы (по высоте, %)
 const MAP_DIM={wide:{w:1600,h:1500,coreY:350,coreH:800}, tall:{w:600,h:2000,coreY:450,coreH:1100}};
 const pinsEl=$('#pins');
 pinsEl.innerHTML=SALONS.map((s,i)=>`<button class="pin-wrap" data-i="${i}" aria-label="${s.name}" style="--xw:${PIN_POS.wide[i][0]}%;--yw:${PIN_POS.wide[i][1]}%;--xt:${PIN_POS.tall[i][0]}%;--yt:${PIN_POS.tall[i][1]}%"><span class="pin" style="animation-delay:${i*.3}s"></span><span class="pin-label">${s.short}</span></button>`).join('');
@@ -856,7 +862,7 @@ function sizeMap(){
   const boxTop=head.offsetTop+head.offsetHeight+parseFloat(getComputedStyle(head).marginBottom), boxH=H-boxTop;
   const d=MAP_DIM[innerWidth<1000?'tall':'wide'], mode=innerWidth<1000?'tall':'wide';
   const sc=Math.max(W/d.w, boxH/d.coreH);
-  const iw=d.w*sc, ih=d.h*sc, left=(W-iw)/2, top=boxTop+boxH/2-(d.coreY+d.coreH/2)*sc;
+  const iw=d.w*sc, ih=d.h*sc, left=(W-iw)/2, top=Math.min(0,Math.max(H-ih, H/2-ih*MSK_Y[mode]/100));   // центр Москвы — ровно по центру экрана по высоте
   Object.assign(img.style,{left:left+'px',top:top+'px',width:iw+'px',height:ih+'px'});
   map.style.setProperty('--fade-top', (boxTop)+'px');
   pinsEl.querySelectorAll('.pin-wrap').forEach((el,i)=>{ const p=PIN_POS[mode][i]; el.style.left=(left+iw*p[0]/100)+'px'; el.style.top=(top+ih*p[1]/100)+'px'; });
