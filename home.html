@@ -354,6 +354,34 @@ html{scroll-snap-type:y mandatory}
   .seg-btn{min-height:34px;padding:0 14px;font-size:14px}
   .salon-card .btn{font-size:14px;padding:0 14px}
 }
+
+/* новости (Макс 21.10): название и описание ПОД превью, превью крупнее и занимает высоту экрана */
+#news{--nc-text:150px;--nc-avail:calc(100svh - var(--header-h) - 20px - 28px - 120px)}
+.news-track{flex:1 1 auto;min-height:0;align-items:stretch}
+.news-card{display:flex!important;flex-direction:column;gap:18px;aspect-ratio:auto!important;overflow:visible!important;background:none!important;border-radius:0!important;cursor:zoom-in;
+  flex:0 0 min(80%,calc((var(--nc-avail) - var(--nc-text)) * 16/9))!important}
+.news-card::after{display:none!important}
+.nc-media{position:relative;flex:none;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:var(--tile)}
+.nc-media .media{position:absolute;inset:0;transition:transform .5s ease}
+.news-card:hover .nc-media .media{transform:scale(1.035)}
+.news-card .info{position:static!important;padding:0 4px}
+.news-card h3{font-size:clamp(26px,2.4vw,38px);margin-bottom:8px}
+.news-card p{max-width:720px;color:var(--muted);-webkit-line-clamp:3}
+.news-card:hover h3{color:var(--accent)}
+.news-all{align-self:flex-start;aspect-ratio:9/16;height:auto;max-height:calc(var(--nc-avail) - var(--nc-text))}
+@media (max-width:999px){
+  #news{--nc-text:140px;--nc-avail:calc(100svh - var(--header-h) - 14px - 18px - 90px)}
+  .news-card{gap:14px;flex:0 0 86%!important}
+  .nc-media{aspect-ratio:auto;height:min(calc(var(--nc-avail) - var(--nc-text)),150vw)}
+  .news-card h3{font-size:24px}
+  .news-all{aspect-ratio:auto;align-self:stretch;max-height:calc(var(--nc-avail) - var(--nc-text));flex:0 0 46%}
+}
+@media (max-height:740px){
+  #news{--nc-text:110px}
+  .news-card{gap:10px}
+  .news-card h3{font-size:clamp(20px,2.2vw,28px)}
+  .news-card p{-webkit-line-clamp:2}
+}
 </style>
 </head>
 <body>
@@ -587,9 +615,11 @@ function media(src, g, label, poster){
 const track = $('#newsTrack');
 track.innerHTML = NEWS.map((n,i)=>`
   <button class="news-card" data-i="${i}">
-    <div class="media">${media(n.preview, n.g, 'превью 10 сек', n.poster)}</div>
-    <span class="date">${n.date}</span>
-    <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></span>
+    <div class="nc-media">
+      <div class="media">${media(n.preview, n.g, 'превью 10 сек', n.poster)}</div>
+      <span class="date">${n.date}</span>
+      <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></span>
+    </div>
     <div class="info"><h3>${n.title}</h3><p>${n.text}</p></div>
   </button>`).join('') + `
   <a class="news-all" href="#"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Все новости</a>`;
