@@ -2,14 +2,55 @@
 <html lang="ru">
 <head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta charset="utf-8">
-<title>Портфолио — MGS Mebel</title>
-<meta name="description" content="Портфолио MGS Mebel: кухни, шкафы и гардеробные на заказ.">
+<title>Наши работы — MGS Mebel</title>
+<meta name="description" content="Наши работы — MGS Mebel: кухни, шкафы и гардеробные на заказ.">
 <link rel="preload" href="assets/fonts/onest-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/onest-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+20BD}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}</style>
 <script>window.__resources={}</script>
 <script>/* кэш сайта в браузере — sw.js */if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})</script>
 <script src="assets/dims.js" defer></script>
+<style>
+/* ===== шапка и док сайта — копия с главной (home.html), классы с префиксом site- ===== */
+:root{--site-hd:72px;--dock:96px}
+.site-hd{position:fixed;inset:0 0 auto 0;z-index:40;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
+.site-logo{pointer-events:auto;display:inline-flex;line-height:0;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}
+.site-logo img{height:38px;width:auto;display:block}
+.site-dock{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:42;display:flex;gap:6px;padding:7px;border-radius:24px;
+  background:rgba(30,27,24,.58);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border:1px solid rgba(244,241,236,.1);box-shadow:0 12px 40px rgba(0,0,0,.45);font-family:Onest,system-ui,sans-serif}
+.site-dock a{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:74px;padding:9px 12px 8px;border-radius:17px;color:#f4f1ec;text-decoration:none;transition:transform .25s cubic-bezier(.22,1,.36,1),background-color .2s ease;transform-origin:50% 100%}
+.site-dock a svg{width:24px;height:24px}
+.site-dock a span{font-size:11px;color:#a89f92;letter-spacing:.02em}
+.site-dock a:hover{background:rgba(244,241,236,.08);color:#f4f1ec}
+@media (hover:hover){ .site-dock a:hover{transform:scale(1.18) translateY(-4px)} }
+.site-dock a.on svg{color:#bfd630} .site-dock a.on span{color:#f4f1ec}
+.site-dock a.open{background:rgba(244,241,236,.1)}
+.site-dock a.site-cta{background:#bfd630;color:#1c1a17} .site-dock a.site-cta span{color:#1c1a17}
+.site-menu{position:fixed;inset:0;z-index:41;background:#0f0e0c;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;opacity:0;pointer-events:none;transition:opacity .3s;
+  padding:calc(var(--site-hd) + 20px) 24px calc(var(--dock) + 30px);font-family:Onest,system-ui,sans-serif}
+.site-menu.open{opacity:1;pointer-events:auto}
+.site-menu a{font-size:30px;font-weight:300;letter-spacing:-.01em;padding:8px 0;color:#f4f1ec;text-decoration:none}
+.site-menu a:hover{color:#bfd630}
+.site-menu a.active{color:#bfd630}
+.sm-contacts{margin-top:22px;display:flex;flex-direction:column;gap:8px}
+.sm-contacts a{font-size:22px;font-weight:500;color:#bfd630}
+.sm-contacts span{display:flex;gap:18px} .sm-contacts span a{font-size:16px;color:#a89f92}
+@media (min-width:1000px){ .site-menu{padding-left:12vw} .site-menu a{font-size:44px} .sm-contacts a{font-size:22px} .sm-contacts span a{font-size:16px} }
+@media (max-width:999px){
+  :root{--site-hd:64px;--dock:84px}
+  .site-logo img{height:32px}
+  .site-dock{left:10px;right:10px;transform:none;bottom:calc(8px + env(safe-area-inset-bottom));justify-content:space-between;border-radius:26px;padding:6px}
+  .site-dock a{min-width:0;flex:1;padding:8px 2px 7px;border-radius:20px}
+  .site-dock a svg{width:23px;height:23px}
+  .site-dock a span{font-size:10.5px}
+}
+/* место под шапку сверху и под док снизу */
+.top-sec{padding-top:calc(var(--site-hd) + 10px + env(safe-area-inset-top)) !important}
+.page-wrap{padding-bottom:calc(var(--dock) + 24px + env(safe-area-inset-bottom))}
+html.site-menu-open{overflow:hidden}
+/* переключатель «2 в ряд / 1 в ряд» на телефоне — над доком */
+@media (max-width:759px){ .mode-pick{bottom:calc(var(--dock) + 10px + env(safe-area-inset-bottom,0px)) !important} }
+</style>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -149,16 +190,16 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 </style>
 </helmet>
 
-<div style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100vh">
+<div class="page-wrap" style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100vh">
 
   <!-- заголовок -->
   <section class="pad top-sec" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
-    <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em">Портфолио</h1>
+    <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em">Наши работы</h1>
     <div style="font-size: 14px; color: #a89f92">{{countLine}}</div>
   </section>
 
   <!-- ленты: у всех одинаковая сетка, а открытие разное (REELS — рилсы, Комплекс — страница проекта, остальные — просмотр изделия) -->
-  <nav aria-label="Ленты портфолио" class="pad chips-nav" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 18px 32px 26px">
+  <nav aria-label="Ленты: наши работы" class="pad chips-nav" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 18px 32px 26px">
     <sc-for list="{{chips}}" as="c" hint-placeholder-count="8">
       <button class="chip" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; background: {{c.bg}}; color: {{c.fg}}">{{c.label}} <span style="opacity: 0.6; font-weight: 400">{{c.count}}</span></button>
     </sc-for>
@@ -352,6 +393,34 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 
 </div>
 </template>
+
+<!-- ===== Шапка и навигация сайта — как на главной (home.html): логотип по центру, док снизу, меню на весь экран ===== -->
+<header class="site-hd"><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo.webp" alt="MGS MEBEL" width="400" height="217"></a></header>
+<nav class="site-dock" id="siteDock" aria-label="Меню сайта">
+  <a href="home.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Главная</span></a>
+  <a href="home.html#salons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11.5A7 7 0 0 1 19 9.5C19 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Салоны</span></a>
+  <a href="portfolio.html" class="on" id="siteHere"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Работы</span></a>
+  <a href="#" id="siteMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Меню</span></a>
+  <a href="home.html#calc" class="site-cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h1.5M12 11.5h1.5M15.5 11.5h0M8.5 15.5h1.5M12 15.5h3.5"/></svg><span>Расчёт</span></a>
+</nav>
+<div class="site-menu" id="siteMenu">
+  <a href="home.html">Главная</a>
+  <a href="#">О нас</a>
+  <a href="home.html#salons">Фирменные салоны</a>
+  <a href="portfolio.html" class="active">Наши работы</a>
+  <a href="#">Каталоги</a>
+  <a href="#">Дизайнерам</a>
+  <a href="#">Новости / новинки</a>
+  <div class="sm-contacts"><a href="tel:84957773575">8-495-777-35-75</a><span><a href="#">Telegram</a><a href="#">WhatsApp</a></span></div>
+</div>
+<script>
+(function(){var m=document.getElementById('siteMenu'),b=document.getElementById('siteMenuBtn');
+b.addEventListener('click',function(e){e.preventDefault();var o=!m.classList.contains('open');m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);});
+m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){m.classList.remove('open');b.classList.remove('open');document.documentElement.classList.remove('site-menu-open');});});
+// «Работы» — мы уже здесь: наверх страницы
+document.getElementById('siteHere').addEventListener('click',function(e){e.preventDefault();m.classList.remove('open');b.classList.remove('open');scrollTo({top:0,behavior:'smooth'});});
+document.querySelector('#siteMenu a.active').addEventListener('click',function(e){e.preventDefault();});})();
+</script>
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#bfd630","options":["#bfd630","#d8b98f","#f4f1ec"]},"$preview":{"width":1440,"height":1600}}'>
 class Component extends DCLogic {
   constructor(props) {

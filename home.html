@@ -630,7 +630,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
   <div class="content">
     <h2>Кухни, шкафы, гардеробные и не только</h2>
     <p>Текст-заглушка: здесь будет описание того, что производит фабрика — от отдельной кухни до мебели для всего дома под ключ.</p>
-    <div class="cta"><a class="btn btn-ghost" href="portfolio.html">Как мы делали — портфолио<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    <div class="cta"><a class="btn btn-ghost" href="portfolio.html">Как мы делали — наши работы<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
   </div>
 </section>
 
@@ -956,6 +956,8 @@ const modal = $('#calcModal');
 function openCalc(e){ if(e) e.preventDefault(); $('#calcForm').style.display=''; $('#calcSent').style.display='none'; modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); $('#fab').classList.remove('open'); }
 function closeCalc(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
 document.querySelectorAll('[data-calc]').forEach(b => b.addEventListener('click', openCalc));
+// со страницы «Наши работы»: home.html#calc — сразу открыть окно расчёта
+if (location.hash === '#calc') { try { history.replaceState(null, '', location.pathname); } catch (e) {} setTimeout(openCalc, 300); }
 $('#calcClose').onclick = closeCalc;
 modal.addEventListener('click', e => { if (e.target === modal) closeCalc(); });
 addEventListener('keydown', e => { if (e.key==='Escape' && modal.classList.contains('open')) closeCalc(); });
