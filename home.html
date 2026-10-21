@@ -480,7 +480,7 @@ html{scroll-snap-type:none!important}
 /* iPhone, «Списком»: горизонтальная лента внутри экрана с transform/overflow давала чёрный фон после 2-й карточки.
    У экрана салонов нет своего слоя, у карточек нет внутренней прокрутки, у ленты — свой слой. */
 .page > #salons{transform:none!important;-webkit-backface-visibility:visible;backface-visibility:visible}
-#salons{overflow:visible!important}
+#salons{overflow:hidden!important}
 .salons-list .salon-card{max-height:none!important;overflow:hidden!important}
 .salons-list{-webkit-transform:translateZ(0);transform:translateZ(0);overscroll-behavior-x:contain}
 .salon-photo img{opacity:1!important}
@@ -835,6 +835,10 @@ document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',
   listEl.hidden = v!=='list';
   if(v==='list'){ listEl.scrollLeft=0; }
   else { closeSalon(); setTimeout(sizeMap,30); }
+  btn.blur();
+  // после смены вида iPhone «перепримагничивал» страницу (экран съезжал: пропадал заголовок, снизу чёрный фон) — держим экран салонов ровно на месте
+  const top=$('#salons').offsetTop, fix=()=>{ if(Math.abs(page.scrollTop-top)>1) page.scrollTo({top, behavior:'instant'}); };
+  fix(); requestAnimationFrame(fix); setTimeout(fix,120); setTimeout(fix,400);
 }));
 
 /* Карта — лёгкая картинка (assets/salons/map-wide-v4.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
