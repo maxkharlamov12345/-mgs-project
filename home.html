@@ -613,7 +613,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 <!-- О НАС: видео про фабрику -->
 <section class="hero" id="about">
   <div class="media">
-    <video class="bg-video" muted loop playsinline preload="auto" poster="assets/video/factory-loop.jpg" data-src="assets/video/factory-loop.mp4" data-src-mobile="assets/video/factory-loop-m.mp4"></video>
+    <video class="bg-video" muted loop playsinline preload="auto" poster="assets/video/factory-loop.jpg" data-src="assets/video/factory-loop.mp4" data-src-mobile="assets/video/factory-loop-v.mp4" data-poster-mobile="assets/video/factory-loop-v.jpg"></video>
   </div>
   <div class="content">
     <h1>Мы — MGS MEBEL</h1>
@@ -775,6 +775,7 @@ const $ = s => document.querySelector(s);
 const isMob = innerWidth < 1000;
 document.querySelectorAll('.hero video').forEach(v=>{
   v.muted=true;
+  if(isMob && v.dataset.posterMobile) v.poster=v.dataset.posterMobile;
   if(v.poster) v.parentElement.style.backgroundImage=`url("${v.poster}")`;
   v.addEventListener('playing',()=>v.classList.add('ready'));
   const src = (isMob && v.dataset.srcMobile) ? v.dataset.srcMobile : v.dataset.src;
