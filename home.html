@@ -105,7 +105,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .news-card::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(15,14,12,.88),rgba(15,14,12,0) 60%)}
 .news-card .info{position:absolute;left:28px;right:28px;bottom:26px;z-index:2}
 .news-card h3{font-size:clamp(26px,2.6vw,40px);font-weight:300;line-height:1.05;letter-spacing:-.01em;margin-bottom:10px}
-.news-card p{font-size:15px;line-height:1.5;max-width:540px;color:#d9d3ca}
+.news-card p{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font-size:15px;line-height:1.5;max-width:540px;color:#d9d3ca}
 .news-card .play{position:absolute;top:18px;right:18px;z-index:2;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.94);color:var(--ink);display:grid;place-items:center}
 .news-card .play svg{width:12px;height:12px;margin-left:2px}
 .news-card .date{position:absolute;top:18px;left:18px;z-index:2;height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.94);color:var(--ink);font-size:13px;font-weight:500;letter-spacing:.04em}
@@ -269,11 +269,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 
 
-/* слайдер двух видео-экранов: как полноэкранный просмотр новостей — прокрутка с примагничиванием внутри блока;
-   после второго видео прокрутка сама переходит на страницу (Новости и ниже — обычный скролл) */
-.hero-stack{height:100vh;height:100svh;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.hero-stack::-webkit-scrollbar{display:none}
-.hero-stack .hero{height:100%;min-height:0;scroll-snap-align:start;scroll-snap-stop:always}
 
 .viewer-sound{position:fixed;left:50%;transform:translateX(-50%);top:24px;z-index:101;height:32px;padding:0 14px;border-radius:999px;background:rgba(15,14,12,.55);color:var(--text);font-size:13px;font-weight:500;backdrop-filter:blur(6px)}
 .viewer-sound.on{background:var(--accent);color:var(--ink)}
@@ -313,6 +308,52 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .modal-box h3{font-size:32px}
 }
 @media (max-width:420px){.footer-grid{grid-template-columns:1fr}}
+
+/* ===== Вся главная — экраны-слайды (Макс 21.10): 1 видео, 2 видео, 3 новости, 4 салоны, 5 подвал.
+   Нативное примагничивание страницы (как просмотр новостей), свободной прокрутки нет. ===== */
+html{scroll-snap-type:y mandatory}
+.hero{min-height:0;scroll-snap-align:start;scroll-snap-stop:always}
+#news,#salons{height:100vh;height:100svh;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;justify-content:safe center;
+  padding-top:calc(var(--header-h) + 20px);padding-bottom:28px;overflow:hidden}
+#news .section-head,#salons .section-head{margin-bottom:22px;flex:none}
+.footer{scroll-snap-align:end}
+/* новости: карточка по высоте помещается в экран */
+.news-card{flex:0 0 min(78%,calc((100svh - var(--header-h) - 240px)*16/9));aspect-ratio:16/9}
+/* салоны: карта подгоняется под оставшуюся высоту экрана (размер считает sizeMap) */
+.salons-map{aspect-ratio:auto!important;flex:none;align-self:center}
+/* «Списком» — карточки листаются вбок, чтобы всё помещалось в один экран */
+.salons-list{display:flex!important;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -32px;padding:0 32px;scroll-padding:0 32px;flex:none}
+.salons-list::-webkit-scrollbar{display:none}
+.salons-list{min-height:0;flex:0 1 auto!important}
+.salons-list .salon-card{flex:0 0 calc((100% - 32px)/3);scroll-snap-align:start;max-height:100%;overflow:auto;scrollbar-width:none}
+.salons-list .salon-photo{aspect-ratio:16/10;flex:none}
+.salons-list .salon-card .body{flex:none}
+@media (max-width:999px){
+  #news,#salons{padding-top:calc(var(--header-h) + 14px);padding-bottom:18px}
+  .news-card{flex:0 0 min(86%,calc((100svh - var(--header-h) - 230px)*4/5));aspect-ratio:4/5}
+  .salons-list{margin:0 -16px;padding:0 16px;scroll-padding:0 16px;gap:10px}
+  .salons-list .salon-card{flex:0 0 86%}
+  .salons-list .salon-card h4{font-size:22px}
+}
+
+/* низкие экраны (iPhone SE, ноутбуки 720px): компактнее заголовки и карточки, чтобы экран помещался целиком */
+@media (max-height:740px){
+  #news .section-head h2,#salons .section-head h2{font-size:clamp(24px,3vw,40px)}
+  #news .section-head,#salons .section-head{margin-bottom:12px}
+  .news-card h3{font-size:clamp(20px,2.2vw,30px)}
+  .news-card p{-webkit-line-clamp:3;font-size:14px}
+  .salons-list .salon-photo{aspect-ratio:2/1;margin-bottom:10px}
+  .salons-list .salon-card .kind{margin-bottom:6px}
+  .salons-list .salon-card .addr,.salons-list .metro{margin-bottom:8px}
+  .salons-list .salon-card .lbl{display:none}
+  .salons-list .salon-card .phone{margin-bottom:12px}
+}
+@media (max-height:740px) and (max-width:999px){
+  #salons .section-head{flex-direction:row;align-items:flex-end;flex-wrap:wrap;gap:10px}
+  #salons .section-head h2{font-size:24px}
+  .seg-btn{min-height:34px;padding:0 14px;font-size:14px}
+  .salon-card .btn{font-size:14px;padding:0 14px}
+}
 </style>
 </head>
 <body>
@@ -341,8 +382,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   <a href="#">Новости / новинки</a>
 </div>
 
-<!-- Два видео-экрана — свой вертикальный слайдер, как просмотр новостей (CSS scroll-snap) -->
-<div class="hero-stack" id="heroStack">
 <!-- О НАС: видео про фабрику -->
 <section class="hero" id="about">
   <div class="media">
@@ -370,7 +409,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     <div class="cta"><button class="btn" data-calc>Сделать расчёт</button><a class="btn btn-ghost" href="portfolio.html">Как мы делали — портфолио<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
   </div>
 </section>
-</div>
 
 <!-- НОВОСТИ -->
 <section class="section" id="news">
@@ -646,7 +684,7 @@ document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',
   $('#salonsMap').hidden = v!=='map';
   listEl.hidden = v!=='list';
   if(v==='list'){ listEl.querySelectorAll('.salon-card').forEach(c=>{ c.style.animation='none'; c.offsetHeight; c.style.animation=''; }); }
-  else { closeSalon(); setTimeout(fitPinLabels,30); }
+  else { closeSalon(); setTimeout(sizeMap,30); }
 }));
 
 /* Карта — лёгкая картинка (assets/salons/map-wide.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
@@ -657,6 +695,21 @@ pinsEl.querySelectorAll('.pin-wrap').forEach(el=>el.addEventListener('click',()=
 // подписи у краёв карты не вылезают за экран
 function fitPinLabels(){ const box=$('#salonsMap').getBoundingClientRect(); pinsEl.querySelectorAll('.pin-label').forEach(l=>{ l.style.setProperty('--lx','0px'); const r=l.getBoundingClientRect(); let dx=0; if(r.right>box.right-8) dx=box.right-8-r.right; if(r.left<box.left+8) dx=box.left+8-r.left; l.style.setProperty('--lx',dx+'px'); }); }
 addEventListener('resize', fitPinLabels); setTimeout(fitPinLabels, 50);
+// карта салонов: максимально большая, но целиком в одном экране и без искажения меток
+function sizeMap(){
+  const sec=$('#salons'), map=$('#salonsMap'); if(map.hidden) return;
+  const cs=getComputedStyle(sec), head=sec.querySelector('.section-head');
+  const avail=sec.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-head.offsetHeight-parseFloat(getComputedStyle(head).marginBottom);
+  const pad=parseFloat(cs.paddingLeft), full=sec.clientWidth;            // во всю ширину экрана
+  const ratio = innerWidth<1000 ? 9/16 : 7/3;
+  let w=full, h=w/ratio; if(h>avail){ h=avail; w=h*ratio; }
+  map.style.width=w+'px'; map.style.height=h+'px';
+  map.style.margin = w>=full-1 ? `0 -${pad}px` : '0 auto';
+  map.style.borderRadius = w>=full-1 ? '0' : '18px';
+  fitPinLabels();
+}
+addEventListener('resize', sizeMap); setTimeout(sizeMap,30);
+
 
 // фото салонов — заранее, чтобы карточка открывалась сразу с картинкой
 setTimeout(()=>SALONS.forEach(x=>{ const i=new Image(); i.src=x.photo; }), 3000);
