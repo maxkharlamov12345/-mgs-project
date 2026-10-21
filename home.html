@@ -399,7 +399,7 @@ html{scroll-snap-type:none!important}
 /* iPhone: при быстром листании туда-сюда Safari «терял» содержимое экранов (карта, заголовок новостей).
    Каждому экрану — свой постоянный слой; размытие под шапкой и кнопками на телефонах выключено (главный виновник таких пропаданий). */
 .page > section,.page > footer{transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
-.salons-map,.map-img,.pins{transform:translateZ(0)}
+
 @media (hover:none),(max-width:999px){
   .header.solid{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,14,12,.97)}
   .hero .btn-ghost{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,14,12,.45)}
@@ -461,6 +461,9 @@ html{scroll-snap-type:none!important}
 .salons-map::before{height:var(--fade-top,30%)!important;background:linear-gradient(to bottom,var(--bg) 0%,rgba(15,14,12,.82) 55%,rgba(15,14,12,.35) 85%,rgba(15,14,12,0) 100%)!important}
 .salons-map::after{height:20%!important}
 @media (max-width:999px){ .salons-map::after{height:9%!important} }
+
+/* iPhone: карта пропадала при свайпе — без лишних слоёв у карты и меток, картинка меньше по памяти */
+.salons-map,.salons-map .map-img,.pins{transform:none!important;will-change:auto!important}
 </style>
 </head>
 <body>
@@ -542,8 +545,8 @@ html{scroll-snap-type:none!important}
   </div>
   <div class="salons-map" id="salonsMap">
     <picture>
-      <source media="(max-width:999px)" srcset="assets/salons/map-tall-v3.webp">
-      <img class="map-img" src="assets/salons/map-wide-v3.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="async">
+      <source media="(max-width:999px)" srcset="assets/salons/map-tall-v4.webp">
+      <img class="map-img" src="assets/salons/map-wide-v4.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="sync" fetchpriority="high">
     </picture>
     <div class="pins" id="pins"></div>
     <div class="salon-overlay" id="salonOverlay" aria-hidden="true">
@@ -803,7 +806,7 @@ document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',
   else { closeSalon(); setTimeout(sizeMap,30); }
 }));
 
-/* Карта — лёгкая картинка (assets/salons/map-wide-v3.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
+/* Карта — лёгкая картинка (assets/salons/map-wide-v4.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
 const PIN_POS={wide:[[51.94,70.91],[57.9,50.11],[42.1,29.09],[42.23,67.12]], tall:[[53.36,64.71],[71.32,49.49],[23.68,34.12],[24.08,61.94]]};
 // картинки карты с запасом сверху/снизу; core — прежняя область (по ней карта «стоит на месте»)
 const MAP_DIM={wide:{w:1600,h:1100,coreY:150,coreH:800}, tall:{w:600,h:1700,coreY:300,coreH:1100}};
