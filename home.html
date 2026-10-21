@@ -613,7 +613,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 <!-- О НАС: видео про фабрику -->
 <section class="hero" id="about">
   <div class="media">
-    <video class="bg-video" muted loop playsinline preload="auto" poster="assets/video/factory-loop.jpg" data-src="assets/video/factory-loop2.mp4" data-src-mobile="assets/video/factory-loop2-v.mp4" data-poster-mobile="assets/video/factory-loop-v.jpg"></video>
+    <video class="bg-video" muted loop playsinline preload="auto" poster="assets/video/factory-loop.jpg" data-rate="0.75" data-src="assets/video/factory-loop2.mp4" data-src-mobile="assets/video/factory-loop2-v.mp4" data-poster-mobile="assets/video/factory-loop-v.jpg"></video>
   </div>
   <div class="content">
     <h1>Мы — MGS MEBEL</h1>
@@ -778,6 +778,9 @@ document.querySelectorAll('.hero video').forEach(v=>{
   if(isMob && v.dataset.posterMobile) v.poster=v.dataset.posterMobile;
   if(v.poster) v.parentElement.style.backgroundImage=`url("${v.poster}")`;
   v.addEventListener('playing',()=>v.classList.add('ready'));
+  // замедленное воспроизведение (Макс 22.10): размер файла не меняется
+  const rate=parseFloat(v.dataset.rate||'1'); const setRate=()=>{ v.defaultPlaybackRate=rate; v.playbackRate=rate; };
+  ['loadedmetadata','play','playing'].forEach(ev=>v.addEventListener(ev,setRate));
   const src = (isMob && v.dataset.srcMobile) ? v.dataset.srcMobile : v.dataset.src;
   const load=()=>{ if(src && !v.getAttribute('src')){ v.src=src; } };
   const unload=()=>{ if(v.getAttribute('src')){ v.pause(); v.removeAttribute('src'); v.load(); v.classList.remove('ready'); } };
