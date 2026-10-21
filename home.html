@@ -520,8 +520,8 @@ html{scroll-snap-type:none!important}
   </div>
   <div class="salons-map" id="salonsMap">
     <picture>
-      <source media="(max-width:999px)" srcset="assets/salons/map-tall.webp">
-      <img class="map-img" src="assets/salons/map-wide.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="async">
+      <source media="(max-width:999px)" srcset="assets/salons/map-tall-v2.webp">
+      <img class="map-img" src="assets/salons/map-wide-v2.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="async">
     </picture>
     <div class="pins" id="pins"></div>
     <div class="salon-overlay" id="salonOverlay" aria-hidden="true">
@@ -781,7 +781,7 @@ document.querySelectorAll('.seg-btn').forEach(btn=>btn.addEventListener('click',
   else { closeSalon(); setTimeout(sizeMap,30); }
 }));
 
-/* Карта — лёгкая картинка (assets/salons/map-wide.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
+/* Карта — лёгкая картинка (assets/salons/map-wide-v2.webp / map-tall.webp, отрисованы из нашей тёмной карты), метки поверх в процентах */
 const PIN_POS={wide:[[51.94,78.75],[57.9,50.15],[42.1,21.25],[42.23,73.55]], tall:[[53.36,72.73],[71.32,49.22],[23.68,25.45],[24.08,68.45]]};
 const MAP_RATIO={wide:1600/800, tall:600/1100};   // пропорции картинок карты
 const pinsEl=$('#pins');
