@@ -613,7 +613,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 <!-- О НАС: видео про фабрику -->
 <section class="hero" id="about">
   <div class="media">
-    <video class="bg-video" autoplay muted loop playsinline preload="auto" poster="assets/factory.jpg" data-src="assets/factory.mp4"></video>
+    <video class="bg-video" muted loop playsinline preload="auto" poster="assets/factory.jpg" data-src="assets/factory.mp4" data-src-mobile="assets/factory-m.mp4"></video>
   </div>
   <div class="content">
     <h1>Мы — MGS MEBEL</h1>
@@ -638,7 +638,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 <!-- НОВОСТИ -->
 <section class="hero" id="news">
   <div class="media">
-    <video class="bg-video" data-lazy="1" muted loop playsinline preload="none" poster="assets/news/expo2026-preview.jpg" data-src="assets/news/expo2026-bg.mp4"></video>
+    <video class="bg-video" data-lazy="1" muted loop playsinline preload="none" poster="assets/news/expo2026-preview.jpg" data-src="assets/news/expo2026-bg.mp4" data-src-mobile="assets/news/expo2026-bg-m.mp4"></video>
   </div>
   <div class="content">
     <h2>Выставка 2026</h2>
@@ -658,7 +658,7 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
   <div class="salons-map" id="salonsMap">
     <picture>
       <source media="(max-width:999px)" srcset="assets/salons/map-tall-v5.webp">
-      <img class="map-img" src="assets/salons/map-wide-v5.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="sync" fetchpriority="high">
+      <img class="map-img" src="assets/salons/map-wide-v5.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="async" loading="lazy">
     </picture>
     <div class="pins" id="pins"></div>
     <div id="map" aria-label="Интерактивная карта салонов"></div>
@@ -787,19 +787,21 @@ const SALONS = [
 const $ = s => document.querySelector(s);
 
 
-/* ===== Фоновые видео: на телефоне — лёгкая версия ===== */
-document.querySelectorAll('video.bg-video').forEach(v => {
-  const load=()=>{ if(v.src) return; v.src = (innerWidth < 1000 && v.dataset.srcMobile) ? v.dataset.srcMobile : v.dataset.src; v.muted = true; };
-  if(v.dataset.lazy){ new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); load(); } },{rootMargin:'100% 0px'}).observe(v.closest('section')); }
-  else { load(); v.play().catch(()=>{}); }
+/* ===== Фоновые видео (Макс 22.10: iPhone перезагружал страницу «с ошибками» — не хватало памяти).
+   В памяти держим только видео ближайших экранов: подходим — грузим, уходим далеко — выгружаем; играет только видимое.
+   На телефоне — облегчённые копии 720px (data-src-mobile). ===== */
+const isMob = innerWidth < 1000;
+document.querySelectorAll('.hero video').forEach(v=>{
+  v.muted=true;
+  if(v.poster) v.parentElement.style.backgroundImage=`url("${v.poster}")`;
+  v.addEventListener('playing',()=>v.classList.add('ready'));
+  const src = (isMob && v.dataset.srcMobile) ? v.dataset.srcMobile : v.dataset.src;
+  const load=()=>{ if(!v.getAttribute('src')){ v.src=src; } };
+  const unload=()=>{ if(v.getAttribute('src')){ v.pause(); v.removeAttribute('src'); v.load(); v.classList.remove('ready'); } };
+  const sec=v.closest('section');
+  new IntersectionObserver(es=>{ es[0].isIntersecting ? load() : unload(); },{rootMargin:'60% 0px'}).observe(sec);
+  new IntersectionObserver(es=>{ const e=es[0]; if(e.intersectionRatio>0.5){ load(); v.play().catch(()=>{}); } else v.pause(); },{threshold:[0,0.5,1]}).observe(sec);
 });
-
-
-/* ===== Экраны-слайды: играет только видео на экране ===== */
-const heroVids=[...document.querySelectorAll('.hero video')];
-heroVids.forEach(v=>{ v.addEventListener('playing',()=>v.classList.add('ready')); if(v.poster) v.parentElement.style.backgroundImage=`url("${v.poster}")`; });
-const heroIO=new IntersectionObserver(es=>es.forEach(e=>{ const v=e.target.querySelector('video'); if(!v) return; if(e.intersectionRatio>0.5){ v.play().catch(()=>{}) } else { v.pause() } }),{threshold:[0,0.5,1]});
-document.querySelectorAll('.hero').forEach(h=>heroIO.observe(h));
 
 
 /* ===== Видео-экраны: текст проявляется, когда экран встал на место ===== */
@@ -1005,7 +1007,7 @@ async function initLiveMap(){
   try{
     const [_, style]=await Promise.all([loadMapLib(), fetch('https://tiles.openfreemap.org/styles/dark').then(r=>r.json())]);
     lmap=new maplibregl.Map({container:'map', style:brandStyle(style), center:[37.6173,55.7558], zoom:9.3, attributionControl:false,
-      dragRotate:false, pitchWithRotate:false, scrollZoom:false, cooperativeGestures:true, fadeDuration:150,
+      dragRotate:false, pitchWithRotate:false, scrollZoom:false, cooperativeGestures:true, fadeDuration:150, pixelRatio:Math.min(devicePixelRatio||1, isMob?2:2), maxTileCacheSize:isMob?60:200,
       locale:{'CooperativeGesturesHandler.WindowsHelpText':'Приближайте карту: Ctrl + колесо мыши','CooperativeGesturesHandler.MacHelpText':'Приближайте карту: ⌘ + колесо мыши','CooperativeGesturesHandler.MobileHelpText':'Двигайте карту двумя пальцами'}});
     lmap.touchZoomRotate.disableRotation();
     lmap.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
@@ -1017,7 +1019,7 @@ async function initLiveMap(){
     });
     let touched=false; ['dragstart','zoomstart'].forEach(ev=>lmap.on(ev,e=>{ if(e.originalEvent) touched=true; }));
     const refit=()=>{ if(!lmap) return; lmap.resize(); if(!touched) liveFit(); };
-    lmap.once('load',()=>{ refit(); $('#salonsMap').classList.add('live'); });
+    lmap.once('load',()=>{ refit(); $('#salonsMap').classList.add('live'); setTimeout(()=>{ const im=$('#salonsMap .map-img'); if(im) im.removeAttribute('src'); $('#salonsMap source')?.removeAttribute('srcset'); },800); });
     new ResizeObserver(()=>requestAnimationFrame(refit)).observe($('#map'));
     // вернулись на экран салонов — если карту не трогали, снова общий вид
     new IntersectionObserver(es=>{ if(es[0].isIntersecting) refit(); },{threshold:0.5}).observe($('#salons'));
