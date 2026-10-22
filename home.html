@@ -990,31 +990,61 @@ mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMenu(false
 // переход по доку: экран мягко гаснет, мгновенно переставляется на нужный и проявляется
 // (плавная прокрутка через примагниченные экраны «мелькала» всеми блоками и дёргалась — Макс 22.10)
 const veil=document.createElement('div'); veil.className='veil'; document.body.appendChild(veil);
-let jumping=false;
+// ── переход по доку: надёжно на iPhone ──
+// 1) реагируем на touchend (первый тап во время инерции iOS «съедает» click);
+// 2) тапы во время перехода не теряются — берётся последний выбранный пункт;
+// 3) инерцию гасим (overflow:hidden), прыгаем, затем проверяем позицию и доводим, если snap/инерция сдвинули.
+let jumping=false, wantId=null, lockId=null, lockUntil=0;
+const root=document.documentElement;
+const topOf=id=> id==='calc' ? root.scrollHeight - innerHeight : Math.round($('#'+id).getBoundingClientRect().top + scrollY);
+const lightDock=id=> dock.querySelectorAll('[data-go]').forEach(x=>x.classList.toggle('on', x.dataset.go===id));
 function goScreen(id){
-  const el=$('#'+id); if(!el || jumping) return;
-  dock.querySelectorAll('[data-go]').forEach(x=>x.classList.toggle('on', x.dataset.go===id));
-  const target = id==='calc' ? document.documentElement.scrollHeight - innerHeight : el.offsetTop;
-  if(Math.abs(target-scrollY)<2) return;
+  if(!$('#'+id)) return;
+  wantId=id; lightDock(id); lockId=id; lockUntil=Date.now()+1500;
+  if(jumping) return;                                   // текущий переход сам подхватит wantId
+  if(Math.abs(topOf(id)-scrollY)<3){ wantId=null; return; }
   jumping=true; veil.classList.add('on');
-  setTimeout(()=>{
-    const top = id==='calc' ? document.documentElement.scrollHeight - innerHeight : el.offsetTop;   // последний экран — к низу страницы
-    scrollTo({top, behavior:'instant'});      // ровно на точку примагничивания — snap не трогаем
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{ veil.classList.remove('on'); setTimeout(()=>{ jumping=false; markDock(); },260); }));
-  },230);
+  root.style.overflow='hidden';                         // останавливает инерцию свайпа
+  setTimeout(land,220);
+}
+function land(){
+  const id=wantId; wantId=null;
+  const top=topOf(id);
+  scrollTo({top, behavior:'instant'});
+  root.style.overflow='';
+  scrollTo({top, behavior:'instant'});
+  const fix=()=>{ if(!wantId && Math.abs(topOf(id)-scrollY)>2) scrollTo({top:topOf(id), behavior:'instant'}); };
+  requestAnimationFrame(()=>{ fix(); requestAnimationFrame(()=>{
+    fix();
+    if(wantId && wantId!==id){ setTimeout(land,60); return; }   // пока прыгали — выбрали другой пункт
+    veil.classList.remove('on');
+    setTimeout(fix,120); setTimeout(fix,350);
+    setTimeout(()=>{ jumping=false; if(wantId){ const w=wantId; wantId=null; goScreen(w); } else markDock(); },380);
+  }); });
 }
 window.goScreen=goScreen;
-dock.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); setMenu(false); if(typeof closeSalon==='function') closeSalon(); goScreen(a.dataset.go); }));
-// подсветка пункта: экран, ближайший к текущей позиции прокрутки (надёжно и при свайпе, и после перехода по доку)
+function dockGo(a){ setMenu(false); if(typeof closeSalon==='function') closeSalon(); goScreen(a.dataset.go); setTimeout(()=>a.blur(),0); }
+let tStart=null, lastTouch=0;
+dock.querySelectorAll('[data-go]').forEach(a=>{
+  a.addEventListener('touchstart',e=>{ const t=e.touches[0]; tStart={x:t.clientX,y:t.clientY,a}; },{passive:true});
+  a.addEventListener('touchend',e=>{
+    const t=e.changedTouches[0];
+    if(tStart && tStart.a===a && Math.abs(t.clientX-tStart.x)<14 && Math.abs(t.clientY-tStart.y)<14){ e.preventDefault(); lastTouch=Date.now(); dockGo(a); }
+    tStart=null;
+  });
+  a.addEventListener('click',e=>{ e.preventDefault(); if(Date.now()-lastTouch<800) return; dockGo(a); });
+});
+// подсветка пункта: экран, ближайший к текущей позиции прокрутки
 const DOCK_IDS=['about','abilities','news','salons','calc'];
-function markDock(){ if(jumping) return; const y=scrollY; let best=DOCK_IDS[0], bd=1e9;
-  DOCK_IDS.forEach(id=>{ const d=Math.abs($('#'+id).offsetTop-y); if(d<bd){ bd=d; best=id; } });
-  if(y >= document.documentElement.scrollHeight - innerHeight - 4) best='calc';
-  dock.querySelectorAll('[data-go]').forEach(a=>a.classList.toggle('on', a.dataset.go===best)); }
+function markDock(){ if(jumping) return;
+  if(lockId && Date.now()<lockUntil && Math.abs(topOf(lockId)-scrollY)<4){ lightDock(lockId); return; }
+  lockId=null;
+  const y=scrollY; let best=DOCK_IDS[0], bd=1e9;
+  DOCK_IDS.forEach(id=>{ const d=Math.abs(topOf(id)-y); if(d<bd){ bd=d; best=id; } });
+  if(y >= root.scrollHeight - innerHeight - 4) best='calc';
+  lightDock(best); }
 let mdRaf=0; addEventListener('scroll',()=>{ cancelAnimationFrame(mdRaf); mdRaf=requestAnimationFrame(markDock); },{passive:true});
 addEventListener('resize',markDock); markDock();
-// на телефоне после нажатия убираем фокус с пункта (иначе оставался серый фон)
-dock.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setTimeout(()=>a.blur(),0)));
 
 /* ===== Кнопка «Связаться» ===== */
 $('#fabBtn').onclick = () => $('#fab').classList.toggle('open');
