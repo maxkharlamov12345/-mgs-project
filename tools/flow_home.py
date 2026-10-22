@@ -31,11 +31,16 @@ html.flow .screen{position:relative;inset:auto;visibility:visible;height:100vh;h
 /* расчёт — последний экран: высотой по содержимому, листается свободно (html.free), иначе низ страницы дёргался */
 html.flow .calc-screen{height:auto;min-height:100vh;min-height:var(--scr, 100lvh);overflow:visible!important}
 html.flow .calc-inner{min-height:100vh;min-height:var(--scr, 100lvh)}
-/* под часами: Safari ставит верх окна НИЖЕ часов, а полоса под часами показывает то, что выше, — низ предыдущего экрана
-   (у первого — пустоту). Поэтому фон каждого экрана продлён вверх на высоту полосы под часами: он ложится поверх низа предыдущего */
+/* Safari сам решает, где остановить страницу и сколько её уйдёт под часы/панели (на разных iPhone по-разному, и меняется,
+   когда панели сворачиваются) — точно попасть краем экрана в край телефона нельзя. Поэтому края не важны:
+   фон каждого экрана продлён вверх с запасом (--ext) и ложится поверх низа предыдущего экрана, а над первым экраном —
+   такой же запас (отступ сверху у .stage, на нём лежит продлённое видео первого экрана). Как бы Safari ни сдвинул —
+   под часами и у краёв всегда видео/фон текущего экрана, без полосок соседнего. Низ закрыт тем, что экран = высота телефона. */
+html.flow{--ext:140px}
+html.flow .stage{padding-top:var(--ext)}
 html.flow .screen{overflow:visible}
-html.flow .hero .media,html.flow .salons-map{top:calc(-1 * env(safe-area-inset-top))}
-html.flow .screen::before{content:"";position:absolute;left:0;right:0;top:calc(-1 * env(safe-area-inset-top));height:env(safe-area-inset-top);background:var(--bg);pointer-events:none}
+html.flow .hero .media,html.flow .salons-map,html.flow .hero::after{top:calc(-1 * var(--ext))}
+html.flow .screen::before{content:"";position:absolute;left:0;right:0;top:calc(-1 * var(--ext));height:var(--ext);background:var(--bg);pointer-events:none}
 html.flow .hero::before{display:none}
 html.flow .stage{transition:opacity .22s ease}
 html.flow.jump .stage{opacity:0}
@@ -121,7 +126,12 @@ if(FLOW){
   const i=IDS.indexOf(location.hash.slice(1));
   if(FLOW){
     cur=Math.max(0,i);
-    if(i>0){ HTML.classList.add('free'); requestAnimationFrame(()=>{ window.scrollTo({top:screens[i].offsetTop, behavior:'instant'}); flowFree(); }); }
+    // встаём ровно на нужный экран (над первым экраном — запас --ext, страница не должна стоять на нём)
+    try{ history.scrollRestoration='manual'; }catch(_){}
+    HTML.classList.add('free');
+    const toCur=()=>{ window.scrollTo({top:screens[cur].offsetTop, behavior:'instant'}); };
+    toCur(); requestAnimationFrame(()=>{ toCur(); HTML.classList.remove('free'); flowFree(); });
+    addEventListener('load', ()=>{ if(Math.abs(scrollY-screens[cur].offsetTop)>2 && scrollY<screens[0].offsetTop) toCur(); });
     screens[cur].classList.add('in'); lightDock(cur); syncMedia(); onEnter(cur); return;
   }""")
 
