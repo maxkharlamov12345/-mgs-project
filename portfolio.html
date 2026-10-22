@@ -376,27 +376,9 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 </template>
 
 <!-- ===== Шапка как на главной (home.html): логотип по центру закреплён сверху, справа кружок меню; меню на весь экран ===== -->
-<header class="site-hd"><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo.webp" alt="MGS MEBEL" width="400" height="217"></a>
-  <button class="site-menu-btn" id="siteMenuBtn" aria-label="Меню"><span></span><span></span><span></span></button></header>
-<nav class="site-menu" id="siteMenu" aria-label="Меню сайта">
-  <a href="home.html">Главная</a>
-  <a href="#">О нас</a>
-  <a href="#">Фирменные салоны</a>
-  <a href="portfolio.html" class="active">Наши работы</a>
-  <a href="#">Каталоги</a>
-  <a href="#">Дизайнерам</a>
-  <a href="news.html">Новости / новинки</a>
-  <div class="mm-contacts"><a href="tel:84957773575">8-495-777-35-75</a><span><a href="#">Telegram</a><a href="#">WhatsApp</a></span></div>
-</nav>
-<script>
-(function(){var m=document.getElementById('siteMenu'),b=document.getElementById('siteMenuBtn');
-function set(o){m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);}
-b.addEventListener('click',function(){set(!m.classList.contains('open'));});
-m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(e){if(a.classList.contains('active')){e.preventDefault();}set(false);});});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m.classList.contains('open'))set(false);});
-// прокрутили — под шапкой мягкое затемнение, чтобы логотип и кружок меню не сливались с плитками
-var sc=function(){document.documentElement.classList.toggle('site-scrolled',(window.scrollY||0)>8);};addEventListener('scroll',sc,{passive:true});sc();})();
-</script>
+<header class="site-hd"><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo.webp" alt="MGS MEBEL" width="400" height="217"></a></header>
+<!-- кружок меню и меню временно убраны (Макс 22.10, тест) — вернуть из коммита 4780ef6 -->
+
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#bfd630","options":["#bfd630","#d8b98f","#f4f1ec"]},"$preview":{"width":1440,"height":1600}}'>
 class Component extends DCLogic {
   constructor(props) {
