@@ -13,13 +13,13 @@
 <style>
 /* ===== шапка как на главной (home.html): логотип закреплён по центру сверху, кружок меню справа; классы site- ===== */
 :root{--site-hd:72px;--site-side:32px}
-.site-hd{position:fixed;left:0;right:0;top:0;z-index:46;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
+.site-hd{position:absolute;left:0;right:0;top:0;z-index:46;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
 .site-hd::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% + 28px);z-index:-1;pointer-events:none;opacity:0;transition:opacity .25s;
   background:linear-gradient(to bottom,rgba(15,14,12,.92) 0%,rgba(15,14,12,.78) 55%,rgba(15,14,12,0) 100%)}
 /* общей полосы-затемнения под шапкой нет (Макс 22.10) — только тень у логотипа и тёмный кружок меню, как на главной */
 .site-logo{pointer-events:auto;display:inline-flex;line-height:0;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}
 .site-logo img{height:38px;width:auto;display:block}
-.site-menu-btn{position:absolute;right:var(--site-side);top:calc(env(safe-area-inset-top) + (var(--site-hd) - 46px)/2);width:46px;height:46px;border-radius:50%;padding:0;cursor:pointer;
+.site-menu-btn{position:fixed;z-index:46;right:var(--site-side);top:calc(env(safe-area-inset-top) + (var(--site-hd) - 46px)/2);width:46px;height:46px;border-radius:50%;padding:0;cursor:pointer;
   background:rgba(30,27,24,.72);border:1px solid rgba(244,241,236,.12);pointer-events:auto;transition:background-color .2s}
 .site-menu-btn span{position:absolute;left:14px;right:14px;height:1.6px;border-radius:2px;background:#f4f1ec;transition:transform .3s,opacity .2s,top .3s}
 .site-menu-btn span:nth-child(1){top:16px}.site-menu-btn span:nth-child(2){top:22px}.site-menu-btn span:nth-child(3){top:28px}
