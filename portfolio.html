@@ -13,13 +13,13 @@
 <style>
 /* ===== шапка как на главной (home.html): логотип закреплён по центру сверху, кружок меню справа; классы site- ===== */
 :root{--site-hd:72px;--site-side:32px}
-.site-hd{position:absolute;left:0;right:0;top:0;z-index:46;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
+.site-hd{position:fixed;left:0;right:0;top:0;z-index:46;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
 .site-hd::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% + 28px);z-index:-1;pointer-events:none;opacity:0;transition:opacity .25s;
   background:linear-gradient(to bottom,rgba(15,14,12,.92) 0%,rgba(15,14,12,.78) 55%,rgba(15,14,12,0) 100%)}
-html.site-scrolled .site-hd::before{opacity:0}  /* логотип не закреплён — затемнение не нужно */
+html.site-scrolled .site-hd::before{opacity:1}
 .site-logo{pointer-events:auto;display:inline-flex;line-height:0;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}
 .site-logo img{height:38px;width:auto;display:block}
-.site-menu-btn{position:fixed;z-index:46;right:var(--site-side);top:calc(env(safe-area-inset-top) + (var(--site-hd) - 46px)/2);width:46px;height:46px;border-radius:50%;padding:0;cursor:pointer;
+.site-menu-btn{position:absolute;right:var(--site-side);top:calc(env(safe-area-inset-top) + (var(--site-hd) - 46px)/2);width:46px;height:46px;border-radius:50%;padding:0;cursor:pointer;
   background:rgba(30,27,24,.72);border:1px solid rgba(244,241,236,.12);pointer-events:auto;transition:background-color .2s}
 .site-menu-btn span{position:absolute;left:14px;right:14px;height:1.6px;border-radius:2px;background:#f4f1ec;transition:transform .3s,opacity .2s,top .3s}
 .site-menu-btn span:nth-child(1){top:16px}.site-menu-btn span:nth-child(2){top:22px}.site-menu-btn span:nth-child(3){top:28px}
@@ -28,8 +28,6 @@ html.site-scrolled .site-hd::before{opacity:0}  /* логотип не закр�
 .site-menu{position:fixed;inset:0;z-index:45;background:#0f0e0c;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;font-family:Onest,system-ui,sans-serif;
   padding:calc(var(--site-hd) + 20px) 24px 30px;opacity:0;pointer-events:none;transition:opacity .3s}
 .site-menu.open{opacity:1;pointer-events:auto}
-/* закрытое меню убираем совсем (display:none): iPhone Safari видит закреплённый на весь экран тёмный слой даже прозрачным и заливает полосу под часами — лента после меню «уменьшалась» */
-.site-menu[hidden]{display:none !important}
 .site-menu > a{font-size:30px;font-weight:300;letter-spacing:-.01em;padding:8px 0;color:#f4f1ec;text-decoration:none}
 .site-menu > a:hover,.site-menu > a.active{color:#bfd630}
 .site-menu .mm-contacts{margin-top:22px;display:flex;flex-direction:column;gap:8px}
@@ -38,12 +36,7 @@ html.site-scrolled .site-hd::before{opacity:0}  /* логотип не закр�
 @media (min-width:1000px){ .site-menu{padding-left:12vw} .site-menu > a{font-size:44px} }
 @media (max-width:999px){ :root{--site-hd:64px;--site-side:16px} .site-logo img{height:32px} }
 .top-sec{padding-top:calc(var(--site-hd) + 10px + env(safe-area-inset-top)) !important}
-/* меню открыто: прокрутку НЕ запрещаем (iPhone от overflow:hidden перестраивал экран — лента «съезжала» после закрытия меню);
-   вместо этого прячем саму ленту, а меню тянем на всю высоту с запасом под «парящие» панели Safari — ничего не просвечивает */
-html.site-menu-open #dc-root{visibility:hidden}
-.site-menu{padding-bottom:calc(30px + env(safe-area-inset-bottom)) !important}
-/* меню — ровно по экрану (inset:0, как было), пункты по центру; тёмный фон продлён вниз под «парящие» панели Safari */
-.site-menu::after{content:"";position:absolute;left:0;right:0;top:100%;height:50vh;background:#0f0e0c;pointer-events:none}
+html.site-menu-open{overflow:hidden}
 </style>
 <script src="./support.js"></script>
 </head>
@@ -383,7 +376,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 <!-- ===== Шапка как на главной (home.html): логотип по центру закреплён сверху, справа кружок меню; меню на весь экран ===== -->
 <header class="site-hd"><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo.webp" alt="MGS MEBEL" width="400" height="217"></a>
   <button class="site-menu-btn" id="siteMenuBtn" aria-label="Меню"><span></span><span></span><span></span></button></header>
-<nav class="site-menu" id="siteMenu" aria-label="Меню сайта" hidden>
+<nav class="site-menu" id="siteMenu" aria-label="Меню сайта">
   <a href="home.html">Главная</a>
   <a href="#">О нас</a>
   <a href="#">Фирменные салоны</a>
@@ -395,7 +388,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 </nav>
 <script>
 (function(){var m=document.getElementById('siteMenu'),b=document.getElementById('siteMenuBtn');
-var ht;function set(o){clearTimeout(ht);if(o){m.hidden=false;void m.offsetWidth;}else{ht=setTimeout(function(){if(!m.classList.contains('open'))m.hidden=true;},320);}m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);}
+function set(o){m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);}
 b.addEventListener('click',function(){set(!m.classList.contains('open'));});
 m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(e){if(a.classList.contains('active')){e.preventDefault();}set(false);});});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m.classList.contains('open'))set(false);});
