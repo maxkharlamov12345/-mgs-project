@@ -21,9 +21,10 @@
   #lb-wrap{position:relative !important;inset:auto !important;overflow:visible !important;min-height:100lvh;scroll-snap-type:none !important}
   .lb-close-v{top:calc(14px + env(safe-area-inset-top)) !important}
   .lb-vcount{top:calc(14px + env(safe-area-inset-top)) !important}
-  /* последний экран (описание или последнее фото/рилс, если описания нет): точка примагничивания — самый низ страницы. Он достижим при любой высоте экрана,
+  /* последнее фото/рилс без описания: точка примагничивания — самый низ страницы (описание листается свободно — см. lb-free в vScroll). Он достижим при любой высоте экрана,
      поэтому когда Safari сворачивает/разворачивает панели, страница не дёргается, пытаясь выровняться */
-  html:has(#lb-wrap) .lb-panel{scroll-snap-align:end !important;flex-grow:1}
+  html:has(#lb-wrap) .lb-panel{scroll-snap-align:none !important;flex-grow:1}
+  html.lb-free{scroll-snap-type:none !important}
   #lb-wrap::after{content:"";display:block;flex:none;height:1px;scroll-snap-align:end}
 }
 </style>
@@ -661,6 +662,7 @@ class Component extends DCLogic {
   // поэтому предыдущее состояние просмотра запоминаем сами
   componentDidUpdate(prev) {
     var wasLb = this._wasLb; this._wasLb = this.state.lb >= 0;
+    if (wasLb && !this._wasLb) document.documentElement.classList.remove('lb-free');
     if (wasLb && !this._wasLb && window.innerWidth < 1000 && this._feedY != null) {
       var de = document.documentElement; de.style.scrollSnapType = 'none';
       window.scrollTo({ top: this._feedY, behavior: 'instant' }); de.style.scrollSnapType = '';
@@ -959,6 +961,11 @@ class Component extends DCLogic {
         var stp = window.scrollY, chh = window.innerHeight;
         var sl = el.querySelectorAll('.lb-vslide'), k = 0;
         for (var i = 0; i < sl.length; i++) if (sl[i].offsetTop <= stp + chh * 0.4) k = i;
+        // описание после последнего фото листается свободно, без примагничивания (иначе страница дёргалась,
+        // возвращая к низу или к фото); вернулся к последнему фото — примагничивание снова включено
+        var pnl = el.querySelector('.lb-panel'), lastS = sl[sl.length - 1];
+        var free = !!pnl && pnl.offsetParent !== null && !!lastS && stp > lastS.offsetTop - 5 + 40;
+        document.documentElement.classList.toggle('lb-free', free);
         if (k !== li && k < pc) { self.fromScroll = true; self.setState({ lb: k }); }
         // долистали до описания — видео на паузу; вернулись к фото — снова играет
         var panel = el.querySelector('.lb-panel');
