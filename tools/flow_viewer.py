@@ -105,5 +105,10 @@ if n:
     rep("if (!el.getAttribute('data-lb') && el.getAttribute('src')) {",
         "if (!el.getAttribute('data-lb') && el.getAttribute('src') && !document.documentElement.classList.contains('lb-on')) {", n)
 
+# ссылки между страницами теста ведут на такие же тестовые страницы (-flow), если передан флаг --links
+if '--links' in sys.argv:
+    for nm in ['index', 'project-2', 'project-5', 'project-6', 'project-7', 'project-8', 'portfolio']:
+        s = s.replace("href: '%s.html'" % nm, "href: '%s-flow.html'" % nm).replace('href="%s.html"' % nm, 'href="%s-flow.html"' % nm)
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', dst, 'video-keep:', n)
