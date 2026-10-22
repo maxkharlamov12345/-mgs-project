@@ -107,7 +107,7 @@ if n:
 
 # ссылки между страницами теста ведут на такие же тестовые страницы (-flow), если передан флаг --links
 if '--links' in sys.argv:
-    for nm in ['index', 'project-2', 'project-5', 'project-6', 'project-7', 'project-8', 'portfolio']:
+    for nm in ['index', 'project-2', 'project-5', 'project-6', 'project-7', 'project-8', 'portfolio', 'home']:
         s = s.replace("href: '%s.html'" % nm, "href: '%s-flow.html'" % nm).replace('href="%s.html"' % nm, 'href="%s-flow.html"' % nm)
 
 open(dst, 'w', encoding='utf-8').write(s)
