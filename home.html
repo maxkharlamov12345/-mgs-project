@@ -641,6 +641,13 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 /* затемнение при переходе по доку */
 .veil{position:fixed;inset:0;z-index:65;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .22s ease}
 .veil.on{opacity:1}
+
+/* ===== Экран 5 «Расчёт» — без дёрганья (Макс 22.10) =====
+   Последний экран примагничивается к НИЗУ страницы (точка всегда достижима при любой высоте панелей Safari),
+   пока заполняется форма (клавиатура) — примагничивание выключено */
+.calc-screen{scroll-snap-align:end!important;scroll-snap-stop:normal!important;height:auto!important;min-height:var(--ph,100svh)}
+html.typing{scroll-snap-type:none!important}
+.calc-box input,.calc-box textarea{font-size:16px!important}   /* меньше 16px — iPhone зумит страницу при вводе */
 </style>
 </head>
 <body>
@@ -969,6 +976,9 @@ setTimeout(()=>SALONS.forEach(x=>{ const i=new Image(); i.src=x.photo; }), 3000)
 function openCalc(e){ if(e) e.preventDefault(); if(typeof closeSalon==='function') closeSalon(); $('#mobileMenu').classList.remove('open'); if(window.goScreen) goScreen('calc'); else scrollTo({top:$('#calc').offsetTop}); }
 document.querySelectorAll('[data-calc]').forEach(b => b.addEventListener('click', openCalc));
 if (location.hash === '#calc') setTimeout(()=>scrollTo({top:$('#calc').offsetTop}), 300);
+const cf=$('#calcForm');
+cf.addEventListener('focusin',()=>document.documentElement.classList.add('typing'));
+cf.addEventListener('focusout',()=>setTimeout(()=>{ if(!cf.contains(document.activeElement)) document.documentElement.classList.remove('typing'); },150));
 $('#calcForm').onsubmit = e => { e.preventDefault(); $('#calcForm').style.display='none'; $('#calcSent').style.display='block'; };
 
 
@@ -984,10 +994,12 @@ let jumping=false;
 function goScreen(id){
   const el=$('#'+id); if(!el || jumping) return;
   dock.querySelectorAll('[data-go]').forEach(x=>x.classList.toggle('on', x.dataset.go===id));
-  if(Math.abs(el.offsetTop-scrollY)<2) return;
+  const target = id==='calc' ? document.documentElement.scrollHeight - innerHeight : el.offsetTop;
+  if(Math.abs(target-scrollY)<2) return;
   jumping=true; veil.classList.add('on');
   setTimeout(()=>{
-    scrollTo({top:el.offsetTop, behavior:'instant'});      // ровно на точку примагничивания — snap не трогаем
+    const top = id==='calc' ? document.documentElement.scrollHeight - innerHeight : el.offsetTop;   // последний экран — к низу страницы
+    scrollTo({top, behavior:'instant'});      // ровно на точку примагничивания — snap не трогаем
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ veil.classList.remove('on'); setTimeout(()=>{ jumping=false; markDock(); },260); }));
   },230);
 }
@@ -997,6 +1009,7 @@ dock.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.
 const DOCK_IDS=['about','abilities','news','salons','calc'];
 function markDock(){ if(jumping) return; const y=scrollY; let best=DOCK_IDS[0], bd=1e9;
   DOCK_IDS.forEach(id=>{ const d=Math.abs($('#'+id).offsetTop-y); if(d<bd){ bd=d; best=id; } });
+  if(y >= document.documentElement.scrollHeight - innerHeight - 4) best='calc';
   dock.querySelectorAll('[data-go]').forEach(a=>a.classList.toggle('on', a.dataset.go===best)); }
 let mdRaf=0; addEventListener('scroll',()=>{ cancelAnimationFrame(mdRaf); mdRaf=requestAnimationFrame(markDock); },{passive:true});
 addEventListener('resize',markDock); markDock();
