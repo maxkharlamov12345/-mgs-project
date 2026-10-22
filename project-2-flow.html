@@ -21,6 +21,10 @@
   #lb-wrap{position:relative !important;inset:auto !important;overflow:visible !important;min-height:100lvh;scroll-snap-type:none !important}
   .lb-close-v{top:calc(14px + env(safe-area-inset-top)) !important}
   .lb-vcount{top:calc(14px + env(safe-area-inset-top)) !important}
+  /* последний экран (описание или последнее фото/рилс, если описания нет): точка примагничивания — самый низ страницы. Он достижим при любой высоте экрана,
+     поэтому когда Safari сворачивает/разворачивает панели, страница не дёргается, пытаясь выровняться */
+  html:has(#lb-wrap) .lb-panel{scroll-snap-align:end !important;flex-grow:1}
+  #lb-wrap::after{content:"";display:block;flex:none;height:1px;scroll-snap-align:end}
 }
 </style>
 </head>
