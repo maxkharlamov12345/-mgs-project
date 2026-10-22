@@ -26,7 +26,7 @@
 .site-menu-btn.open{background:#bfd630} .site-menu-btn.open span{background:#1c1a17}
 .site-menu-btn.open span:nth-child(1){top:22px;transform:rotate(45deg)} .site-menu-btn.open span:nth-child(2){opacity:0} .site-menu-btn.open span:nth-child(3){top:22px;transform:rotate(-45deg)}
 .site-menu{position:fixed;inset:0;z-index:45;background:#0f0e0c;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;font-family:Onest,system-ui,sans-serif;
-  padding:calc(var(--site-hd) + 20px) 24px 30px;opacity:0;pointer-events:none;transition:opacity .3s}
+  padding:calc(var(--site-hd) + 20px) 24px 30px;opacity:0;pointer-events:none;transition:opacity .2s}
 .site-menu.open{opacity:1;pointer-events:auto}
 /* закрытое меню убираем совсем (display:none): iPhone Safari видит закреплённый на весь экран тёмный слой даже прозрачным и заливает полосу под часами — лента после меню «уменьшалась» */
 .site-menu[hidden]{display:none !important}
@@ -42,8 +42,9 @@
    вместо этого прячем саму ленту, а меню тянем на всю высоту с запасом под «парящие» панели Safari — ничего не просвечивает */
 /* лента под меню — прозрачная (opacity), а не visibility:hidden: iPhone при visibility перерисовывал всю ленту заново и она появлялась с лагом;
    при opacity картинки остаются готовыми, после закрытия лента мягко проявляется сразу */
-html.site-menu-open #dc-root{opacity:0}
-#dc-root{transition:opacity .25s}
+/* открытие: меню проявляется поверх ленты, лента гаснет мгновенно уже ПОСЛЕ этого (без «двойной картинки»);
+   закрытие: меню исчезает сразу и лента сразу на месте — раньше они полсекунды проступали друг сквозь друга, выглядело как лаг */
+html.site-menu-open #dc-root{opacity:0;transition:opacity 0s .2s}
 .site-menu{padding-bottom:calc(30px + env(safe-area-inset-bottom)) !important}
 /* меню — ровно по экрану (inset:0), пункты по центру; тёмный фон продлён вниз под «парящие» панели Safari */
 .site-menu::after{content:"";position:absolute;left:0;right:0;top:100%;height:50vh;background:#0f0e0c;pointer-events:none}
@@ -419,7 +420,7 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 </nav>
 <script>
 (function(){var m=document.getElementById('siteMenu'),b=document.getElementById('siteMenuBtn');
-var ht;function set(o){clearTimeout(ht);if(o){m.hidden=false;void m.offsetWidth;}else{ht=setTimeout(function(){if(!m.classList.contains('open'))m.hidden=true;},320);}m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);}
+var ht;function set(o){clearTimeout(ht);if(o){m.hidden=false;void m.offsetWidth;}else{m.hidden=true;}m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);}
 b.addEventListener('click',function(){set(!m.classList.contains('open'));});
 m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(e){if(a.classList.contains('active')){e.preventDefault();}set(false);});});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m.classList.contains('open'))set(false);});
