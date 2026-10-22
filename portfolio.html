@@ -14,8 +14,7 @@
 /* ===== шапка как на главной (home.html): логотип закреплён по центру сверху, кружок меню справа; классы site- ===== */
 :root{--site-hd:72px;--site-side:32px}
 .site-hd{position:fixed;left:0;right:0;top:0;z-index:46;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
-.site-hd::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% + 28px);z-index:-1;pointer-events:none;opacity:0;transition:opacity .25s;
-  background:linear-gradient(to bottom,rgba(15,14,12,.92) 0%,rgba(15,14,12,.78) 55%,rgba(15,14,12,0) 100%)}
+.site-hd::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .25s;background:#0f0e0c}
 html.site-scrolled .site-hd::before{opacity:1}
 .site-logo{pointer-events:auto;display:inline-flex;line-height:0;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}
 .site-logo img{height:38px;width:auto;display:block}
@@ -35,7 +34,12 @@ html.site-scrolled .site-hd::before{opacity:1}
 .site-menu .mm-contacts span{display:flex;gap:18px} .site-menu .mm-contacts span a{font-size:16px;color:#a89f92;text-decoration:none}
 @media (min-width:1000px){ .site-menu{padding-left:12vw} .site-menu > a{font-size:44px} }
 @media (max-width:999px){ :root{--site-hd:64px;--site-side:16px} .site-logo img{height:32px} }
-.top-sec{padding-top:calc(var(--site-hd) + 10px + env(safe-area-inset-top)) !important}
+.top-sec{padding:calc(var(--site-hd) + env(safe-area-inset-top)) 0 0 !important;gap:0 !important}
+/* заголовок «Наши работы» убран с экрана (Макс 22.10) — остаётся только для поисковиков и экранных читалок */
+.site-sr{position:absolute !important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+/* ленты (REELS, Комплекс…) закреплены под шапкой, как меню */
+.chips-nav{position:sticky;top:calc(var(--site-hd) + env(safe-area-inset-top));z-index:44;background:#0f0e0c;
+  box-shadow:0 14px 18px -8px rgba(15,14,12,.9)}
 html.site-menu-open{overflow:hidden}
 </style>
 <script src="./support.js"></script>
@@ -181,7 +185,7 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 
   <!-- заголовок -->
   <section class="pad top-sec" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
-    <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em">Наши работы</h1>
+    <h1 class="ttl site-sr">Наши работы</h1>
   </section>
 
   <!-- ленты: у всех одинаковая сетка, а открытие разное (REELS — рилсы, Комплекс — страница проекта, остальные — просмотр изделия) -->
@@ -873,7 +877,8 @@ class Component extends DCLogic {
     this._touchPin = null;  // после смены вида/ленты в «2 в ряд» снова ничего не играет, пока не коснутся
     this._loading = {}; this._vBusy = null; this._vq = [];  // очередь загрузки — заново, с верха новой ленты
     var self = this, a = this.anim(), E = this.feedEls();
-    var go = function () { self._animIn = a; self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };
+    // ленты закреплены сверху — новая лента всегда открывается с начала
+    var go = function () { try { if ((window.scrollY || 0) > 0) window.scrollTo(0, 0); } catch (e) {} self._animIn = a; self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };
     if (!a || !E.feed || !E.feed.animate) { go(); return; }
     (this._outA || []).forEach(function (x) { x.cancel(); });
     this._animIn = null; this.setState({ chipF: f });
