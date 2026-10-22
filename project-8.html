@@ -32,6 +32,8 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 .lb-thumbs-grid{display:none !important}
 .lb-hide{display:none !important}
 .lb-wrap{overscroll-behavior:contain}
+/* iPhone, панель Safari свёрнута: окно просмотра не доставало до самого верха — над фото была видна страница. Тень-заливка закрывает всё вокруг окна */
+.lb-wrap{box-shadow:0 0 0 100vh #0b0a09}
 .lb-track .lb-slide{transition:opacity .5s ease, filter .5s ease}
 .lb-track .lb-slide.rs-dim{filter:brightness(.28)}
 .lb-track.lb-reels ~ .lb-fade-r{background:linear-gradient(to right, rgba(11,10,9,0) 0%, rgba(11,10,9,0.03) 15%, rgba(11,10,9,0.09) 30%, rgba(11,10,9,0.2) 45%, rgba(11,10,9,0.36) 60%, rgba(11,10,9,0.56) 75%, rgba(11,10,9,0.78) 88%, rgba(11,10,9,1) 100%) !important}
