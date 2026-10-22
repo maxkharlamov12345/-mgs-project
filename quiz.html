@@ -284,16 +284,22 @@ function findImage(o){
 async function render(prompt){
   if(!tok()) throw new ApiErr(401,'no key');
   const img=await toDataURL(photoBlob);
-  let g=await api('/media',{method:'POST',body:JSON.stringify({model:model(),input:{prompt,images:[{type:'base64',data:img}],image_resolution:'1K',output_format:'jpeg'}})});
-  const t0=Date.now();
-  while(true){
-    if(g.status==='completed'){ const u=findImage(g.data); if(u) return u; throw new Error('нет картинки в ответе: '+JSON.stringify(g.data||g).slice(0,200)); }
-    if(g.status==='failed'||g.status==='cancelled') throw new Error((g.error&&(g.error.message||g.error.code))||g.status);
-    if(Date.now()-t0>180000) throw new Error('timeout');
-    waitInfo(g.status==='processing'?'Рисуем…':'В очереди…');
-    await new Promise(r=>setTimeout(r,2000));
-    g=await api('/media/'+encodeURIComponent(g.id));
-  }
+  // минимальный запрос: только задание и фото (лишние параметры часть моделей не принимает)
+  const once=async()=>{
+    let g=await api('/media',{method:'POST',body:JSON.stringify({model:model(),input:{prompt,images:[{type:'base64',data:img}]}})});
+    console.log('polza create',g);
+    const t0=Date.now();
+    while(true){
+      if(g.status==='completed'){ console.log('polza done',g); const u=findImage(g.data)||findImage(g.content)||findImage(g); if(u) return u; throw new Error('нет картинки в ответе: '+JSON.stringify(g).slice(0,200)); }
+      if(g.status==='failed'||g.status==='cancelled'){ console.log('polza fail',g); throw new ApiErr(500,(g.error&&(g.error.message||g.error.code))||g.status); }
+      if(Date.now()-t0>180000) throw new Error('timeout');
+      waitInfo(g.status==='processing'?'Рисуем…':'В очереди…');
+      await new Promise(r=>setTimeout(r,2000));
+      g=await api('/media/'+encodeURIComponent(g.id));
+    }
+  };
+  try{ return await once(); }
+  catch(e){ if(e.status>=500){ waitInfo('Повторяем попытку…'); return await once(); } throw e; }
 }
 let waitExtra=''; const waitInfo=t=>{ waitExtra=t; };
 async function run(){
