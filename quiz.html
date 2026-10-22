@@ -59,6 +59,7 @@ h1{font-size:clamp(30px,5vw,46px);font-weight:300;letter-spacing:-.02em;line-hei
 .stage .lbl{position:absolute;top:12px;font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(15,14,12,.7)}
 .stage .lbl.l{left:12px}.stage .lbl.r{right:12px}
 .wait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(15,14,12,.72);text-align:center;padding:20px}
+.wait[hidden],.stage [hidden]{display:none!important}
 .spin{width:42px;height:42px;border-radius:50%;border:3px solid var(--chip);border-top-color:var(--accent);animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .wait p{font-size:14px;color:var(--muted)}
