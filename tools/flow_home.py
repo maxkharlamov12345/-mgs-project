@@ -23,10 +23,14 @@ html.flow,html.flow body{height:auto;overflow:visible;overscroll-behavior-y:none
 html.flow{scroll-snap-type:y mandatory}
 html.flow.free{scroll-snap-type:none}
 html.flow .stage{position:relative;height:auto;overflow:visible}
-html.flow .screen{position:relative;inset:auto;visibility:visible;height:100vh;height:100lvh;scroll-snap-align:start;scroll-snap-stop:always;transform:none!important}
+/* экран = высота самого телефона (screen.height, ставит скрипт в <head>): при свёрнутых панелях Safari видимая область больше 100lvh
+   (страница уходит под часы и нижнюю строку) — со 100lvh снизу выглядывал следующий экран. Текст и кнопки держим в видимой части
+   при развёрнутых панелях: --tb = запас снизу = высота экрана − 100svh (на нём уже построены все отступы главной) */
+html.flow{--tb:max(0px, calc(var(--scr, 100lvh) - 100svh))}
+html.flow .screen{position:relative;inset:auto;visibility:visible;height:100vh;height:var(--scr, 100lvh);scroll-snap-align:start;scroll-snap-stop:always;transform:none!important}
 /* расчёт — последний экран: высотой по содержимому, листается свободно (html.free), иначе низ страницы дёргался */
-html.flow .calc-screen{height:auto;min-height:100vh;min-height:100lvh;overflow:visible!important}
-html.flow .calc-inner{min-height:100vh;min-height:100lvh}
+html.flow .calc-screen{height:auto;min-height:100vh;min-height:var(--scr, 100lvh);overflow:visible!important}
+html.flow .calc-inner{min-height:100vh;min-height:var(--scr, 100lvh)}
 html.flow .stage{transition:opacity .22s ease}
 html.flow.jump .stage{opacity:0}
 /* меню: закрытое убрано совсем, открытое — страница под ним прозрачна (не visibility — иначе лаг) */
@@ -34,7 +38,10 @@ html.flow .site-menu[hidden]{display:none!important}
 html.flow.menu-open .stage{opacity:0;transition:opacity 0s .2s}
 html.flow .site-menu::after{content:"";position:absolute;left:0;right:0;top:100%;height:50vh;background:var(--bg);pointer-events:none}
 </style>
-<script>if(innerWidth<1000)document.documentElement.classList.add('flow')</script>
+<script>if(innerWidth<1000){var _de=document.documentElement;_de.classList.add('flow');
+  // высота экрана телефона (а не окна браузера): окно меняется, когда браузер прячет панели, экран — нет
+  var _scr=function(){var p=innerWidth<innerHeight, h=p?Math.max(screen.height||0,innerHeight):innerHeight;_de.style.setProperty('--scr',h+'px');};
+  _scr();addEventListener('orientationchange',function(){setTimeout(_scr,300);});}</script>
 '''
 rep('</head>', CSS + '</head>')
 rep('<title>', '<meta name="robots" content="noindex"><title>')
