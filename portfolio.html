@@ -11,45 +11,32 @@
 <script>/* кэш сайта в браузере — sw.js */if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})</script>
 <script src="assets/dims.js" defer></script>
 <style>
-/* ===== шапка и док сайта — копия с главной (home.html), классы с префиксом site- ===== */
-:root{--site-hd:72px;--dock:96px}
-.site-hd{position:fixed;inset:0 0 auto 0;z-index:40;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
+/* ===== шапка как на главной (home.html): логотип закреплён по центру сверху, кружок меню справа; классы site- ===== */
+:root{--site-hd:72px;--site-side:32px}
+.site-hd{position:fixed;left:0;right:0;top:0;z-index:46;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
+.site-hd::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% + 28px);z-index:-1;pointer-events:none;opacity:0;transition:opacity .25s;
+  background:linear-gradient(to bottom,rgba(15,14,12,.92) 0%,rgba(15,14,12,.78) 55%,rgba(15,14,12,0) 100%)}
+html.site-scrolled .site-hd::before{opacity:1}
 .site-logo{pointer-events:auto;display:inline-flex;line-height:0;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}
 .site-logo img{height:38px;width:auto;display:block}
-.site-dock{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:42;display:flex;gap:6px;padding:7px;border-radius:24px;
-  background:rgba(30,27,24,.58);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border:1px solid rgba(244,241,236,.1);box-shadow:0 12px 40px rgba(0,0,0,.45);font-family:Onest,system-ui,sans-serif}
-.site-dock a{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:74px;padding:9px 12px 8px;border-radius:17px;color:#f4f1ec;text-decoration:none;transition:transform .25s cubic-bezier(.22,1,.36,1),background-color .2s ease;transform-origin:50% 100%}
-.site-dock a svg{width:24px;height:24px}
-.site-dock a span{font-size:11px;color:#a89f92;letter-spacing:.02em}
-.site-dock a:hover{background:rgba(244,241,236,.08);color:#f4f1ec}
-@media (hover:hover){ .site-dock a:hover{transform:scale(1.18) translateY(-4px)} }
-.site-dock a.on svg{color:#bfd630} .site-dock a.on span{color:#f4f1ec}
-.site-dock a.open{background:rgba(244,241,236,.1)}
-.site-dock a.site-cta{background:#bfd630;color:#1c1a17} .site-dock a.site-cta span{color:#1c1a17}
-.site-menu{position:fixed;inset:0;z-index:41;background:#0f0e0c;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;opacity:0;pointer-events:none;transition:opacity .3s;
-  padding:calc(var(--site-hd) + 20px) 24px calc(var(--dock) + 30px);font-family:Onest,system-ui,sans-serif}
+.site-menu-btn{position:absolute;right:var(--site-side);top:calc(env(safe-area-inset-top) + (var(--site-hd) - 46px)/2);width:46px;height:46px;border-radius:50%;padding:0;cursor:pointer;
+  background:rgba(30,27,24,.72);border:1px solid rgba(244,241,236,.12);pointer-events:auto;transition:background-color .2s}
+.site-menu-btn span{position:absolute;left:14px;right:14px;height:1.6px;border-radius:2px;background:#f4f1ec;transition:transform .3s,opacity .2s,top .3s}
+.site-menu-btn span:nth-child(1){top:16px}.site-menu-btn span:nth-child(2){top:22px}.site-menu-btn span:nth-child(3){top:28px}
+.site-menu-btn.open{background:#bfd630} .site-menu-btn.open span{background:#1c1a17}
+.site-menu-btn.open span:nth-child(1){top:22px;transform:rotate(45deg)} .site-menu-btn.open span:nth-child(2){opacity:0} .site-menu-btn.open span:nth-child(3){top:22px;transform:rotate(-45deg)}
+.site-menu{position:fixed;inset:0;z-index:45;background:#0f0e0c;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;font-family:Onest,system-ui,sans-serif;
+  padding:calc(var(--site-hd) + 20px) 24px 30px;opacity:0;pointer-events:none;transition:opacity .3s}
 .site-menu.open{opacity:1;pointer-events:auto}
-.site-menu a{font-size:30px;font-weight:300;letter-spacing:-.01em;padding:8px 0;color:#f4f1ec;text-decoration:none}
-.site-menu a:hover{color:#bfd630}
-.site-menu a.active{color:#bfd630}
-.sm-contacts{margin-top:22px;display:flex;flex-direction:column;gap:8px}
-.sm-contacts a{font-size:22px;font-weight:500;color:#bfd630}
-.sm-contacts span{display:flex;gap:18px} .sm-contacts span a{font-size:16px;color:#a89f92}
-@media (min-width:1000px){ .site-menu{padding-left:12vw} .site-menu a{font-size:44px} .sm-contacts a{font-size:22px} .sm-contacts span a{font-size:16px} }
-@media (max-width:999px){
-  :root{--site-hd:64px;--dock:84px}
-  .site-logo img{height:32px}
-  .site-dock{left:10px;right:10px;transform:none;bottom:calc(8px + env(safe-area-inset-bottom));justify-content:space-between;border-radius:26px;padding:6px}
-  .site-dock a{min-width:0;flex:1;padding:8px 2px 7px;border-radius:20px}
-  .site-dock a svg{width:23px;height:23px}
-  .site-dock a span{font-size:10.5px}
-}
-/* место под шапку сверху и под док снизу */
+.site-menu > a{font-size:30px;font-weight:300;letter-spacing:-.01em;padding:8px 0;color:#f4f1ec;text-decoration:none}
+.site-menu > a:hover,.site-menu > a.active{color:#bfd630}
+.site-menu .mm-contacts{margin-top:22px;display:flex;flex-direction:column;gap:8px}
+.site-menu .mm-contacts > a{font-size:22px;font-weight:500;color:#bfd630;text-decoration:none}
+.site-menu .mm-contacts span{display:flex;gap:18px} .site-menu .mm-contacts span a{font-size:16px;color:#a89f92;text-decoration:none}
+@media (min-width:1000px){ .site-menu{padding-left:12vw} .site-menu > a{font-size:44px} }
+@media (max-width:999px){ :root{--site-hd:64px;--site-side:16px} .site-logo img{height:32px} }
 .top-sec{padding-top:calc(var(--site-hd) + 10px + env(safe-area-inset-top)) !important}
-.page-wrap{padding-bottom:calc(var(--dock) + 24px + env(safe-area-inset-bottom))}
 html.site-menu-open{overflow:hidden}
-/* переключатель «2 в ряд / 1 в ряд» на телефоне — над доком */
-@media (max-width:759px){ .mode-pick{bottom:calc(var(--dock) + 10px + env(safe-area-inset-bottom,0px)) !important} }
 </style>
 <script src="./support.js"></script>
 </head>
@@ -190,12 +177,11 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 </style>
 </helmet>
 
-<div class="page-wrap" style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100vh">
+<div style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100vh">
 
   <!-- заголовок -->
   <section class="pad top-sec" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
     <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em">Наши работы</h1>
-    <div style="font-size: 14px; color: #a89f92">{{countLine}}</div>
   </section>
 
   <!-- ленты: у всех одинаковая сетка, а открытие разное (REELS — рилсы, Комплекс — страница проекта, остальные — просмотр изделия) -->
@@ -275,13 +261,6 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
   </div>
 
 
-  <!-- телефон, REELS и «Комплекс»: переключатель вида ленты — 2 в ряд / 1 в ряд слайдером -->
-  <sc-if value="{{showModes}}" hint-placeholder-val="{{ false }}">
-    <div class="mode-pick" role="group" aria-label="Вид ленты">
-      <button class="mode-btn" onClick="{{setGrid}}" aria-pressed="{{gridOn}}" aria-label="По 2 в ряд"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="7" height="7" rx="1.6"></rect><rect x="11" y="2" width="7" height="7" rx="1.6"></rect><rect x="2" y="11" width="7" height="7" rx="1.6"></rect><rect x="11" y="11" width="7" height="7" rx="1.6"></rect></svg></button>
-      <button class="mode-btn" onClick="{{setSlide}}" aria-pressed="{{slideOn}}" aria-label="По 1 в ряд, листать вниз"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2.5"></rect></svg></button>
-    </div>
-  </sc-if>
 
   <!-- полноэкранный просмотр: как на странице проекта -->
   <!-- полноэкранный просмотр -->
@@ -394,38 +373,33 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 </div>
 </template>
 
-<!-- ===== Шапка и навигация сайта — как на главной (home.html): логотип по центру, док снизу, меню на весь экран ===== -->
-<header class="site-hd"><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo.webp" alt="MGS MEBEL" width="400" height="217"></a></header>
-<nav class="site-dock" id="siteDock" aria-label="Меню сайта">
-  <a href="home.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Главная</span></a>
-  <a href="home.html#salons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11.5A7 7 0 0 1 19 9.5C19 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Салоны</span></a>
-  <a href="portfolio.html" class="on" id="siteHere"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Работы</span></a>
-  <a href="#" id="siteMenuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Меню</span></a>
-  <a href="home.html#calc" class="site-cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h1.5M12 11.5h1.5M15.5 11.5h0M8.5 15.5h1.5M12 15.5h3.5"/></svg><span>Расчёт</span></a>
-</nav>
-<div class="site-menu" id="siteMenu">
+<!-- ===== Шапка как на главной (home.html): логотип по центру закреплён сверху, справа кружок меню; меню на весь экран ===== -->
+<header class="site-hd"><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo.webp" alt="MGS MEBEL" width="400" height="217"></a>
+  <button class="site-menu-btn" id="siteMenuBtn" aria-label="Меню"><span></span><span></span><span></span></button></header>
+<nav class="site-menu" id="siteMenu" aria-label="Меню сайта">
   <a href="home.html">Главная</a>
   <a href="#">О нас</a>
-  <a href="home.html#salons">Фирменные салоны</a>
+  <a href="#">Фирменные салоны</a>
   <a href="portfolio.html" class="active">Наши работы</a>
   <a href="#">Каталоги</a>
   <a href="#">Дизайнерам</a>
-  <a href="#">Новости / новинки</a>
-  <div class="sm-contacts"><a href="tel:84957773575">8-495-777-35-75</a><span><a href="#">Telegram</a><a href="#">WhatsApp</a></span></div>
-</div>
+  <a href="news.html">Новости / новинки</a>
+  <div class="mm-contacts"><a href="tel:84957773575">8-495-777-35-75</a><span><a href="#">Telegram</a><a href="#">WhatsApp</a></span></div>
+</nav>
 <script>
 (function(){var m=document.getElementById('siteMenu'),b=document.getElementById('siteMenuBtn');
-b.addEventListener('click',function(e){e.preventDefault();var o=!m.classList.contains('open');m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);});
-m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){m.classList.remove('open');b.classList.remove('open');document.documentElement.classList.remove('site-menu-open');});});
-// «Работы» — мы уже здесь: наверх страницы
-document.getElementById('siteHere').addEventListener('click',function(e){e.preventDefault();m.classList.remove('open');b.classList.remove('open');scrollTo({top:0,behavior:'smooth'});});
-document.querySelector('#siteMenu a.active').addEventListener('click',function(e){e.preventDefault();});})();
+function set(o){m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);}
+b.addEventListener('click',function(){set(!m.classList.contains('open'));});
+m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(e){if(a.classList.contains('active')){e.preventDefault();}set(false);});});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m.classList.contains('open'))set(false);});
+// прокрутили — под шапкой мягкое затемнение, чтобы логотип и кружок меню не сливались с плитками
+var sc=function(){document.documentElement.classList.toggle('site-scrolled',(window.scrollY||0)>8);};addEventListener('scroll',sc,{passive:true});sc();})();
 </script>
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#bfd630","options":["#bfd630","#d8b98f","#f4f1ec"]},"$preview":{"width":1440,"height":1600}}'>
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    var sl = false; try { sl = localStorage.getItem('mgs-slide') === '1'; } catch (e) {}
+    var sl = false;  // переключатель «2 в ряд / 1 в ряд» убран (Макс 22.10) — всегда сетка
     this.state = { filter: this.readHash() || this.DEFAULT(), lb: -1, slide: sl };
   }
 

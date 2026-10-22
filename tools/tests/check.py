@@ -121,7 +121,7 @@ async def check_one_video(b, base):
     touch = """(i)=>{const ps=document.querySelectorAll('.feed .pin');const p=ps[i%ps.length];if(!p)return;const el=p.querySelector('video')||p;const t=new Touch({identifier:Date.now()%1e6,target:el,clientX:10,clientY:10});el.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[t],targetTouches:[t],changedTouches:[t]}));}"""
     bad = 0
     for step in range(60):
-        a = random.choice(['scroll', 'scroll', 'touch', 'touch', 'mode', 'feed'])
+        a = random.choice(['scroll', 'scroll', 'touch', 'touch', 'feed'])
         if a == 'scroll': await pg.mouse.wheel(0, random.choice([-400, -200, 200, 400, 700]))
         elif a == 'touch': await pg.evaluate(touch, random.randint(0, 7))
         elif a == 'mode': await pg.click('.mode-btn >> nth=%d' % random.randint(0, 1))
