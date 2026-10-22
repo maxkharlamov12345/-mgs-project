@@ -630,6 +630,13 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 
 .dock a.dock-cta svg,.dock a.dock-cta.on svg{color:var(--ink)!important} .dock a.dock-cta span{color:var(--ink)!important}
 .dock a.dock-cta.on{box-shadow:0 0 0 2px rgba(191,214,48,.35)}
+
+/* док: выбранный экран — лаймовая плашка (как «Расчёт»), остальные — обычные (Макс 22.10) */
+.dock a.dock-cta{background:transparent!important;box-shadow:none!important}
+.dock a.dock-cta svg{color:var(--text)!important} .dock a.dock-cta span{color:var(--muted)!important}
+.dock a.on,.dock a.dock-cta.on{background:var(--accent)!important;box-shadow:none!important}
+.dock a.on svg,.dock a.on span,.dock a.dock-cta.on svg,.dock a.dock-cta.on span{color:var(--ink)!important}
+.dock a{transition:background-color .3s ease,transform .25s cubic-bezier(.22,1,.36,1)}
 </style>
 </head>
 <body>
