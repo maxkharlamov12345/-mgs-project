@@ -10,7 +10,7 @@
 <script>/* кэш сайта в браузере — sw.js */if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})</script>
 <script src="assets/dims.js" defer></script>
 <script src="./support.js"></script>
-<script>/* временная диагностика iPhone: ?dbg */if(/[?&]dbg/.test(location.search)){var _d=document.createElement("script");_d.src="assets/dbg.js?v=1";document.head.appendChild(_d);}</script>
+<script>/* временная диагностика iPhone: ?dbg */if(/[?&]dbg/.test(location.search)){var _d=document.createElement("script");_d.src="assets/dbg.js?v=2";document.head.appendChild(_d);}</script>
 </head>
 <body>
 <template data-dc>
@@ -33,8 +33,10 @@ a{color:#f4f1ec}a:hover{color:#bfd630}
 .lb-thumbs-grid{display:none !important}
 .lb-hide{display:none !important}
 .lb-wrap{overscroll-behavior:contain}
-/* iPhone, панель Safari свёрнута: окно просмотра не доставало до самого верха — над фото была видна страница. Тень-заливка закрывает всё вокруг окна */
-.lb-wrap{box-shadow:0 0 0 100vh #0b0a09}
+/* iPhone (Safari 26), панель свёрнута: закреплённое окно просмотра не заходит под часы, и там была видна лента страницы.
+   Пока просмотр открыт — ленту и всё остальное прячем (visibility: место и прокрутка не меняются), под часами остаётся тёмный фон */
+html:has(#lb-wrap) .sc-host > div > :not(#lb-wrap):not([role=dialog]),
+html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){visibility:hidden}
 .lb-track .lb-slide{transition:opacity .5s ease, filter .5s ease}
 .lb-track .lb-slide.rs-dim{filter:brightness(.28)}
 .lb-track.lb-reels ~ .lb-fade-r{background:linear-gradient(to right, rgba(11,10,9,0) 0%, rgba(11,10,9,0.03) 15%, rgba(11,10,9,0.09) 30%, rgba(11,10,9,0.2) 45%, rgba(11,10,9,0.36) 60%, rgba(11,10,9,0.56) 75%, rgba(11,10,9,0.78) 88%, rgba(11,10,9,1) 100%) !important}

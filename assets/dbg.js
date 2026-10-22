@@ -19,6 +19,6 @@
       hits.join('\n');
     requestAnimationFrame(function () { setTimeout(tick, 150); });
   }
-  function start() { document.body.appendChild(box); document.body.appendChild(top0); tick(); }
+  function start() { box.setAttribute('data-dbg', ''); top0.setAttribute('data-dbg', ''); document.body.appendChild(box); document.body.appendChild(top0); tick(); }
   if (document.body) start(); else addEventListener('DOMContentLoaded', start);
 })();
