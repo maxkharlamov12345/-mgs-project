@@ -36,7 +36,10 @@ html.site-scrolled .site-hd::before{opacity:0}  /* логотип не закр�
 @media (min-width:1000px){ .site-menu{padding-left:12vw} .site-menu > a{font-size:44px} }
 @media (max-width:999px){ :root{--site-hd:64px;--site-side:16px} .site-logo img{height:32px} }
 .top-sec{padding-top:calc(var(--site-hd) + 10px + env(safe-area-inset-top)) !important}
-html.site-menu-open{overflow:hidden}
+/* меню открыто: прокрутку НЕ запрещаем (iPhone от overflow:hidden перестраивал экран — лента «съезжала» после закрытия меню);
+   вместо этого прячем саму ленту, а меню тянем на всю высоту с запасом под «парящие» панели Safari — ничего не просвечивает */
+html.site-menu-open #dc-root{visibility:hidden}
+.site-menu{top:0;bottom:auto;height:100vh;height:100lvh;min-height:calc(100% + 120px);padding-bottom:calc(30px + env(safe-area-inset-bottom)) !important}
 </style>
 <script src="./support.js"></script>
 </head>
