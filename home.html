@@ -97,6 +97,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webki
 #salons{display:flex;flex-direction:column;padding:calc(var(--header-h) + 20px) var(--side) 0}
 .seg-row{position:relative;z-index:3;display:flex;justify-content:center;margin-bottom:22px;flex:none;pointer-events:none}
 .seg{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--chip);pointer-events:auto}
+/* появление переключателя при входе на экран салонов: всплывает плашка с «На карте», затем вправо выезжает «Списком» */
+.seg.anim{animation:segIn .95s cubic-bezier(.22,.61,.36,1) .3s both}
+.seg.anim .seg-btn:last-child{animation:segTxt .95s cubic-bezier(.22,.61,.36,1) .3s both}
+@keyframes segIn{0%{opacity:0;transform:translateY(10px) scale(.94);clip-path:inset(0 var(--sx,120px) 0 0 round 999px)}
+  38%{opacity:1;transform:none;clip-path:inset(0 var(--sx,120px) 0 0 round 999px)}
+  100%{opacity:1;transform:none;clip-path:inset(0 0 0 0 round 999px)}}
+@keyframes segTxt{0%,40%{opacity:0;transform:translateX(-16px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){ .seg.anim,.seg.anim .seg-btn:last-child{animation:none} }
 .seg-btn{min-height:40px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:500;transition:background-color .2s ease,color .2s ease}
 .seg-btn.on{background:var(--accent);color:var(--ink)}
 @media (hover:hover){ .seg-btn:not(.on):hover{background:var(--chip-h)} }
@@ -494,10 +502,15 @@ mb.addEventListener('click',()=>setMenu(!menuOpen()));
 menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMenu(false)));
 
 /* ---------- при входе на экран ---------- */
+function segIntro(){
+  const seg=$('.seg'); if(!seg) return; const last=seg.querySelector('.seg-btn:last-child');
+  seg.style.setProperty('--sx', (last.offsetWidth+4)+'px');
+  seg.classList.remove('anim'); void seg.offsetWidth; seg.classList.add('anim');
+}
 function onEnter(i){
   const id=IDS[i];
   if(id==='salons' || i>=2) startLive();
-  if(id==='salons') refitMap();
+  if(id==='salons'){ refitMap(); segIntro(); }
   if(id!=='salons') closeSalon();
   try{ history.replaceState(null,'', i===0 ? location.pathname : '#'+id); }catch(_){}
 }
@@ -627,8 +640,11 @@ function loadMapLib(){ return new Promise((res,rej)=>{ if(window.maplibregl) ret
 function liveFit(){
   if(!lmap) return; const el=$('#map'); if(!el.clientWidth||!el.clientHeight) return;
   const b=new maplibregl.LngLatBounds(); SALONS.forEach(s=>b.extend([s.lng,s.lat]));
-  const mob=innerWidth<1000, cam=lmap.cameraForBounds(b,{padding:mob?{top:170,bottom:150,left:70,right:90}:{top:180,bottom:170,left:160,right:160}});
-  if(cam) lmap.jumpTo({center:[cam.center.lng,55.7558], zoom:cam.zoom-(mob?0.5:0)});
+  const mob=innerWidth<1000;
+  // телефон: масштаб и центр по референсу Макса (23.10, iPhone 390px: зум 9.1, Москва чуть правее и выше центра); на других ширинах — тот же охват
+  if(mob){ lmap.jumpTo({center:[37.578,55.740], zoom:9.1+Math.log2(el.clientWidth/390)}); return; }
+  const cam=lmap.cameraForBounds(b,{padding:{top:180,bottom:170,left:160,right:160}});
+  if(cam) lmap.jumpTo({center:[cam.center.lng,55.7558], zoom:cam.zoom});
 }
 function refitMap(){ if(!lmap) return; lmap.resize(); if(!mapTouched) liveFit(); }
 async function initLiveMap(){
