@@ -16,7 +16,9 @@
       'vv h ' + (vv ? r(vv.height) + ' offTop ' + r(vv.offsetTop) + ' pageTop ' + r(vv.pageTop) + ' scale ' + vv.scale.toFixed(2) : '-') + '\n' +
       'scrollY ' + r(scrollY) + '  body h ' + document.body.scrollHeight + '\n' +
       'lb ' + (lr ? 'top ' + r(lr.top) + ' h ' + r(lr.height) + ' scrollTop ' + r(lb.scrollTop) + ' op ' + cs.opacity + ' tf ' + cs.transform.slice(0, 30) : 'нет') + '\n' +
-      hits.join('\n');
+      hits.join('\n') + '\n' +
+      'safeTop ' + (function () { var e = document.getElementById('_sat'); if (!e) { e = document.createElement('div'); e.id = '_sat'; e.setAttribute('data-dbg', ''); e.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);width:1px;visibility:hidden'; document.body.appendChild(e); } return e.offsetHeight; })() +
+      '  screens ' + [].map.call(document.querySelectorAll('.screen'), function (x) { return r(x.getBoundingClientRect().top); }).join(',');
     requestAnimationFrame(function () { setTimeout(tick, 150); });
   }
   function start() { box.setAttribute('data-dbg', ''); top0.setAttribute('data-dbg', ''); document.body.appendChild(box); document.body.appendChild(top0); tick(); }
