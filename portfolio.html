@@ -50,7 +50,22 @@ html.site-menu-open #dc-root{opacity:0;transition:opacity 0s .2s}
 .site-menu::after{content:"";position:absolute;left:0;right:0;top:100%;height:50vh;background:#0f0e0c;pointer-events:none}
 </style>
 <script src="./support.js"></script>
-<script>/* временная диагностика iPhone: ?dbg */if(/[?&]dbg/.test(location.search)){var _d=document.createElement("script");_d.src="assets/dbg.js?v=3";document.head.appendChild(_d);}</script>
+<style>
+/* «просмотр как лента» : на телефоне просмотр — сама страница, не окно поверх */
+@media (max-width: 999px){
+  html.lb-on{scroll-snap-type:y mandatory;scroll-padding-top:5px}
+  html.lb-on .sc-host > div > :not(#lb-wrap):not([role=dialog]),
+  html.lb-on body > :not(#dc-root):not(script):not(style):not([data-dbg]){display:none !important}
+  html.lb-on #lb-wrap{position:relative !important;inset:auto !important;overflow:visible !important;min-height:100lvh;scroll-snap-type:none !important}
+  html.lb-on .lb-close-v,html.lb-on .lb-vcount{top:calc(14px + env(safe-area-inset-top)) !important}
+  /* описание после последнего фото — без примагничивания (lb-free ставит vScroll); последнее фото без описания —
+     точка у самого низа страницы (достижима при любой высоте экрана — не дёргается, когда браузер прячет панели) */
+  html.lb-on .lb-panel{scroll-snap-align:none !important;flex-grow:1}
+  html.lb-on #lb-wrap::after{content:"";display:block;flex:none;height:1px;scroll-snap-align:end}
+  html.lb-free,html.lb-hold{scroll-snap-type:none !important}
+  html.lb-free .lb-vcount{opacity:0;transition:opacity .2s}  /* на описании счётчик фото не налезает на заголовок */
+}
+</style>
 </head>
 <body>
 <template data-dc>
@@ -987,6 +1002,17 @@ class Component extends DCLogic {
     if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
   }
   componentDidMount() {
+    var fm = this, phoneW = function () { return window.innerWidth < 1000; };
+    document.addEventListener('pointerdown', function () {
+      if (fm.state.lb >= 0 || !phoneW()) return;
+      fm._feedY = window.scrollY;
+      // на миг выключаем примагничивание — иначе Safari, увидев просмотр на месте прокрутки ленты, примагничивал к случайному фото
+      document.documentElement.classList.add('lb-hold');
+    }, true);
+    window.addEventListener('scroll', function () { if (fm.state.lb >= 0 && phoneW() && fm._vs) fm._vs({}); }, { passive: true });
+    // «Назад» браузера/телефона закрывает просмотр
+    window.addEventListener('popstate', function () { if (fm.state.lb >= 0 && fm._lbHist) { fm._lbHist = false; fm._byBack = true; fm.setState({ lb: -1, lbZone: null, lbStart: 0 }); } });
+    try { if (history.state && history.state.mgsLb) history.replaceState(null, ''); } catch (e) {}
     // заранее (после загрузки страницы) качаем маленькие заставки всех видео — в просмотре под видео сразу картинка, не чёрный экран
     var me0 = this, warm = function () { setTimeout(function () { try { var D = me0.data(), L = [];
       (D.reels || []).forEach(function (r) { if (r.poster) L.push(r.poster); });
@@ -1034,6 +1060,19 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
   componentDidUpdate() {
+    var wasLb = this._wasLb, isLb = this.state.lb >= 0, de = document.documentElement; this._wasLb = isLb;
+    if (isLb && !wasLb && window.innerWidth < 1000) {
+      de.classList.add('lb-on');
+      try { history.pushState({ mgsLb: 1 }, ''); this._lbHist = true; } catch (e) {}
+    }
+    if (!isLb && wasLb) {
+      var hadOn = de.classList.contains('lb-on');
+      de.classList.remove('lb-on', 'lb-free', 'lb-hold');
+      if (hadOn && this._feedY != null) window.scrollTo({ top: this._feedY, behavior: 'instant' });
+      // закрыли крестиком/Esc — убираем свою запись из истории, чтобы следующий «Назад» не был пустым
+      if (this._lbHist && !this._byBack) { this._lbHist = false; try { history.back(); } catch (e) {} }
+      this._byBack = false;
+    }
     if (this._bgFor !== this.state.filter) { this._bgFor = this.state.filter; this.bgPhotos(); }
     // открыли просмотр изделия — подгружаем в память только его фото (листание без вспышек)
     var lz = this.state.lbZone || '';
@@ -1165,7 +1204,7 @@ class Component extends DCLogic {
             if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp);
               // подходит к экрану — заранее грузим видео (без запуска), чтобы по касанию оно стартовало сразу, без чёрного кадра
               s = self.feedSrc(el); if (s && el.getAttribute('src') !== s) { self._vq = self._vq || []; if (self._vq.indexOf(el) < 0) self._vq.push(el); self.pumpVid(); } else if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
-            else { if (self._vq) { var qi = self._vq.indexOf(el); if (qi >= 0) self._vq.splice(qi, 1); } if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
+            else { if (self._vq) { var qi = self._vq.indexOf(el); if (qi >= 0) self._vq.splice(qi, 1); } if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src') && !document.documentElement.classList.contains('lb-on')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
         }, { rootMargin: '60% 0px 40% 0px' });
         self._io.observe(v); continue;
       }
@@ -1178,7 +1217,7 @@ class Component extends DCLogic {
               if (!self._io) self._io = new IntersectionObserver(function (es) {
                 es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-src') || el.getAttribute('data-want');
                   if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) { el.src = s; } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
-                  else { if (self._vq) { var qi = self._vq.indexOf(el); if (qi >= 0) self._vq.splice(qi, 1); } if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
+                  else { if (self._vq) { var qi = self._vq.indexOf(el); if (qi >= 0) self._vq.splice(qi, 1); } if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src') && !document.documentElement.classList.contains('lb-on')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
               }, { rootMargin: '60% 0px 40% 0px' });
               v.setAttribute('data-want', u); self._io.observe(v); return;
             }
@@ -1233,7 +1272,9 @@ class Component extends DCLogic {
     if (window.innerWidth >= 1000) return;
     var el = document.getElementById('lb-wrap'); if (!el) return;
     var sl = el.querySelectorAll('.lb-vslide'), c = sl[this.state.lb];
-    el.style.scrollSnapType = 'none'; el.scrollTop = c ? Math.max(0, c.offsetTop - 5) : 0; el.style.scrollSnapType = '';
+    var de = document.documentElement; de.classList.add('lb-hold');
+    window.scrollTo({ top: c ? Math.max(0, c.getBoundingClientRect().top + window.scrollY - 5) : 0, behavior: 'instant' });
+    requestAnimationFrame(function () { requestAnimationFrame(function () { setTimeout(function () { de.classList.remove('lb-hold'); }, 60); }); });
   }
   slideLeft(el, i) {
     var sl = el.querySelectorAll('.lb-slide'); var c = sl[i]; if (!c) return 0;
@@ -1427,14 +1468,19 @@ class Component extends DCLogic {
       })(),
       // ПК: колесо и тачпад листают ровно на одно фото
       // телефон: какое фото сейчас на экране — для счётчика
-      vScroll: function (e) {
+      vScroll: self._vs = function (e) {
         if (window.innerWidth >= 1000) return;
-        var el = e.currentTarget, sl = el.querySelectorAll('.lb-vslide'), k = 0;
-        for (var i = 0; i < sl.length; i++) if (sl[i].offsetTop <= el.scrollTop + el.clientHeight * 0.4) k = i;
+        var el = document.getElementById('lb-wrap'); if (!el) return;
+        var stp = window.scrollY, chh = window.innerHeight;
+        var sl = el.querySelectorAll('.lb-vslide'), k = 0;
+        for (var i = 0; i < sl.length; i++) if (sl[i].offsetTop <= stp + chh * 0.4) k = i;
+        // описание после последнего фото листается свободно, вернулся к последнему фото — снова примагничивание
+        var pnl = el.querySelector('.lb-panel'), lastS = sl[sl.length - 1];
+        document.documentElement.classList.toggle('lb-free', !!pnl && pnl.offsetParent !== null && !!lastS && stp > lastS.offsetTop - 5 + 40);
         if (k !== li && k < pc) { self.fromScroll = true; self.setState({ lb: k }); }
         // долистали до описания — видео на паузу; вернулись к фото — снова играет
         var panel = el.querySelector('.lb-panel');
-        var atPanel = !!panel && panel.offsetParent !== null && el.scrollTop + el.clientHeight * 0.5 >= panel.offsetTop;
+        var atPanel = !!panel && panel.offsetParent !== null && stp + chh * 0.5 >= panel.offsetTop;
         if (atPanel && !self._atPanel) {
           self._atPanel = true; self._activeV = null;
           var vv = el.querySelectorAll('video[data-lb]'); for (var j = 0; j < vv.length; j++) if (!vv[j].paused) vv[j].pause();
