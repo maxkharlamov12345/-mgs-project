@@ -637,6 +637,10 @@ html{scroll-snap-type:y mandatory!important;overscroll-behavior-y:none}
 .dock a.on,.dock a.dock-cta.on{background:var(--accent)!important;box-shadow:none!important}
 .dock a.on svg,.dock a.on span,.dock a.dock-cta.on svg,.dock a.dock-cta.on span{color:var(--ink)!important}
 .dock a{transition:background-color .3s ease,transform .25s cubic-bezier(.22,1,.36,1)}
+
+/* затемнение при переходе по доку */
+.veil{position:fixed;inset:0;z-index:65;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .22s ease}
+.veil.on{opacity:1}
 </style>
 </head>
 <body>
@@ -962,7 +966,7 @@ setTimeout(startLive, 3500);
 setTimeout(()=>SALONS.forEach(x=>{ const i=new Image(); i.src=x.photo; }), 3000);
 
 /* ===== Окно расчёта (отправка пока не подключена) ===== */
-function openCalc(e){ if(e) e.preventDefault(); if(typeof closeSalon==='function') closeSalon(); $('#mobileMenu').classList.remove('open'); scrollTo({top:$('#calc').offsetTop, behavior:'smooth'}); }
+function openCalc(e){ if(e) e.preventDefault(); if(typeof closeSalon==='function') closeSalon(); $('#mobileMenu').classList.remove('open'); if(window.goScreen) goScreen('calc'); else scrollTo({top:$('#calc').offsetTop}); }
 document.querySelectorAll('[data-calc]').forEach(b => b.addEventListener('click', openCalc));
 if (location.hash === '#calc') setTimeout(()=>scrollTo({top:$('#calc').offsetTop}), 300);
 $('#calcForm').onsubmit = e => { e.preventDefault(); $('#calcForm').style.display='none'; $('#calcSent').style.display='block'; };
@@ -973,9 +977,25 @@ const dock=$('#dock'), mm=$('#mobileMenu'), mb=$('#menuBtn');
 const setMenu=o=>{ mm.classList.toggle('open',o); mb.classList.toggle('open',o); document.documentElement.classList.toggle('menu-open',o); };
 mb.addEventListener('click',()=>setMenu(!mm.classList.contains('open')));
 mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMenu(false)));
-dock.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); setMenu(false); if(typeof closeSalon==='function') closeSalon(); scrollTo({top:$('#'+a.dataset.go).offsetTop, behavior:'smooth'}); }));
+// переход по доку: экран мягко гаснет, мгновенно переставляется на нужный и проявляется
+// (плавная прокрутка через примагниченные экраны «мелькала» всеми блоками и дёргалась — Макс 22.10)
+const veil=document.createElement('div'); veil.className='veil'; document.body.appendChild(veil);
+let jumping=false;
+function goScreen(id){
+  const el=$('#'+id); if(!el || jumping) return;
+  dock.querySelectorAll('[data-go]').forEach(x=>x.classList.toggle('on', x.dataset.go===id));
+  if(Math.abs(el.offsetTop-scrollY)<2) return;
+  jumping=true; veil.classList.add('on');
+  setTimeout(()=>{
+    const h=document.documentElement; h.style.scrollSnapType='none';
+    scrollTo({top:el.offsetTop, behavior:'instant'});
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ h.style.scrollSnapType=''; veil.classList.remove('on'); setTimeout(()=>jumping=false,260); }));
+  },230);
+}
+window.goScreen=goScreen;
+dock.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); setMenu(false); if(typeof closeSalon==='function') closeSalon(); goScreen(a.dataset.go); }));
 // подсветка пункта по текущему экрану
-const dockIO=new IntersectionObserver(es=>es.forEach(en=>{ if(en.intersectionRatio<0.55) return;
+const dockIO=new IntersectionObserver(es=>es.forEach(en=>{ if(en.intersectionRatio<0.55 || jumping) return;
   dock.querySelectorAll('[data-go]').forEach(a=>a.classList.toggle('on', a.dataset.go===en.target.id)); }),{threshold:[0.55]});
 ['about','abilities','news','salons','calc'].forEach(id=>dockIO.observe($('#'+id)));
 
