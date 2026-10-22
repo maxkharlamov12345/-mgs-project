@@ -97,14 +97,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webki
 #salons{display:flex;flex-direction:column;padding:calc(var(--header-h) + 20px) var(--side) 0}
 .seg-row{position:relative;z-index:3;display:flex;justify-content:center;margin-bottom:22px;flex:none;pointer-events:none}
 .seg{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--chip);pointer-events:auto}
-/* появление переключателя при входе на экран салонов: всплывает плашка с «На карте», затем вправо выезжает «Списком» */
-.seg.anim{animation:segIn .95s cubic-bezier(.22,.61,.36,1) .3s both}
-.seg.anim .seg-btn:last-child{animation:segTxt .95s cubic-bezier(.22,.61,.36,1) .3s both}
-@keyframes segIn{0%{opacity:0;transform:translateY(10px) scale(.94);clip-path:inset(0 var(--sx,120px) 0 0 round 999px)}
-  38%{opacity:1;transform:none;clip-path:inset(0 var(--sx,120px) 0 0 round 999px)}
-  100%{opacity:1;transform:none;clip-path:inset(0 0 0 0 round 999px)}}
-@keyframes segTxt{0%,40%{opacity:0;transform:translateX(-16px)}100%{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){ .seg.anim,.seg.anim .seg-btn:last-child{animation:none} }
 .seg-btn{min-height:40px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:500;transition:background-color .2s ease,color .2s ease}
 .seg-btn.on{background:var(--accent);color:var(--ink)}
 @media (hover:hover){ .seg-btn:not(.on):hover{background:var(--chip-h)} }
@@ -115,7 +107,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webki
 .pins{position:absolute;inset:0;z-index:2}
 #map{position:absolute;inset:0;z-index:1;opacity:0;transition:opacity .5s ease;background:var(--bg)}
 .salons-map.live #map{opacity:1}
-.salons-map.live .map-img,.salons-map.live .pins{visibility:hidden}
+/* живая карта плавно проявляется ПОВЕРХ картинки-заглушки, и только потом картинка с метками прячется — без резкой смены */
+.salons-map.live .map-img,.salons-map.live .pins{visibility:hidden;transition:visibility 0s .55s}
 /* метки */
 .pin-wrap{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;cursor:pointer;transform:translate(-50%,-9px)}
 #map .pin-wrap{transform:none}
@@ -502,15 +495,10 @@ mb.addEventListener('click',()=>setMenu(!menuOpen()));
 menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMenu(false)));
 
 /* ---------- при входе на экран ---------- */
-function segIntro(){
-  const seg=$('.seg'); if(!seg) return; const last=seg.querySelector('.seg-btn:last-child');
-  seg.style.setProperty('--sx', (last.offsetWidth+4)+'px');
-  seg.classList.remove('anim'); void seg.offsetWidth; seg.classList.add('anim');
-}
 function onEnter(i){
   const id=IDS[i];
   if(id==='salons' || i>=2) startLive();
-  if(id==='salons'){ refitMap(); segIntro(); }
+  if(id==='salons') refitMap();
   if(id!=='salons') closeSalon();
   try{ history.replaceState(null,'', i===0 ? location.pathname : '#'+id); }catch(_){}
 }
