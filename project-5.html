@@ -10,6 +10,7 @@
 <script>/* кэш сайта в браузере — sw.js */if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})</script>
 <script src="assets/dims.js" defer></script>
 <script src="./support.js"></script>
+<script>/* временная диагностика iPhone: ?dbg */if(/[?&]dbg/.test(location.search)){var _d=document.createElement("script");_d.src="assets/dbg.js?v=1";document.head.appendChild(_d);}</script>
 </head>
 <body>
 <template data-dc>
