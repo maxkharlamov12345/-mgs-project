@@ -24,7 +24,7 @@
   /* последнее фото/рилс без описания: точка примагничивания — самый низ страницы (описание листается свободно — см. lb-free в vScroll). Он достижим при любой высоте экрана,
      поэтому когда Safari сворачивает/разворачивает панели, страница не дёргается, пытаясь выровняться */
   html:has(#lb-wrap) .lb-panel{scroll-snap-align:none !important;flex-grow:1}
-  html.lb-free{scroll-snap-type:none !important}
+  html.lb-free,html.lb-hold{scroll-snap-type:none !important}
   #lb-wrap::after{content:"";display:block;flex:none;height:1px;scroll-snap-align:end}
 }
 </style>
@@ -561,7 +561,13 @@ class Component extends DCLogic {
   webp(v) { return v; }
   componentDidMount() {
     var fm = this;
-    document.addEventListener('pointerdown', function () { if (!(fm.state.lb >= 0)) fm._feedY = window.scrollY; }, true);
+    document.addEventListener('pointerdown', function () {
+      if (fm.state.lb >= 0) return;
+      fm._feedY = window.scrollY;
+      // на время открытия примагничивание выключено: иначе Safari, увидев просмотр на месте старой прокрутки ленты,
+      // сам примагничивал к случайному фото (открывалось не то фото и картинка дёргалась)
+      document.documentElement.classList.add('lb-hold');
+    }, true);
     window.addEventListener('scroll', function () { if (fm.state.lb >= 0 && window.innerWidth < 1000 && fm._vs) fm._vs({}); }, { passive: true });
     // видео-плитка проявляется только когда у видео есть кадр; сбросили источник — снова прячем (под ним картинка)
     document.addEventListener('loadeddata', function (e) { var v = e.target; if (v.classList && v.classList.contains('feed-v')) v.classList.add('ready'); }, true);
@@ -723,6 +729,8 @@ class Component extends DCLogic {
     var de = document.documentElement; de.style.scrollSnapType = 'none';
     window.scrollTo({ top: c ? Math.max(0, c.getBoundingClientRect().top + window.scrollY - 5) : 0, behavior: 'instant' });
     de.style.scrollSnapType = '';
+    de.classList.add('lb-hold');
+    requestAnimationFrame(function () { requestAnimationFrame(function () { setTimeout(function () { de.classList.remove('lb-hold'); }, 60); }); });
   }
   slideLeft(el, i) {
     var sl = el.querySelectorAll('.lb-slide'); var c = sl[i]; if (!c) return 0;
