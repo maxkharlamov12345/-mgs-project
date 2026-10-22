@@ -40,7 +40,10 @@
 .top-sec{padding-top:calc(var(--site-hd) + 10px + env(safe-area-inset-top)) !important}
 /* меню открыто: прокрутку НЕ запрещаем (iPhone от overflow:hidden перестраивал экран — лента «съезжала» после закрытия меню);
    вместо этого прячем саму ленту, а меню тянем на всю высоту с запасом под «парящие» панели Safari — ничего не просвечивает */
-html.site-menu-open #dc-root{visibility:hidden}
+/* лента под меню — прозрачная (opacity), а не visibility:hidden: iPhone при visibility перерисовывал всю ленту заново и она появлялась с лагом;
+   при opacity картинки остаются готовыми, после закрытия лента мягко проявляется сразу */
+html.site-menu-open #dc-root{opacity:0}
+#dc-root{transition:opacity .25s}
 .site-menu{padding-bottom:calc(30px + env(safe-area-inset-bottom)) !important}
 /* меню — ровно по экрану (inset:0), пункты по центру; тёмный фон продлён вниз под «парящие» панели Safari */
 .site-menu::after{content:"";position:absolute;left:0;right:0;top:100%;height:50vh;background:#0f0e0c;pointer-events:none}
