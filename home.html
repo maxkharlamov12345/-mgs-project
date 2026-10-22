@@ -300,7 +300,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webki
     </div>
     <div class="salons-map" id="salonsMap">
       <picture>
-        <source media="(max-width:999px)" srcset="assets/salons/map-tall-v5.webp">
+        <source media="(max-width:999px)" srcset="assets/salons/map-tall-v6.webp">
         <img class="map-img" src="assets/salons/map-wide-v5.webp" alt="Карта фирменных салонов MGS MEBEL в Москве" decoding="async">
       </picture>
       <div class="pins" id="pins"></div>
@@ -576,8 +576,8 @@ $$('.seg-btn').forEach(btn=>btn.addEventListener('click',()=>{
 }));
 
 /* Картинка карты с метками — пока не загрузилась живая карта (или если не загрузится) */
-const PIN_POS={wide:[[51.94,65.33],[57.9,50.08],[42.1,34.67],[42.23,62.56]], tall:[[53.36,62.5],[71.32,49.57],[23.68,36.5],[24.08,60.15]]};
-const MSK_Y={wide:49.16, tall:48.79};
+const PIN_POS={wide:[[51.94,65.33],[57.9,50.08],[42.1,34.67],[42.23,62.56]], tall:[[55.45,63.88],[75.84,49.21],[21.77,34.37],[22.23,61.21]]};  // tall: v6 — тот же масштаб и центр, что у живой карты на телефоне
+const MSK_Y={wide:49.16, tall:50};   // tall v6: центр картинки = центр живой карты [37.578,55.740]
 const MAP_DIM={wide:{w:1600,h:1500,coreH:800}, tall:{w:600,h:2000,coreH:1100}};
 const pinsEl=$('#pins');
 pinsEl.innerHTML=SALONS.map((s,i)=>`<button class="pin-wrap" data-i="${i}" aria-label="${s.name}"><span class="pin" style="animation-delay:${i*.3}s"></span><span class="pin-label">${s.short}</span></button>`).join('');
@@ -587,7 +587,8 @@ function sizeMap(){
   const sec=$('#salons'), row=sec.querySelector('.seg-row'), img=map.querySelector('.map-img');
   const W=sec.clientWidth, Hh=sec.clientHeight; if(!W||!Hh) return;
   const boxH=Hh-(row.offsetTop+row.offsetHeight+22), mode=innerWidth<1000?'tall':'wide', d=MAP_DIM[mode];
-  const sc=Math.max(W/d.w, boxH/d.coreH), iw=d.w*sc, ih=d.h*sc, left=(W-iw)/2, top=Math.min(0,Math.max(Hh-ih, Hh/2-ih*MSK_Y[mode]/100));
+  const sc=mode==='tall' ? W/d.w : Math.max(W/d.w, boxH/d.coreH),   // телефон: масштаб как у живой карты (по ширине)
+        iw=d.w*sc, ih=d.h*sc, left=(W-iw)/2, top=Math.min(0,Math.max(Hh-ih, Hh/2-ih*MSK_Y[mode]/100));
   Object.assign(img.style,{left:left+'px',top:top+'px',width:iw+'px',height:ih+'px'});
   pinsEl.querySelectorAll('.pin-wrap').forEach((el,i)=>{ const p=PIN_POS[mode][i]; el.style.left=(left+iw*p[0]/100)+'px'; el.style.top=(top+ih*p[1]/100)+'px'; });
 }
