@@ -600,11 +600,30 @@ const MAP_DIM={wide:{w:1600,h:1500,coreH:800}, tall:{w:600,h:2000,coreH:1100}};
 const pinsEl=$('#pins');
 pinsEl.innerHTML=SALONS.map((s,i)=>`<button class="pin-wrap" data-i="${i}" aria-label="${s.name}"><span class="pin" style="animation-delay:${i*.3}s"></span><span class="pin-label">${s.short}</span></button>`).join('');
 pinsEl.querySelectorAll('.pin-wrap').forEach(el=>el.addEventListener('click',()=>showSalon(+el.dataset.i)));
+/* ПК: картинка-подложка откалибрована по координатам (Web Mercator), поэтому её можно поставить
+   ровно так же, как встанет живая карта — при загрузке карты ничего не прыгает (Макс 23.10) */
+const CAL_WIDE={k:336847.2, bx:-202776.93, by:-104563.14};   // пиксель картинки 1600×1500 = k·merc + b
+const mX=lng=>(lng+180)/360, mY=lat=>{ const r=lat*Math.PI/180; return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2; };
+const unX=x=>x*360-180, unY=y=>{ const n=Math.PI*(1-2*y); return 180/Math.PI*Math.atan(Math.sinh(n)); };
+const PC_PAD={top:180,bottom:170,left:160,right:160}, MSK_LAT=55.7558;
+function pcCamera(W,H){   // то же, что cameraForBounds у MapLibre: все салоны в кадре с отступами, Москва по центру по высоте
+  const xs=SALONS.map(s=>mX(s.lng)), ys=SALONS.map(s=>mY(s.lat));
+  const x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
+  const scale=Math.min((W-PC_PAD.left-PC_PAD.right)/(x1-x0), (H-PC_PAD.top-PC_PAD.bottom)/(y1-y0));   // px экрана на единицу меркатора
+  return {cx:(x0+x1)/2, cy:mY(MSK_LAT), scale, zoom:Math.log2(scale/512)};
+}
 function sizeMap(){
   const map=$('#salonsMap'); if(map.hidden || map.classList.contains('live')) return;
   const sec=$('#salons'), row=sec.querySelector('.seg-row'), img=map.querySelector('.map-img');
   const W=sec.clientWidth, Hh=sec.clientHeight; if(!W||!Hh) return;
   const boxH=Hh-(row.offsetTop+row.offsetHeight+22), mode=innerWidth<1000?'tall':'wide', d=MAP_DIM[mode];
+  if(mode==='wide'){
+    const c=pcCamera(W,Hh), sc=c.scale/CAL_WIDE.k;
+    const left=W/2+(-CAL_WIDE.bx/CAL_WIDE.k-c.cx)*c.scale, top=Hh/2+(-CAL_WIDE.by/CAL_WIDE.k-c.cy)*c.scale;
+    Object.assign(img.style,{left:left+'px',top:top+'px',width:d.w*sc+'px',height:d.h*sc+'px'});
+    pinsEl.querySelectorAll('.pin-wrap').forEach((el,i)=>{ const S=SALONS[i]; el.style.left=(W/2+(mX(S.lng)-c.cx)*c.scale)+'px'; el.style.top=(Hh/2+(mY(S.lat)-c.cy)*c.scale)+'px'; });
+    return;
+  }
   const sc=mode==='tall' ? W/d.w : Math.max(W/d.w, boxH/d.coreH),   // телефон: масштаб как у живой карты (по ширине)
         iw=d.w*sc, ih=d.h*sc, left=(W-iw)/2, top=Math.min(0,Math.max(Hh-ih, Hh/2-ih*MSK_Y[mode]/100));
   Object.assign(img.style,{left:left+'px',top:top+'px',width:iw+'px',height:ih+'px'});
@@ -650,8 +669,8 @@ function liveFit(){
   const mob=innerWidth<1000;
   // телефон: масштаб и центр по референсу Макса (23.10, iPhone 390px: зум 9.1, Москва чуть правее и выше центра); на других ширинах — тот же охват
   if(mob){ lmap.jumpTo({center:[37.578,55.740], zoom:9.1+Math.log2(el.clientWidth/390)}); return; }
-  const cam=lmap.cameraForBounds(b,{padding:{top:180,bottom:170,left:160,right:160}});
-  if(cam) lmap.jumpTo({center:[cam.center.lng,55.7558], zoom:cam.zoom});
+  const c=pcCamera(el.clientWidth, el.clientHeight);          // та же формула, что у картинки-подложки
+  lmap.jumpTo({center:[unX(c.cx), MSK_LAT], zoom:c.zoom});
 }
 function refitMap(){ if(!lmap) return; lmap.resize(); if(!mapTouched) liveFit(); }
 async function initLiveMap(){
