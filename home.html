@@ -113,6 +113,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webki
 .salons-map[hidden],.salons-list[hidden]{display:none!important}
 .map-img{position:absolute;max-width:none;display:block}
 .pins{position:absolute;inset:0;z-index:2}
+.salons-map:not(.live) .map-img{-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
 #map{position:absolute;inset:0;z-index:1;opacity:0;transition:opacity .5s ease;background:var(--bg)}
 .salons-map.live #map{opacity:1}
 /* живая карта плавно проявляется ПОВЕРХ картинки-заглушки, и только потом картинка с метками прячется — без резкой смены */
@@ -609,8 +610,13 @@ const PC_PAD={top:180,bottom:170,left:160,right:160}, MSK_LAT=55.7558;
 function pcCamera(W,H){   // то же, что cameraForBounds у MapLibre: все салоны в кадре с отступами, Москва по центру по высоте
   const xs=SALONS.map(s=>mX(s.lng)), ys=SALONS.map(s=>mY(s.lat));
   const x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
-  const scale=Math.min((W-PC_PAD.left-PC_PAD.right)/(x1-x0), (H-PC_PAD.top-PC_PAD.bottom)/(y1-y0));   // px экрана на единицу меркатора
-  return {cx:(x0+x1)/2, cy:mY(MSK_LAT), scale, zoom:Math.log2(scale/512)};
+  let scale=Math.min((W-PC_PAD.left-PC_PAD.right)/(x1-x0), (H-PC_PAD.top-PC_PAD.bottom)/(y1-y0));   // px экрана на единицу меркатора
+  const cx=(x0+x1)/2, cy=mY(MSK_LAT);
+  // подложка должна закрывать весь экран (широкие мониторы 21:9): если не хватает чуть-чуть (до 15%) — приближаем и карту, и подложку одинаково
+  const K=CAL_WIDE.k, X0=-CAL_WIDE.bx/K, X1=(1600-CAL_WIDE.bx)/K, Y0=-CAL_WIDE.by/K, Y1=(1500-CAL_WIDE.by)/K;
+  const need=Math.max(W/2/(cx-X0), W/2/(X1-cx), H/2/(cy-Y0), H/2/(Y1-cy));
+  if(need>scale && need<=scale*1.15) scale=need;
+  return {cx, cy, scale, zoom:Math.log2(scale/512)};
 }
 function sizeMap(){
   const map=$('#salonsMap'); if(map.hidden || map.classList.contains('live')) return;
@@ -663,20 +669,19 @@ function brandStyle(st){
 function loadMapLib(){ return new Promise((res,rej)=>{ if(window.maplibregl) return res();
   const css=document.createElement('link'); css.rel='stylesheet'; css.href='assets/maplibre/maplibre-gl.css'; document.head.appendChild(css);
   const js=document.createElement('script'); js.src='assets/maplibre/maplibre-gl.js'; js.onload=res; js.onerror=rej; document.head.appendChild(js); }); }
-function liveFit(){
-  if(!lmap) return; const el=$('#map'); if(!el.clientWidth||!el.clientHeight) return;
-  const b=new maplibregl.LngLatBounds(); SALONS.forEach(s=>b.extend([s.lng,s.lat]));
-  const mob=innerWidth<1000;
-  // телефон: масштаб и центр по референсу Макса (23.10, iPhone 390px: зум 9.1, Москва чуть правее и выше центра); на других ширинах — тот же охват
-  if(mob){ lmap.jumpTo({center:[37.578,55.740], zoom:9.1+Math.log2(el.clientWidth/390)}); return; }
-  const c=pcCamera(el.clientWidth, el.clientHeight);          // та же формула, что у картинки-подложки
-  lmap.jumpTo({center:[unX(c.cx), MSK_LAT], zoom:c.zoom});
+// вид карты: телефон — по референсу Макса (23.10, iPhone 390px: зум 9.1, Москва чуть правее и выше центра); ПК — та же формула, что у подложки
+function camFor(el){
+  const W=el.clientWidth||innerWidth, H=el.clientHeight||innerHeight;
+  if(innerWidth<1000) return {center:[37.578,55.740], zoom:9.1+Math.log2(W/390)};
+  const c=pcCamera(W,H); return {center:[unX(c.cx), MSK_LAT], zoom:c.zoom};
 }
+function liveFit(){ if(!lmap) return; const el=$('#map'); if(!el.clientWidth||!el.clientHeight) return; lmap.jumpTo(camFor(el)); }
 function refitMap(){ if(!lmap) return; lmap.resize(); if(!mapTouched) liveFit(); }
-async function initLiveMap(){
+async function initLiveMap(attempt=1){
   try{
-    const [, style]=await Promise.all([loadMapLib(), fetch('https://tiles.openfreemap.org/styles/dark').then(r=>r.json())]);
-    lmap=new maplibregl.Map({container:'map', style:brandStyle(style), center:[37.6173,55.7558], zoom:9.3, attributionControl:false,
+    const [, style]=await Promise.all([loadMapLib(), fetch('https://tiles.openfreemap.org/styles/dark').then(r=>{ if(!r.ok) throw new Error('style '+r.status); return r.json(); })]);
+    // сразу нужный вид — плитки грузятся один раз (на больших экранах карта появляется быстрее)
+    lmap=new maplibregl.Map({container:'map', style:brandStyle(style), ...camFor($('#map')), attributionControl:false,
       dragRotate:false, pitchWithRotate:false, scrollZoom:false, cooperativeGestures:true, fadeDuration:150, pixelRatio:Math.min(devicePixelRatio||1,2), maxTileCacheSize:isMob?60:200,
       locale:{'CooperativeGesturesHandler.WindowsHelpText':'Приближайте карту: Ctrl + колесо мыши','CooperativeGesturesHandler.MacHelpText':'Приближайте карту: ⌘ + колесо мыши','CooperativeGesturesHandler.MobileHelpText':'Двигайте карту двумя пальцами'}});
     lmap.touchZoomRotate.disableRotation();
@@ -688,10 +693,18 @@ async function initLiveMap(){
       new maplibregl.Marker({element:el, anchor:'top', offset:[0,-9]}).setLngLat([s.lng,s.lat]).addTo(lmap);
     });
     ['dragstart','zoomstart'].forEach(ev=>lmap.on(ev,e=>{ if(e.originalEvent) mapTouched=true; }));
-    lmap.once('load',()=>{ refitMap(); $('#salonsMap').classList.add('live');
-      setTimeout(()=>{ const im=$('#salonsMap .map-img'); if(im) im.removeAttribute('src'); $('#salonsMap source')?.removeAttribute('srcset'); },800); });
+    let shown=false;
+    const showLive=()=>{ if(shown) return; shown=true; refitMap(); $('#salonsMap').classList.add('live');
+      setTimeout(()=>{ const im=$('#salonsMap .map-img'); if(im) im.removeAttribute('src'); $('#salonsMap source')?.removeAttribute('srcset'); },800); };
+    lmap.once('load',showLive);
+    // если часть плиток грузится долго — всё равно показываем живую карту, как только готов стиль
+    setTimeout(()=>{ if(lmap.isStyleLoaded()) showLive(); else lmap.once('styledata',()=>setTimeout(showLive,1500)); },8000);
     new ResizeObserver(()=>requestAnimationFrame(refitMap)).observe($('#map'));
-  }catch(e){ /* остаётся картинка с метками */ }
+  }catch(e){
+    // не загрузилась (сеть) — пробуем ещё раз; пока — картинка с метками
+    if(lmap){ try{ lmap.remove(); }catch(_){} lmap=null; }
+    if(attempt<3) setTimeout(()=>initLiveMap(attempt+1), 3000*attempt);
+  }
 }
 let liveStarted=false; function startLive(){ if(liveStarted) return; liveStarted=true; initLiveMap(); }
 setTimeout(startLive, 3500);
