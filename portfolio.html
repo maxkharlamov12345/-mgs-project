@@ -208,34 +208,25 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   .lb-panel-head{display:none !important}
 }
 
-/* «#НАШИ РАБОТЫ» — бегущая строка: лаймовая лента + встречная контурная лента за ней */
-.rb-sec{position:relative;overflow:hidden}
-.rb-box{position:relative;height:110px}
-.rb-h{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
-.rb{position:absolute;left:0;right:0;top:50%;display:flex;overflow:hidden;white-space:nowrap}
-.rb-t{display:flex;flex:none;align-items:center;animation:rb-run 48s linear infinite;will-change:transform}
-.rb-front{z-index:2;background:#bfd630;color:#0f0e0c;padding:14px 0;transform:translateY(-50%)}
-.rb-i{font-weight:700;font-size:40px;line-height:1;letter-spacing:-.01em;padding:0 22px}
-.rb-s{font-size:22px;line-height:1}
-@keyframes rb-run{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media (max-width:999px){
-  .rb-box{height:76px}
-  .rb-front{padding:10px 0}
-    .rb-i{font-size:26px;padding:0 14px}
-  .rb-s{font-size:15px}
-    }
-@media (prefers-reduced-motion:reduce){ .rb-t{animation:none} }
+
+/* стикер — строчный элемент после текста: встаёт у конца последней строки, не налезает на текст при переносе */
+/* Заголовок «маркер + стикер» (Макс 23.10, вариант 6): тонкий текст, под ним прорисовывается лаймовый маркер, сверху прыгает стикер */
+.mk-w{position:relative;display:inline}
+.mk-t{background:linear-gradient(#bfd630,#bfd630) no-repeat 0 80%/0% .42em;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .1em;border-radius:.1em .3em .12em .25em;animation:mk-draw .8s cubic-bezier(.7,0,.2,1) .3s forwards}
+@keyframes mk-draw{to{background-size:100% .42em}}
+.mk-st{position:relative;display:inline-block;vertical-align:top;margin-left:-.55em;top:-.45em;z-index:2;white-space:nowrap;background:#f4f1ec;color:#0f0e0c;font-weight:800;font-size:max(12px,.22em);letter-spacing:0;line-height:1;padding:.5em .75em;border-radius:.7em;
+  transform:rotate(12deg) scale(0);box-shadow:0 8px 24px rgba(0,0,0,.4);animation:mk-pop .55s cubic-bezier(.3,1.7,.5,1) 1.05s forwards,mk-wob 3s ease-in-out 1.7s infinite}
+@keyframes mk-pop{to{transform:rotate(12deg) scale(1)}}
+@keyframes mk-wob{0%,100%{transform:rotate(12deg) scale(1)}50%{transform:rotate(4deg) scale(1.06)}}
+@media (prefers-reduced-motion:reduce){ .mk-t{animation:none;background-size:100% .42em} .mk-st{animation:none;transform:rotate(12deg)} }
 </style>
 </helmet>
 
 <div style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100vh">
 
   <!-- заголовок -->
-  <section class="top-sec rb-sec" style="padding: 44px 0 8px">
-    <h1 class="rb-h">Наши работы</h1>
-    <div class="rb-box">
-    <div class="rb rb-front" aria-hidden="true"><div class="rb-t"><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span></div></div>
-    </div>
+  <section class="pad top-sec" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
+    <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em"><span class="mk-w"><span class="mk-t">Наши работы</span><span class="mk-st" aria-hidden="true">#MGS</span></span></h1>
   </section>
 
   <!-- ленты: у всех одинаковая сетка, а открытие разное (REELS — рилсы, Комплекс — страница проекта, остальные — просмотр изделия) -->
