@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
+<title>Тест: оформление карточки «Комплекса» — MGS Mebel</title>
+<style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+20BD}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--bg:#0f0e0c;--tx:#f4f1ec;--panel:#151311;--chip:#26221f;--lime:#bfd630;--dim:#a89f92}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Onest,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.intro{max-width:640px;margin:0 auto;padding:22px 16px 6px;text-align:center;color:var(--dim);font-size:14px;line-height:1.5}.intro b{color:var(--tx)}
+.wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:36px 24px;padding:18px 0 60px}
+.v{width:min(390px,100vw)}
+.lbl{display:flex;gap:10px;align-items:flex-start;padding:0 12px 12px;min-height:70px}
+.lbl>b{flex:none;width:30px;height:30px;border-radius:50%;background:var(--lime);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:15px}
+.lbl h2{margin:3px 0 4px;font-size:17px;font-weight:600}.lbl p{margin:0;font-size:13px;line-height:1.45;color:var(--dim)}
+.ph{padding:0 5px}
+.card{position:relative;width:100%;aspect-ratio:4/5;border-radius:14px;overflow:hidden;background:#1d1a17}
+.card .m{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.num{position:absolute;left:10px;top:10px;z-index:3;height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:rgba(15,14,12,.7);font-size:13px}
+.zhk{color:var(--lime);font-size:13px;font-weight:500}
+.desc{font-size:14px;line-height:1.45;color:#d9d4cc}
+.arrow{width:44px;height:44px;border-radius:50%;background:var(--lime);color:#1c1a17;display:flex;align-items:center;justify-content:center;flex:none}
+
+/* 1 — градиент снизу */
+.v1 .info{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:70px 16px 16px;background:linear-gradient(to top,rgba(10,9,8,.92),rgba(10,9,8,.6) 55%,rgba(10,9,8,0));display:flex;align-items:flex-end;gap:12px}
+.v1 .t{flex:1;min-width:0} .v1 h3{margin:4px 0 6px;font-size:24px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
+.v1 .desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* 2 — панель под видео */
+.v2 .card{border-radius:14px 14px 0 0}
+.v2 .panel{background:var(--panel);border-radius:0 0 14px 14px;padding:16px 16px 18px}
+.v2 h3{margin:0 0 4px;font-size:22px;font-weight:500;letter-spacing:-.01em}
+.v2 .desc{margin:10px 0 14px}
+.v2 .go{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:999px;background:var(--lime);color:#1c1a17;font-weight:600;font-size:14px}
+
+/* 3 — стеклянная плашка */
+.v3 .glass{position:absolute;left:10px;right:10px;bottom:10px;z-index:2;padding:14px 14px 14px 16px;border-radius:16px;background:rgba(24,22,19,.55);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);border:1px solid rgba(244,241,236,.12);display:flex;gap:12px;align-items:center}
+.v3 .t{flex:1;min-width:0} .v3 h3{margin:0 0 2px;font-size:18px;font-weight:600}
+.v3 .desc{font-size:13px;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* 4 — плашки сверху, крупный заголовок снизу */
+.v4 .chips{position:absolute;left:10px;top:10px;right:10px;z-index:3;display:flex;flex-wrap:wrap;gap:6px}
+.v4 .chips span{height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:rgba(244,241,236,.94);color:#1c1a17;font-size:13px;font-weight:500}
+.v4 .chips span.dark{background:rgba(15,14,12,.7);color:var(--tx)}
+.v4 .bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:80px 16px 18px;background:linear-gradient(to top,rgba(10,9,8,.85),rgba(10,9,8,0))}
+.v4 h3{margin:0 0 8px;font-size:34px;font-weight:300;line-height:1.05;letter-spacing:-.02em}
+.v4 .desc{font-size:13px;color:#cfc9bf}
+
+/* 5 — журнальный: номер, тонкий заголовок слева сверху, описание снизу */
+.v5 .top{position:absolute;left:0;right:0;top:0;z-index:2;padding:16px 16px 60px;background:linear-gradient(to bottom,rgba(10,9,8,.8),rgba(10,9,8,0))}
+.v5 .no{font-size:13px;color:var(--lime);font-weight:600;letter-spacing:.08em}
+.v5 h3{margin:6px 0 0;font-size:30px;font-weight:300;line-height:1.05;letter-spacing:-.02em;max-width:85%}
+.v5 .bot{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:60px 16px 16px;background:linear-gradient(to top,rgba(10,9,8,.85),rgba(10,9,8,0));display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.v5 .desc{font-size:13px;max-width:72%}
+.v5 .more{flex:none;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(244,241,236,.5);display:inline-flex;align-items:center;font-size:13px}
+
+/* 6 — коротко + раскрыть описание */
+.v6 .info{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:60px 16px 16px;background:linear-gradient(to top,rgba(10,9,8,.9),rgba(10,9,8,0));transition:padding .3s}
+.v6 h3{margin:4px 0 0;font-size:22px;font-weight:600}
+.v6 .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.v6 .ib{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:rgba(244,241,236,.18);color:var(--tx);font:600 16px Onest,system-ui;cursor:pointer;transition:transform .3s}
+.v6 .more{max-height:0;overflow:hidden;transition:max-height .35s ease, margin .35s}
+.v6.open .more{max-height:160px;margin-top:10px}
+.v6.open .info{background:linear-gradient(to top,rgba(10,9,8,.96),rgba(10,9,8,.75) 70%,rgba(10,9,8,0))}
+.v6.open .ib{transform:rotate(45deg)}
+.v6 .go{display:inline-flex;margin-top:12px;height:38px;align-items:center;padding:0 16px;border-radius:999px;background:var(--lime);color:#1c1a17;font-weight:600;font-size:14px}
+</style></head><body>
+<div class="intro"><b>Варианты карточки «Комплекса»</b><br>Один и тот же проект в 6 вариантах: название, ЖК и описание. Выбери номер — сделаю так в ленте «Комплекс».</div>
+<div class="wrap">
+
+<section class="v v1"><div class="lbl"><b>1</b><div><h2>Подпись на градиенте</h2><p>Как в Instagram: снизу мягкое затемнение, на нём ЖК, название, 2 строки описания и стрелка.</p></div></div>
+<div class="ph"><div class="card"><video class="m" src="assets/p1-preview.mp4" poster="assets/t/p1-preview.webp" muted autoplay loop playsinline></video><span class="num">1 / 6</span>
+<div class="info"><div class="t"><div class="zhk">ЖК Уно · Москва · 2025</div><h3>Квартира в тёплых тонах</h3><div class="desc">Кухня до потолка, гардеробная, санузел, прихожая и гостиная — вся мебель в тёплом дубе и светлых матовых фасадах.</div></div><span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div></div></section>
+
+<section class="v v2"><div class="lbl"><b>2</b><div><h2>Панель под видео</h2><p>Видео чистое, без текста. Под ним тёмная панель: название, ЖК, описание и кнопка.</p></div></div>
+<div class="ph"><div class="card"><video class="m" src="assets/p1-preview.mp4" poster="assets/t/p1-preview.webp" muted autoplay loop playsinline></video><span class="num">1 / 6</span></div>
+<div class="panel"><h3>Квартира в тёплых тонах</h3><div class="zhk">ЖК Уно · Москва · 2025</div><div class="desc">Кухня до потолка, гардеробная, санузел, прихожая и гостиная — вся мебель в тёплом дубе и светлых матовых фасадах.</div><span class="go">Смотреть проект <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div></section>
+
+<section class="v v3"><div class="lbl"><b>3</b><div><h2>Стеклянная плашка</h2><p>Матовое «стекло» внизу видео: видео просвечивает, текст читается.</p></div></div>
+<div class="ph"><div class="card"><video class="m" src="assets/p1-preview.mp4" poster="assets/t/p1-preview.webp" muted autoplay loop playsinline></video><span class="num">1 / 6</span>
+<div class="glass"><div class="t"><h3>Квартира в тёплых тонах</h3><div class="zhk">ЖК Уно · Москва · 2025</div><div class="desc">Кухня до потолка, гардеробная, санузел, прихожая и гостиная — вся мебель в тёплом дубе и светлых матовых фасадах.</div></div><span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div></div></section>
+
+<section class="v v4"><div class="lbl"><b>4</b><div><h2>Плашки + крупный заголовок</h2><p>Сверху светлые плашки (ЖК, год, зоны), снизу крупное тонкое название и одна строка описания.</p></div></div>
+<div class="ph"><div class="card"><video class="m" src="assets/p1-preview.mp4" poster="assets/t/p1-preview.webp" muted autoplay loop playsinline></video>
+<div class="chips"><span class="dark">1 / 6</span><span>ЖК Уно</span><span>2025</span><span>5 зон</span></div>
+<div class="bottom"><h3>Квартира<br>в тёплых тонах</h3><div class="desc">Кухня, гардеробная, санузел, прихожая, гостиная</div></div></div></div></section>
+
+<section class="v v5"><div class="lbl"><b>5</b><div><h2>Журнальный</h2><p>Номер и тонкое название сверху, описание и «Смотреть» снизу — видео в центре свободно.</p></div></div>
+<div class="ph"><div class="card"><video class="m" src="assets/p1-preview.mp4" poster="assets/t/p1-preview.webp" muted autoplay loop playsinline></video>
+<div class="top"><div class="no">01 / 06 · ЖК УНО</div><h3>Квартира в тёплых тонах</h3></div>
+<div class="bot"><div class="desc">Кухня до потолка, гардеробная, санузел, прихожая и гостиная — вся мебель в тёплом дубе и светлых матовых фасадах.</div><span class="more">Смотреть</span></div></div></div></section>
+
+<section class="v v6" id="v6"><div class="lbl"><b>6</b><div><h2>Коротко + раскрыть</h2><p>По умолчанию только ЖК и название. Кнопка «+» раскрывает описание и кнопку проекта (нажми).</p></div></div>
+<div class="ph"><div class="card"><video class="m" src="assets/p1-preview.mp4" poster="assets/t/p1-preview.webp" muted autoplay loop playsinline></video><span class="num">1 / 6</span>
+<div class="info"><div class="row"><div><div class="zhk">ЖК Уно · Москва · 2025</div><h3>Квартира в тёплых тонах</h3></div><button class="ib" onclick="document.getElementById('v6').classList.toggle('open')" aria-label="Подробнее">+</button></div>
+<div class="more"><div class="desc">Кухня до потолка, гардеробная, санузел, прихожая и гостиная — вся мебель в тёплом дубе и светлых матовых фасадах.</div><span class="go">Смотреть проект</span></div></div></div></div></section>
+
+</div></body></html>
