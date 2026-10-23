@@ -269,14 +269,14 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 @media (max-width:999px){ .cx-open{left:10px;bottom:10px;height:40px;padding:0 16px;font-size:14px} }
 
-/* ТЕСТ: «Комплекс» на телефоне листается как рилсы — по одному проекту на экран, с примагничиванием; карточка 4:5 по центру экрана */
+/* ТЕСТ: «Комплекс» на телефоне листается как рилсы — каждый проект на весь экран (видео заполняет экран, заходит под часы и панель Safari), с примагничиванием */
 html.cx-snap{scroll-snap-type:y mandatory}
-html.cx-snap .chips-nav ~ .pad{padding-top:0 !important}
+html.cx-snap .chips-nav ~ .pad{padding:0 !important}
 .feed.cx1 .feed-col{gap:0 !important;padding-bottom:0 !important}
-.feed.cx1 .cx-pin{height:100svh;flex:none !important;display:flex;align-items:center;scroll-snap-align:start;scroll-snap-stop:always}
+.feed.cx1 .cx-pin{height:100lvh;flex:none !important;scroll-snap-align:start;scroll-snap-stop:always}
 .feed.cx1 .cx-pin > div[aria-hidden]{display:none}
-.feed.cx1 .cx-pin a.pin-btn{position:relative !important;top:auto !important;left:auto !important;right:auto !important;bottom:auto !important;width:100% !important;height:auto !important;aspect-ratio:4/5}
-.feed.cx1 .cx-open{bottom:calc(50svh - (100vw - 10px) * .625 + 10px)}
+.feed.cx1 .cx-pin a.pin-btn{border-radius:0 !important}
+.feed.cx1 .cx-open{bottom:calc(84px + env(safe-area-inset-bottom))}
 </style>
 </helmet>
 
