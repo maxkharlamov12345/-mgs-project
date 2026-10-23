@@ -697,10 +697,9 @@ function cxInfo(x, i, n) {
     (z.length ? '<span>' + z.length + ' ' + plural(z.length, 'зона', 'зоны', 'зон') + '</span>' : '') + '</div>' +
     '<div class="cx-bottom"><h3>' + esc(x.title) + '</h3>' + (z.length ? '<div class="cx-zones">' + esc(z.map(function (w, k) { return k ? w.charAt(0).toLowerCase() + w.slice(1) : w; }).join(', ')) + '</div>' : '') + '</div>';
 }
-// REELS в ленте — короткое превью 4:5 в стиле «Комплекса»: плашки (номер, зона, ЖК) и снизу название
+// REELS в ленте — короткое превью 4:5, поверх только номер
 function rpInfo(x, i, n) {
-  return '<div class="cx-chips"><span class="dark">' + (i + 1) + ' / ' + n + '</span>' + (x.zone ? '<span>' + esc(x.zone) + '</span>' : '') + (x.address ? '<span>' + esc(x.address) + '</span>' : '') + '</div>' +
-    '<div class="cx-bottom"><h3>' + esc(x.project) + '</h3><div class="cx-zones">Смотреть рилс ▸</div></div>';
+  return '<div class="cx-chips"><span class="dark">' + (i + 1) + ' / ' + n + '</span></div>';   // только номер (Макс 24.10)
 }
 // касание превью — полноценный просмотр рилсов («рилс-лента») с этого ролика
 function openReels(i) {
