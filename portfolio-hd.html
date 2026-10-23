@@ -64,7 +64,7 @@ html.menu-open .subchips,html.viewing .subchips{display:none}
 
 /* ---------- лента ---------- */
 /* в начале контент — с отступом под шапку; при прокрутке уходит под неё */
-#feed{padding:var(--top) 5px 0}
+#feed{padding:var(--top) 5px 0;min-height:calc(100vh + 2px);min-height:calc(100lvh + 2px)}  /* страница всегда чуть выше экрана: короткая лента (подфильтр) не возвращает панель Safari — иначе плашки дёргались вверх */
 @keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 .in{animation:up .5s cubic-bezier(.2,.7,.2,1) backwards}
 

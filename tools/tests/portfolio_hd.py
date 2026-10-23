@@ -110,6 +110,8 @@ with sync_playwright() as p:
     pg.tap('.sub[data-s="П-образная"]'); pg.wait_for_timeout(700); pg.screenshot(path=D+'h_sub.png')
     n=J("document.querySelectorAll('.tile').length")
     ok(0<n<allk and J("document.querySelector('.sub.on').dataset.s")=='П-образная','П-образная: %d из %d'%(n,allk))
+    pg.tap('.sub[data-s="Прямая"]'); pg.wait_for_timeout(500)
+    ok(J("document.documentElement.scrollHeight")>J("innerHeight"),'короткая лента (Прямая) всё равно выше экрана — панель Safari не дёргает плашки')
     pg.tap('.sub[data-s="Все"]'); pg.wait_for_timeout(500)
     ok(J("document.querySelectorAll('.tile').length")==allk,'«Все» возвращает все кухни')
     J("scrollTo(0,700)"); pg.wait_for_timeout(400); y0=J("scrollY")
