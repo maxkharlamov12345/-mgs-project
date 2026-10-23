@@ -252,6 +252,15 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 }
 .feed-sec + .feed-sec{margin-top:16px}
 @media (max-width:999px){ .feed-sec + .feed-sec{margin-top:5px} }
+
+/* ТЕСТ (Макс 23.10): лента без затемнений и текста поверх фото, без значка «развернуть»;
+   «Комплекс» — без белого названия и затемнения, ЖК — светлой плашкой в левом нижнем углу всегда */
+.ph-over,.ph-exp,.cx-title{display:none !important}
+.cx-big,.pin-btn:hover .cx-big,.pin-btn:focus-visible .cx-big{background:none !important;justify-content:flex-end !important;align-items:flex-start !important;padding:12px !important}
+.cx-big::before{display:none !important}
+.cx-more{height:32px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.94);color:#1c1a17 !important;font-size:13px !important;font-weight:500;text-shadow:none}
+.cx-more svg{display:none}
+@media (max-width:999px){ .cx-big{padding:8px !important} .cx-more{height:28px;padding:0 10px;font-size:12px !important} }
 </style>
 </helmet>
 
@@ -1132,6 +1141,14 @@ class Component extends DCLogic {
       if (t && t.querySelector('video')) { self._touchPin = t; self.focusPlay(); }
     };
     document.addEventListener('touchstart', this.onTouchPin, { passive: true });
+    // ТЕСТ: касание пальцем плитки «Комплекса» с роликом: первое — запускает ролик, второе — открывает проект
+    this.onCxClick = function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('.feed .cx-pin a.pin-btn') : null; if (!a) return;
+      var pin = a.closest('.cx-pin'); if (!pin.querySelector('video') || !self._lastTouch || Date.now() - self._lastTouch > 800) return;
+      if (self._armed !== pin) { e.preventDefault(); self._armed = pin; }
+    };
+    document.addEventListener('click', this.onCxClick, true);
+    document.addEventListener('touchstart', function (e) { self._lastTouch = Date.now(); var t = e.target && e.target.closest ? e.target.closest('.feed .pin') : null; if (self._armed && t !== self._armed) self._armed = null; }, { passive: true, capture: true });
     document.addEventListener('pointerdown', this.onTouchPin, { passive: true });
     // страховка: в режимах «одно видео» любое другое видео ленты, которое запустилось само, ставим на паузу
     this.onAnyPlay = function (e) {
