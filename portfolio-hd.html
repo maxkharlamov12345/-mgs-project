@@ -77,10 +77,12 @@ html.trk .lenta{will-change:transform;touch-action:none;padding-bottom:0}
 /* все карточки встают на одну высоту — под шапкой (--top) и целиком помещаются на экране */
 .card.reel{height:min(177.78vw, calc(100svh - var(--top) - 5px))}
 /* то, что выше и ниже текущей карточки, — притемнено градиентом: глаз смотрит на текущую */
-.lenta .card::after{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0;transition:opacity .35s ease}
-.lenta .card.above::after{opacity:1;background:linear-gradient(to bottom, rgba(15,14,12,.98), rgba(15,14,12,.82))}
-.lenta .card.below::after{opacity:1;background:linear-gradient(to top, rgba(15,14,12,.98), rgba(15,14,12,.78))}
-.lenta .card.above .num,.lenta .card.below .num{opacity:0}  /* у притемнённых — без счётчика */
+/* затемнение (.dim) и плашки меняются ВМЕСТЕ со сдвигом ленты: JS ставит прозрачность по положению карточки
+   и ту же длительность/кривую, что у сдвига (trkDims) — без мигания. Свой слой (translateZ) — iPhone не рисует видео поверх */
+.card .dim{position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0;background:linear-gradient(to top, rgba(15,14,12,.98), rgba(15,14,12,.78))}
+.card.up .dim{background:linear-gradient(to bottom, rgba(15,14,12,.98), rgba(15,14,12,.82))}
+.card .dim,.card .num,.card .cx-chips,.card .cx-bottom,.card .snd,.card .prog,.card .play-ico{-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.card .play-ico{transform:translate(-50%,-50%) translateZ(0)}
 .card.cx{aspect-ratio:4/5;border-radius:14px}
 @media (min-width:760px){
   .card.reel{width:calc((100svh - var(--top) - 5px) * .5625);height:calc(100svh - var(--top) - 5px)}
@@ -106,7 +108,6 @@ html.trk .lenta{will-change:transform;touch-action:none;padding-bottom:0}
 .cx-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:90px 16px 18px;background:linear-gradient(to top,rgba(10,9,8,.85),rgba(10,9,8,0));pointer-events:none}
 .cx-bottom h3{margin:0 0 8px;font-size:34px;font-weight:300;line-height:1.05;letter-spacing:-.02em;text-wrap:balance}
 .cx-zones{font-size:13px;color:#cfc9bf;line-height:1.4}
-.lenta .card.above .cx-chips,.lenta .card.below .cx-chips{opacity:0}
 @media (min-width:760px){ .cx-bottom h3{font-size:40px} .cx-zones{font-size:14px} }
 /* просмотр рилсов (касание превью REELS): рилс-лента на весь экран — шапки нет, ролики 9:16 от верха */
 .rvl{padding:5px 0 calc(100lvh - var(--ch, 400px) - 10px)}
@@ -686,10 +687,24 @@ window.addEventListener('scroll', function () {
    Без прокрутки окна Safari не дёргает экран (панели, инерция, доводка scrollTo). */
 var T = { el: null, i: 0, y: 0, drag: false, axis: null, x0: 0, y0: 0, dy: 0, lastY: 0, lastT: 0, v: 0, dragEnd: 0, far: false, wheelT: 0, wheelUsed: false };
 function trkOff(i) { var c = S.cards[i], c0 = S.cards[0]; return c && c0 ? c.offsetTop - c0.offsetTop : 0; }
+var EASE = 'cubic-bezier(.22,.8,.24,1)';
 function trkApply(y, ms) {
   if (!T.el) return; T.y = y;
-  T.el.style.transition = ms ? 'transform ' + ms + 'ms cubic-bezier(.22,.8,.24,1)' : 'none';
+  T.el.style.transition = ms ? 'transform ' + ms + 'ms ' + EASE : 'none';
   T.el.style.transform = 'translate3d(0,' + (-y).toFixed(1) + 'px,0)';
+  trkDims(y, ms);
+}
+// затемнение соседей и плашки — по положению ленты, одновременно со сдвигом (без скачков классов)
+function trkDims(y, ms) {
+  var tr = ms ? 'opacity ' + ms + 'ms ' + EASE : 'none';
+  S.cards.forEach(function (c, k) {
+    var off = trkOff(k), h = c.offsetHeight || 1, d = Math.min(1, Math.abs(off - y) / (h * .6));
+    if (!c._dim) { c._dim = $('.dim', c); c._ov = $$('.num,.cx-chips,.cx-bottom', c); }
+    if (d > .02) c.classList.toggle('up', off < y);
+    if (c._dim) { c._dim.style.transition = tr; c._dim.style.opacity = d.toFixed(3); }
+    var o = Math.max(0, 1 - d * 1.6).toFixed(3);
+    c._ov.forEach(function (e) { e.style.transition = tr; e.style.opacity = o; });
+  });
 }
 function trkSet(el) { T.el = el || null; T.drag = false; de.classList.toggle('trk', !!T.el); if (T.el) jump(0); }
 function trkGo(i, ms) {
@@ -775,17 +790,17 @@ function lentaHTML(f) {
     if (reels) return '<div class="card reel' + anim + '" data-src="' + esc(x.src) + '">' +
       '<img class="poster" src="' + esc(reelPoster(x.src)) + '" alt="" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
       '<video muted playsinline loop preload="none"></video>' +
-      '<span class="num">' + (i + 1) + ' / ' + n + '</span><span class="play-ico">' + PLAY + '</span><span class="spin"></span>' +
+      '<i class="dim"></i><span class="num">' + (i + 1) + ' / ' + n + '</span><span class="play-ico">' + PLAY + '</span><span class="spin"></span>' +
       '<button class="snd" aria-label="Звук">' + SND_OFF + SND_ON + '</button>' +
       '<div class="prog" aria-label="Перемотка"><b><i></i></b></div></div>';
     if (f === 'REELS') return '<div class="card cx rp" data-reel="' + i + '" data-src="' + esc(x.src.replace(/\.mp4$/, '-preview.mp4')) + '" aria-label="Открыть рилс">' +
       '<img class="poster" src="' + esc(reelPoster(x.src)) + '" alt="" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
-      '<video muted playsinline loop preload="none"></video><span class="spin"></span>' + rpInfo(x, i, n) + '</div>';
+      '<video muted playsinline loop preload="none"></video><span class="spin"></span><i class="dim"></i>' + rpInfo(x, i, n) + '</div>';
     var poster = x.coverPoster ? 'assets/t/' + base(x.coverPoster) + '.webp' : thumb(x.cover);
     return '<div class="card cx' + anim + '" data-href="' + esc(x.href) + '"' + (x.coverVideo ? ' data-src="' + esc(x.coverVideo) + '"' : '') + ' aria-label="' + esc(x.title) + '">' +
       '<img class="poster" src="' + esc(poster) + '" alt="' + esc(x.title) + '" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
       (x.coverVideo ? '<video muted playsinline loop preload="none"></video><span class="spin"></span>' : '') +
-      cxInfo(x, i, n) + '</div>';
+      '<i class="dim"></i>' + cxInfo(x, i, n) + '</div>';
   }).join('') + '</div>';
 }
 // «Комплекс», вариант 4 (Макс 24.10): сверху плашки (номер, ЖК, год, сколько зон), снизу крупное тонкое название и строка зон

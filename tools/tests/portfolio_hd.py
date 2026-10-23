@@ -58,7 +58,7 @@ with sync_playwright() as p:
     ok(set(s2['loaded'])<= {0,1},'загружены только текущий и следующий: %s'%s2['loaded'])
     swipe(-150, 500); s=st()
     ok(s['act']==1 and abs(top(1)-5)<2 and s['y']==0,'медленный свайп → доезжает до 2-го (верх %.0f)'%top(1))
-    swipe(-70, 40, n=3)
+    swipe(-70, 20, n=2)
     ok(st()['ti']==2 and abs(top(2)-5)<2,'быстрый короткий флик (70 px) — к следующему')
     swipe(-40, 700)
     ok(st()['ti']==2 and abs(top(2)-5)<2,'палец протянул 40 px медленно — возвращает на место')
@@ -68,6 +68,7 @@ with sync_playwright() as p:
     ok(s['act']==3 and s['playing']==[3],'4-й рилс активен и играет один')
     ok(0 not in s['loaded'],'дальние выгружены: %s'%s['loaded'])
     ok(J("MGS_TEST.cards[2].classList.contains('above') && MGS_TEST.cards[4].classList.contains('below')"),'соседние притемнены')
+    ok(J("+getComputedStyle(MGS_TEST.cards[2].querySelector('.dim')).opacity")>0.95 and J("+getComputedStyle(MGS_TEST.cards[3].querySelector('.dim')).opacity")<0.05 and J("+getComputedStyle(MGS_TEST.cards[3].querySelector('.num')).opacity")>0.95 and J("+getComputedStyle(MGS_TEST.cards[4].querySelector('.num')).opacity")<0.05,'затемнение и счётчик — по положению ленты (текущая чистая, соседи тёмные)')
     c3="MGS_TEST.cards[3]"
     box=J(c3+".getBoundingClientRect().toJSON()")
     pg.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']*0.4); pg.wait_for_timeout(500)
