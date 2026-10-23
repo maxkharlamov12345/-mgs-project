@@ -255,7 +255,8 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 
 /* ТЕСТ (Макс 23.10): лента без затемнений и текста поверх фото, без значка «развернуть»;
    «Комплекс» — без белого названия и затемнения, ЖК — светлой плашкой в левом нижнем углу всегда */
-.ph-over,.ph-exp,.cx-title{display:none !important}
+.ph-over,.ph-exp,.cx-title,.cx-more{display:none !important}
+.pin-btn:hover .pin-img{transform:none !important}  /* без приближения фото при наведении/касании */
 .cx-big,.pin-btn:hover .cx-big,.pin-btn:focus-visible .cx-big{background:none !important;justify-content:flex-end !important;align-items:flex-start !important;padding:12px !important}
 .cx-big::before{display:none !important}
 .cx-more{height:32px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.94);color:#1c1a17 !important;font-size:13px !important;font-weight:500;text-shadow:none}
@@ -1141,14 +1142,6 @@ class Component extends DCLogic {
       if (t && t.querySelector('video')) { self._touchPin = t; self.focusPlay(); }
     };
     document.addEventListener('touchstart', this.onTouchPin, { passive: true });
-    // ТЕСТ: касание пальцем плитки «Комплекса» с роликом: первое — запускает ролик, второе — открывает проект
-    this.onCxClick = function (e) {
-      var a = e.target && e.target.closest ? e.target.closest('.feed .cx-pin a.pin-btn') : null; if (!a) return;
-      var pin = a.closest('.cx-pin'); if (!pin.querySelector('video') || !self._lastTouch || Date.now() - self._lastTouch > 800) return;
-      if (self._armed !== pin) { e.preventDefault(); self._armed = pin; }
-    };
-    document.addEventListener('click', this.onCxClick, true);
-    document.addEventListener('touchstart', function (e) { self._lastTouch = Date.now(); var t = e.target && e.target.closest ? e.target.closest('.feed .pin') : null; if (self._armed && t !== self._armed) self._armed = null; }, { passive: true, capture: true });
     document.addEventListener('pointerdown', this.onTouchPin, { passive: true });
     // страховка: в режимах «одно видео» любое другое видео ленты, которое запустилось само, ставим на паузу
     this.onAnyPlay = function (e) {
@@ -1216,7 +1209,8 @@ class Component extends DCLogic {
   feedSrc(v) { var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; if (!w) return w; w = this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; return w.indexOf('#') < 0 ? w + '#t=0.001' : w; }
   // заставка плитки рилса = первый кадр её превью (<имя>-preview.jpg), иначе при запуске картинка «прыгает»
   tilePoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.jpg').replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : fallback; }
-  slideOn() { try { return document.documentElement.classList.contains('mgs-focus'); } catch (e) { return false; } }
+  // ТЕСТ (Макс 23.10): превью-видео играют сами, как только видны и загрузились (как на ПК), не по касанию; на телефоне — лёгкие -mini
+  slideOn() { return false; }
   focusPlay() {
     var self0 = this, pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
     if (!this.slideOn()) {  // обычная сетка — играют все видимые
