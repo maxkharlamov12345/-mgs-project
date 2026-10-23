@@ -250,11 +250,10 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   .feed-col:last-child{padding-bottom:0}
   .feed-sec:last-child .feed-col{padding-bottom:70px}
 }
-/* подпись раздела в сплошной ленте: тонкий текст с лаймовым маркером, как заголовок «Наши работы» */
-.sec-ttl{display:flex;justify-content:center;padding:34px 0 18px}
-.sec-ttl span{font-size:40px;font-weight:300;line-height:1.05;letter-spacing:-.02em;padding:0 .12em;
-  background:linear-gradient(#bfd630,#bfd630) no-repeat 0 80%/100% .42em;border-radius:.1em .3em .12em .25em}
-@media (max-width:999px){ .sec-ttl{padding:22px 0 12px} .sec-ttl span{font-size:28px} }
+/* подпись раздела в сплошной ленте: серый прямоугольник во всю ширину ленты (как плашки снизу), текст внутри */
+.sec-ttl{display:flex;align-items:center;justify-content:center;height:72px;margin:0 auto 16px;max-width:1920px;border-radius:18px;background:#26221f}
+.sec-ttl span{font-size:24px;font-weight:500;letter-spacing:-.01em;color:#f4f1ec}
+@media (max-width:999px){ .sec-ttl{height:56px;margin-bottom:5px;border-radius:18px} .sec-ttl span{font-size:19px} }
 .feed-sec + .feed-sec{margin-top:16px}
 @media (max-width:999px){ .feed-sec + .feed-sec{margin-top:5px} }
 </style>
