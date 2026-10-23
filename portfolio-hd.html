@@ -1275,7 +1275,7 @@ class Component extends DCLogic {
   // ПО ПОРЯДКУ: видео ленты грузятся по одному, в порядке плиток; следующее — когда у текущего появился кадр
   pumpVid() {
     var self = this, b = this._vBusy;
-    if (b && document.body.contains(b.el) && !b.el.classList.contains('ready') && Date.now() - b.t < 6000) return;
+    if (b && document.body.contains(b.el) && !b.el.classList.contains('ready') && Date.now() - b.t < 1500) return;  // ТЕСТ: не ждём кадр дольше 1,5 с (iPhone в энергосбережении кадр не даёт — раньше каждое видео ждало 6 с)
     this._vBusy = null;
     var list = []; (this._vq || []).forEach(function (el) { if (document.body.contains(el)) list.push(el); });
     this._vq = list;
@@ -1285,7 +1285,7 @@ class Component extends DCLogic {
     if (!next) return;
     next.preload = 'auto'; next.src = self.feedSrc(next); this._vBusy = { el: next, t: Date.now() };
     if (!self.slideOn()) { var pr = next.play(); if (pr && pr.catch) pr.catch(function () {}); }
-    clearTimeout(this._vT); this._vT = setTimeout(function () { self.pumpVid(); }, 6100);
+    clearTimeout(this._vT); this._vT = setTimeout(function () { self.pumpVid(); }, 1600);
   }
   isLocal(src) { return !!src && (src.indexOf('assets/') === 0 || src.indexOf('data:') === 0 || src.indexOf('blob:') === 0); }
 
