@@ -229,7 +229,7 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
      считает шапкой и заливает зону под часами — лента переставала уходить под часы */
   .site-hd{position:fixed;left:0;right:0;width:max-content;margin:0 auto}  /* без transform — иначе кнопки внутри (fixed) встают относительно шапки */
   .site-hd::before{display:none}
-  .site-logo img{height:40px}  /* по высоте кружков телефона и меню */
+  .site-logo img{height:34px}
   .site-call,.site-menu-btn{width:40px;height:40px;top:calc(env(safe-area-inset-top) + (var(--site-hd) - 40px)/2)}
   .site-call{display:flex;align-items:center;justify-content:center;position:fixed;z-index:46;left:var(--site-side);border-radius:50%;color:#f4f1ec;pointer-events:auto;
     background:rgba(30,27,24,.72);border:1px solid rgba(244,241,236,.12);text-decoration:none}
