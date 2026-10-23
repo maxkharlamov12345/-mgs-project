@@ -95,6 +95,15 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 .cx-zones{font-size:13px;color:#cfc9bf;line-height:1.4}
 .lenta .card.above .cx-chips,.lenta .card.below .cx-chips{opacity:0}
 @media (min-width:760px){ .cx-bottom h3{font-size:40px} .cx-zones{font-size:14px} }
+/* просмотр рилсов (касание превью REELS): рилс-лента на весь экран — шапки нет, ролики 9:16 от верха */
+.rvl{padding:5px 0 calc(100lvh - var(--ch, 400px) - 10px)}
+.rvl .card.reel{height:min(177.78vw, calc(100svh - 10px))}
+@media (min-width:760px){ .rvl .card.reel{width:calc((100svh - 10px) * .5625);height:calc(100svh - 10px)} }
+.rvl .num{top:10px}
+html.rv .vcount{display:none !important}
+.rvl .prog{bottom:8px} .rvl .snd{bottom:40px}  /* в просмотре плашек снизу нет — полоска и звук у края ролика */
+html.rv .vclose{top:calc(10px + env(safe-area-inset-top))}
+.rvl .card.reel .num{left:10px}
 /* кружок загрузки */
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:none;position:absolute;left:50%;top:50%;z-index:3;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:3px solid rgba(244,241,236,.25);border-top-color:var(--lime);animation:spin .8s linear infinite;pointer-events:none}
@@ -550,7 +559,10 @@ function projectsRaw() {
 }
 var PRS = projectsRaw(), REELS = [], ITEMS = [];
 PRS.forEach(function (pr) {
-  (pr.reels || []).forEach(function (r) { REELS.push({ src: r.src, poster: r.poster, project: pr.title, href: pr.href }); });
+  (pr.reels || []).forEach(function (r) {
+    var zone = ''; (pr.items || []).forEach(function (it) { (it.videos || []).forEach(function (v) { if (v.src === r.src) zone = it.name; }); });
+    REELS.push({ src: r.src, poster: r.poster, project: pr.title, href: pr.href, address: pr.address || '', zone: zone });
+  });
   (pr.items || []).forEach(function (it) { if ((it.photos || []).length) ITEMS.push({ name: it.name, type: it.type, photos: it.photos || [], videos: it.videos || [], text: it.text || '',
     price: it.price || '', korpus: it.korpus || '—', fasady: it.fasady || '—', furn: it.furn || '—', project: pr.title, href: pr.href, address: pr.address || '', priceDate: pr.priceDate || '' }); });
 });
@@ -584,13 +596,13 @@ var jump = function (y) { var sb = de.style.scrollBehavior; de.style.scrollBehav
 var P = { touch: false, y0: 0, i0: 0, t0: 0, anim: 0, animating: false, cur: 0, lastY: 0, lastT: 0, v: 0, idle: 0, free: false };
 function killMomentum() { de.style.overflow = 'hidden'; void de.offsetHeight; requestAnimationFrame(function () { de.style.overflow = ''; }); }
 function pages() {
-  var list = S.viewing ? (S.vms || []) : (S.feed === 'REELS' || S.feed === 'Комплекс' ? S.cards : []), y = window.scrollY;
+  var list = S.rv ? S.cards : S.viewing ? (S.vms || []) : (S.feed === 'REELS' || S.feed === 'Комплекс' ? S.cards : []), y = window.scrollY;
   var off = S.viewing ? 5 : topPx();
   return list.map(function (el, i) { return { el: el, y: i === 0 ? 0 : Math.max(0, Math.round(el.getBoundingClientRect().top + y - off)), h: el.offsetHeight }; });
 }
 function topPx() { return parseFloat(getComputedStyle(feedEl).paddingTop) || 72; }   // высота, на которую встают карточки
 function nearest(ps) { var y = window.scrollY, b = 0, bd = 1e9; ps.forEach(function (p, i) { var d = Math.abs(p.y - y); if (d < bd) { bd = d; b = i; } }); return b; }
-function inFree(ps) { return S.viewing && ps.length && window.scrollY > ps[ps.length - 1].y + 40; }   // описание под фото — листается свободно
+function inFree(ps) { return S.viewing && !S.rv && ps.length && window.scrollY > ps[ps.length - 1].y + 40; }   // описание под фото — листается свободно
 function animTo(y, ms) {
   cancelAnimationFrame(P.anim);
   var y0 = window.scrollY, d = y - y0, t0 = performance.now();
@@ -617,7 +629,7 @@ document.addEventListener('touchend', function () {
   var dy = window.scrollY - P.y0, dt = Math.max(1, performance.now() - P.t0), v = P.v;
   if (P.free && dy > -40) return;                                   // в описании — свободно
   var last = ps.length - 1, i = P.i0, h = ps[i].h || window.innerHeight;
-  if (S.viewing && i === last && dy > 0) return;                    // с последнего фото вниз — к описанию, свободно
+  if (S.viewing && !S.rv && i === last && dy > 0) return;                    // с последнего фото вниз — к описанию, свободно
   var go = Math.abs(dy) > Math.min(90, h * .15) || Math.abs(v) > .45 || (Math.abs(dy) > 20 && Math.abs(dy) / dt > .35);
   var dir = dy !== 0 ? (dy > 0 ? 1 : -1) : (v > 0 ? 1 : -1);
   goPage(go ? i + dir : i, ps);
@@ -658,7 +670,7 @@ function stopAll() { $$('video', feedEl).forEach(function (v) { try { v.pause();
 
 /* ---------- рилс-лента ---------- */
 function lentaHTML(f) {
-  var reels = f === 'REELS', list = reels ? REELS : CX, n = list.length;
+  var reels = f === 'REELS-full', list = f === 'Комплекс' ? CX : REELS, n = list.length;
   if (!n) return '<div class="empty">Скоро здесь появятся работы</div>';
   return '<div class="lenta">' + list.map(function (x, i) {
     var anim = '';  // без анимации появления — сдвиг карточек мешал листанию
@@ -668,6 +680,9 @@ function lentaHTML(f) {
       '<span class="num">' + (i + 1) + ' / ' + n + '</span><span class="play-ico">' + PLAY + '</span><span class="spin"></span>' +
       '<button class="snd" aria-label="Звук">' + SND_OFF + SND_ON + '</button>' +
       '<div class="prog" aria-label="Перемотка"><b><i></i></b></div></div>';
+    if (f === 'REELS') return '<div class="card cx rp" data-reel="' + i + '" data-src="' + esc(x.src.replace(/\.mp4$/, '-preview.mp4')) + '" aria-label="Открыть рилс">' +
+      '<img class="poster" src="' + esc(reelPoster(x.src)) + '" alt="" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
+      '<video muted playsinline loop preload="none"></video><span class="spin"></span>' + rpInfo(x, i, n) + '</div>';
     var poster = x.coverPoster ? 'assets/t/' + base(x.coverPoster) + '.webp' : thumb(x.cover);
     return '<div class="card cx' + anim + '" data-href="' + esc(x.href) + '"' + (x.coverVideo ? ' data-src="' + esc(x.coverVideo) + '"' : '') + ' aria-label="' + esc(x.title) + '">' +
       '<img class="poster" src="' + esc(poster) + '" alt="' + esc(x.title) + '" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
@@ -681,6 +696,27 @@ function cxInfo(x, i, n) {
   return '<div class="cx-chips"><span class="dark">' + (i + 1) + ' / ' + n + '</span>' + (x.address ? '<span>' + esc(x.address) + '</span>' : '') + (y ? '<span>' + y + '</span>' : '') +
     (z.length ? '<span>' + z.length + ' ' + plural(z.length, 'зона', 'зоны', 'зон') + '</span>' : '') + '</div>' +
     '<div class="cx-bottom"><h3>' + esc(x.title) + '</h3>' + (z.length ? '<div class="cx-zones">' + esc(z.map(function (w, k) { return k ? w.charAt(0).toLowerCase() + w.slice(1) : w; }).join(', ')) + '</div>' : '') + '</div>';
+}
+// REELS в ленте — короткое превью 4:5 в стиле «Комплекса»: плашки (номер, зона, ЖК) и снизу название
+function rpInfo(x, i, n) {
+  return '<div class="cx-chips"><span class="dark">' + (i + 1) + ' / ' + n + '</span>' + (x.zone ? '<span>' + esc(x.zone) + '</span>' : '') + (x.address ? '<span>' + esc(x.address) + '</span>' : '') + '</div>' +
+    '<div class="cx-bottom"><h3>' + esc(x.project) + '</h3><div class="cx-zones">Смотреть рилс ▸</div></div>';
+}
+// касание превью — полноценный просмотр рилсов («рилс-лента») с этого ролика
+function openReels(i) {
+  if (S.viewing) return;
+  S.feedY = window.scrollY; S.feedCards = S.cards;
+  S.cards.forEach(unloadV); S.active = null;
+  viewEl.innerHTML = lentaHTML('REELS-full').replace('<div class="lenta">', '<div class="lenta rvl">');
+  S.rv = true; S.viewing = true;
+  try { history.pushState({ mgsView: 1 }, ''); S.pushed = true; } catch (e) { S.pushed = false; }
+  killMomentum(); cancelAnimationFrame(P.anim); P.animating = false;
+  de.classList.add('viewing', 'rv'); de.classList.remove('vfree');
+  S.cards = $$('.card', viewEl); S.cards.forEach(bindCard);
+  var l = $('.lenta', viewEl), last = S.cards[S.cards.length - 1]; if (l && last) l.style.setProperty('--ch', last.offsetHeight + 'px');
+  var c = S.cards[i] || S.cards[0];
+  jump(i === 0 ? 0 : Math.round(c.getBoundingClientRect().top + window.scrollY - 5));
+  P.cur = S.cards.indexOf(c); setActive(c);
 }
 // запас снизу — чтобы и последняя карточка вставала наверх
 function fitPad() { var l = $('.lenta', feedEl), c = S.cards[S.cards.length - 1]; if (l && c) l.style.setProperty('--ch', c.offsetHeight + 'px'); }
@@ -697,7 +733,10 @@ function bindCard(card) {
   }
   card.addEventListener('click', function (e) {
     if (e.target.closest('.snd') || e.target.closest('.prog')) return;
-    if (!reel) { var h = card.getAttribute('data-href'); if (h) location.href = h; return; }
+    if (!reel) {
+      if (card.hasAttribute('data-reel')) { if (card !== S.active) { goPage(S.cards.indexOf(card)); return; } openReels(+card.getAttribute('data-reel')); return; }
+      var h = card.getAttribute('data-href'); if (h) location.href = h; return;
+    }
     if (card !== S.active) { goPage(S.cards.indexOf(card)); return; }
     if (v.paused) { card._userPaused = false; card.classList.remove('paused'); playV(card); }
     else { card._userPaused = true; v.pause(); card.classList.add('paused'); }
@@ -746,26 +785,26 @@ function setActive(card) {
 }
 // активная — карточка, верх которой ближе всего к верху экрана
 function pickActive() {
-  if (S.viewing || !S.cards.length) return;
+  if ((S.viewing && !S.rv) || !S.cards.length) return;
   var best = null, bd = 1e9;
-  var T = topPx();
+  var T = S.rv ? 5 : topPx();
   S.cards.forEach(function (c) { var d = Math.abs(c.getBoundingClientRect().top - T); if (d < bd) { bd = d; best = c; } });
   if (best) setActive(best);
 }
 var sRaf = 0;
 window.addEventListener('scroll', function () {
-  if (S.viewing) { vScroll(); return; }
+  if (S.viewing && !S.rv) { vScroll(); return; }
   if (sRaf) return; sRaf = requestAnimationFrame(function () { sRaf = 0; pickActive(); });
 }, { passive: true });
 // полоска прогресса у активного рилса
 (function prog() {
   var c = S.active;
-  if (c && c._v && c._v.duration && !S.viewing) { var pg = $('.prog', c); if (pg && !pg.classList.contains('drag')) $('i', pg).style.width = (c._v.currentTime / c._v.duration * 100) + '%'; }
+  if (c && c._v && c._v.duration && (!S.viewing || S.rv)) { var pg = $('.prog', c); if (pg && !pg.classList.contains('drag')) $('i', pg).style.width = (c._v.currentTime / c._v.duration * 100) + '%'; }
   requestAnimationFrame(prog);
 })();
 // iPhone в энергосбережении не даёт видео стартовать само — первое касание запускает
-document.addEventListener('touchend', function () { var c = S.active; if (c && c._v && c._v.paused && !c._userPaused && !S.viewing) playV(c); }, { passive: true });
-document.addEventListener('visibilitychange', function () { if (document.hidden) stopPlaying(); else if (S.active && !S.active._userPaused && !S.viewing) playV(S.active); });
+document.addEventListener('touchend', function () { var c = S.active; if (c && c._v && c._v.paused && !c._userPaused && (!S.viewing || S.rv)) playV(c); }, { passive: true });
+document.addEventListener('visibilitychange', function () { if (document.hidden) stopPlaying(); else if (S.active && !S.active._userPaused && (!S.viewing || S.rv)) playV(S.active); });
 function stopPlaying() { $$('video').forEach(function (v) { v.pause(); }); }
 
 /* ---------- сетка ---------- */
@@ -839,10 +878,13 @@ function closeView(fromPop) {
   $$('video', viewEl).forEach(function (v) { v.removeAttribute('src'); try { v.load(); } catch (e) {} });
   viewEl.innerHTML = ''; S.vms = [];
   killMomentum(); cancelAnimationFrame(P.anim); P.animating = false;
-  de.classList.remove('viewing', 'vfree');
+  var wasRv = S.rv;
+  if (wasRv) { S.rv = false; S.cards = S.feedCards || []; S.active = null; }
+  de.classList.remove('viewing', 'vfree', 'rv');
   jump(S.feedY); var fy = S.feedY; P.cur = Math.max(0, S.cards.indexOf(S.active)); requestAnimationFrame(function () { if (Math.abs(window.scrollY - fy) > 2) jump(fy); });
   if (!fromPop && S.pushed) { S.pushed = false; history.back(); }
   S.pushed = false;
+  if (wasRv) requestAnimationFrame(function () { requestAnimationFrame(pickActive); });
 }
 $('#vclose').addEventListener('click', function () { closeView(false); });
 window.addEventListener('popstate', function () { if (S.viewing) { S.pushed = false; closeView(true); } });

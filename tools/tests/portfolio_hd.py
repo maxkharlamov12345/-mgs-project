@@ -4,7 +4,8 @@ from playwright.sync_api import sync_playwright
 import re, subprocess
 D='/tmp/mgs-hd/'; W=D+'webm/'; os.makedirs(W, exist_ok=True)
 # Chromium в Playwright не играет H.264 — делаем короткие webm-копии видео страницы и подменяем ими mp4
-for f in sorted(set(re.findall(r'assets/[\w-]+\.mp4', open('portfolio-hd.html').read()))):
+import glob
+for f in sorted(set(re.findall(r'assets/[\w-]+\.mp4', open('portfolio-hd.html').read())) | set(glob.glob('assets/*-preview.mp4'))):
     out=W+os.path.basename(f)[:-4]+'.webm'
     if not os.path.exists(out):
         subprocess.run(['ffmpeg','-nostdin','-loglevel','error','-y','-t','6','-i',f,'-vf','scale=270:-2','-c:v','libvpx','-b:v','300k','-c:a','libvorbis',out])
@@ -28,59 +29,68 @@ with sync_playwright() as p:
       playing:cs.map((c,i)=>c._v&&!c._v.paused?i:-1).filter(i=>i>=0), loaded:cs.map((c,i)=>c._v&&c._v.getAttribute('src')?i:-1).filter(i=>i>=0),
       t:S.active&&S.active._v?S.active._v.currentTime:null, y:scrollY, snap:document.documentElement.classList.contains('snap')}})()""")
     pg.goto(URL); pg.wait_for_timeout(2500)
+    TF="parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"
     s=st(); print(s)
-    ok(s['feed']=='REELS' and s['n']==7 and s['act']==0 and s['snap'],'старт: REELS, 7 рилсов, активный первый, примагничивание')
-    ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'первый рилс — с отступом под шапкой (%d px)'%J("MGS_TEST.cards[0].getBoundingClientRect().top"))
-    J("scrollTo(0,30)"); pg.wait_for_timeout(700); ok(J("scrollY")==0,'начальное положение — тоже точка доводки (вернуло в 0)')
-    pg.wait_for_timeout(1000); s2=st()
+    ok(s['feed']=='REELS' and s['n']==7 and s['act']==0,'старт: REELS, 7 превью, активное первое')
+    ok(J("MGS_TEST.cards[0].classList.contains('rp') && Math.abs(MGS_TEST.cards[0].offsetHeight/MGS_TEST.cards[0].offsetWidth-1.25)<0.02"),'превью рилсов — карточки 4:5, как в Комплексе')
+    ok(J("MGS_TEST.cards[0]._v.getAttribute('src')||''").find('-preview.mp4')>0,'в ленте играет короткое превью (-preview.mp4)')
+    ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'первое превью — с отступом под шапкой')
+    pg.wait_for_timeout(800); ok(st()['playing']==[0],'в ленте играет только первое превью')
+    h=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-"+TF); J("scrollTo(0,%d)"%(h*0.6)); pg.wait_for_timeout(900); s=st()
+    ok(s['act']==1 and abs(s['y']-h)<3,'лента превью: полсвайпа → следующее')
+    J("scrollTo(0,0)"); pg.wait_for_timeout(900)
+    # касание превью → полноценная рилс-лента
+    b0=J("MGS_TEST.cards[0].getBoundingClientRect().toJSON()"); pg.touchscreen.tap(b0['x']+100,b0['y']+150); pg.wait_for_timeout(1200)
+    ok(J("MGS_TEST.rv===true && document.documentElement.classList.contains('viewing')"),'касание превью — открылся просмотр рилсов')
+    s=st(); print(s)
+    ok(s['n']==7 and s['act']==0 and J("MGS_TEST.cards[0].classList.contains('reel')") and (J("MGS_TEST.active._v.getAttribute('src')||''").find('-preview')<0),'в просмотре — полные видео 9:16, с 1-го')
+    pg.wait_for_timeout(800); s2=st()
     ok(s2['playing']==[0] and s2['t']>0.3,'играет только первый рилс (t=%.1f)'%(s2['t'] or 0))
     ok(set(s2['loaded'])<= {0,1},'загружены только текущий и следующий: %s'%s2['loaded'])
-    # свайп-эмуляция: прокрутка на полкарточки → примагничивание
-    h=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)")
+    h=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-5")
     J("scrollTo(0,%d)"%(h*0.6)); pg.wait_for_timeout(900); s=st()
     ok(s['act']==1 and abs(s['y']-h)<3,'полсвайпа → доводит до 2-го (y=%d, ждали %d)'%(s['y'],h))
-    # палец: протянул на 80 px и отпустил → следующий; на 10 px → вернуло на место
     J("document.dispatchEvent(new Event('touchstart'))"); J("scrollTo(0,scrollY+80)"); pg.wait_for_timeout(50); J("document.dispatchEvent(new Event('touchend'))"); pg.wait_for_timeout(700)
-    h2=J("MGS_TEST.cards[2].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"); ok(abs(J("scrollY")-h2)<3 and J("MGS_TEST.cards.indexOf(MGS_TEST.active)")==2,'палец протянул 80 px — доводит до следующего')
+    h2=J("MGS_TEST.cards[2].getBoundingClientRect().top+scrollY-5"); ok(abs(J("scrollY")-h2)<3 and J("MGS_TEST.cards.indexOf(MGS_TEST.active)")==2,'палец протянул 80 px — доводит до следующего')
     J("document.dispatchEvent(new Event('touchstart'))"); J("scrollTo(0,scrollY+10)"); pg.wait_for_timeout(50); J("document.dispatchEvent(new Event('touchend'))"); pg.wait_for_timeout(700)
     ok(abs(J("scrollY")-h2)<3,'палец протянул 10 px — возвращает на место')
     J("document.dispatchEvent(new Event('touchstart'))"); J("scrollTo(0,scrollY-90)"); pg.wait_for_timeout(50); J("document.dispatchEvent(new Event('touchend'))"); pg.wait_for_timeout(700)
     ok(abs(J("scrollY")-h)<3,'палец вверх — к предыдущему')
-    for k in [2,3]:
-        hk=J("MGS_TEST.cards[%d].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"%k); J("scrollTo(0,%d)"%hk); pg.wait_for_timeout(900)
-    pg.wait_for_timeout(800); s=st(); print(s)
+    hk=J("MGS_TEST.cards[3].getBoundingClientRect().top+scrollY-5"); J("scrollTo(0,%d)"%hk); pg.wait_for_timeout(1500); s=st(); print(s)
     ok(s['act']==3 and s['playing']==[3],'4-й рилс активен и играет один')
-    T=J("parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)")
-    ok(abs(J("MGS_TEST.cards[3].getBoundingClientRect().top")-T)<3,'текущий рилс стоит на той же высоте, что и первый (%d px)'%T)
-    ok(J("MGS_TEST.cards[2].classList.contains('above') && MGS_TEST.cards[4].classList.contains('below') && !MGS_TEST.cards[3].classList.contains('above') && !MGS_TEST.cards[3].classList.contains('below')"),'соседние карточки притемнены, текущая — нет')
-    ok(J("MGS_TEST.cards[3].getBoundingClientRect().bottom")<=J("innerHeight")+1,'текущий рилс целиком на экране')
     ok(0 not in s['loaded'],'дальние выгружены: %s'%s['loaded'])
-    # пауза / продолжить
+    ok(J("MGS_TEST.cards[2].classList.contains('above') && MGS_TEST.cards[4].classList.contains('below')"),'соседние притемнены')
     c3="MGS_TEST.cards[3]"
     box=J(c3+".getBoundingClientRect().toJSON()")
     pg.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']*0.4); pg.wait_for_timeout(500)
     ok(J(c3+"._v.paused") and J(c3+".classList.contains('paused')"),'касание — пауза и значок ▶')
     pg.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']*0.4); pg.wait_for_timeout(700)
     ok(not J(c3+"._v.paused") and not J(c3+".classList.contains('paused')"),'второе касание — снова играет')
-    # перемотка
     pr=J(c3+".querySelector('.prog').getBoundingClientRect().toJSON()")
     pg.touchscreen.tap(pr['x']+8+(pr['width']-16)*0.5, pr['y']+pr['height']/2); pg.wait_for_timeout(400)
     t=J(c3+"._v.currentTime"); d=J(c3+"._v.duration")
-    ok(abs(t-d*0.5)<0.6 and not J(c3+"._v.paused"),'касание полоски — перемотка на середину (%.1f из %.1f), не ставит на паузу'%(t,d))
-    # тянем полоску
+    ok(abs(t-d*0.5)<0.6 and not J(c3+"._v.paused"),'касание полоски — перемотка на середину (%.1f из %.1f)'%(t,d))
     pg.mouse.move(pr['x']+20, pr['y']+13); pg.mouse.down(); pg.mouse.move(pr['x']+pr['width']*0.8, pr['y']+13, steps=5); pg.mouse.up(); pg.wait_for_timeout(300)
     t=J(c3+"._v.currentTime"); ok(abs(t-d*0.8)<0.8,'перетаскивание полоски — перемотка (%.1f)'%t)
-    # звук
     sb=J(c3+".querySelector('.snd').getBoundingClientRect().toJSON()")
     pg.touchscreen.tap(sb['x']+20,sb['y']+20); pg.wait_for_timeout(400)
     ok(J("document.documentElement.classList.contains('sound')") and not J(c3+"._v.muted") and not J(c3+"._v.paused"),'кнопка звука — звук включён, видео играет')
-    # переход на следующий со звуком
-    h4=J("MGS_TEST.cards[4].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"); J("scrollTo(0,%d)"%h4); pg.wait_for_timeout(1000)
+    h4=J("MGS_TEST.cards[4].getBoundingClientRect().top+scrollY-5"); J("scrollTo(0,%d)"%h4); pg.wait_for_timeout(1000)
     ok(J("!MGS_TEST.cards[4]._v.muted") and J("MGS_TEST.cards[3]._v.paused"),'следующий рилс — со звуком, предыдущий остановлен')
+    # закрыть — назад к превью
+    pg.go_back(); pg.wait_for_timeout(1200); s=st()
+    ok(not J("MGS_TEST.rv") and s['feed']=='REELS' and J("MGS_TEST.cards[0].classList.contains('rp')") and s['y']==0,'«Назад» — снова лента превью на прежнем месте')
+    ok(J("document.querySelectorAll('#view video').length")==0 and s['playing']==[0],'полные видео выгружены, снова играет превью')
+    # открыть 3-е превью — просмотр с 3-го
+    h=J("MGS_TEST.cards[2].getBoundingClientRect().top+scrollY-"+TF); J("scrollTo(0,%d)"%h); pg.wait_for_timeout(900)
+    b2=J("MGS_TEST.cards[2].getBoundingClientRect().toJSON()"); pg.touchscreen.tap(b2['x']+100,b2['y']+150); pg.wait_for_timeout(1200)
+    ok(J("MGS_TEST.rv && MGS_TEST.cards.indexOf(MGS_TEST.active)")==2,'касание 3-го превью — просмотр с 3-го рилса')
+    pg.tap('#vclose'); pg.wait_for_timeout(1000)
+    ok(not J("MGS_TEST.rv") and J("MGS_TEST.cards.indexOf(MGS_TEST.active)")==2,'крестик — назад к 3-му превью')
     # Комплекс — с начала
     pg.tap('.chip[data-f="Комплекс"]'); pg.wait_for_timeout(1500); s=st(); print(s)
     ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'Комплекс: первая карточка с отступом под шапкой (%d px)'%J("MGS_TEST.cards[0].getBoundingClientRect().top"))
-    ok(s['feed']=='Комплекс' and s['act']==0 and s['y']==0 and s['snap'],'Комплекс открывается с 1-го проекта (не с 4-го)')
+    ok(s['feed']=='Комплекс' and s['act']==0 and s['y']==0 and s['snap'],'Комплекс открывается с 1-го проекта')
     ok(s['playing']==[0],'в Комплексе играет только первый')
     ok(J("MGS_TEST.cards[0].querySelector('.cx-chips .dark').textContent")=='1 / 6' and J("MGS_TEST.cards[0].querySelector('.cx-bottom h3').textContent")=='Квартира в тёплых тонах' and J("!MGS_TEST.cards[0].querySelector('.snd,.prog')"),'Комплекс: счётчик есть, звука и полоски нет')
     hc=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"); J("scrollTo(0,%d)"%(hc*0.55)); pg.wait_for_timeout(900); s=st()
@@ -108,7 +118,7 @@ with sync_playwright() as p:
     # снова REELS — примагничивание работает
     pg.tap('.chip[data-f="REELS"]'); pg.wait_for_timeout(1200)
     h=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"); J("scrollTo(0,%d)"%(h*0.6)); pg.wait_for_timeout(900); s=st()
-    ok(s['act']==1 and abs(s['y']-h)<3 and s['playing']==[1],'после Кухонь REELS снова листается слайдером')
+    ok(s['act']==1 and abs(s['y']-h)<3 and s['playing']==[1],'после Кухонь лента REELS снова листается по одной')
     # меню
     pg.tap('#menuBtn'); pg.wait_for_timeout(400); ok(J("!document.getElementById('menu').hidden"),'меню открывается')
     pg.tap('#menuBtn'); pg.wait_for_timeout(300); ok(J("document.getElementById('menu').hidden"),'меню закрывается')
