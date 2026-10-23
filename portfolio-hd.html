@@ -262,6 +262,12 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 .cx-more{height:32px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.94);color:#1c1a17 !important;font-size:13px !important;font-weight:500;text-shadow:none}
 .cx-more svg{display:none}
 @media (max-width:999px){ .cx-big{padding:8px !important} .cx-more{height:28px;padding:0 10px;font-size:12px !important} }
+
+/* ТЕСТ: «Комплекс» — отдельная лента; карточка сама ничего не открывает, только кнопка «Открыть весь проект» */
+.cx-pin a.pin-btn{pointer-events:none}
+.cx-open{position:absolute;left:12px;bottom:12px;z-index:3;display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:999px;background:#bfd630;color:#1c1a17;
+  font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+@media (max-width:999px){ .cx-open{left:10px;bottom:10px;height:40px;padding:0 16px;font-size:14px} }
 </style>
 </helmet>
 
@@ -311,6 +317,7 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
         <sc-if value="{{p.isLink}}" hint-placeholder-val="{{ false }}">
           <div class="pin cx-pin" data-key="{{p.key}}" style="position: relative; flex: {{p.flex}}">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
+            <a class="cx-open" href="{{p.href}}">Открыть весь проект</a>
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
               <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
@@ -494,8 +501,10 @@ class Component extends DCLogic {
     var sl = false;  // переключатель «2 в ряд / 1 в ряд» убран (Макс 22.10) — всегда сетка
     // ТЕСТ (Макс 23.10): одна сплошная лента — Комплекс, потом Кухни, Спальни… плашка переезжает сама при прокрутке; REELS — отдельно
     var h0 = this.readHash();
-    this._pendingSec = (h0 && h0 !== 'REELS' && h0 !== 'Комплекс') ? h0 : null;
-    this.state = { filter: h0 === 'REELS' ? 'REELS' : 'Комплекс', lb: -1, slide: sl, spy: this._pendingSec };
+    // REELS и «Комплекс» — отдельные ленты; Кухни…Гостиные — одна сплошная лента (state.filter = 'Кухни')
+    var cat = h0 && h0 !== 'REELS' && h0 !== 'Комплекс';
+    this._pendingSec = cat && h0 !== 'Кухни' ? h0 : null;
+    this.state = { filter: cat ? 'Кухни' : (h0 || this.DEFAULT()), lb: -1, slide: sl, spy: cat ? h0 : null };
   }
 
   // ===== ЛЕНТЫ =====
@@ -934,7 +943,7 @@ class Component extends DCLogic {
     this._touchPin = null; this._loading = {}; this._vBusy = null; this._vq = [];
     this.setSpy(name);
     var jump = function () {
-      var y = name === 'Комплекс' ? 0 : el.getBoundingClientRect().top + (window.scrollY || 0) - off;
+      var y = el === document.querySelector('.feed-sec') ? 0 : el.getBoundingClientRect().top + (window.scrollY || 0) - off;
       var de = document.documentElement, sb = de.style.scrollBehavior; de.style.scrollBehavior = 'auto';
       window.scrollTo(0, Math.max(0, y)); de.style.scrollBehavior = sb;
       self._spyT = setTimeout(function () { self._spyLock = null; }, 400);
@@ -958,7 +967,7 @@ class Component extends DCLogic {
     });
   }
   spyCheck() {
-    if (this.state.filter === 'REELS' || this.state.lb >= 0 || this._spyLock) return;
+    if (this.state.filter === 'REELS' || this.state.filter === 'Комплекс' || this.state.lb >= 0 || this._spyLock) return;
     var secs = document.querySelectorAll('.feed-sec[data-sec]'); if (!secs.length) return;
     var line = window.innerHeight * 0.4, cur = secs[0].getAttribute('data-sec');
     for (var i = 0; i < secs.length; i++) { if (secs[i].getBoundingClientRect().top <= line) cur = secs[i].getAttribute('data-sec'); }
@@ -972,8 +981,9 @@ class Component extends DCLogic {
     return this.FILTERS().indexOf(h) >= 0 ? h : '';
   }
   setFilter(f) {
-    if (f !== 'REELS' && this.state.filter !== 'REELS') { this.goSec(f); return; }  // та же сплошная лента — просто едем к разделу
-    if (f !== 'REELS') { this._pendingSec = f === 'Комплекс' ? null : f; this.setState({ spy: f }); f = 'Комплекс'; }
+    var sepF = function (x) { return x === 'REELS' || x === 'Комплекс'; };
+    if (!sepF(f) && !sepF(this.state.filter)) { this.goSec(f); return; }  // та же сплошная лента — просто едем к разделу
+    if (!sepF(f)) { this._pendingSec = f === 'Кухни' ? null : f; this.setState({ spy: f }); f = 'Кухни'; }
     if (f === this.state.filter) return;
     // адрес обновляем, где это разрешено (во встроенных окнах превью — нельзя, лента всё равно переключится)
     try { history.replaceState(null, '', f === this.DEFAULT() ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
@@ -1014,7 +1024,7 @@ class Component extends DCLogic {
     var go = function () { self._animIn = a; self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };
     if (!a || !E.feed || !E.feed.animate) { go(); return; }
     (this._outA || []).forEach(function (x) { x.cancel(); });
-    this._animIn = null; this.setState({ chipF: f });
+    this._animIn = null; this.setState({ chipF: (f === 'Кухни' && this.state.spy) || f });
     var out = [], ease = 'cubic-bezier(.4,0,1,1)', dur = 170;
     var fx = function (el, kf, o) { out.push(el.animate(kf, Object.assign({ duration: dur, easing: ease, fill: 'forwards' }, o || {}))); };
     if (a === 1) E.pins.forEach(function (o) { fx(o.el, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }]); });
@@ -1170,7 +1180,7 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
   componentDidUpdate() {
-    if (this._pendingSec && this.state.filter !== 'REELS' && document.querySelector('.feed-sec[data-sec="' + this._pendingSec + '"]')) {
+    if (this._pendingSec && this.state.filter === 'Кухни' && document.querySelector('.feed-sec[data-sec="' + this._pendingSec + '"]')) {
       var ps = this._pendingSec, me = this; this._pendingSec = null; setTimeout(function () { me.goSec(ps); }, 60);
     }
     var wasLb = this._wasLb, isLb = this.state.lb >= 0, de = document.documentElement; this._wasLb = isLb;
@@ -1496,17 +1506,18 @@ class Component extends DCLogic {
     return pins;
     };
     self._feedPhotos = []; self._feedPhotosFor = f;
-    var secNames = f === 'REELS' ? ['REELS'] : this.FILTERS().filter(function (k) { return k !== 'REELS'; });
+    var secNames = (f === 'REELS' || f === 'Комплекс') ? [f] : this.FILTERS().filter(function (k) { return k !== 'REELS' && k !== 'Комплекс'; });
     var secPins = secNames.map(function (k) { return secOf(k); });
     var pins = [].concat.apply([], secPins);
     // разная высота плиток — эффект Pinterest, как в ленте проекта
     var ratios = ['4 / 5', '3 / 4', '1 / 1', '4 / 5', '2 / 3', '5 / 6', '3 / 4', '4 / 5'];
     var poses = ['center', 'center 40%', 'center 65%', 'center', 'center 55%', 'center 35%'];
     var gi = 0;
+    var vw0 = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440), cx1 = f === 'Комплекс' && vw0 < 760;  // ТЕСТ: «Комплекс» на телефоне — по одной карточке 4:5
     pins.forEach(function (pn) {
       if (pn.ph) { self._near = self._near || {}; pn.key = pn.ph; pn.ph = self._near[pn.key] ? pn.ph : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; }
       if (pn.isVideo) return;
-      pn.ratio = ratios[gi % ratios.length]; pn.pos = poses[gi % poses.length]; gi++;
+      pn.ratio = pn.isLink && cx1 ? '4 / 5' : ratios[gi % ratios.length]; pn.pos = poses[gi % poses.length]; gi++;
       var r = pn.ratio.split('/'); pn.padTop = (parseFloat(r[1]) / parseFloat(r[0]) * 100).toFixed(2) + '%';
       // фото грузим только у плиток на экране и чуть ниже (watchNear), остальные — пустышка до подхода к экрану
       var phKey = pn.key; pn.key = phKey || pn.src; self._near = self._near || {};
@@ -1517,7 +1528,7 @@ class Component extends DCLogic {
     var vw = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
     var modeFeed = vw < 760 && (f === 'REELS' || f === 'Комплекс');
     var slide = modeFeed && !!this.state.slide;
-    var cols = slide ? 1 : vw < 760 ? 2 : vw < 1100 ? 3 : 4;
+    var cols = slide || cx1 ? 1 : vw < 760 ? 2 : vw < 1100 ? 3 : 4;
     var est = function (pn) { if (pn.isVideo) return 16 / 9; var r = pn.ratio.split('/'); return parseFloat(r[1]) / parseFloat(r[0]); };
     var layout = function (list) {
     var columns = [];
@@ -1536,7 +1547,7 @@ class Component extends DCLogic {
     var sections = secNames.map(function (k, i) { return { name: k, columns: layout(secPins[i]) }; }).filter(function (sc) { return sc.columns.some(function (c) { return c.pins.length; }); });
     var columns = sections.length ? sections[0].columns : [];
 
-    try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); document.documentElement.classList.toggle('mgs-focus', modeFeed); } catch (e) {}
+    try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); document.documentElement.classList.toggle('mgs-focus', modeFeed && !cx1); } catch (e) {}
 
     // ---- плашки ----
     var countOf = function (k) {
@@ -1545,7 +1556,7 @@ class Component extends DCLogic {
       return D.items.filter(function (it) { return it.type === k && it.photos.length; }).length;
     };
     var chips = this.FILTERS().map(function (k) {
-      var on = k === (self.state.chipF || (f === 'REELS' ? 'REELS' : (self.state.spy || 'Комплекс')));  // в сплошной ленте горит раздел, который сейчас на экране
+      var on = k === (self.state.chipF || ((f === 'REELS' || f === 'Комплекс') ? f : (self.state.spy || 'Кухни')));  // в сплошной ленте горит раздел, который сейчас на экране
       return { name: k, label: k === 'Комплекс' ? '🔥 Комплекс' : k, count: countOf(k), pressed: on ? 'true' : 'false', bg: on ? accent : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setFilter(k); } };
     });
     var n = pins.length;
