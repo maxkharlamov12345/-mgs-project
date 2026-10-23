@@ -27,7 +27,15 @@ with sync_playwright() as p:
     J=pg.evaluate
     st=lambda: J("""(()=>{const S=window.MGS_TEST;const cs=S.cards;return {feed:S.feed,n:cs.length,act:cs.indexOf(S.active),
       playing:cs.map((c,i)=>c._v&&!c._v.paused?i:-1).filter(i=>i>=0), loaded:cs.map((c,i)=>c._v&&c._v.getAttribute('src')?i:-1).filter(i=>i>=0),
-      t:S.active&&S.active._v?S.active._v.currentTime:null, y:scrollY, snap:document.documentElement.classList.contains('snap')}})()""")
+      t:S.active&&S.active._v?S.active._v.currentTime:null, y:scrollY, ti:S.T.i, snap:document.documentElement.classList.contains('snap')}})()""")
+    cdp=ctx.new_cdp_session(pg)
+    def swipe(dy, ms=260, x=195, y0=430, n=10):
+        # настоящий жест пальцем: касание, движение, отпускание
+        cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y0}]})
+        for k in range(1,n+1):
+            pg.wait_for_timeout(ms/n); cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':y0+dy*k/n}]})
+        cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]}); pg.wait_for_timeout(650)
+    top=lambda i: J("MGS_TEST.cards[%d].getBoundingClientRect().top"%i)
     pg.goto(URL); pg.wait_for_timeout(2500)
     TF="parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"
     s=st(); print(s)
@@ -36,9 +44,10 @@ with sync_playwright() as p:
     ok(J("MGS_TEST.cards[0]._v.getAttribute('src')||''").find('-preview.mp4')>0,'в ленте играет короткое превью (-preview.mp4)')
     ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'первое превью — с отступом под шапкой')
     pg.wait_for_timeout(800); ok(st()['playing']==[0],'в ленте играет только первое превью')
-    h=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-"+TF); J("scrollTo(0,%d)"%(h*0.6)); pg.wait_for_timeout(900); s=st()
-    ok(s['act']==1 and abs(s['y']-h)<3,'лента превью: полсвайпа → следующее')
-    J("scrollTo(0,0)"); pg.wait_for_timeout(900)
+    tf=J(TF); swipe(-140, 500); s=st()
+    ok(s['act']==1 and s['ti']==1 and abs(top(1)-tf)<2 and s['y']==0,'лента превью: свайп → следующее встаёт под шапку, страница не прокручивается (%.0f/%.0f)'%(top(1),tf))
+    ok(J("document.documentElement.classList.contains('trk')") and 'translate3d' in J("document.querySelector('#feed .lenta').style.transform"),'лента едет сдвигом (transform), а не прокруткой')
+    swipe(200, 500); ok(st()['ti']==0 and abs(top(0)-tf)<2,'свайп вниз — назад к первому')
     # касание превью → полноценная рилс-лента
     b0=J("MGS_TEST.cards[0].getBoundingClientRect().toJSON()"); pg.touchscreen.tap(b0['x']+100,b0['y']+150); pg.wait_for_timeout(1200)
     ok(J("MGS_TEST.rv===true && document.documentElement.classList.contains('viewing')"),'касание превью — открылся просмотр рилсов')
@@ -47,16 +56,15 @@ with sync_playwright() as p:
     pg.wait_for_timeout(800); s2=st()
     ok(s2['playing']==[0] and s2['t']>0.3,'играет только первый рилс (t=%.1f)'%(s2['t'] or 0))
     ok(set(s2['loaded'])<= {0,1},'загружены только текущий и следующий: %s'%s2['loaded'])
-    h=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-5")
-    J("scrollTo(0,%d)"%(h*0.6)); pg.wait_for_timeout(900); s=st()
-    ok(s['act']==1 and abs(s['y']-h)<3,'полсвайпа → доводит до 2-го (y=%d, ждали %d)'%(s['y'],h))
-    J("document.dispatchEvent(new Event('touchstart'))"); J("scrollTo(0,scrollY+80)"); pg.wait_for_timeout(50); J("document.dispatchEvent(new Event('touchend'))"); pg.wait_for_timeout(700)
-    h2=J("MGS_TEST.cards[2].getBoundingClientRect().top+scrollY-5"); ok(abs(J("scrollY")-h2)<3 and J("MGS_TEST.cards.indexOf(MGS_TEST.active)")==2,'палец протянул 80 px — доводит до следующего')
-    J("document.dispatchEvent(new Event('touchstart'))"); J("scrollTo(0,scrollY+10)"); pg.wait_for_timeout(50); J("document.dispatchEvent(new Event('touchend'))"); pg.wait_for_timeout(700)
-    ok(abs(J("scrollY")-h2)<3,'палец протянул 10 px — возвращает на место')
-    J("document.dispatchEvent(new Event('touchstart'))"); J("scrollTo(0,scrollY-90)"); pg.wait_for_timeout(50); J("document.dispatchEvent(new Event('touchend'))"); pg.wait_for_timeout(700)
-    ok(abs(J("scrollY")-h)<3,'палец вверх — к предыдущему')
-    hk=J("MGS_TEST.cards[3].getBoundingClientRect().top+scrollY-5"); J("scrollTo(0,%d)"%hk); pg.wait_for_timeout(1500); s=st(); print(s)
+    swipe(-150, 500); s=st()
+    ok(s['act']==1 and abs(top(1)-5)<2 and s['y']==0,'медленный свайп → доезжает до 2-го (верх %.0f)'%top(1))
+    swipe(-70, 40, n=3)
+    ok(st()['ti']==2 and abs(top(2)-5)<2,'быстрый короткий флик (70 px) — к следующему')
+    swipe(-40, 700)
+    ok(st()['ti']==2 and abs(top(2)-5)<2,'палец протянул 40 px медленно — возвращает на место')
+    swipe(150, 500)
+    ok(st()['ti']==1 and abs(top(1)-5)<2,'палец вниз — к предыдущему')
+    swipe(-150,400); swipe(-150,400); pg.wait_for_timeout(800); s=st(); print(s)
     ok(s['act']==3 and s['playing']==[3],'4-й рилс активен и играет один')
     ok(0 not in s['loaded'],'дальние выгружены: %s'%s['loaded'])
     ok(J("MGS_TEST.cards[2].classList.contains('above') && MGS_TEST.cards[4].classList.contains('below')"),'соседние притемнены')
@@ -75,14 +83,14 @@ with sync_playwright() as p:
     sb=J(c3+".querySelector('.snd').getBoundingClientRect().toJSON()")
     pg.touchscreen.tap(sb['x']+20,sb['y']+20); pg.wait_for_timeout(400)
     ok(J("document.documentElement.classList.contains('sound')") and not J(c3+"._v.muted") and not J(c3+"._v.paused"),'кнопка звука — звук включён, видео играет')
-    h4=J("MGS_TEST.cards[4].getBoundingClientRect().top+scrollY-5"); J("scrollTo(0,%d)"%h4); pg.wait_for_timeout(1000)
+    swipe(-150, 400, y0=300); pg.wait_for_timeout(400)
     ok(J("!MGS_TEST.cards[4]._v.muted") and J("MGS_TEST.cards[3]._v.paused"),'следующий рилс — со звуком, предыдущий остановлен')
     # закрыть — назад к превью
     pg.go_back(); pg.wait_for_timeout(1200); s=st()
-    ok(not J("MGS_TEST.rv") and s['feed']=='REELS' and J("MGS_TEST.cards[0].classList.contains('rp')") and s['y']==0,'«Назад» — снова лента превью на прежнем месте')
+    ok(not J("MGS_TEST.rv") and s['feed']=='REELS' and J("MGS_TEST.cards[0].classList.contains('rp')") and s['ti']==0 and abs(top(0)-tf)<2,'«Назад» — снова лента превью на прежнем месте')
     ok(J("document.querySelectorAll('#view video').length")==0 and s['playing']==[0],'полные видео выгружены, снова играет превью')
     # открыть 3-е превью — просмотр с 3-го
-    h=J("MGS_TEST.cards[2].getBoundingClientRect().top+scrollY-"+TF); J("scrollTo(0,%d)"%h); pg.wait_for_timeout(900)
+    swipe(-150,400); swipe(-150,400)
     b2=J("MGS_TEST.cards[2].getBoundingClientRect().toJSON()"); pg.touchscreen.tap(b2['x']+100,b2['y']+150); pg.wait_for_timeout(1200)
     ok(J("MGS_TEST.rv && MGS_TEST.cards.indexOf(MGS_TEST.active)")==2,'касание 3-го превью — просмотр с 3-го рилса')
     pg.tap('#vclose'); pg.wait_for_timeout(1000)
@@ -90,16 +98,16 @@ with sync_playwright() as p:
     # Комплекс — с начала
     pg.tap('.chip[data-f="Комплекс"]'); pg.wait_for_timeout(1500); s=st(); print(s)
     ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'Комплекс: первая карточка с отступом под шапкой (%d px)'%J("MGS_TEST.cards[0].getBoundingClientRect().top"))
-    ok(s['feed']=='Комплекс' and s['act']==0 and s['y']==0 and s['snap'],'Комплекс открывается с 1-го проекта')
+    ok(s['feed']=='Комплекс' and s['act']==0 and s['ti']==0 and abs(top(0)-tf)<2,'Комплекс открывается с 1-го проекта')
     ok(s['playing']==[0],'в Комплексе играет только первый')
     ok(J("MGS_TEST.cards[0].querySelector('.cx-chips .dark').textContent")=='1 / 6' and J("MGS_TEST.cards[0].querySelector('.cx-bottom h3').textContent")=='Квартира в тёплых тонах' and J("!MGS_TEST.cards[0].querySelector('.snd,.prog')"),'Комплекс: счётчик есть, звука и полоски нет')
-    hc=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"); J("scrollTo(0,%d)"%(hc*0.55)); pg.wait_for_timeout(900); s=st()
-    ok(s['act']==1 and abs(s['y']-hc)<3,'Комплекс: полсвайпа → доводит до 2-го')
+    swipe(-150,500); s=st()
+    ok(s['act']==1 and abs(top(1)-tf)<2,'Комплекс: свайп → доезжает до 2-го')
     pg.screenshot(path=D+'h_cx.png')
     # Кухни
     pg.tap('.chip[data-f="Кухни"]'); pg.wait_for_timeout(1200)
     ok(J("document.querySelector('.tile').getBoundingClientRect().top")>50,'Кухни: сетка с отступом под шапкой')
-    ok(not J("document.documentElement.classList.contains('snap')") and J("document.querySelectorAll('.tile').length")>5 and J("scrollY")==0,'Кухни: сетка, без примагничивания, с начала (%d плиток)'%J("document.querySelectorAll('.tile').length"))
+    ok(not J("document.documentElement.classList.contains('trk')") and J("document.querySelectorAll('.tile').length")>5 and J("scrollY")==0,'Кухни: сетка, без примагничивания, с начала (%d плиток)'%J("document.querySelectorAll('.tile').length"))
     ok(J("[...document.querySelectorAll('video')].every(v=>v.paused)"),'в сетке видео не играют')
     pg.screenshot(path=D+'h_k.png')
     # подфильтры кухонь
@@ -130,8 +138,8 @@ with sync_playwright() as p:
     # снова REELS — примагничивание работает
     pg.tap('.chip[data-f="REELS"]'); pg.wait_for_timeout(1200)
     ok(not J("document.getElementById('subchips').classList.contains('show')"),'в REELS подфильтров нет')
-    h=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"); J("scrollTo(0,%d)"%(h*0.6)); pg.wait_for_timeout(900); s=st()
-    ok(s['act']==1 and abs(s['y']-h)<3 and s['playing']==[1],'после Кухонь лента REELS снова листается по одной')
+    swipe(-150,500); pg.wait_for_timeout(400); s=st()
+    ok(s['act']==1 and abs(top(1)-tf)<2 and s['playing']==[1],'после Кухонь лента REELS снова листается по одной')
     # меню
     pg.tap('#menuBtn'); pg.wait_for_timeout(400); ok(J("!document.getElementById('menu').hidden"),'меню открывается')
     pg.tap('#menuBtn'); pg.wait_for_timeout(300); ok(J("document.getElementById('menu').hidden"),'меню закрывается')
@@ -142,6 +150,8 @@ with sync_playwright() as p:
     # ПК
     pc=b.new_page(viewport={'width':1440,'height':900}); pc.route('**/*.mp4',route); e2=[]; pc.on('pageerror',lambda e:e2.append(str(e)))
     pc.goto(URL); pc.wait_for_timeout(2000); pc.screenshot(path=D+'h_pc.png')
+    pc.mouse.move(720,450); pc.mouse.wheel(0,120); pc.wait_for_timeout(120); pc.mouse.wheel(0,120); pc.wait_for_timeout(900)
+    ok(pc.evaluate("MGS_TEST.T.i")==1,'ПК: один жест колесом — ровно одна карточка')
     pc.click('.chip[data-f="Кухни"]'); pc.wait_for_timeout(1200); pc.screenshot(path=D+'h_pc2.png')
     ok(pc.evaluate("document.querySelectorAll('.col').length")==4 and not e2,'ПК: сетка 4 колонки, без ошибок')
     b.close()
