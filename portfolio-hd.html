@@ -263,20 +263,30 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 .cx-more svg{display:none}
 @media (max-width:999px){ .cx-big{padding:8px !important} .cx-more{height:28px;padding:0 10px;font-size:12px !important} }
 
-/* ТЕСТ: «Комплекс» — отдельная лента; карточка сама ничего не открывает, только кнопка «Открыть весь проект» */
-.cx-pin a.pin-btn{pointer-events:none}
-.cx-open{position:absolute;left:12px;bottom:12px;z-index:3;display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:999px;background:#bfd630;color:#1c1a17;
-  font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4)}
-@media (max-width:999px){ .cx-open{left:10px;bottom:10px;height:40px;padding:0 16px;font-size:14px} }
-
-/* ТЕСТ: «Комплекс» на телефоне — как просмотр рилсов: листается сама страница (Safari прячет панели, видео заходит под часы и строку адреса),
-   карточки 4:5 встык, свайп доводит ровно до следующей (примагничивание на html) */
+/* ===== ТЕСТ (Макс 23.10): «рилс-лента» на телефоне — REELS и «Комплекс» по одной карточке в ряд, листается сама страница
+   (Safari прячет панели, видео под часами), свайп доводит ровно до следующей (примагничивание на html), играет только верхняя ===== */
+.rl-num,.rl-prog,.rl-play,.rl-snd{display:none}
 html.cx-snap{scroll-snap-type:y mandatory;scroll-padding-top:5px}
 html.cx-snap .chips-nav ~ .pad{padding-top:5px !important}
-.feed.cx1 .feed-col{gap:5px !important;padding-bottom:calc(100lvh - (100vw - 10px) * 1.25 - 10px) !important}
-.feed.cx1 .cx-pin{flex:none !important;scroll-snap-align:start;scroll-snap-stop:always;transition:filter .3s ease}
-.feed.cx1 .cx-pin:not(.cx-on){filter:brightness(.28)}
-.feed.cx1 .cx-open{left:10px;bottom:10px}
+.feed.rl .feed-col{gap:5px !important}
+.feed.rl .pin{flex:none !important;scroll-snap-align:start;scroll-snap-stop:always}
+.feed.rl-cx .feed-col{padding-bottom:calc(100lvh - (100vw - 10px) * 1.25 - 10px) !important}
+/* рилс — 9:16 во всю ширину, но не выше экрана (как в просмотре рилсов) */
+.feed.rl-reels .pin{padding-top:0 !important;height:min(177.78vw, calc(100svh - 10px));border-radius:10px !important}
+.feed.rl-reels .feed-col{padding-bottom:calc(100lvh - min(177.78vw, calc(100svh - 10px)) - 10px) !important}
+.feed.rl-reels .pin > span:not([class]){display:none !important}  /* плашки REELS/зона — в рилс-ленте не нужны */
+.feed.rl-reels .pin button[aria-label^="Открыть REELS"] > span{display:none !important}  /* значок «развернуть» */
+.feed.rl .rl-num{display:inline-flex;position:absolute;left:10px;top:63px;z-index:3;height:32px;box-sizing:border-box;align-items:center;padding:0 12px;border-radius:999px;background:rgba(15,14,12,.7);color:#f4f1ec;font-size:13px;pointer-events:none}
+.feed.rl-reels .rl-prog{display:block;position:absolute;left:12px;right:12px;bottom:74px;z-index:3;height:3px;border-radius:2px;background:rgba(244,241,236,.3);overflow:hidden;pointer-events:none}
+.feed.rl-reels .rl-prog i{display:block;height:100%;width:0;background:#f4f1ec}
+.feed.rl-reels .rl-snd{display:flex;position:absolute;right:12px;bottom:88px;z-index:4;width:40px;height:40px;border:0;border-radius:50%;background:rgba(15,14,12,.6);color:#f4f1ec;align-items:center;justify-content:center;cursor:pointer}
+.rl-snd .s-on{display:none} html.rl-sound .rl-snd .s-on{display:block} html.rl-sound .rl-snd .s-off{display:none}
+.feed.rl-reels .pin.rl-paused .rl-play{display:flex;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;width:64px;height:64px;border-radius:50%;background:rgba(15,14,12,.6);color:#f4f1ec;align-items:center;justify-content:center;pointer-events:none}
+/* счётчик — под шапкой (телефон/логотип/меню), звук и полоска — над плашками снизу */
+/* кружок загрузки на видео, пока у него нет кадра */
+@keyframes vspin{to{transform:rotate(360deg)}}
+.v-wait::after{content:"";position:absolute;left:50%;top:50%;z-index:4;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;box-sizing:border-box;
+  border:3px solid rgba(244,241,236,.25);border-top-color:#bfd630;animation:vspin .8s linear infinite;pointer-events:none}
 </style>
 </helmet>
 
@@ -326,7 +336,7 @@ html.cx-snap .chips-nav ~ .pad{padding-top:5px !important}
         <sc-if value="{{p.isLink}}" hint-placeholder-val="{{ false }}">
           <div class="pin cx-pin" data-key="{{p.key}}" style="position: relative; flex: {{p.flex}}">
             <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
-            <a class="cx-open" href="{{p.href}}">Открыть весь проект</a>
+            <span class="rl-num">{{p.num}}</span>
             <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
               <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
               <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
@@ -354,9 +364,13 @@ html.cx-snap .chips-nav ~ .pad{padding-top:5px !important}
               <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
               <sc-if value="{{p.hasZone}}" hint-placeholder-val="{{ false }}"><span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px">{{p.zone}}</span></sc-if>
             </span>
+            <span class="rl-num">{{p.num}}</span>
+            <span class="rl-prog" aria-hidden="true"><i></i></span>
+            <span class="rl-play" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></span>
             <button onClick="{{p.open}}" aria-label="Открыть REELS: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer">
               <span style="position: absolute; right: 12px; top: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
             </button>
+            <button class="rl-snd" onClick="{{p.snd}}" aria-label="Звук"><svg class="s-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg><svg class="s-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></button>
           </div>
         </sc-if>
 
@@ -482,7 +496,7 @@ html.cx-snap .chips-nav ~ .pad{padding-top:5px !important}
 </template>
 
 <!-- ===== Шапка как на главной (home.html): логотип по центру закреплён сверху, справа кружок меню; меню на весь экран ===== -->
-<header class="site-hd"><a href="tel:84957773575" class="site-call" aria-label="Позвонить 8-495-777-35-75"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo.webp" alt="MGS MEBEL" width="400" height="217"></a>
+<header class="site-hd"><a href="tel:84957773575" class="site-call" aria-label="Позвонить 8-495-777-35-75"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo-cut.webp" alt="MGS MEBEL" width="400" height="217"></a>
   <button class="site-menu-btn" id="siteMenuBtn" aria-label="Меню"><span></span><span></span><span></span></button></header>
 <nav class="site-menu" id="siteMenu" aria-label="Меню сайта" hidden>
   <a href="home.html">Главная</a>
@@ -511,15 +525,14 @@ class Component extends DCLogic {
     // ТЕСТ (Макс 23.10): одна сплошная лента — Комплекс, потом Кухни, Спальни… плашка переезжает сама при прокрутке; REELS — отдельно
     var h0 = this.readHash();
     // REELS и «Комплекс» — отдельные ленты; Кухни…Гостиные — одна сплошная лента (state.filter = 'Кухни')
-    var cat = h0 && h0 !== 'REELS' && h0 !== 'Комплекс';
-    this._pendingSec = cat && h0 !== 'Кухни' ? h0 : null;
-    this.state = { filter: cat ? 'Кухни' : (h0 || this.DEFAULT()), lb: -1, slide: sl, spy: cat ? h0 : null };
+    this._pendingSec = null;
+    this.state = { filter: h0 || this.DEFAULT(), lb: -1, slide: sl };
   }
 
   // ===== ЛЕНТЫ =====
   // порядок плашек; при заходе открывается DEFAULT
   FILTERS() { return ['REELS', 'Комплекс', 'Кухни', 'Спальни', 'Гардеробные', 'Прихожие', 'Санузлы', 'Детские', 'Гостиные']; }
-  DEFAULT() { return 'Комплекс'; }
+  DEFAULT() { return 'REELS'; }  // ТЕСТ (Макс 23.10): страница открывается с REELS
 
   // ===== ПРОЕКТЫ ПОРТФОЛИО: на сайте приходят из CMS =====
   // Проект — это адрес. Всё, что в нём сделано, само раскладывается по лентам:
@@ -976,6 +989,7 @@ class Component extends DCLogic {
     });
   }
   spyCheck() {
+    return;  // ТЕСТ: сплошной ленты больше нет — у каждой плашки своя лента
     if (this.state.filter === 'REELS' || this.state.filter === 'Комплекс' || this.state.lb >= 0 || this._spyLock) return;
     var secs = document.querySelectorAll('.feed-sec[data-sec]'); if (!secs.length) return;
     var line = window.innerHeight * 0.4, cur = secs[0].getAttribute('data-sec');
@@ -990,9 +1004,6 @@ class Component extends DCLogic {
     return this.FILTERS().indexOf(h) >= 0 ? h : '';
   }
   setFilter(f) {
-    var sepF = function (x) { return x === 'REELS' || x === 'Комплекс'; };
-    if (!sepF(f) && !sepF(this.state.filter)) { this.goSec(f); return; }  // та же сплошная лента — просто едем к разделу
-    if (!sepF(f)) { this._pendingSec = f === 'Кухни' ? null : f; this.setState({ spy: f }); f = 'Кухни'; }
     if (f === this.state.filter) return;
     // адрес обновляем, где это разрешено (во встроенных окнах превью — нельзя, лента всё равно переключится)
     try { history.replaceState(null, '', f === this.DEFAULT() ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
@@ -1030,10 +1041,10 @@ class Component extends DCLogic {
     this._touchPin = null;  // после смены вида/ленты в «2 в ряд» снова ничего не играет, пока не коснутся
     this._loading = {}; this._vBusy = null; this._vq = [];  // очередь загрузки — заново, с верха новой ленты
     var self = this, a = this.anim(), E = this.feedEls();
-    var go = function () { self._animIn = a; self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };
+    var go = function () { self._animIn = a; self._cxOn = null; try { var de = document.documentElement, sb = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); de.style.scrollBehavior = sb; } catch (e) {} self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };  // ТЕСТ: плашки внизу — новая лента всегда с начала
     if (!a || !E.feed || !E.feed.animate) { go(); return; }
     (this._outA || []).forEach(function (x) { x.cancel(); });
-    this._animIn = null; this.setState({ chipF: (f === 'Кухни' && this.state.spy) || f });
+    this._animIn = null; this.setState({ chipF: f });
     var out = [], ease = 'cubic-bezier(.4,0,1,1)', dur = 170;
     var fx = function (el, kf, o) { out.push(el.animate(kf, Object.assign({ duration: dur, easing: ease, fill: 'forwards' }, o || {}))); };
     if (a === 1) E.pins.forEach(function (o) { fx(o.el, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }]); });
@@ -1152,8 +1163,12 @@ class Component extends DCLogic {
     window.addEventListener('resize', this.onResize);
     this.onHash = function () { var f = self.readHash(); if (f) self.setFilter(f); };
     window.addEventListener('hashchange', this.onHash);
-    var cxRaf = 0; window.addEventListener('scroll', function () { if (cxRaf || !document.querySelector('.feed.cx1')) return; cxRaf = requestAnimationFrame(function () { cxRaf = 0; self.cxFocus(); }); }, true);
-    document.addEventListener('play', function (e) { var v = e.target, pin = v && v.closest ? v.closest('.feed.cx1 .cx-pin') : null; if (pin && !pin.classList.contains('cx-on') && self._cxOn) v.pause(); }, true);
+    var vw = function (v, on) { var p = v && v.parentElement; if (!p || v.tagName !== 'VIDEO') return; if (on && getComputedStyle(p).position === 'static') return; p.classList.toggle('v-wait', on); };
+    ['loadstart', 'waiting', 'emptied'].forEach(function (ev) { document.addEventListener(ev, function (e) { vw(e.target, e.target.readyState < 3); }, true); });
+    ['loadeddata', 'canplay', 'playing', 'seeked'].forEach(function (ev) { document.addEventListener(ev, function (e) { vw(e.target, false); }, true); });
+    this.markWait = function () { var vs = document.querySelectorAll('.feed video, #lb-wrap video'); for (var i = 0; i < vs.length; i++) vw(vs[i], vs[i].readyState < 2); };
+    var cxRaf = 0; window.addEventListener('scroll', function () { if (cxRaf || !document.querySelector('.feed.rl')) return; cxRaf = requestAnimationFrame(function () { cxRaf = 0; self.cxFocus(); }); }, true);
+    document.addEventListener('play', function (e) { var v = e.target, pin = v && v.closest ? v.closest('.feed.rl .pin') : null; if (pin && !pin.classList.contains('rl-on') && self._cxOn) v.pause(); }, true);
     var spyRaf = 0; window.addEventListener('scroll', function () { if (spyRaf) return; spyRaf = requestAnimationFrame(function () { spyRaf = 0; self.spyCheck(); }); }, { passive: true });
     this.onFocusScroll = function () { if (self._fpRaf) return; self._fpRaf = requestAnimationFrame(function () { self._fpRaf = 0; if (self.slideOn()) self.focusPlay(); }); };
     window.addEventListener('scroll', this.onFocusScroll, { passive: true });
@@ -1192,7 +1207,7 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
   componentDidUpdate() {
-    var me0 = this; requestAnimationFrame(function () { me0.cxFocus(); });
+    var me0 = this; requestAnimationFrame(function () { me0.cxFocus(); if (me0.markWait) me0.markWait(); });
     if (this._pendingSec && this.state.filter === 'Кухни' && document.querySelector('.feed-sec[data-sec="' + this._pendingSec + '"]')) {
       var ps = this._pendingSec, me = this; this._pendingSec = null; setTimeout(function () { me.goSec(ps); }, 60);
     }
@@ -1231,25 +1246,44 @@ class Component extends DCLogic {
   gridMini() { try { var c = document.documentElement.classList; return c.contains('mgs-focus') && !c.contains('mgs-snap'); } catch (e) { return false; } }
   // без заставки: плитка показывает первый кадр самого видео (#t=0.001 — iPhone тогда рисует кадр, а не чёрное),
   // поэтому при запуске нет никакого скачка картинки
-  feedSrc(v) { var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; if (!w) return w; w = this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; return w.indexOf('#') < 0 ? w + '#t=0.001' : w; }
+  feedSrc(v) { if (v.closest && v.closest('.feed.rl-reels')) { var fs = v.getAttribute('data-src') || ''; return fs && fs.indexOf('#') < 0 ? fs + '#t=0.001' : fs; }
+    var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; if (!w) return w; w = this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; return w.indexOf('#') < 0 ? w + '#t=0.001' : w; }
   // заставка плитки рилса = первый кадр её превью (<имя>-preview.jpg), иначе при запуске картинка «прыгает»
   tilePoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.jpg').replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : fallback; }
   // ТЕСТ (Макс 23.10): превью-видео играют сами, как только видны и загрузились (как на ПК), не по касанию; на телефоне — лёгкие -mini
   slideOn() { return false; }
-  // ТЕСТ: «Комплекс»-слайдер — играет только проект, вставший наверх; остальные на паузе и притемнены (как в просмотре рилсов)
+  // ТЕСТ: рилс-лента — играет только карточка, вставшая наверх; остальные на паузе
   cxFocus() {
-    var box = document.querySelector('.feed.cx1'); if (!box) return;
-    var top = 5, best = null, bd = 1e9, self = this;
-    var ps = box.querySelectorAll('.cx-pin');
-    for (var i = 0; i < ps.length; i++) { var d = Math.abs(ps[i].getBoundingClientRect().top - top); if (d < bd) { bd = d; best = ps[i]; } }
+    var box = document.querySelector('.feed.rl'); if (!box) { this._cxOn = null; return; }
+    var best = null, bd = 1e9, self = this, reels = box.classList.contains('rl-reels');
+    var ps = box.querySelectorAll('.pin');
+    for (var i = 0; i < ps.length; i++) { var d = Math.abs(ps[i].getBoundingClientRect().top - 5); if (d < bd) { bd = d; best = ps[i]; } }
     for (var j = 0; j < ps.length; j++) {
       var on = ps[j] === best, v = ps[j].querySelector('video');
-      ps[j].classList.toggle('cx-on', on);
+      ps[j].classList.toggle('rl-on', on);
       if (!v) continue;
-      if (on) { var w = self.feedSrc(v); if (w && v.getAttribute('src') !== w) { v.preload = 'auto'; v.src = w; } if (v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } }
-      else if (!v.paused) v.pause();
+      if (on) {
+        if (best !== this._cxOn) ps[j].classList.remove('rl-paused');
+        var w = self.feedSrc(v); if (w && v.getAttribute('src') !== w) { v.preload = 'auto'; v.src = w; }
+        if (reels) v.muted = !self._snd;
+        if (v.paused && !ps[j].classList.contains('rl-paused')) { (function (v) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () { if (!v.muted) { v.muted = true; self._snd = false; document.documentElement.classList.remove('rl-sound'); var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {}); } }); })(v); }
+      } else { if (!v.paused) v.pause(); if (reels) v.muted = true; }
     }
     this._cxOn = best;
+    if (reels && !this._progRaf) { var loop = function () { var b = document.querySelector('.feed.rl-reels .pin.rl-on'); if (!b) { self._progRaf = 0; return; } var vv = b.querySelector('video'), bar = b.querySelector('.rl-prog i'); if (vv && bar && vv.duration) bar.style.width = (vv.currentTime / vv.duration * 100) + '%'; self._progRaf = requestAnimationFrame(loop); }; this._progRaf = requestAnimationFrame(loop); }
+  }
+  // касание рилса в рилс-ленте — пауза / продолжить
+  rlTap(i) {
+    var pin = document.querySelectorAll('.feed.rl-reels .pin')[i]; if (!pin) return; var v = pin.querySelector('video'); if (!v) return;
+    if (pin !== this._cxOn) { this.cxFocus(); return; }
+    if (v.paused) { pin.classList.remove('rl-paused'); v.muted = !this._snd; var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+    else { v.pause(); pin.classList.add('rl-paused'); }
+  }
+  // кнопка звука: включает/выключает звук у рилсов (запоминается для следующих)
+  rlSound() {
+    this._snd = !this._snd; document.documentElement.classList.toggle('rl-sound', this._snd);
+    var b = document.querySelector('.feed.rl-reels .pin.rl-on video'); if (!b) return;
+    b.muted = !this._snd; if (b.paused) { var pr = b.play(); if (pr && pr.catch) pr.catch(function () {}); }
   }
   focusPlay() {
     var self0 = this, pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
@@ -1508,6 +1542,8 @@ class Component extends DCLogic {
     // пропорции всех фото известны заранее (assets/dims.js) — слайдер просмотра сразу раскладывается как надо
     if (window.MGS_RATIOS && !this._dimsIn) { this._dimsIn = 1; var R = window.MGS_RATIOS, own = this.ratios || {}; this.ratios = {}; for (var rk in R) this.ratios[rk] = R[rk]; for (var ok in own) this.ratios[ok] = own[ok]; }
     var self = this, D = this.data(), f = this.state.filter;
+    // ТЕСТ: на телефоне REELS и «Комплекс» — «рилс-лента»: по одной карточке в ряд, листается страница с примагничиванием, играет только верхняя
+    var vw0 = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440), rl = (f === 'REELS' || f === 'Комплекс') && vw0 < 760;
     var accent = this.props.accent ?? '#bfd630';
 
     // ---- плитки выбранной ленты ----
@@ -1515,13 +1551,15 @@ class Component extends DCLogic {
     var pins = [];
     if (sf === 'REELS') {
       D.reels.forEach(function (r, i) {
-        pins.push({ isVideo: true, src: r.src, poster: self.tilePoster(r.src, r.poster), ph: self.tilePoster(r.src, r.poster), label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
+        pins.push({ isVideo: true, src: r.src, poster: self.tilePoster(r.src, r.poster), ph: self.tilePoster(r.src, r.poster), label: r.project, zone: r.zone, hasZone: !!r.zone, num: (i + 1) + ' / ' + D.reels.length,
+          snd: function (e) { if (e && e.stopPropagation) e.stopPropagation(); self.rlSound(); },
+          open: function () { if (rl) self.rlTap(i); else self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
     } else if (sf === 'Комплекс') {
       // обложка проекта — видео (coverVideo); пока видео нет — тёмная плитка с названием
       D.projects.forEach(function (pr) {
         if (!pr.complex || !pr.href) return;
-        pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '', ph: pr.coverPoster || '' });
+        pins.push({ num: '', isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '', ph: pr.coverPoster || '' });
       });
     } else {
       D.items.forEach(function (it) {
@@ -1534,18 +1572,18 @@ class Component extends DCLogic {
     return pins;
     };
     self._feedPhotos = []; self._feedPhotosFor = f;
-    var secNames = (f === 'REELS' || f === 'Комплекс') ? [f] : this.FILTERS().filter(function (k) { return k !== 'REELS' && k !== 'Комплекс'; });
+    var secNames = [f];
     var secPins = secNames.map(function (k) { return secOf(k); });
+    if (f === 'Комплекс') secPins[0].forEach(function (pn, i, a) { pn.num = (i + 1) + ' / ' + a.length; });
     var pins = [].concat.apply([], secPins);
     // разная высота плиток — эффект Pinterest, как в ленте проекта
     var ratios = ['4 / 5', '3 / 4', '1 / 1', '4 / 5', '2 / 3', '5 / 6', '3 / 4', '4 / 5'];
     var poses = ['center', 'center 40%', 'center 65%', 'center', 'center 55%', 'center 35%'];
     var gi = 0;
-    var vw0 = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440), cx1 = f === 'Комплекс' && vw0 < 760;  // ТЕСТ: «Комплекс» на телефоне — по одной карточке 4:5
     pins.forEach(function (pn) {
       if (pn.ph) { self._near = self._near || {}; pn.key = pn.ph; pn.ph = self._near[pn.key] ? pn.ph : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; }
       if (pn.isVideo) return;
-      pn.ratio = pn.isLink && cx1 ? '4 / 5' : ratios[gi % ratios.length]; pn.pos = poses[gi % poses.length]; gi++;
+      pn.ratio = pn.isLink && rl ? '4 / 5' : ratios[gi % ratios.length]; pn.pos = poses[gi % poses.length]; gi++;
       var r = pn.ratio.split('/'); pn.padTop = (parseFloat(r[1]) / parseFloat(r[0]) * 100).toFixed(2) + '%';
       // фото грузим только у плиток на экране и чуть ниже (watchNear), остальные — пустышка до подхода к экрану
       var phKey = pn.key; pn.key = phKey || pn.src; self._near = self._near || {};
@@ -1556,7 +1594,7 @@ class Component extends DCLogic {
     var vw = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
     var modeFeed = vw < 760 && (f === 'REELS' || f === 'Комплекс');
     var slide = modeFeed && !!this.state.slide;
-    var cols = slide || cx1 ? 1 : vw < 760 ? 2 : vw < 1100 ? 3 : 4;
+    var cols = slide || rl ? 1 : vw < 760 ? 2 : vw < 1100 ? 3 : 4;
     var est = function (pn) { if (pn.isVideo) return 16 / 9; var r = pn.ratio.split('/'); return parseFloat(r[1]) / parseFloat(r[0]); };
     var layout = function (list) {
     var columns = [];
@@ -1575,7 +1613,7 @@ class Component extends DCLogic {
     var sections = secNames.map(function (k, i) { return { name: k, columns: layout(secPins[i]) }; }).filter(function (sc) { return sc.columns.some(function (c) { return c.pins.length; }); });
     var columns = sections.length ? sections[0].columns : [];
 
-    try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); document.documentElement.classList.toggle('mgs-focus', modeFeed && !cx1); document.documentElement.classList.toggle('cx-snap', cx1 && !(this.state.lb >= 0)); } catch (e) {}
+    try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); document.documentElement.classList.toggle('mgs-focus', modeFeed && !rl); document.documentElement.classList.toggle('cx-snap', rl && !(this.state.lb >= 0)); } catch (e) {}
 
     // ---- плашки ----
     var countOf = function (k) {
@@ -1584,7 +1622,7 @@ class Component extends DCLogic {
       return D.items.filter(function (it) { return it.type === k && it.photos.length; }).length;
     };
     var chips = this.FILTERS().map(function (k) {
-      var on = k === (self.state.chipF || ((f === 'REELS' || f === 'Комплекс') ? f : (self.state.spy || 'Кухни')));  // в сплошной ленте горит раздел, который сейчас на экране
+      var on = k === (self.state.chipF || f);  // в сплошной ленте горит раздел, который сейчас на экране
       return { name: k, label: k === 'Комплекс' ? '🔥 Комплекс' : k, count: countOf(k), pressed: on ? 'true' : 'false', bg: on ? accent : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setFilter(k); } };
     });
     var n = pins.length;
@@ -1614,7 +1652,7 @@ class Component extends DCLogic {
       accent: accent,
       countLine: countLine,
       chips: chips, columns: columns, sections: sections, isEmpty: n === 0,
-      feedCls: slide ? 'feed slide' : cx1 ? 'feed cx1' : 'feed', showModes: modeFeed, gridOn: slide ? 'false' : 'true', slideOn: slide ? 'true' : 'false',
+      feedCls: slide ? 'feed slide' : rl ? 'feed rl ' + (f === 'REELS' ? 'rl-reels' : 'rl-cx') : 'feed', showModes: modeFeed, gridOn: slide ? 'false' : 'true', slideOn: slide ? 'true' : 'false',
       setGrid: function () { self.setMode(false); }, setSlide: function () { self.setMode(true); },
       priceDate: view[li].priceDate || 'октябрь 2026',
       lbOpen: this.state.lb >= 0,
