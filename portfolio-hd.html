@@ -227,7 +227,7 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   :root{--site-hd:58px}
   /* шапка закреплена, но НЕ во всю ширину и без полосы-затемнения: закреплённый слой во всю ширину у верхнего края iPhone Safari
      считает шапкой и заливает зону под часами — лента переставала уходить под часы */
-  .site-hd{position:fixed;left:50%;right:auto;width:auto;transform:translateX(-50%)}
+  .site-hd{position:fixed;left:0;right:0;width:max-content;margin:0 auto}  /* без transform — иначе кнопки внутри (fixed) встают относительно шапки */
   .site-hd::before{display:none}
   .site-logo img{height:28px}
   .site-call,.site-menu-btn{width:40px;height:40px;top:calc(env(safe-area-inset-top) + (var(--site-hd) - 40px)/2)}
