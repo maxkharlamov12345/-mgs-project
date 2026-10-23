@@ -13,7 +13,7 @@
 </head>
 <body>
 <style>
-:root{--bg:#0f0e0c;--tx:#f4f1ec;--chip:#26221f;--lime:#bfd630;--dim:#a89f92;--side:16px;--hd:58px}
+:root{--bg:#0f0e0c;--tx:#f4f1ec;--chip:#26221f;--lime:#bfd630;--dim:#a89f92;--side:16px;--hd:58px;--top:calc(var(--hd) + env(safe-area-inset-top))}
 *{box-sizing:border-box}
 html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:Onest,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -55,7 +55,8 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 .chip.on{background:var(--lime);color:#1c1a17}
 
 /* ---------- лента ---------- */
-#feed{padding:5px 5px 0}
+/* в начале контент — с отступом под шапку; при прокрутке уходит под неё */
+#feed{padding:var(--top) 5px 0}
 @keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 .in{animation:up .5s cubic-bezier(.2,.7,.2,1) backwards}
 
@@ -63,6 +64,12 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 .lenta{display:flex;flex-direction:column;align-items:center;gap:5px;padding-bottom:calc(100lvh - var(--ch, 400px) - 10px)}
 .card{position:relative;flex:none;width:calc(100vw - 10px);border-radius:10px;overflow:hidden;background:#1d1a17;scroll-snap-align:start;scroll-snap-stop:always;cursor:pointer}
 .card.reel{height:min(177.78vw, calc(100svh - 10px))}
+/* первая карточка примагничивается в начальном положении (под шапкой), остальные — к верху экрана */
+.lenta .card:first-child{scroll-margin-top:calc(var(--top) - 5px)}
+.lenta .card:first-child .num{top:10px}
+/* первый рилс помещается целиком под шапкой (иначе примагничивание его не держит — карточка выше экрана) */
+.lenta .card.reel:first-child{height:min(177.78vw, calc(100svh - var(--top) - 5px))}
+@media (min-width:760px){ .lenta .card.cx:first-child{width:min(calc(100vw - 10px), calc((100svh - var(--top) - 5px) * .8))} .lenta .card.reel:first-child{height:calc(100svh - var(--top) - 5px);width:calc((100svh - var(--top) - 5px) * .5625)} }
 .card.cx{aspect-ratio:4/5;border-radius:14px}
 @media (min-width:760px){
   .card.reel{width:calc((100svh - 10px) * .5625);height:calc(100svh - 10px)}
@@ -93,13 +100,14 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 .tile{position:relative;display:block;width:100%;border-radius:14px;overflow:hidden;background:#1d1a17}
 .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .empty{padding:120px 20px;text-align:center;color:var(--dim)}
-@media (min-width:760px){ #feed{padding:5px 12px 0} .grid,.col{gap:16px} .tile{border-radius:18px} }
+@media (min-width:760px){ #feed{padding:var(--top) 12px 0} .grid,.col{gap:16px} .tile{border-radius:18px} }
 
 /* ---------- просмотр изделия: сама страница, фото одно под другим ---------- */
 #view{display:none}
 html.viewing #view{display:block}
 html.viewing #feed,html.viewing .chips,html.viewing .hd-btn,html.viewing .hd-logo{display:none}
-.vl{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 5px 0}
+.vl{display:flex;flex-direction:column;align-items:center;gap:5px;padding:calc(var(--top) + 10px) 5px 0}
+.vl .vm:first-child{scroll-margin-top:calc(var(--top) + 5px)}
 .vm{position:relative;width:calc(100vw - 10px);max-width:900px;border-radius:10px;overflow:hidden;background:#1d1a17 center/cover no-repeat;scroll-snap-align:start;scroll-snap-stop:always}
 .vm img{width:100%;height:100%;object-fit:cover}
 .vm.vid{height:min(177.78vw, calc(100svh - 10px));max-width:calc((100svh - 10px) * .5625)}
@@ -569,11 +577,16 @@ function setFeed(f, first) {
   S.feed = f; S.gen++; S.cards = []; S.active = null;
   try { history.replaceState(history.state, '', f === 'REELS' ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
   markChip();
-  var lenta = f === 'REELS' || f === 'Комплекс';
-  de.classList.toggle('snap', lenta);
+  var lenta = f === 'REELS' || f === 'Комплекс', gen = S.gen;
+  de.classList.remove('snap');   // на время смены примагничивание выкл. — иначе Safari ставил новую ленту на «тот же номер» карточки
   feedEl.innerHTML = lenta ? lentaHTML(f) : gridHTML(f);
   jump(0);
-  if (lenta) { S.cards = $$('.card', feedEl); S.cards.forEach(bindCard); fitPad(); requestAnimationFrame(pickActive); }
+  if (lenta) { S.cards = $$('.card', feedEl); S.cards.forEach(bindCard); fitPad(); }
+  requestAnimationFrame(function () { requestAnimationFrame(function () {
+    if (gen !== S.gen) return;
+    jump(0); de.classList.toggle('snap', lenta); jump(0);
+    if (lenta) pickActive();
+  }); });
 }
 function stopAll() { $$('video', feedEl).forEach(function (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); }
 

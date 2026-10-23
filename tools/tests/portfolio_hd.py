@@ -30,6 +30,8 @@ with sync_playwright() as p:
     pg.goto(URL); pg.wait_for_timeout(2500)
     s=st(); print(s)
     ok(s['feed']=='REELS' and s['n']==7 and s['act']==0 and s['snap'],'старт: REELS, 7 рилсов, активный первый, примагничивание')
+    ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'первый рилс — с отступом под шапкой (%d px)'%J("MGS_TEST.cards[0].getBoundingClientRect().top"))
+    J("scrollTo(0,30)"); pg.wait_for_timeout(700); ok(J("scrollY")==0,'начальное положение — тоже точка примагничивания (вернуло в 0)')
     pg.wait_for_timeout(1000); s2=st()
     ok(s2['playing']==[0] and s2['t']>0.3,'играет только первый рилс (t=%.1f)'%(s2['t'] or 0))
     ok(set(s2['loaded'])<= {0,1},'загружены только текущий и следующий: %s'%s2['loaded'])
@@ -66,6 +68,7 @@ with sync_playwright() as p:
     ok(J("!MGS_TEST.cards[4]._v.muted") and J("MGS_TEST.cards[3]._v.paused"),'следующий рилс — со звуком, предыдущий остановлен')
     # Комплекс — с начала
     pg.tap('.chip[data-f="Комплекс"]'); pg.wait_for_timeout(1500); s=st(); print(s)
+    ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'Комплекс: первая карточка с отступом под шапкой (%d px)'%J("MGS_TEST.cards[0].getBoundingClientRect().top"))
     ok(s['feed']=='Комплекс' and s['act']==0 and s['y']==0 and s['snap'],'Комплекс открывается с 1-го проекта (не с 4-го)')
     ok(s['playing']==[0],'в Комплексе играет только первый')
     ok(J("MGS_TEST.cards[0].querySelector('.num').textContent")=='1 / 6' and J("!MGS_TEST.cards[0].querySelector('.snd,.prog')"),'Комплекс: счётчик есть, звука и полоски нет')
@@ -74,6 +77,7 @@ with sync_playwright() as p:
     pg.screenshot(path=D+'h_cx.png')
     # Кухни
     pg.tap('.chip[data-f="Кухни"]'); pg.wait_for_timeout(1200)
+    ok(J("document.querySelector('.tile').getBoundingClientRect().top")>50,'Кухни: сетка с отступом под шапкой')
     ok(not J("document.documentElement.classList.contains('snap')") and J("document.querySelectorAll('.tile').length")>5 and J("scrollY")==0,'Кухни: сетка, без примагничивания, с начала (%d плиток)'%J("document.querySelectorAll('.tile').length"))
     ok(J("[...document.querySelectorAll('video')].every(v=>v.paused)"),'в сетке видео не играют')
     pg.screenshot(path=D+'h_k.png')
