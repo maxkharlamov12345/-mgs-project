@@ -86,6 +86,15 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 .prog b{display:block;height:4px;border-radius:2px;background:rgba(244,241,236,.3);overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--tx)}
 .prog.drag b{height:6px;margin-top:-1px}
+/* «Комплекс», вариант 4: плашки сверху, крупное тонкое название снизу */
+.cx-chips{position:absolute;left:10px;top:10px;right:10px;z-index:3;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.cx-chips span{height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:rgba(244,241,236,.94);color:#1c1a17;font-size:13px;font-weight:500}
+.cx-chips span.dark{background:rgba(15,14,12,.7);color:var(--tx)}
+.cx-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:90px 16px 18px;background:linear-gradient(to top,rgba(10,9,8,.85),rgba(10,9,8,0));pointer-events:none}
+.cx-bottom h3{margin:0 0 8px;font-size:34px;font-weight:300;line-height:1.05;letter-spacing:-.02em;text-wrap:balance}
+.cx-zones{font-size:13px;color:#cfc9bf;line-height:1.4}
+.lenta .card.above .cx-chips,.lenta .card.below .cx-chips{opacity:0}
+@media (min-width:760px){ .cx-bottom h3{font-size:40px} .cx-zones{font-size:14px} }
 /* кружок загрузки */
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:none;position:absolute;left:50%;top:50%;z-index:3;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:3px solid rgba(244,241,236,.25);border-top-color:var(--lime);animation:spin .8s linear infinite;pointer-events:none}
@@ -546,6 +555,10 @@ PRS.forEach(function (pr) {
     price: it.price || '', korpus: it.korpus || '—', fasady: it.fasady || '—', furn: it.furn || '—', project: pr.title, href: pr.href, address: pr.address || '', priceDate: pr.priceDate || '' }); });
 });
 var CX = PRS.filter(function (p) { return p.complex && p.href; });
+// год проекта — как на его странице («ЖК …, Москва, год»)
+var YEAR = { 'index.html': '2025', 'project-2.html': '2026', 'project-5.html': '2025', 'project-6.html': '2026', 'project-7.html': '2025', 'project-8.html': '2026' };
+var zonesOf = function (pr) { var z = []; (pr.items || []).forEach(function (it) { if (z.indexOf(it.name) < 0) z.push(it.name); }); return z; };
+var plural = function (n, a, b, c) { var m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
 var base = function (s) { return (s || '').replace(/^.*\//, '').replace(/\.(jpg|jpeg|png|webp|mp4)$/, ''); };
 var thumb = function (s) { return /^assets\/[^/]+\.(jpg|webp)$/.test(s || '') ? 'assets/t/' + base(s) + '.webp' : s; };
 var reelPoster = function (src) { return 'assets/t/' + base(src) + '-preview.webp'; };
@@ -659,8 +672,15 @@ function lentaHTML(f) {
     return '<div class="card cx' + anim + '" data-href="' + esc(x.href) + '"' + (x.coverVideo ? ' data-src="' + esc(x.coverVideo) + '"' : '') + ' aria-label="' + esc(x.title) + '">' +
       '<img class="poster" src="' + esc(poster) + '" alt="' + esc(x.title) + '" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
       (x.coverVideo ? '<video muted playsinline loop preload="none"></video><span class="spin"></span>' : '') +
-      '<span class="num">' + (i + 1) + ' / ' + n + '</span></div>';
+      cxInfo(x, i, n) + '</div>';
   }).join('') + '</div>';
+}
+// «Комплекс», вариант 4 (Макс 24.10): сверху плашки (номер, ЖК, год, сколько зон), снизу крупное тонкое название и строка зон
+function cxInfo(x, i, n) {
+  var z = zonesOf(x), y = YEAR[x.href] || '';
+  return '<div class="cx-chips"><span class="dark">' + (i + 1) + ' / ' + n + '</span>' + (x.address ? '<span>' + esc(x.address) + '</span>' : '') + (y ? '<span>' + y + '</span>' : '') +
+    (z.length ? '<span>' + z.length + ' ' + plural(z.length, 'зона', 'зоны', 'зон') + '</span>' : '') + '</div>' +
+    '<div class="cx-bottom"><h3>' + esc(x.title) + '</h3>' + (z.length ? '<div class="cx-zones">' + esc(z.map(function (w, k) { return k ? w.charAt(0).toLowerCase() + w.slice(1) : w; }).join(', ')) + '</div>' : '') + '</div>';
 }
 // запас снизу — чтобы и последняя карточка вставала наверх
 function fitPad() { var l = $('.lenta', feedEl), c = S.cards[S.cards.length - 1]; if (l && c) l.style.setProperty('--ch', c.offsetHeight + 'px'); }

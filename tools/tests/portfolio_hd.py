@@ -82,7 +82,7 @@ with sync_playwright() as p:
     ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'Комплекс: первая карточка с отступом под шапкой (%d px)'%J("MGS_TEST.cards[0].getBoundingClientRect().top"))
     ok(s['feed']=='Комплекс' and s['act']==0 and s['y']==0 and s['snap'],'Комплекс открывается с 1-го проекта (не с 4-го)')
     ok(s['playing']==[0],'в Комплексе играет только первый')
-    ok(J("MGS_TEST.cards[0].querySelector('.num').textContent")=='1 / 6' and J("!MGS_TEST.cards[0].querySelector('.snd,.prog')"),'Комплекс: счётчик есть, звука и полоски нет')
+    ok(J("MGS_TEST.cards[0].querySelector('.cx-chips .dark').textContent")=='1 / 6' and J("MGS_TEST.cards[0].querySelector('.cx-bottom h3').textContent")=='Квартира в тёплых тонах' and J("!MGS_TEST.cards[0].querySelector('.snd,.prog')"),'Комплекс: счётчик есть, звука и полоски нет')
     hc=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"); J("scrollTo(0,%d)"%(hc*0.55)); pg.wait_for_timeout(900); s=st()
     ok(s['act']==1 and abs(s['y']-hc)<3,'Комплекс: полсвайпа → доводит до 2-го')
     pg.screenshot(path=D+'h_cx.png')
