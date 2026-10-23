@@ -225,8 +225,10 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 .site-call{display:none}
 @media (max-width:999px){
   :root{--site-hd:58px}
-  .site-hd{position:fixed}
-  .site-hd::before{opacity:1;height:calc(100% + 70px);background:linear-gradient(rgba(15,14,12,.8) 0%,rgba(15,14,12,.74) 12%,rgba(15,14,12,.62) 26%,rgba(15,14,12,.47) 40%,rgba(15,14,12,.32) 54%,rgba(15,14,12,.19) 67%,rgba(15,14,12,.09) 79%,rgba(15,14,12,.03) 90%,rgba(15,14,12,0) 100%)}
+  /* шапка закреплена, но НЕ во всю ширину и без полосы-затемнения: закреплённый слой во всю ширину у верхнего края iPhone Safari
+     считает шапкой и заливает зону под часами — лента переставала уходить под часы */
+  .site-hd{position:fixed;left:50%;right:auto;width:auto;transform:translateX(-50%)}
+  .site-hd::before{display:none}
   .site-logo img{height:28px}
   .site-call,.site-menu-btn{width:40px;height:40px;top:calc(env(safe-area-inset-top) + (var(--site-hd) - 40px)/2)}
   .site-call{display:flex;align-items:center;justify-content:center;position:fixed;z-index:46;left:var(--site-side);border-radius:50%;color:#f4f1ec;pointer-events:auto;
