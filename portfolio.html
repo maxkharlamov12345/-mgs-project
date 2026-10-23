@@ -207,14 +207,43 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   .lb-close-m{display:flex !important;position:fixed !important;top:14px !important;right:14px !important;z-index:60 !important}
   .lb-panel-head{display:none !important}
 }
+
+/* «#НАШИ РАБОТЫ» — бегущая строка: лаймовая лента + встречная контурная лента за ней */
+.rb-sec{position:relative;overflow:hidden}
+.rb-box{position:relative;height:150px}
+.rb-h{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.rb{position:absolute;left:-5%;right:-5%;top:50%;display:flex;overflow:hidden;white-space:nowrap}
+.rb-t{display:flex;flex:none;align-items:center;animation:rb-run 26s linear infinite;will-change:transform}
+.rb-front{z-index:2;background:#bfd630;color:#0f0e0c;padding:14px 0;transform:translateY(-50%) rotate(-3deg);box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.rb-back{z-index:1;padding:10px 0;transform:translateY(-50%) rotate(3deg);border-top:1px solid rgba(191,214,48,.35);border-bottom:1px solid rgba(191,214,48,.35)}
+.rb-back .rb-t{animation-direction:reverse;animation-duration:34s}
+.rb-i{font-weight:700;font-size:40px;line-height:1;letter-spacing:-.01em;padding:0 22px}
+.rb-s{font-size:22px;line-height:1}
+.rb-back .rb-i{font-size:26px;color:transparent;-webkit-text-stroke:1px rgba(191,214,48,.7);letter-spacing:.04em}
+.rb-back .rb-s{color:rgba(191,214,48,.6);font-size:16px}
+@keyframes rb-run{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (max-width:999px){
+  .rb-box{height:100px}
+  .rb-front{padding:10px 0;transform:translateY(-50%) rotate(-4deg)}
+  .rb-back{transform:translateY(-50%) rotate(6deg)}
+  .rb-i{font-size:26px;padding:0 14px}
+  .rb-s{font-size:15px}
+  .rb-back .rb-i{font-size:17px}
+  .rb-back .rb-s{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){ .rb-t{animation:none} }
 </style>
 </helmet>
 
 <div style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100vh">
 
   <!-- заголовок -->
-  <section class="pad top-sec" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
-    <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em">Наши работы</h1>
+  <section class="top-sec rb-sec" style="padding: 44px 0 8px">
+    <h1 class="rb-h">Наши работы</h1>
+    <div class="rb-box">
+    <div class="rb rb-back" aria-hidden="true"><div class="rb-t"><span class="rb-i">КУХНИ</span><span class="rb-s">✦</span><span class="rb-i">ШКАФЫ</span><span class="rb-s">✦</span><span class="rb-i">ГАРДЕРОБНЫЕ</span><span class="rb-s">✦</span><span class="rb-i">КУХНИ</span><span class="rb-s">✦</span><span class="rb-i">ШКАФЫ</span><span class="rb-s">✦</span><span class="rb-i">ГАРДЕРОБНЫЕ</span><span class="rb-s">✦</span><span class="rb-i">КУХНИ</span><span class="rb-s">✦</span><span class="rb-i">ШКАФЫ</span><span class="rb-s">✦</span><span class="rb-i">ГАРДЕРОБНЫЕ</span><span class="rb-s">✦</span><span class="rb-i">КУХНИ</span><span class="rb-s">✦</span><span class="rb-i">ШКАФЫ</span><span class="rb-s">✦</span><span class="rb-i">ГАРДЕРОБНЫЕ</span><span class="rb-s">✦</span><span class="rb-i">КУХНИ</span><span class="rb-s">✦</span><span class="rb-i">ШКАФЫ</span><span class="rb-s">✦</span><span class="rb-i">ГАРДЕРОБНЫЕ</span><span class="rb-s">✦</span><span class="rb-i">КУХНИ</span><span class="rb-s">✦</span><span class="rb-i">ШКАФЫ</span><span class="rb-s">✦</span><span class="rb-i">ГАРДЕРОБНЫЕ</span><span class="rb-s">✦</span><span class="rb-i">КУХНИ</span><span class="rb-s">✦</span><span class="rb-i">ШКАФЫ</span><span class="rb-s">✦</span><span class="rb-i">ГАРДЕРОБНЫЕ</span><span class="rb-s">✦</span><span class="rb-i">КУХНИ</span><span class="rb-s">✦</span><span class="rb-i">ШКАФЫ</span><span class="rb-s">✦</span><span class="rb-i">ГАРДЕРОБНЫЕ</span><span class="rb-s">✦</span></div></div>
+    <div class="rb rb-front" aria-hidden="true"><div class="rb-t"><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span><span class="rb-i">#НАШИ РАБОТЫ</span><span class="rb-s">✦</span></div></div>
+    </div>
   </section>
 
   <!-- ленты: у всех одинаковая сетка, а открытие разное (REELS — рилсы, Комплекс — страница проекта, остальные — просмотр изделия) -->
