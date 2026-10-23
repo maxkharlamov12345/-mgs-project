@@ -277,6 +277,8 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 .feed.cx1 .feed-col{gap:5px !important;padding:5px 0 calc(100svh - (100vw - 10px) * 1.25 - 10px) !important}  /* карточки встык, как в просмотре рилсов; снизу запас — чтобы и последняя вставала наверх */
 .feed.cx1 .cx-pin{flex:none !important;padding:0 5px;box-sizing:border-box;scroll-snap-align:start;scroll-snap-stop:always}
 .feed.cx1 .cx-pin > div[aria-hidden]{display:none}
+.feed.cx1 .cx-pin{transition:filter .3s ease} .feed.cx1 .cx-pin:not(.cx-on){filter:brightness(.28)}
+
 .feed.cx1 .cx-pin a.pin-btn{position:relative !important;top:auto !important;left:auto !important;right:auto !important;bottom:auto !important;width:100% !important;height:auto !important;aspect-ratio:4/5}
 .feed.cx1 .cx-open{left:15px;bottom:10px}
 </style>
@@ -1153,6 +1155,8 @@ class Component extends DCLogic {
     window.addEventListener('resize', this.onResize);
     this.onHash = function () { var f = self.readHash(); if (f) self.setFilter(f); };
     window.addEventListener('hashchange', this.onHash);
+    var cxRaf = 0; document.addEventListener('scroll', function (e) { if (!e.target || !e.target.classList || !e.target.classList.contains('cx1') || cxRaf) return; cxRaf = requestAnimationFrame(function () { cxRaf = 0; self.cxFocus(); }); }, true);
+    document.addEventListener('play', function (e) { var v = e.target, pin = v && v.closest ? v.closest('.feed.cx1 .cx-pin') : null; if (pin && !pin.classList.contains('cx-on') && self._cxOn) v.pause(); }, true);
     var spyRaf = 0; window.addEventListener('scroll', function () { if (spyRaf) return; spyRaf = requestAnimationFrame(function () { spyRaf = 0; self.spyCheck(); }); }, { passive: true });
     this.onFocusScroll = function () { if (self._fpRaf) return; self._fpRaf = requestAnimationFrame(function () { self._fpRaf = 0; if (self.slideOn()) self.focusPlay(); }); };
     window.addEventListener('scroll', this.onFocusScroll, { passive: true });
@@ -1191,6 +1195,7 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
   componentDidUpdate() {
+    var me0 = this; requestAnimationFrame(function () { me0.cxFocus(); });
     if (this._pendingSec && this.state.filter === 'Кухни' && document.querySelector('.feed-sec[data-sec="' + this._pendingSec + '"]')) {
       var ps = this._pendingSec, me = this; this._pendingSec = null; setTimeout(function () { me.goSec(ps); }, 60);
     }
@@ -1234,6 +1239,21 @@ class Component extends DCLogic {
   tilePoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.jpg').replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : fallback; }
   // ТЕСТ (Макс 23.10): превью-видео играют сами, как только видны и загрузились (как на ПК), не по касанию; на телефоне — лёгкие -mini
   slideOn() { return false; }
+  // ТЕСТ: «Комплекс»-слайдер — играет только проект, вставший наверх; остальные на паузе и притемнены (как в просмотре рилсов)
+  cxFocus() {
+    var box = document.querySelector('.feed.cx1'); if (!box) return;
+    var top = box.getBoundingClientRect().top + 5, best = null, bd = 1e9, self = this;
+    var ps = box.querySelectorAll('.cx-pin');
+    for (var i = 0; i < ps.length; i++) { var d = Math.abs(ps[i].getBoundingClientRect().top - top); if (d < bd) { bd = d; best = ps[i]; } }
+    for (var j = 0; j < ps.length; j++) {
+      var on = ps[j] === best, v = ps[j].querySelector('video');
+      ps[j].classList.toggle('cx-on', on);
+      if (!v) continue;
+      if (on) { var w = self.feedSrc(v); if (w && v.getAttribute('src') !== w) { v.preload = 'auto'; v.src = w; } if (v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } }
+      else if (!v.paused) v.pause();
+    }
+    this._cxOn = best;
+  }
   focusPlay() {
     var self0 = this, pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
     if (!this.slideOn()) {  // обычная сетка — играют все видимые
