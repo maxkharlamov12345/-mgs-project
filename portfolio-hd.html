@@ -65,8 +65,9 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 .card.reel{height:min(177.78vw, calc(100svh - var(--top) - 5px))}
 /* то, что выше и ниже текущей карточки, — притемнено градиентом: глаз смотрит на текущую */
 .lenta .card::after{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0;transition:opacity .35s ease}
-.lenta .card.above::after{opacity:1;background:linear-gradient(to bottom, rgba(15,14,12,.94), rgba(15,14,12,.62))}
-.lenta .card.below::after{opacity:1;background:linear-gradient(to top, rgba(15,14,12,.94), rgba(15,14,12,.55))}
+.lenta .card.above::after{opacity:1;background:linear-gradient(to bottom, rgba(15,14,12,.98), rgba(15,14,12,.82))}
+.lenta .card.below::after{opacity:1;background:linear-gradient(to top, rgba(15,14,12,.98), rgba(15,14,12,.78))}
+.lenta .card.above .num,.lenta .card.below .num{opacity:0}  /* у притемнённых — без счётчика */
 .card.cx{aspect-ratio:4/5;border-radius:14px}
 @media (min-width:760px){
   .card.reel{width:calc((100svh - var(--top) - 5px) * .5625);height:calc(100svh - var(--top) - 5px)}
