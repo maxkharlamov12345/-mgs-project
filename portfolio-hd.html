@@ -2,550 +2,156 @@
 <html lang="ru">
 <head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta charset="utf-8">
-<title>Тест шапки — Наши работы — MGS Mebel</title>
+<title>Тест — Наши работы — MGS Mebel</title>
 <meta name="robots" content="noindex">
 <meta name="description" content="Наши работы — MGS Mebel: кухни, шкафы и гардеробные на заказ.">
 <link rel="preload" href="assets/fonts/onest-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/onest-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+20BD}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}</style>
-<script>window.__resources={}</script>
 <script>/* кэш сайта в браузере — sw.js */if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})</script>
-<script src="assets/dims.js" defer></script>
-<style>
-/* ===== шапка как на главной (home.html): логотип закреплён по центру сверху, кружок меню справа; классы site- ===== */
-:root{--site-hd:72px;--site-side:32px}
-.site-hd{position:absolute;left:0;right:0;top:0;z-index:46;height:calc(var(--site-hd) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;pointer-events:none}
-.site-hd::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% + 28px);z-index:-1;pointer-events:none;opacity:0;transition:opacity .25s;
-  background:linear-gradient(to bottom,rgba(15,14,12,.92) 0%,rgba(15,14,12,.78) 55%,rgba(15,14,12,0) 100%)}
-/* общей полосы-затемнения под шапкой нет (Макс 22.10) — только тень у логотипа и тёмный кружок меню, как на главной */
-.site-logo{pointer-events:auto;display:inline-flex;line-height:0;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}
-.site-logo img{height:38px;width:auto;display:block}
-.site-menu-btn{position:fixed;z-index:46;right:var(--site-side);top:calc(env(safe-area-inset-top) + (var(--site-hd) - 46px)/2);width:46px;height:46px;border-radius:50%;padding:0;cursor:pointer;
-  background:rgba(30,27,24,.72);border:1px solid rgba(244,241,236,.12);pointer-events:auto;transition:background-color .2s}
-.site-menu-btn span{position:absolute;left:14px;right:14px;height:1.6px;border-radius:2px;background:#f4f1ec;transition:transform .3s,opacity .2s,top .3s}
-.site-menu-btn span:nth-child(1){top:16px}.site-menu-btn span:nth-child(2){top:22px}.site-menu-btn span:nth-child(3){top:28px}
-.site-menu-btn.open{background:#bfd630} .site-menu-btn.open span{background:#1c1a17}
-.site-menu-btn.open span:nth-child(1){top:22px;transform:rotate(45deg)} .site-menu-btn.open span:nth-child(2){opacity:0} .site-menu-btn.open span:nth-child(3){top:22px;transform:rotate(-45deg)}
-.site-menu{position:fixed;inset:0;z-index:45;background:#0f0e0c;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;font-family:Onest,system-ui,sans-serif;
-  padding:calc(var(--site-hd) + 20px) 24px 30px;opacity:0;pointer-events:none;transition:opacity .2s}
-.site-menu.open{opacity:1;pointer-events:auto}
-/* закрытое меню убираем совсем (display:none): iPhone Safari видит закреплённый на весь экран тёмный слой даже прозрачным и заливает полосу под часами — лента после меню «уменьшалась» */
-.site-menu[hidden]{display:none !important}
-.site-menu > a{font-size:30px;font-weight:300;letter-spacing:-.01em;padding:8px 0;color:#f4f1ec;text-decoration:none}
-.site-menu > a:hover,.site-menu > a.active{color:#bfd630}
-.site-menu .mm-contacts{margin-top:22px;display:flex;flex-direction:column;gap:8px}
-.site-menu .mm-contacts > a{font-size:22px;font-weight:500;color:#bfd630;text-decoration:none}
-.site-menu .mm-contacts span{display:flex;gap:18px} .site-menu .mm-contacts span a{font-size:16px;color:#a89f92;text-decoration:none}
-@media (min-width:1000px){ .site-menu{padding-left:12vw} .site-menu > a{font-size:44px} }
-@media (max-width:999px){ :root{--site-hd:64px;--site-side:16px} .site-logo img{height:32px} }
-.top-sec{padding-top:calc(var(--site-hd) + 10px + env(safe-area-inset-top)) !important}
-/* меню открыто: прокрутку НЕ запрещаем (iPhone от overflow:hidden перестраивал экран — лента «съезжала» после закрытия меню);
-   вместо этого прячем саму ленту, а меню тянем на всю высоту с запасом под «парящие» панели Safari — ничего не просвечивает */
-/* лента под меню — прозрачная (opacity), а не visibility:hidden: iPhone при visibility перерисовывал всю ленту заново и она появлялась с лагом;
-   при opacity картинки остаются готовыми, после закрытия лента мягко проявляется сразу */
-/* открытие: меню проявляется поверх ленты, лента гаснет мгновенно уже ПОСЛЕ этого (без «двойной картинки»);
-   закрытие: меню исчезает сразу и лента сразу на месте — раньше они полсекунды проступали друг сквозь друга, выглядело как лаг */
-html.site-menu-open #dc-root{opacity:0;transition:opacity 0s .2s}
-/* пункты меню на той же высоте, что на главной: там снизу запас под док (96px ПК / 84px телефон) + 30px */
-.site-menu{padding-bottom:126px !important}
-@media (max-width:999px){ .site-menu{padding-bottom:114px !important} }
-/* меню — ровно по экрану (inset:0), пункты по центру; тёмный фон продлён вниз под «парящие» панели Safari */
-.site-menu::after{content:"";position:absolute;left:0;right:0;top:100%;height:50vh;background:#0f0e0c;pointer-events:none}
-</style>
-<script src="./support.js"></script>
-<style>
-/* «просмотр как лента» : на телефоне просмотр — сама страница, не окно поверх */
-@media (max-width: 999px){
-  html.lb-on{scroll-snap-type:y mandatory;scroll-padding-top:5px}
-  html.lb-on .sc-host > div > :not(#lb-wrap):not([role=dialog]),
-  html.lb-on body > :not(#dc-root):not(script):not(style):not([data-dbg]){display:none !important}
-  html.lb-on #lb-wrap{position:relative !important;inset:auto !important;overflow:visible !important;min-height:100lvh;scroll-snap-type:none !important}
-  html.lb-on .lb-close-v,html.lb-on .lb-vcount{top:calc(14px + env(safe-area-inset-top)) !important}
-  /* описание после последнего фото — без примагничивания (lb-free ставит vScroll); последнее фото без описания —
-     точка у самого низа страницы (достижима при любой высоте экрана — не дёргается, когда браузер прячет панели) */
-  html.lb-on .lb-panel{scroll-snap-align:none !important;flex-grow:1}
-  html.lb-on #lb-wrap::after{content:"";display:block;flex:none;height:1px;scroll-snap-align:end}
-  html.lb-free,html.lb-hold{scroll-snap-type:none !important}
-  html.lb-free .lb-vcount{opacity:0;transition:opacity .2s}  /* на описании счётчик фото не налезает на заголовок */
-}
-</style>
+<script src="assets/dims.js"></script>
 </head>
 <body>
-<template data-dc>
-<helmet>
 <style>
-body{margin:0;background:#0f0e0c}
-a{color:#f4f1ec}a:hover{color:#bfd630}
-.pin{display:block;margin:0}
-.pin-img{transition:transform .5s ease, filter .3s ease}
-.pin-btn:hover .pin-img{transform:scale(1.035)}
-/* видео-плитки: под видео — картинка его первого кадра; видео проявляется, только когда у него есть кадр (нет чёрного) */
-.feed-v{opacity:0;transition:opacity .2s ease}
-.feed-v.ready{opacity:1}
-/* плитки изделий: в покое — чистое фото; при наведении — затемнение, название по центру, значок «развернуть» */
-.ph-over{background:rgba(10,9,8,.55);opacity:0;transition:opacity .35s ease}
-.ph-exp{opacity:0;transform:scale(.85);transition:opacity .3s ease, transform .3s ease}
-.pin-btn:hover .ph-over,.pin-btn:focus-visible .ph-over{opacity:1}
-.pin-btn:hover .ph-exp,.pin-btn:focus-visible .ph-exp{opacity:1;transform:none}
-.ph-sub:empty{display:none}
-.pin-meta{opacity:0;transition:opacity .25s ease}
-.pin-btn:hover .pin-meta,.pin-btn:focus-visible .pin-meta{opacity:1}
-/* «Комплекс»: в покое фото притемнены сильнее, при наведении — светлеют (затемнение остаётся только под текстом) */
-.cx-big{background:rgba(10,9,8,.5);transition:background-color .45s ease}
-.cx-big::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at center, rgba(10,9,8,.45) 0%, rgba(10,9,8,.15) 55%, rgba(10,9,8,0) 80%)}
-.cx-big{isolation:isolate}
-.pin-btn:hover .cx-big,.pin-btn:focus-visible .cx-big{background-color:rgba(10,9,8,.08)}
+:root{--bg:#0f0e0c;--tx:#f4f1ec;--chip:#26221f;--lime:#bfd630;--dim:#a89f92;--side:16px;--hd:58px}
+*{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Onest,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:inherit;-webkit-tap-highlight-color:transparent}
+img,video{display:block}
+/* примагничивание: рилс-лента и просмотр изделия; листается сама страница (Safari прячет панели) */
+html.snap{scroll-snap-type:y mandatory;scroll-padding-top:5px}
+html.vfree{scroll-snap-type:none}
 
-.cx-more svg{transition:transform .25s ease}
-.pin-btn:hover .cx-more svg{transform:translateX(3px)}
-.chip{transition:background-color .2s ease,color .2s ease}
-.chip:hover{background:#322d29}
-.lb-thumbs{scrollbar-width:none}
-.lb-vlist,.lb-vcount,.lb-close-v{display:none}
-.lb-thumbs-grid{display:none !important}
-.lb-hide{display:none !important}
-.lb-wrap{overscroll-behavior:contain}
-/* iPhone (Safari 26), панель свёрнута: закреплённое окно просмотра не заходит под часы, и там была видна лента страницы.
-   Пока просмотр открыт — ленту и всё остальное прячем (visibility: место и прокрутка не меняются), под часами остаётся тёмный фон */
-html:has(#lb-wrap) .sc-host > div > :not(#lb-wrap):not([role=dialog]),
-html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){visibility:hidden}
-.lb-track .lb-slide{transition:opacity .5s ease, filter .5s ease}
-.lb-track .lb-slide.rs-dim{filter:brightness(.28)}
-.lb-track.lb-reels ~ .lb-fade-r{background:linear-gradient(to right, rgba(11,10,9,0) 0%, rgba(11,10,9,0.03) 15%, rgba(11,10,9,0.09) 30%, rgba(11,10,9,0.2) 45%, rgba(11,10,9,0.36) 60%, rgba(11,10,9,0.56) 75%, rgba(11,10,9,0.78) 88%, rgba(11,10,9,1) 100%) !important}
-.lb-reels .lb-slide.rs-prev{opacity:0;pointer-events:none}
-.lb-reels .lb-slide.rs-next{filter:brightness(.28)}
-.lb-track.rs-nt .lb-slide{transition:none}
-.rr-strip{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.rr-strip::-webkit-scrollbar{display:none}
-.rr-strip .rr-item{height:500px}
-.lb-track{position:relative;display:flex;gap:16px;width:100%;height:100%;box-sizing:border-box;padding:24px 0 24px 50%;overflow-x:hidden;scroll-snap-type:none;scroll-padding-left:24px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.lb-track::-webkit-scrollbar{display:none}
-.lb-slide{flex:none;height:100%;scroll-snap-align:start;scroll-snap-stop:always}
-.lb-slide-img{display:block;height:100%;width:auto;max-width:calc(100vw - 520px);object-fit:cover;border-radius:14px}
-.lb-reels .lb-slide-img{max-width:calc(100vw - 160px)}
-.lb-spacer{flex:0 0 70%}
-/* переключатель вида ленты (только телефон, REELS и «Комплекс») */
-.mode-pick{display:none}
-@media (max-width: 759px){
-  .mode-pick{display:flex;position:fixed;z-index:30;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));
-    gap:4px;padding:4px;border-radius:999px;background:rgba(21,19,17,.9);border:1px solid #2c2824;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 8px 24px rgba(0,0,0,.45)}
-  .mode-btn{width:44px;height:40px;border:0;border-radius:999px;background:transparent;color:#a89f92;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .2s,color .2s}
-  .mode-btn[aria-pressed="true"]{background:#bfd630;color:#1c1a17}
-  .mode-btn:focus-visible{outline:2px solid #bfd630;outline-offset:2px}
-  /* «слайдер»: по одной карточке, страница листается вниз с примагничиванием, как просмотр */
-  html.mgs-snap{scroll-snap-type:y mandatory;scroll-padding-top:5px}
-  html.mgs-snap .top-sec{scroll-snap-align:start}
-  .feed.slide .pin{flex:none !important;scroll-snap-align:start;scroll-snap-stop:always;padding-top:0 !important;height:min(177.78vw, calc(100svh - 10px))}
-  .feed.slide .pin > div[aria-hidden="true"]{display:none}
-  .feed.slide .cx-pin{height:auto;aspect-ratio:4/5}  /* «Комплекс» в 1 ряд — родной формат видео 4:5 */
-  .feed.slide .feed-col{gap:10px !important}
-  .feed.slide .cx-title{font-size:32px !important}
-  .feed.slide .cx-more{font-size:14px !important}
-  .feed.slide .cx-big{gap:12px !important}
-  .feed.slide .pin-btn,.feed.slide .pin{border-radius:14px !important}
-}
-@media (max-width: 760px){
-  .feed,.feed-col{gap:5px !important}
-  .pad{padding-left:5px !important;padding-right:5px !important}
-  header.pad{padding-left:12px !important;padding-right:12px !important}
-  .pin-btn,.pin{border-radius:10px !important}
-  .cx-big{gap:6px !important;padding:8px !important}
-  .ph-title{font-size:16px !important}
-  .ph-sub{font-size:11px !important}
-  .ph-exp{width:26px !important;height:26px !important;right:7px !important;top:7px !important}
-  .cx-title{font-size:17px !important}
-  .cx-more{font-size:11px !important}
-  .about-band{border-radius:12px !important}
-  .ttl{font-size:34px !important}
-  .logo-img{width:52px !important;height:52px !important}
-  .hide-m{display:none}
-  .hdr-cta{padding:0 16px !important;font-size:14px !important;min-height:44px !important}
-  .chips-nav{flex-wrap:nowrap !important;justify-content:flex-start !important;overflow-x:auto;scrollbar-width:none;padding-top:14px !important;padding-bottom:16px !important}
-  .chips-nav .chip{flex:none;white-space:nowrap}
-  .about-band{padding:22px 18px !important}
-  .about-band p{font-size:16px !important}
-  .rr-list{gap:5px !important}
-  .rr-strip{gap:5px !important}
-  .rr-strip .rr-item{height:300px}
-  .rr-arrows{display:none !important}
-  .rr-item{border-radius:10px !important}
-  .rr-head{padding:22px 18px !important;border-radius:10px !important}
-  .rr-title{font-size:30px !important}
-}
-/* невысокие экраны ПК: компактнее блок описания, чтобы кнопка была видна без прокрутки */
-@media (min-width: 1000px) and (max-height: 720px){
-  .lb-panel{padding:20px 24px 22px !important;gap:14px !important}
-  .lb-panel h2{font-size:30px !important}
-  .lb-panel p{font-size:14px !important;line-height:1.5 !important}
-  .lb-panel dl > div{padding:7px 0 !important}
-}
-/* телефон боком: фото не выше экрана, иначе свайп застревает */
-@media (max-width: 999px) and (orientation: landscape){
-  .lb-vslide img{max-height:calc(100vh - 10px);max-height:calc(100svh - 10px);object-fit:contain !important;background:#0b0a09 !important}
-}
-/* просмотр: на телефонах и планшетах в портрете — вертикальный слайдер */
-@media (max-width: 999px){
-  .lb-img{max-height:60vh !important}
-  .lb-wrap{flex-direction:column !important;overflow-y:auto;scroll-snap-type:y mandatory;scroll-padding-top:5px;-webkit-overflow-scrolling:touch}
-  .lb-stage{display:none !important}
-  .lb-vlist{display:flex !important;flex-direction:column;gap:5px;flex:none;padding:5px 5px 0}
-  .lb-vslide img{border-radius:10px}
-  .lb-vslide .v-snd{top:auto !important;bottom:38px}
-  .lb-vvid{height:min(177.78vw, calc(100vh - 10px));height:min(177.78vw, calc(100svh - 10px))}
-  .lb-vslide{scroll-snap-align:start;scroll-snap-stop:always}
-  .lb-panel{scroll-snap-align:start}
-  .lb-vcount{display:inline-flex !important}
-  .lb-close-v{display:flex !important}
-  .lb-stage{flex:none !important;height:var(--lbh, 125vw);max-height:82vh;padding:0 !important;transition:height .3s ease}
-  .lb-desktop{display:none !important}
-  .lb-thumbs-grid{display:none !important}
-  .lb-track{gap:0 !important;padding:0 !important;scroll-padding-left:0 !important;overflow-x:auto !important;scroll-snap-type:x mandatory !important}
-  .lb-slide{flex:0 0 100% !important;scroll-snap-align:center !important}
-  .lb-slide-img{width:100% !important;height:100% !important;object-fit:cover;border-radius:0 !important}
-  .lb-spacer,.lb-fade{display:none !important}
-  .lb-count{left:50% !important;transform:translateX(-50%)}
-  .lb-panel{width:auto !important;border-left:0 !important;overflow:visible !important;padding:22px 16px 28px !important}
-  .lb-close-m{display:flex !important;position:fixed !important;top:14px !important;right:14px !important;z-index:60 !important}
-  .lb-panel-head{display:none !important}
-}
+/* ---------- шапка: отдельные небольшие элементы (полоса во всю ширину заставляет Safari заливать зону часов) ---------- */
+.hd-btn{position:fixed;z-index:46;top:calc(env(safe-area-inset-top) + (var(--hd) - 40px)/2);width:40px;height:40px;border-radius:50%;
+  background:rgba(30,27,24,.72);border:1px solid rgba(244,241,236,.12);display:flex;align-items:center;justify-content:center;color:var(--tx);text-decoration:none}
+.hd-call{left:var(--side)}
+.hd-menu{right:var(--side)}
+.hd-menu span{position:absolute;left:12px;right:12px;height:1.6px;border-radius:2px;background:var(--tx);transition:transform .3s,opacity .2s,top .3s}
+.hd-menu span:nth-child(1){top:13px}.hd-menu span:nth-child(2){top:19px}.hd-menu span:nth-child(3){top:25px}
+.hd-menu.open{background:var(--lime)} .hd-menu.open span{background:#1c1a17}
+.hd-menu.open span:nth-child(1){top:19px;transform:rotate(45deg)} .hd-menu.open span:nth-child(2){opacity:0} .hd-menu.open span:nth-child(3){top:19px;transform:rotate(-45deg)}
+.hd-logo{position:fixed;z-index:46;left:0;right:0;width:max-content;margin:0 auto;top:calc(env(safe-area-inset-top) + (var(--hd) - 34px)/2);line-height:0;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}
+.hd-logo img{height:34px;width:auto}
+.menu{position:fixed;inset:0;z-index:45;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;padding:calc(var(--hd) + 20px) 24px 114px;opacity:0;transition:opacity .2s}
+.menu.open{opacity:1}
+.menu[hidden]{display:none}
+.menu > a{font-size:30px;font-weight:300;letter-spacing:-.01em;padding:8px 0;text-decoration:none}
+.menu > a.active{color:var(--lime)}
+.menu .mm{margin-top:22px;display:flex;flex-direction:column;gap:8px}
+.menu .mm > a{font-size:22px;font-weight:500;color:var(--lime);text-decoration:none}
+.menu .mm span{display:flex;gap:18px} .menu .mm span a{font-size:16px;color:var(--dim);text-decoration:none}
+html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
+@media (min-width:1000px){ .menu{padding-left:12vw;padding-bottom:126px} .menu > a{font-size:44px} }
 
+/* ---------- плашки-ленты внизу ---------- */
+.chips{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) - 8px);z-index:44;overflow-x:auto;scrollbar-width:none;padding:20px var(--side);
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent)}
+.chips::-webkit-scrollbar{display:none}
+.chips-in{display:flex;gap:8px;width:max-content;margin:0 auto;padding-right:2px}
+.chip{flex:none;height:44px;padding:0 18px;border-radius:999px;background:var(--chip);color:var(--tx);font-size:15px;font-weight:500;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.4)}
+.chip.on{background:var(--lime);color:#1c1a17}
 
-/* стикер — строчный элемент после текста: встаёт у конца последней строки, не налезает на текст при переносе */
-/* Заголовок «маркер + стикер» (Макс 23.10, вариант 6): тонкий текст, под ним прорисовывается лаймовый маркер, сверху прыгает стикер */
-.mk-w{position:relative;display:inline}
-.mk-t{background:linear-gradient(#bfd630,#bfd630) no-repeat 0 80%/0% .42em;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .1em;border-radius:.1em .3em .12em .25em;animation:mk-draw .8s cubic-bezier(.7,0,.2,1) .3s forwards}
-@keyframes mk-draw{to{background-size:100% .42em}}
-.mk-st{position:relative;display:inline-block;vertical-align:top;margin-left:-.55em;top:-.45em;z-index:2;white-space:nowrap;background:#f4f1ec;color:#0f0e0c;font-weight:800;font-size:max(12px,.22em);letter-spacing:0;line-height:1;padding:.5em .75em;border-radius:.7em;
-  transform:rotate(12deg) scale(0);box-shadow:0 8px 24px rgba(0,0,0,.4);animation:mk-pop .55s cubic-bezier(.3,1.7,.5,1) 1.05s forwards,mk-wob 3s ease-in-out 1.7s infinite}
-@keyframes mk-pop{to{transform:rotate(12deg) scale(1)}}
-@keyframes mk-wob{0%,100%{transform:rotate(12deg) scale(1)}50%{transform:rotate(4deg) scale(1.06)}}
-@media (prefers-reduced-motion:reduce){ .mk-t{animation:none;background-size:100% .42em} .mk-st{animation:none;transform:rotate(12deg)} }
+/* ---------- лента ---------- */
+#feed{padding:5px 5px 0}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.in{animation:up .5s cubic-bezier(.2,.7,.2,1) backwards}
 
-/* ===== ТЕСТ (Макс 23.10, вариант 2 из top-test.html): телефон — лента с самого верха, телефон/логотип/меню поверх фото на мягком затемнении, плашки-ленты внизу (без подложки) ===== */
-.site-call{display:none}
-@media (max-width:999px){
-  :root{--site-hd:58px}
-  /* шапка закреплена, но НЕ во всю ширину и без полосы-затемнения: закреплённый слой во всю ширину у верхнего края iPhone Safari
-     считает шапкой и заливает зону под часами — лента переставала уходить под часы */
-  .site-hd{position:fixed;left:0;right:0;width:max-content;margin:0 auto}  /* без transform — иначе кнопки внутри (fixed) встают относительно шапки */
-  .site-hd::before{display:none}
-  .site-logo img{height:34px}
-  .site-call,.site-menu-btn{width:40px;height:40px;top:calc(env(safe-area-inset-top) + (var(--site-hd) - 40px)/2)}
-  .site-call{display:flex;align-items:center;justify-content:center;position:fixed;z-index:46;left:var(--site-side);border-radius:50%;color:#f4f1ec;pointer-events:auto;
-    background:rgba(30,27,24,.72);border:1px solid rgba(244,241,236,.12);text-decoration:none}
-  .site-menu-btn span{left:12px;right:12px} .site-menu-btn span:nth-child(1){top:13px} .site-menu-btn span:nth-child(2){top:19px} .site-menu-btn span:nth-child(3){top:25px}
-  .site-menu-btn.open span:nth-child(1),.site-menu-btn.open span:nth-child(3){top:19px}
-  /* заголовка нет — лента от самого верха */
-  .top-sec{display:none !important}
-  .chips-nav + div.pad, .chips-nav ~ .pad{padding-top:5px !important}
-  /* плашки — внизу экрана, без серой подложки */
-  .chips-nav{position:fixed !important;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) - 8px);z-index:44;padding:20px var(--site-side) 20px !important;scroll-padding:0 var(--site-side);background:none !important;
-    mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent);-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent)}
-  .chips-nav::after{content:"";flex:none;width:1px}
-  /* без цифр-количества на плашках */
-  .chips-nav .chip > span[style]{display:none}
-  .chips-nav .chip{font-size:0 !important} .chips-nav .chip > .sc-interp{font-size:15px}
-  /* у каждой плашки своя тень; отступы у ленты плашек — чтобы тень не обрезалась прокруткой/маской в общую полосу */
-  .chips-nav .chip{box-shadow:0 4px 14px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.4)}
-  .feed-col:last-child{padding-bottom:0}
-  .feed-sec:last-child .feed-col{padding-bottom:70px}
+/* рилс-лента (REELS, Комплекс) */
+.lenta{display:flex;flex-direction:column;align-items:center;gap:5px;padding-bottom:calc(100lvh - var(--ch, 400px) - 10px)}
+.card{position:relative;flex:none;width:calc(100vw - 10px);border-radius:10px;overflow:hidden;background:#1d1a17;scroll-snap-align:start;scroll-snap-stop:always;cursor:pointer}
+.card.reel{height:min(177.78vw, calc(100svh - 10px))}
+.card.cx{aspect-ratio:4/5;border-radius:14px}
+@media (min-width:760px){
+  .card.reel{width:calc((100svh - 10px) * .5625);height:calc(100svh - 10px)}
+  .card.cx{width:min(calc(100vw - 10px), calc((100svh - 10px) * .8))}
 }
-.feed-sec + .feed-sec{margin-top:16px}
-@media (max-width:999px){ .feed-sec + .feed-sec{margin-top:5px} }
+.card .poster,.card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card video{opacity:0;transition:opacity .15s}
+.card video.ready{opacity:1}
+.num{position:absolute;left:10px;top:63px;z-index:3;height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:rgba(15,14,12,.7);font-size:13px;pointer-events:none}
+.play-ico{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;width:64px;height:64px;border-radius:50%;background:rgba(15,14,12,.6);align-items:center;justify-content:center;pointer-events:none}
+.card.paused .play-ico{display:flex}
+.snd{position:absolute;right:12px;bottom:92px;z-index:4;width:40px;height:40px;border-radius:50%;background:rgba(15,14,12,.6);display:flex;align-items:center;justify-content:center}
+.snd .on{display:none} html.sound .snd .on{display:block} html.sound .snd .off{display:none}
+/* полоска прогресса: тянется пальцем (перемотка); зона касания выше самой полоски */
+.prog{position:absolute;left:4px;right:4px;bottom:62px;z-index:4;height:26px;padding:11px 8px;touch-action:none;cursor:pointer}
+.prog b{display:block;height:4px;border-radius:2px;background:rgba(244,241,236,.3);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--tx)}
+.prog.drag b{height:6px;margin-top:-1px}
+/* кружок загрузки */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:none;position:absolute;left:50%;top:50%;z-index:3;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:3px solid rgba(244,241,236,.25);border-top-color:var(--lime);animation:spin .8s linear infinite;pointer-events:none}
+.wait .spin{display:block}
+.wait.paused .play-ico{display:none}
 
-/* ТЕСТ (Макс 23.10): лента без затемнений и текста поверх фото, без значка «развернуть»;
-   «Комплекс» — без белого названия и затемнения, ЖК — светлой плашкой в левом нижнем углу всегда */
-.ph-over,.ph-exp,.cx-title,.cx-more{display:none !important}
-.pin-btn:hover .pin-img{transform:none !important}  /* без приближения фото при наведении/касании */
-.cx-big,.pin-btn:hover .cx-big,.pin-btn:focus-visible .cx-big{background:none !important;justify-content:flex-end !important;align-items:flex-start !important;padding:12px !important}
-.cx-big::before{display:none !important}
-.cx-more{height:32px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.94);color:#1c1a17 !important;font-size:13px !important;font-weight:500;text-shadow:none}
-.cx-more svg{display:none}
-@media (max-width:999px){ .cx-big{padding:8px !important} .cx-more{height:28px;padding:0 10px;font-size:12px !important} }
+/* сетка (Кухни, Спальни, …) */
+.grid{display:flex;gap:5px;align-items:flex-start;padding-bottom:90px}
+.col{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.tile{position:relative;display:block;width:100%;border-radius:14px;overflow:hidden;background:#1d1a17}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.empty{padding:120px 20px;text-align:center;color:var(--dim)}
+@media (min-width:760px){ #feed{padding:5px 12px 0} .grid,.col{gap:16px} .tile{border-radius:18px} }
 
-/* ===== ТЕСТ (Макс 23.10): «рилс-лента» на телефоне — REELS и «Комплекс» по одной карточке в ряд, листается сама страница
-   (Safari прячет панели, видео под часами), свайп доводит ровно до следующей (примагничивание на html), играет только верхняя ===== */
-.rl-num,.rl-prog,.rl-play,.rl-snd{display:none}
-html.cx-snap{scroll-snap-type:y mandatory;scroll-padding-top:5px}
-html.cx-snap .chips-nav ~ .pad{padding-top:5px !important}
-.feed.rl .feed-col{gap:5px !important}
-.feed.rl .pin{flex:none !important;scroll-snap-align:start;scroll-snap-stop:always}
-.feed.rl-cx .feed-col{padding-bottom:calc(100lvh - (100vw - 10px) * 1.25 - 10px) !important}
-/* рилс — 9:16 во всю ширину, но не выше экрана (как в просмотре рилсов) */
-.feed.rl-reels .pin{padding-top:0 !important;height:min(177.78vw, calc(100svh - 10px));border-radius:10px !important}
-.feed.rl-reels .feed-col{padding-bottom:calc(100lvh - min(177.78vw, calc(100svh - 10px)) - 10px) !important}
-.feed.rl-reels .pin > span:not([class]){display:none !important}  /* плашки REELS/зона — в рилс-ленте не нужны */
-.feed.rl-reels .pin button[aria-label^="Открыть REELS"] > span{display:none !important}  /* значок «развернуть» */
-.feed.rl .rl-num{display:inline-flex;position:absolute;left:10px;top:63px;z-index:3;height:32px;box-sizing:border-box;align-items:center;padding:0 12px;border-radius:999px;background:rgba(15,14,12,.7);color:#f4f1ec;font-size:13px;pointer-events:none}
-.feed.rl-reels .rl-prog{display:block;position:absolute;left:12px;right:12px;bottom:74px;z-index:3;height:3px;border-radius:2px;background:rgba(244,241,236,.3);overflow:hidden;pointer-events:none}
-.feed.rl-reels .rl-prog i{display:block;height:100%;width:0;background:#f4f1ec}
-.feed.rl-reels .rl-snd{display:flex;position:absolute;right:12px;bottom:88px;z-index:4;width:40px;height:40px;border:0;border-radius:50%;background:rgba(15,14,12,.6);color:#f4f1ec;align-items:center;justify-content:center;cursor:pointer}
-.rl-snd .s-on{display:none} html.rl-sound .rl-snd .s-on{display:block} html.rl-sound .rl-snd .s-off{display:none}
-.feed.rl-reels .pin.rl-paused .rl-play{display:flex;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;width:64px;height:64px;border-radius:50%;background:rgba(15,14,12,.6);color:#f4f1ec;align-items:center;justify-content:center;pointer-events:none}
-/* счётчик — под шапкой (телефон/логотип/меню), звук и полоска — над плашками снизу */
-/* кружок загрузки на видео, пока у него нет кадра */
-@keyframes vspin{to{transform:rotate(360deg)}}
-.v-wait::after{content:"";position:absolute;left:50%;top:50%;z-index:4;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;box-sizing:border-box;
-  border:3px solid rgba(244,241,236,.25);border-top-color:#bfd630;animation:vspin .8s linear infinite;pointer-events:none}
+/* ---------- просмотр изделия: сама страница, фото одно под другим ---------- */
+#view{display:none}
+html.viewing #view{display:block}
+html.viewing #feed,html.viewing .chips,html.viewing .hd-btn,html.viewing .hd-logo{display:none}
+.vl{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 5px 0}
+.vm{position:relative;width:calc(100vw - 10px);max-width:900px;border-radius:10px;overflow:hidden;background:#1d1a17 center/cover no-repeat;scroll-snap-align:start;scroll-snap-stop:always}
+.vm img{width:100%;height:100%;object-fit:cover}
+.vm.vid{height:min(177.78vw, calc(100svh - 10px));max-width:calc((100svh - 10px) * .5625)}
+.vm.vid video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vm.vid .snd{bottom:16px}
+.vpanel{width:100%;max-width:900px;margin:0 auto;padding:26px 16px 60px}
+.vend{height:1px;scroll-snap-align:end}  /* точка у самого низа — до описания можно долистать (без неё примагничивание тянуло обратно к фото) */
+.vpanel h1{margin:0 0 6px;font-size:30px;font-weight:300;letter-spacing:-.01em}
+.vpanel .sub{color:var(--lime);font-size:14px;font-weight:500;margin-bottom:16px}
+.vpanel p{margin:0 0 18px;color:#d9d4cc;font-size:15px;line-height:1.55}
+.specs{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px;margin-bottom:22px}
+.specs dt{color:var(--dim)} .specs dd{margin:0}
+.price{font-size:28px;font-weight:500;margin-bottom:4px} .pdate{color:var(--dim);font-size:13px;margin-bottom:20px}
+.btns{display:flex;flex-direction:column;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;height:52px;border-radius:999px;font-size:16px;font-weight:600;text-decoration:none}
+.btn.main{background:var(--lime);color:#1c1a17} .btn.sec{background:var(--chip)}
+.vtop{position:fixed;z-index:50;top:calc(14px + env(safe-area-inset-top));height:40px;display:none}
+html.viewing .vtop{display:flex}
+.vcount{left:14px;align-items:center;padding:0 14px;border-radius:999px;background:rgba(15,14,12,.7);font-size:13px;height:32px;top:calc(18px + env(safe-area-inset-top))}
+html.vfree .vcount{opacity:0}
+.vclose{right:14px;width:40px;border-radius:50%;background:rgba(15,14,12,.7);align-items:center;justify-content:center}
 </style>
-</helmet>
 
-<div style="font-family: Onest, system-ui, sans-serif; color: #f4f1ec; background: #0f0e0c; min-height: 100vh">
-
-  <!-- заголовок -->
-  <section class="pad top-sec" style="padding: 44px 32px 8px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
-    <h1 class="ttl" style="margin: 0; font-weight: 300; font-size: 54px; line-height: 1.05; letter-spacing: -0.02em"><span class="mk-w"><span class="mk-t">Наши работы</span><span class="mk-st" aria-hidden="true">#MGS</span></span></h1>
-  </section>
-
-  <!-- ленты: у всех одинаковая сетка, а открытие разное (REELS — рилсы, Комплекс — страница проекта, остальные — просмотр изделия) -->
-  <nav aria-label="Ленты: наши работы" class="pad chips-nav" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 18px 32px 26px">
-    <sc-for list="{{chips}}" as="c" hint-placeholder-count="8">
-      <button class="chip" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; background: {{c.bg}}; color: {{c.fg}}">{{c.label}} <span style="opacity: 0.6; font-weight: 400">{{c.count}}</span></button>
-    </sc-for>
-  </nav>
-
-  <!-- лента -->
-  <div class="pad" style="padding: 0 12px 64px">
-    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{ false }}">
-      <div style="text-align: center; color: #a89f92; font-size: 15px; padding: 40px 0">Скоро здесь появятся проекты</div>
-    </sc-if>
-    <sc-for list="{{sections}}" as="sec" hint-placeholder-count="1">
-    <div class="feed-sec" data-sec="{{sec.name}}">
-    <div class="{{feedCls}}" style="display: flex; gap: 16px; align-items: stretch; max-width: 1920px; margin: 0 auto">
-      <sc-for list="{{sec.columns}}" as="col" hint-placeholder-count="4">
-      <div class="feed-col" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 16px">
-      <sc-for list="{{col.pins}}" as="p" hint-placeholder-count="3">
-
-        <!-- изделие: открывает просмотр с остальными фото этого изделия -->
-        <sc-if value="{{p.isPhoto}}" hint-placeholder-val="{{ true }}">
-          <div class="pin" data-key="{{p.key}}" style="position: relative; flex: {{p.flex}}">
-            <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
-            <button class="pin-btn" onClick="{{p.open}}" aria-label="Открыть: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 18px; overflow: hidden; background: #1f1c19; cursor: zoom-in">
-              <img class="pin-img" src="{{p.src}}" alt="{{p.label}}" decoding="async" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: {{p.pos}}">
-              <!-- при наведении: затемнение, название по центру, значок «развернуть» в правом верхнем углу -->
-              <span class="ph-over" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; text-align: center; color: #f4f1ec; pointer-events: none">
-                <span class="ph-title" style="font-size: 24px; font-weight: 300; line-height: 1.1; letter-spacing: -0.01em; text-wrap: balance; text-shadow: 0 2px 16px rgba(0,0,0,0.45)">{{p.label}}</span>
-                <span class="ph-sub" style="font-size: 13px; font-weight: 500; color: #bfd630">{{p.sub}}</span>
-              </span>
-              <span class="ph-exp" style="position: absolute; right: 12px; top: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
-            </button>
-          </div>
-        </sc-if>
-
-        <!-- комплексный проект: ведёт на страницу проекта -->
-        <sc-if value="{{p.isLink}}" hint-placeholder-val="{{ false }}">
-          <div class="pin cx-pin" data-key="{{p.key}}" style="position: relative; flex: {{p.flex}}">
-            <div aria-hidden="true" style="padding-top: {{p.padTop}}"></div>
-            <span class="rl-num">{{p.num}}</span>
-            <a class="pin-btn" href="{{p.href}}" aria-label="Открыть проект: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: block; border-radius: 18px; overflow: hidden; background: #1f1c19; text-decoration: none">
-              <!-- обложка-видео проекта (поле coverVideo): играет, когда плитка видна на экране -->
-              <sc-if value="{{p.hasVideo}}" hint-placeholder-val="{{ false }}">
-                <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
-                <video class="pin-img feed-v" data-src="{{p.video}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
-              </sc-if>
-              <sc-if value="{{p.noVideo}}" hint-placeholder-val="{{ true }}">
-                <span class="cx-blank" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #26221f"></span>
-              </sc-if>
-              <!-- «Крупный заголовок»: фото притемнены, по центру — крупное тонкое название и адрес (ЖК) со стрелкой -->
-              <span class="cx-big" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 16px; color: #f4f1ec; pointer-events: none">
-                <span class="cx-title" style="font-size: 30px; font-weight: 300; line-height: 1.08; letter-spacing: -0.01em; text-shadow: 0 2px 18px rgba(0,0,0,0.5); text-wrap: balance">{{p.label}}</span>
-                <span class="cx-more" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: #bfd630">{{p.address}} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
-              </span>
-            </a>
-          </div>
-        </sc-if>
-
-        <!-- рилс: открывает режим REELS, как на странице проекта -->
-        <sc-if value="{{p.isVideo}}" hint-placeholder-val="{{ false }}">
-          <div class="pin" data-key="{{p.key}}" style="position: relative; flex: none; border-radius: 18px; overflow: hidden; background: #1f1c19; padding-top: 177.78%">
-            <img class="vid-ph" src="{{p.ph}}" alt="" aria-hidden="true" decoding="async" style="position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover">
-            <video class="feed-v" data-src="{{p.src}}" preload="none" muted="" loop="" playsinline="" style="pointer-events: none; position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; object-fit: cover"></video>
-            <span style="position: absolute; left: 12px; top: 12px; right: 56px; display: flex; flex-wrap: wrap; gap: 6px">
-              <span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px; letter-spacing: 0.04em">REELS</span>
-              <sc-if value="{{p.hasZone}}" hint-placeholder-val="{{ false }}"><span style="height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; background: rgba(255,255,255,0.94); color: #1c1a17; font-size: 13px; font-weight: 500; padding: 0 12px; border-radius: 999px">{{p.zone}}</span></sc-if>
-            </span>
-            <span class="rl-num">{{p.num}}</span>
-            <span class="rl-prog" aria-hidden="true"><i></i></span>
-            <span class="rl-play" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></span>
-            <button onClick="{{p.open}}" aria-label="Открыть REELS: {{p.label}}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer">
-              <span style="position: absolute; right: 12px; top: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.94); color: #1c1a17; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg></span>
-            </button>
-            <button class="rl-snd" onClick="{{p.snd}}" aria-label="Звук"><svg class="s-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg><svg class="s-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></button>
-          </div>
-        </sc-if>
-
-      </sc-for>
-      </div>
-      </sc-for>
-    </div>
-    </div>
-    </sc-for>
-  </div>
-
-
-
-  <!-- полноэкранный просмотр: как на странице проекта -->
-  <!-- полноэкранный просмотр -->
-  <sc-if value="{{lbOpen}}" hint-placeholder-val="{{ false }}">
-    <div id="lb-wrap" class="lb-wrap" onScroll="{{vScroll}}" role="dialog" aria-modal="true" aria-label="Просмотр: {{lb.zone}}" style="position: fixed; inset: 0; z-index: 50; background: #0b0a09; color: #f4f1ec; display: flex">
-
-      <!-- фото -->
-      <div class="lb-stage" style="position: relative; flex: 1; min-width: 0; display: flex; align-items: stretch; padding: 0; --lbh: {{lbH}}">
-        <sc-if value="{{isReels}}" hint-placeholder-val="{{ false }}">
-          <button class="lb-desktop" onClick="{{closeLb}}" aria-label="Закрыть" style="position: absolute; z-index: 5; top: 24px; right: 24px; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(40,36,32,0.85); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
-        </sc-if>
-        <button class="lb-close-m" onClick="{{closeLb}}" aria-label="Закрыть" style="display: none; position: absolute; top: 20px; right: 20px; z-index: 2; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.7); color: #f4f1ec; cursor: pointer; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
-        <div id="lb-track" class="lb-track {{trackCls}}" onScroll="{{lbScroll}}" onWheel="{{lbWheel}}">
-          <sc-for list="{{lbLoop}}" as="t" hint-placeholder-count="3">
-            <div class="lb-slide">
-              <sc-if value="{{t.isImg}}" hint-placeholder-val="{{ true }}">
-                <img class="lb-slide-img" src="{{t.src}}" alt="Фото {{t.n}}" decoding="sync" onLoad="{{t.measure}}" style="aspect-ratio: {{t.ar}}">
-              </sc-if>
-              <sc-if value="{{t.isVideo}}" hint-placeholder-val="{{ false }}">
-                <div style="position: relative; height: 100%">
-                  <video class="lb-slide-img" src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" style="aspect-ratio: {{t.ar}}; background: #000 url('{{t.pt}}') center / cover no-repeat; cursor: pointer"></video>
-                  <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{t.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{t.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{t.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
-                  <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
-                </div>
-              </sc-if>
-            </div>
-          </sc-for>
-          <div class="lb-spacer" aria-hidden="true"></div>
-        </div>
-        <div class="lb-fade lb-fade-r" aria-hidden="true" style="position: absolute; z-index: 3; top: 0; bottom: 0; right: 0; width: 320px; pointer-events: none; background: linear-gradient(to right, rgba(21,19,17,0) 0%, rgba(21,19,17,0.03) 15%, rgba(21,19,17,0.09) 30%, rgba(21,19,17,0.2) 45%, rgba(21,19,17,0.36) 60%, rgba(21,19,17,0.56) 75%, rgba(21,19,17,0.78) 88%, rgba(21,19,17,1) 100%)"></div>
-        <div class="lb-fade" aria-hidden="true" style="position: absolute; z-index: 3; top: 0; bottom: 0; left: 0; width: 260px; pointer-events: none; background: linear-gradient(to left, rgba(11,10,9,0) 0%, rgba(11,10,9,0.03) 15%, rgba(11,10,9,0.09) 30%, rgba(11,10,9,0.2) 45%, rgba(11,10,9,0.36) 60%, rgba(11,10,9,0.56) 75%, rgba(11,10,9,0.78) 88%, rgba(11,10,9,1) 100%)"></div>
-        <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
-          <button class="lb-desktop" onClick="{{lbPrev}}" aria-label="Предыдущее фото" style="position: absolute; z-index: 4; left: 40px; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; border: 0; background: rgba(15,14,12,0.55); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
-          <button class="lb-desktop" onClick="{{lbNext}}" aria-label="Следующее фото" style="position: absolute; z-index: 4; right: 40px; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; border: 0; background: rgba(15,14,12,0.55); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
-          <span class="lb-count" style="position: absolute; z-index: 4; left: 40px; bottom: 72px; background: rgba(15,14,12,0.6); font-size: 13px; padding: 7px 14px; border-radius: 999px">{{lb.pos}}</span>
-        </sc-if>
-      </div>
-
-      <!-- телефон: фото одно под другим — свайп вверх поднимает следующее, описание открывается после последнего -->
-      <div class="lb-vlist" aria-label="Фото: {{lb.zone}}">
-        <sc-for list="{{lbList}}" as="t" hint-placeholder-count="3">
-          <div class="lb-vslide">
-            <sc-if value="{{t.isImg}}" hint-placeholder-val="{{ true }}">
-              <img src="{{t.src}}" alt="Фото {{t.n}}" decoding="sync" style="display: block; width: 100%; height: auto; aspect-ratio: {{t.ar}}; object-fit: cover; background: #1f1c19">
-            </sc-if>
-            <sc-if value="{{t.isVideo}}" hint-placeholder-val="{{ false }}">
-              <div style="position: relative">
-                <video src="{{t.vsrc}}" data-src="{{t.key}}" poster="{{t.poster}}" muted="" loop="" playsinline="" preload="metadata" data-lb="1" onClick="{{vClick}}" onPlay="{{vEv}}" onPause="{{vEv}}" onVolumeChange="{{vEv}}" onTimeUpdate="{{vTime}}" data-k="{{t.key}}" class="lb-vvid" style="display: block; width: 100%; object-fit: cover; background: #000 url('{{t.pt}}') center / cover no-repeat; border-radius: 10px; cursor: pointer"></video>
-                <button class="v-snd" onClick="{{vSnd}}" aria-label="Звук" style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><sc-if value="{{t.sndOn}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg></sc-if><sc-if value="{{t.sndOff}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M22 9l-6 6M16 9l6 6"></path></svg></sc-if></button><sc-if value="{{t.paused}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: rgba(15,14,12,0.6); color: #f4f1ec; display: flex; align-items: center; justify-content: center; pointer-events: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></sc-if>
-                <div class="v-bar" onPointerDown="{{vSeekDown}}" onPointerMove="{{vSeekMove}}" onPointerUp="{{vSeekUp}}" onPointerCancel="{{vSeekUp}}" style="position: absolute; left: 12px; right: 12px; bottom: 6px; height: 26px; z-index: 3; cursor: pointer; touch-action: none; display: flex; align-items: center"><div style="position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(244,241,236,0.3); overflow: hidden"><div class="v-fill" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: {{accent}}"></div></div></div>
-              </div>
-            </sc-if>
-          </div>
-        </sc-for>
-      </div>
-      <button class="lb-close-v" onClick="{{closeLb}}" aria-label="Закрыть" style="position: fixed; top: 14px; right: 14px; z-index: 60; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(15,14,12,0.7); color: #f4f1ec; cursor: pointer; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
-      <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
-        <span class="lb-vcount" style="position: fixed; top: 14px; left: 14px; z-index: 60; height: 32px; box-sizing: border-box; align-items: center; padding: 0 12px; border-radius: 999px; background: rgba(15,14,12,0.7); color: #f4f1ec; font-size: 13px">{{lb.pos}}</span>
-      </sc-if>
-
-      <!-- телефон: миниатюры сразу под слайдером -->
-      <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
-        <div class="lb-thumbs-m" style="display: none">
-          <sc-for list="{{lbList}}" as="t" hint-placeholder-count="4">
-            <button onClick="{{t.open}}" aria-label="Фото {{t.n}}" style="flex: none; width: 56px; height: 70px; padding: 0; border: 0; border-radius: 8px; overflow: hidden; background: #1f1c19; cursor: pointer; opacity: {{t.op}}; outline: {{t.ring}}; outline-offset: 2px">
-              <img src="{{t.src}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block">
-            </button>
-          </sc-for>
-        </div>
-      </sc-if>
-
-      <!-- панель изделия -->
-      <aside class="lb-panel {{panelCls}}" aria-label="Описание: {{lb.zone}}" style="position: relative; z-index: 3; flex: none; width: 400px; background: #151311; padding: 28px 32px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px; overflow-y: auto">
-        <div class="lb-panel-head" style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-          <span></span>
-          <button onClick="{{closeLb}}" aria-label="Закрыть" style="width: 44px; height: 44px; border: 0; border-radius: 50%; background: #26221f; color: #f4f1ec; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
-        </div>
-        <h2 style="margin: 0; font-size: 40px; font-weight: 300; line-height: 1.05; letter-spacing: -0.01em">{{lb.zone}}</h2>
-        <p style="margin: 0; font-size: 16px; line-height: 1.65; color: #cfc7bb">{{lb.text}}</p>
-        <dl style="margin: 0; display: flex; flex-direction: column">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-top: 1px solid #262220; padding: 11px 0"><dt style="font-size: 14px; color: #a39a8e">Корпус</dt><dd style="margin: 0; font-size: 15px; text-align: right">{{lb.korpus}}</dd></div>
-          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-top: 1px solid #262220; padding: 11px 0"><dt style="font-size: 14px; color: #a39a8e">Фасады</dt><dd style="margin: 0; font-size: 15px; text-align: right">{{lb.fasady}}</dd></div>
-          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-top: 1px solid #262220; padding: 11px 0"><dt style="font-size: 14px; color: #a39a8e">Фурнитура</dt><dd style="margin: 0; font-size: 15px; text-align: right">{{lb.furn}}</dd></div>
-        </dl>
-        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border-top: 1px solid #262220; padding-top: 16px">
-          <span style="font-size: 14px; color: #a39a8e">Стоимость</span>
-          <span style="font-size: 30px; font-weight: 500; line-height: 1.1; color: {{accent}}; white-space: nowrap">{{lb.price}}</span>
-          <span style="font-size: 13px; color: #8f867a">Цена актуальна на {{priceDate}}</span>
-        </div>
-        <sc-if value="{{lb.hasPage}}" hint-placeholder-val="{{ true }}">
-          <a href="{{lb.href}}" aria-label="Открыть весь проект «{{lb.project}}»" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 999px; border: 1px solid rgba(244,241,236,0.35); color: #f4f1ec; font-weight: 500; font-size: 15px">Открыть весь проект<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
-        </sc-if>
-        <sc-if value="{{lbMulti}}" hint-placeholder-val="{{ true }}">
-          <div class="lb-thumbs-grid" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-top: 6px; border-top: 1px solid #262220">
-            <sc-for list="{{lbList}}" as="t" hint-placeholder-count="4">
-              <button onClick="{{t.open}}" aria-label="Фото {{t.n}}" style="aspect-ratio: 4 / 5; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: #1f1c19; cursor: pointer; margin-top: 8px; opacity: {{t.op}}; outline: {{t.ring}}; outline-offset: 2px">
-                <img src="{{t.src}}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block">
-              </button>
-            </sc-for>
-          </div>
-        </sc-if>
-        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 8px">
-          <a href="#" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 999px; background: {{accent}}; color: #1c1a17; font-weight: 500; font-size: 16px">Хочу такую же</a>
-          <span style="font-size: 13px; color: #8f867a; text-align: center">Рассчитаем под ваши размеры</span>
-        </div>
-      </aside>
-    </div>
-  </sc-if>
-
-</div>
-</template>
-
-<!-- ===== Шапка как на главной (home.html): логотип по центру закреплён сверху, справа кружок меню; меню на весь экран ===== -->
-<header class="site-hd"><a href="tel:84957773575" class="site-call" aria-label="Позвонить 8-495-777-35-75"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo-cut.webp" alt="MGS MEBEL" width="400" height="217"></a>
-  <button class="site-menu-btn" id="siteMenuBtn" aria-label="Меню"><span></span><span></span><span></span></button></header>
-<nav class="site-menu" id="siteMenu" aria-label="Меню сайта" hidden>
-  <a href="home.html">Главная</a>
-  <a href="#">О нас</a>
-  <a href="#">Фирменные салоны</a>
-  <a href="portfolio.html" class="active">Наши работы</a>
-  <a href="#">Каталоги</a>
-  <a href="#">Дизайнерам</a>
-  <a href="news.html">Новости / новинки</a>
-  <div class="mm-contacts"><a href="tel:84957773575">8-495-777-35-75</a><span><a href="#">Telegram</a><a href="#">WhatsApp</a></span></div>
+<a class="hd-btn hd-call" href="tel:84957773575" aria-label="Позвонить 8-495-777-35-75"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a>
+<a class="hd-logo" href="home.html" aria-label="MGS MEBEL — на главную"><img src="assets/logo-cut.webp" alt="MGS MEBEL" width="400" height="217"></a>
+<button class="hd-btn hd-menu" id="menuBtn" aria-label="Меню"><span></span><span></span><span></span></button>
+<nav class="menu" id="menu" aria-label="Меню сайта" hidden>
+  <a href="home.html">Главная</a><a href="#">О нас</a><a href="#">Фирменные салоны</a><a href="portfolio.html" class="active">Наши работы</a>
+  <a href="#">Каталоги</a><a href="#">Дизайнерам</a><a href="news.html">Новости / новинки</a>
+  <div class="mm"><a href="tel:84957773575">8-495-777-35-75</a><span><a href="#">Telegram</a><a href="#">WhatsApp</a></span></div>
 </nav>
+
+<h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Наши работы — MGS Mebel</h1>
+<main id="feed"></main>
+<nav class="chips" id="chips" aria-label="Ленты"><div class="chips-in" id="chipsIn"></div></nav>
+<section id="view" aria-label="Просмотр изделия"></section>
+<span class="vtop vcount" id="vcount"></span>
+<button class="vtop vclose" id="vclose" aria-label="Закрыть"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+
 <script>
-(function(){var m=document.getElementById('siteMenu'),b=document.getElementById('siteMenuBtn');
-var ht;function set(o){clearTimeout(ht);if(o){m.hidden=false;void m.offsetWidth;}else{m.hidden=true;}m.classList.toggle('open',o);b.classList.toggle('open',o);document.documentElement.classList.toggle('site-menu-open',o);}
-b.addEventListener('click',function(){set(!m.classList.contains('open'));});
-m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(e){if(a.classList.contains('active')){e.preventDefault();}set(false);});});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m.classList.contains('open'))set(false);});
-// прокрутили — под шапкой мягкое затемнение, чтобы логотип и кружок меню не сливались с плитками
-var sc=function(){document.documentElement.classList.toggle('site-scrolled',(window.scrollY||0)>8);};addEventListener('scroll',sc,{passive:true});sc();})();
-</script>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#bfd630","options":["#bfd630","#d8b98f","#f4f1ec"]},"$preview":{"width":1440,"height":1600}}'>
-class Component extends DCLogic {
-  constructor(props) {
-    super(props);
-    var sl = false;  // переключатель «2 в ряд / 1 в ряд» убран (Макс 22.10) — всегда сетка
-    // ТЕСТ (Макс 23.10): одна сплошная лента — Комплекс, потом Кухни, Спальни… плашка переезжает сама при прокрутке; REELS — отдельно
-    var h0 = this.readHash();
-    // REELS и «Комплекс» — отдельные ленты; Кухни…Гостиные — одна сплошная лента (state.filter = 'Кухни')
-    this._pendingSec = null;
-    this.state = { filter: h0 || this.DEFAULT(), lb: -1, slide: sl };
-  }
+/* ===== ТЕСТ «Наши работы» (portfolio-hd), Макс 23.10 — написано заново, без движка страниц.
+   REELS и «Комплекс» — «рилс-лента»; остальные ленты — сетка, касание — просмотр изделия «как лента». ===== */
+(function () {
+'use strict';
+var de = document.documentElement, $ = function (s, r) { return (r || document).querySelector(s); }, $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+var FEEDS = ['REELS', 'Комплекс', 'Кухни', 'Спальни', 'Гардеробные', 'Прихожие', 'Санузлы', 'Детские', 'Гостиные'];
+var SND_OFF = '<svg class="off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+var SND_ON = '<svg class="on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+var PLAY = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 
-  // ===== ЛЕНТЫ =====
-  // порядок плашек; при заходе открывается DEFAULT
-  FILTERS() { return ['REELS', 'Комплекс', 'Кухни', 'Спальни', 'Гардеробные', 'Прихожие', 'Санузлы', 'Детские', 'Гостиные']; }
-  DEFAULT() { return 'REELS'; }  // ТЕСТ (Макс 23.10): страница открывается с REELS
-
-  // ===== ПРОЕКТЫ ПОРТФОЛИО: на сайте приходят из CMS =====
-  // Проект — это адрес. Всё, что в нём сделано, само раскладывается по лентам:
-  //   complex: true  — проект виден в ленте «Комплекс», клик ведёт на страницу проекта (href);
-  //   reels          — рилсы проекта, лента REELS (клик — просмотр рилсов, как на странице проекта);
-  //   items          — изделия проекта; type — в какой ленте показывать (Кухни, Спальни, …);
-  //                    клик — просмотр изделия со всеми его фото, описанием и ценой.
-  // Обложка изделия в ленте — первое фото из photos.
-  // на сайте показываем WebP-копии фото (на ~45% легче JPEG; делает tools/make_thumbs.py), JPEG остаётся исходником
-  // полные фото в просмотре — оригинальные JPEG (WebP Максу заметно мутнее); WebP только у превью ленты (thumb())
-  webp(v) { return v; }
-  projects() { return this._pjs || (this._pjs = this.webp(this.projectsRaw())); }
-  projectsRaw() {
+/* ---------- данные (те же, что в portfolio.html) ---------- */
+function projectsRaw() {
     var P = {
       k1: 'assets/51b3a741d39db0d4301d3aa373ff7deb.jpg', k2: 'assets/1df78be4ea18f381158d3b6f19fb0650.jpg', k3: 'assets/bf2bd4491530627d1ddddc9a7168d603.jpg',
       l1: 'assets/852969a9418bd9af724aadd3b339a6a4.jpg', l2: 'assets/16c8149d74c21abbbe503503db9855c9.jpg',
@@ -927,824 +533,248 @@ class Component extends DCLogic {
         ]
       }
     ];
-  }
+  
+}
+var PRS = projectsRaw(), REELS = [], ITEMS = [];
+PRS.forEach(function (pr) {
+  (pr.reels || []).forEach(function (r) { REELS.push({ src: r.src, poster: r.poster, project: pr.title, href: pr.href }); });
+  (pr.items || []).forEach(function (it) { if ((it.photos || []).length) ITEMS.push({ name: it.name, type: it.type, photos: it.photos || [], videos: it.videos || [], text: it.text || '',
+    price: it.price || '', korpus: it.korpus || '—', fasady: it.fasady || '—', furn: it.furn || '—', project: pr.title, href: pr.href, address: pr.address || '', priceDate: pr.priceDate || '' }); });
+});
+var CX = PRS.filter(function (p) { return p.complex && p.href; });
+var base = function (s) { return (s || '').replace(/^.*\//, '').replace(/\.(jpg|jpeg|png|webp|mp4)$/, ''); };
+var thumb = function (s) { return /^assets\/[^/]+\.(jpg|webp)$/.test(s || '') ? 'assets/t/' + base(s) + '.webp' : s; };
+var reelPoster = function (src) { return 'assets/t/' + base(src) + '-preview.webp'; };
+var ratio = function (s) { var R = window.MGS_RATIOS || {}; return R[s] || 1.25; };
+var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
 
-  // сводим проекты в плоские списки для лент
-  data() {
-    if (this._data) return this._data;
-    var reels = [], items = [], byKey = {}, photos = [], videos = [];
-    var prs = this.projects();
-    prs.forEach(function (pr, pi) {
-      if (pr.cover) photos.push(pr.cover);
-      // у рилса два тега: REELS и изделие, к которому видео тоже относится (если есть)
-      (pr.reels || []).forEach(function (r) {
-        var zone = '';
-        (pr.items || []).forEach(function (it) { (it.videos || []).forEach(function (v) { if (v.src === r.src) zone = it.name; }); });
-        reels.push({ src: r.src, poster: r.poster, project: pr.title, href: pr.href, zone: zone }); videos.push(r.src);
-      });
-      (pr.items || []).forEach(function (it, ii) {
-        var key = pi + '-' + ii;
-        var x = { key: key, name: it.name, type: it.type, photos: it.photos || [], videos: it.videos || [], text: it.text || '', price: it.price || '',
-          korpus: it.korpus || '—', fasady: it.fasady || '—', furn: it.furn || '—', project: pr.title, href: pr.href, address: pr.address || '', priceDate: pr.priceDate || '' };
-        items.push(x); byKey[key] = x;
-        x.photos.forEach(function (s) { photos.push(s); });
-        x.videos.forEach(function (v) { videos.push(v.src); });
-      });
-    });
-    var uniq = function (a) { return a.filter(function (s, i) { return s && a.indexOf(s) === i; }); };
-    this._data = { projects: prs, reels: reels, items: items, byKey: byKey, photos: uniq(photos), videos: uniq(videos) };
-    return this._data;
-  }
+var feedEl = $('#feed'), chipsIn = $('#chipsIn'), chipsEl = $('#chips'), viewEl = $('#view');
+var S = { feed: null, cards: [], active: null, sound: false, gen: 0, viewing: false, feedY: 0 };
 
-  // нажали плашку в сплошной ленте: как раньше при смене ленты — «Волна» (плитки гаснут, страница встаёт на начало раздела,
-  // плитки раздела всплывают по очереди); дальше вниз разделы идут по порядку. Листание пальцем — плашка переезжает сама (spyCheck)
-  goSec(name) {
-    var el = document.querySelector('.feed-sec[data-sec="' + name + '"]'); if (!el) return;
-    var self = this, off = window.innerWidth < 1000 ? 5 : 16;
-    this._spyLock = name; clearTimeout(this._spyT);
-    this._touchPin = null; this._loading = {}; this._vBusy = null; this._vq = [];
-    this.setSpy(name);
-    var jump = function () {
-      var y = el === document.querySelector('.feed-sec') ? 0 : el.getBoundingClientRect().top + (window.scrollY || 0) - off;
-      var de = document.documentElement, sb = de.style.scrollBehavior; de.style.scrollBehavior = 'auto';
-      window.scrollTo(0, Math.max(0, y)); de.style.scrollBehavior = sb;
-      self._spyT = setTimeout(function () { self._spyLock = null; }, 400);
-    };
-    var a = this.anim(), E = this.feedEls();
-    if (!a || !E.feed || !E.feed.animate) { jump(); return; }
-    (this._outA || []).forEach(function (x) { x.cancel(); });
-    this._outA = E.pins.map(function (o) { return o.el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }], { duration: 170, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }); });
-    clearTimeout(this._swT);
-    this._swT = setTimeout(function () { jump(); requestAnimationFrame(function () { self._animIn = 1; self.animateIn(); }); }, 170);
-  }
-  setSpy(name) {
-    if (this.state.spy !== name) this.setState({ spy: name });
-    try { history.replaceState(null, '', name === this.DEFAULT() ? location.pathname + location.search : '#' + encodeURIComponent(name)); } catch (e) {}
-    // активную плашку — в видимую часть строки плашек
-    var nav = document.querySelector('.chips-nav'), self = this;
-    requestAnimationFrame(function () {
-      var b = nav && nav.querySelector('.chip[aria-pressed="true"]'); if (!b || nav.scrollWidth <= nav.clientWidth) return;
-      var x = b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2;
-      try { nav.scrollTo({ left: Math.max(0, x), behavior: 'smooth' }); } catch (e) { nav.scrollLeft = x; }
-    });
-  }
-  spyCheck() {
-    return;  // ТЕСТ: сплошной ленты больше нет — у каждой плашки своя лента
-    if (this.state.filter === 'REELS' || this.state.filter === 'Комплекс' || this.state.lb >= 0 || this._spyLock) return;
-    var secs = document.querySelectorAll('.feed-sec[data-sec]'); if (!secs.length) return;
-    var line = window.innerHeight * 0.4, cur = secs[0].getAttribute('data-sec');
-    for (var i = 0; i < secs.length; i++) { if (secs[i].getBoundingClientRect().top <= line) cur = secs[i].getAttribute('data-sec'); }
-    // дошли до самого низа — последний раздел
-    if (window.innerHeight + (window.scrollY || 0) >= document.documentElement.scrollHeight - 4) cur = secs[secs.length - 1].getAttribute('data-sec');
-    if (cur !== this.state.spy) this.setSpy(cur);
-  }
-  readHash() {
-    var h = '';
-    try { h = decodeURIComponent((location.hash || '').slice(1)); } catch (e) {}
-    return this.FILTERS().indexOf(h) >= 0 ? h : '';
-  }
-  setFilter(f) {
-    if (f === this.state.filter) return;
-    // адрес обновляем, где это разрешено (во встроенных окнах превью — нельзя, лента всё равно переключится)
-    try { history.replaceState(null, '', f === this.DEFAULT() ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
-    this.switchFeed(f);
-  }
+/* ---------- плашки ---------- */
+chipsIn.innerHTML = FEEDS.map(function (f) { return '<button class="chip" data-f="' + f + '">' + (f === 'Комплекс' ? '🔥 Комплекс' : f) + '</button>'; }).join('');
+chipsIn.addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) setFeed(b.getAttribute('data-f')); });
+function markChip() {
+  var on = null;
+  $$('.chip', chipsIn).forEach(function (b) { var o = b.getAttribute('data-f') === S.feed; b.classList.toggle('on', o); if (o) on = b; });
+  if (on && chipsEl.scrollWidth > chipsEl.clientWidth) { var x = on.offsetLeft - (chipsEl.clientWidth - on.offsetWidth) / 2; try { chipsEl.scrollTo({ left: Math.max(0, x), behavior: 'smooth' }); } catch (e) { chipsEl.scrollLeft = x; } }
+}
+var jump = function (y) { var sb = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; window.scrollTo(0, y); de.style.scrollBehavior = sb; };
 
-  // ===== ПЕРЕХОД МЕЖДУ ЛЕНТАМИ =====
-  // переход — «Волна»: старые плитки гаснут, новые всплывают по очереди; при «уменьшить движение» — без анимации
-  anim() {
-    try { if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return 0; } catch (e) {}
-    return 1;
-  }
-  feedEls() {
-    var vh = window.innerHeight;
-    var pins = [].slice.call(document.querySelectorAll('.feed .pin')).map(function (el) { return { el: el, r: el.getBoundingClientRect() }; })
-      .filter(function (o) { return o.r.bottom > -40 && o.r.top < vh + 40; });  // анимируем только то, что видно
-    pins.sort(function (a, b) { return (a.r.top - b.r.top) || (a.r.left - b.r.left); });
-    return { feed: document.querySelector('.feed'), cols: [].slice.call(document.querySelectorAll('.feed .feed-col')), pins: pins };
-  }
-  // телефон, ленты REELS и «Комплекс»: «плитка» (2 в ряд) или «слайдер» (1 в ряд, листается вниз по одной карточке)
-  setMode(on) {
-    if (!!this.state.slide === on) return;
-    this._touchPin = null;  // после смены вида/ленты в «2 в ряд» снова ничего не играет, пока не коснутся
-    this._loading = {}; this._vBusy = null; this._vq = [];  // очередь загрузки — заново, с верха новой ленты
-    try { localStorage.setItem('mgs-slide', on ? '1' : '0'); } catch (e) {}
-    var self = this, a = this.anim(), E = this.feedEls();
-    var go = function () { self._animIn = a; self.setState({ slide: on }); try { window.scrollTo(0, 0); } catch (e) {} };
-    if (!a || !E.feed || !E.feed.animate) { go(); return; }
-    (this._outA || []).forEach(function (x) { x.cancel(); });
-    this._animIn = null;
-    this._outA = E.pins.map(function (o) { return o.el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }], { duration: 170, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }); });
-    clearTimeout(this._swT); this._swT = setTimeout(go, 170);
-  }
-  switchFeed(f) {
-    this._touchPin = null;  // после смены вида/ленты в «2 в ряд» снова ничего не играет, пока не коснутся
-    this._loading = {}; this._vBusy = null; this._vq = [];  // очередь загрузки — заново, с верха новой ленты
-    var self = this, a = this.anim(), E = this.feedEls();
-    var go = function () { self._animIn = a; self._cxOn = null; try { var de = document.documentElement, sb = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); de.style.scrollBehavior = sb; } catch (e) {} self.setState({ filter: f, chipF: null, lb: -1, lbZone: null, lbStart: 0 }); };  // ТЕСТ: плашки внизу — новая лента всегда с начала
-    if (!a || !E.feed || !E.feed.animate) { go(); return; }
-    (this._outA || []).forEach(function (x) { x.cancel(); });
-    this._animIn = null; this.setState({ chipF: f });
-    var out = [], ease = 'cubic-bezier(.4,0,1,1)', dur = 170;
-    var fx = function (el, kf, o) { out.push(el.animate(kf, Object.assign({ duration: dur, easing: ease, fill: 'forwards' }, o || {}))); };
-    if (a === 1) E.pins.forEach(function (o) { fx(o.el, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-10px)' }]); });
-    this._outA = out;
-    clearTimeout(this._swT); this._swT = setTimeout(go, dur);
-  }
-  animateIn() {
-    var a = this._animIn; this._animIn = 0;
-    (this._outA || []).forEach(function (x) { x.cancel(); }); this._outA = [];
-    if (!a) return;
-    var E = this.feedEls(); if (!E.feed || !E.feed.animate) return;
-    var ease = 'cubic-bezier(.2,.7,.2,1)';
-    if (a !== 1) return;
-    // волна: плитки всплывают по очереди, но каждая — только когда её картинка уже готова (не всплывают пустыми);
-    // ждём не дольше 0,6 с сверх своей очереди, порядок волны сохраняется
-    var t0 = performance.now();
-    var items = E.pins.map(function (o, i) {
-      var an = o.el.animate([{ opacity: 0, transform: 'translateY(28px)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: ease, fill: 'backwards' });
-      an.pause(); return { el: o.el, an: an, want: Math.min(i * 45, 450), on: false };
-    });
-    var ready = function (el) { var im = el.querySelector('img.pin-img, img.vid-ph'); if (!im) return true;
-      var s = im.getAttribute('src') || ''; return s.indexOf('data:') !== 0 && im.complete && im.naturalWidth > 1; };
-    var step = function () {
-      var now = performance.now() - t0;
-      for (var k = 0; k < items.length; k++) { var it = items[k]; if (it.on) continue;
-        if (now >= it.want && (ready(it.el) || now >= it.want + 600)) { it.on = true; it.an.play(); } else break; }
-      if (k < items.length) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
+/* ---------- смена ленты ---------- */
+function setFeed(f, first) {
+  if (FEEDS.indexOf(f) < 0) f = 'REELS';
+  if (f === S.feed && !first) { jump(0); return; }
+  stopAll();
+  S.feed = f; S.gen++; S.cards = []; S.active = null;
+  try { history.replaceState(history.state, '', f === 'REELS' ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
+  markChip();
+  var lenta = f === 'REELS' || f === 'Комплекс';
+  de.classList.toggle('snap', lenta);
+  feedEl.innerHTML = lenta ? lentaHTML(f) : gridHTML(f);
+  jump(0);
+  if (lenta) { S.cards = $$('.card', feedEl); S.cards.forEach(bindCard); fitPad(); requestAnimationFrame(pickActive); }
+}
+function stopAll() { $$('video', feedEl).forEach(function (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); }
 
-  // фото один раз скачиваем в память — при листании в просмотре они не грузятся заново
-  preloadPhotos(list) {
-    var self = this; this.mem = this.mem || {}; this.keep = this.keep || [];
-    (list || []).forEach(function (src) {
-      if (self.mem[src] || !window.fetch || src.indexOf('data:') === 0) return; // встроенные фото уже в памяти
-      fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
-        var u = URL.createObjectURL(b);
-        var im = new Image(); im.src = u; self.keep.push(im);
-        var ready = function () { self.mem[src] = u; if (im.naturalWidth) { self.ratios = self.ratios || {}; self.ratios[src] = im.naturalHeight / im.naturalWidth; } self.forceUpdate(); };
-        if (im.decode) im.decode().then(ready, ready); else im.onload = ready;
-      }).catch(function () {});
-    });
-  }
-  // Фоновая докачка полных фото изделий открытой ленты (как на страницах проектов): когда плитки на экране
-  // загрузились, по одному качаем сначала первое фото каждого изделия по порядку ленты, потом остальные,
-  // и сразу кладём в память для просмотра (mem) — при открытии изделия все его фото (и соседние в слайдере) уже готовы. Пока грузятся плитки/видео ленты — ждём. Режим экономии трафика — не качаем.
-  bgPhotos() {
-    var self = this; clearTimeout(this._bgT);
-    try { var cn = navigator.connection; if (cn && (cn.saveData || /2g/.test(cn.effectiveType || ''))) return; } catch (e) {}
-    if (!window.fetch) return;
-    var step = function () {
-      if (self._feedPhotosFor !== self.state.filter) return;
-      var lists = self._feedPhotos || [], q = [], seen = self._warm = self._warm || {}, mem = self.mem || {};
-      // порядок: сначала изделия на экране (сверху вниз, слева направо), потом ближайшие к экрану — пересчитывается
-      // при каждом шаге, так что прокрутка сразу меняет очередь. У каждого изделия сначала три фото, видные в слайдере
-      // при открытии (главное, второе — справа, последнее — слева), потом остальные.
-      var H = window.innerHeight || 800, dist = function (ps) {
-        var el = document.querySelector('.feed .pin[data-key="' + self.thumb(ps[0]) + '"]'); if (!el) return 1e9;
-        var r = el.getBoundingClientRect(), d = r.bottom < 0 ? -r.bottom : r.top > H ? r.top - H : 0;
-        return d * 10000 + Math.max(0, Math.round(r.top)) * 4 + Math.round(r.left) / 1000; };
-      var ord = lists.filter(function (ps) { return ps && ps.length; }).map(function (ps) { return { ps: ps, d: dist(ps) }; })
-        .sort(function (a, b) { return a.d - b.d; });
-      ord.forEach(function (o) { var ps = o.ps; q.push(ps[0]); if (ps.length > 1) q.push(ps[1]); if (ps.length > 2) q.push(ps[ps.length - 1]); });
-      ord.forEach(function (o) { q = q.concat(o.ps.slice(2, -1)); });
-      q = q.filter(function (x) { return x && !seen[x] && !mem[x] && x.indexOf('data:') !== 0; });
-      if (!q.length) return;
-      if (Object.keys(self._loading || {}).length || self._vBusy || document.hidden) { self._bgT = setTimeout(step, 600); return; }
-      var src = q[0]; seen[src] = 1;
-      var next = function () { self._bgT = setTimeout(step, 30); };
-      // скачанное сразу отдаём просмотру (как ссылку на файл в памяти) — при открытии изделия все его фото уже на месте
-      fetch(src).then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
-        self.mem = self.mem || {}; if (!self.mem[src]) self.mem[src] = URL.createObjectURL(b);
-        if (self.state.lb >= 0) self.forceUpdate(); next(); }, next);
-    };
-    this._bgT = setTimeout(step, 1000);
-  }
-  // полные видео тихо докачиваем в фоне — в просмотре они играют без задержек
-  preloadVideos() {
-    var self = this, list = this.data().videos.filter(function (s) { return s.indexOf('data:') !== 0; }); if (!window.fetch) return;
-    this.vurls = this.vurls || {}; this._vpend = this._vpend || {};
-    var next = function (i) {
-      if (i >= list.length) return;
-      var src = list[i];
-      fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
-        var u = URL.createObjectURL(new Blob([b], { type: 'video/mp4' }));
-        if (self.state.lb >= 0) self._vpend[src] = u; else { self.vurls[src] = u; if (self._vp) delete self._vp[src]; }
-        next(i + 1);
-      }).catch(function () { next(i + 1); });
-    };
-    var start = function () { setTimeout(function () { next(0); }, 1200); };
-    if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
-  }
-  componentDidMount() {
-    var fm = this, phoneW = function () { return window.innerWidth < 1000; };
-    document.addEventListener('pointerdown', function () {
-      if (fm.state.lb >= 0 || !phoneW()) return;
-      fm._feedY = window.scrollY;
-      if (document.documentElement.classList.contains('cx-snap')) return;  // ТЕСТ: в «Комплексе» не выключаем примагничивание касанием (иначе оно пропадало от первого касания)
-      // на миг выключаем примагничивание — иначе Safari, увидев просмотр на месте прокрутки ленты, примагничивал к случайному фото
-      document.documentElement.classList.add('lb-hold');
-    }, true);
-    window.addEventListener('scroll', function () { if (fm.state.lb >= 0 && phoneW() && fm._vs) fm._vs({}); }, { passive: true });
-    // «Назад» браузера/телефона закрывает просмотр
-    window.addEventListener('popstate', function () { if (fm.state.lb >= 0 && fm._lbHist) { fm._lbHist = false; fm._byBack = true; fm.setState({ lb: -1, lbZone: null, lbStart: 0 }); } });
-    try { if (history.state && history.state.mgsLb) history.replaceState(null, ''); } catch (e) {}
-    // заранее (после загрузки страницы) качаем маленькие заставки всех видео — в просмотре под видео сразу картинка, не чёрный экран
-    var me0 = this, warm = function () { setTimeout(function () { try { var D = me0.data(), L = [];
-      (D.reels || []).forEach(function (r) { if (r.poster) L.push(r.poster); });
-      (D.items || []).forEach(function (it) { (it.videos || []).forEach(function (v) { if (v && v.poster) L.push(v.poster); }); });
-      me0._pk = []; L.forEach(function (x, i) { if (L.indexOf(x) !== i) return; var im = new Image(); im.src = me0.thumb(x); me0._pk.push(im); }); } catch (e) {} }, 600); };
-    if (document.readyState === 'complete') warm(); else window.addEventListener('load', warm);
-    // ничего не качаем заранее: фото изделия — при открытии просмотра, видео — потоком по требованию
-    var self = this;
-    this.onResize = function () { self.setState({ vw: window.innerWidth }); clearTimeout(self._rz); self._rz = setTimeout(function () { self.resnap('auto'); }, 80); };
-    window.addEventListener('resize', this.onResize);
-    this.onHash = function () { var f = self.readHash(); if (f) self.setFilter(f); };
-    window.addEventListener('hashchange', this.onHash);
-    var vw = function (v, on) { var p = v && v.parentElement; if (!p || v.tagName !== 'VIDEO') return; if (on && getComputedStyle(p).position === 'static') return; p.classList.toggle('v-wait', on); };
-    ['loadstart', 'waiting', 'emptied'].forEach(function (ev) { document.addEventListener(ev, function (e) { vw(e.target, e.target.readyState < 3); }, true); });
-    ['loadeddata', 'canplay', 'playing', 'seeked'].forEach(function (ev) { document.addEventListener(ev, function (e) { vw(e.target, false); }, true); });
-    this.markWait = function () { var vs = document.querySelectorAll('.feed video, #lb-wrap video'); for (var i = 0; i < vs.length; i++) vw(vs[i], vs[i].readyState < 2); };
-    var cxRaf = 0; window.addEventListener('scroll', function () { if (cxRaf || !document.querySelector('.feed.rl')) return; cxRaf = requestAnimationFrame(function () { cxRaf = 0; self.cxFocus(); }); }, true);
-    document.addEventListener('play', function (e) { var v = e.target, pin = v && v.closest ? v.closest('.feed.rl .pin') : null; if (pin && !pin.classList.contains('rl-on') && self._cxOn) v.pause(); }, true);
-    var spyRaf = 0; window.addEventListener('scroll', function () { if (spyRaf) return; spyRaf = requestAnimationFrame(function () { spyRaf = 0; self.spyCheck(); }); }, { passive: true });
-    this.onFocusScroll = function () { if (self._fpRaf) return; self._fpRaf = requestAnimationFrame(function () { self._fpRaf = 0; if (self.slideOn()) self.focusPlay(); }); };
-    window.addEventListener('scroll', this.onFocusScroll, { passive: true });
-    // касание пальцем видео-плитки в «2 в ряд» — запускаем её, остальные на паузу
-    this.onTouchPin = function (e) {
-      if (!self.slideOn()) return;
-      var t = e.target && e.target.closest ? e.target.closest('.feed .pin') : null;
-      if (t && t.querySelector('video')) { self._touchPin = t; }
-      self.focusPlay();  // ТЕСТ: любое касание экрана — запустить все видимые превью (iPhone в режиме энергосбережения не даёт видео стартовать само)
-    };
-    document.addEventListener('touchend', function () { self.focusPlay(); }, { passive: true });
-    document.addEventListener('touchstart', this.onTouchPin, { passive: true });
-    document.addEventListener('pointerdown', this.onTouchPin, { passive: true });
-    // страховка: в режимах «одно видео» любое другое видео ленты, которое запустилось само, ставим на паузу
-    this.onAnyPlay = function (e) {
-      var v = e.target; if (!v || v.tagName !== 'VIDEO' || v.getAttribute('data-lb') || !self.slideOn()) return;
-      if (v !== self._focusV && v.closest && v.closest('.feed')) v.pause();
-    };
-    document.addEventListener('play', this.onAnyPlay, true);
-    this.onVidFrame = function (e) { var v = e.target; if (v && v.classList && v.classList.contains('feed-v')) { v.classList.add('ready'); if (self._vBusy && self._vBusy.el === v) { self._vBusy = null; self.pumpVid(); } } };
-    // фото загрузилось (или не смогло) — освобождаем место в очереди и берём следующее по порядку
-    this.onImgDone = function (e) { var im = e.target; if (!im || im.tagName !== 'IMG' || !im.closest) return; var pin = im.closest('.feed .pin[data-key]'); if (!pin) return;
-      if ((im.getAttribute('src') || '').indexOf('data:image/gif') === 0) return;
-      var k = pin.getAttribute('data-key'); if (self._loading && self._loading[k]) { delete self._loading[k]; self.pumpImg(); } };
-    // навели мышь / коснулись плитки проекта — заранее качаем его страницу, переход почти мгновенный
-    this.onPrefetch = function (e) { var a = e.target && e.target.closest && e.target.closest('a[href$=".html"]'); if (!a) return; var h = a.getAttribute('href'); self._pf = self._pf || {};
-      if (self._pf[h]) return; self._pf[h] = 1; var l = document.createElement('link'); l.rel = 'prefetch'; l.href = h; document.head.appendChild(l); };
-    document.addEventListener('mouseover', this.onPrefetch, { passive: true }); document.addEventListener('touchstart', this.onPrefetch, { passive: true });
-    document.addEventListener('load', this.onImgDone, true); document.addEventListener('error', this.onImgDone, true);
-    document.addEventListener('error', function (e) { var v = e.target; if (v && v.tagName === 'VIDEO' && self._vBusy && self._vBusy.el === v) { self._vBusy = null; self.pumpVid(); } }, true);
-    this.onVidReset = function (e) { var v = e.target; if (v && v.classList && v.classList.contains('feed-v')) v.classList.remove('ready'); };
-    ['loadeddata', 'playing', 'seeked'].forEach(function (t) { document.addEventListener(t, self.onVidFrame, true); });
-    document.addEventListener('emptied', this.onVidReset, true);
-    this.ensureVideo();
-    this.watchNear();
-  }
-  componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
-  componentDidUpdate() {
-    var me0 = this; requestAnimationFrame(function () { me0.cxFocus(); if (me0.markWait) me0.markWait(); });
-    if (this._pendingSec && this.state.filter === 'Кухни' && document.querySelector('.feed-sec[data-sec="' + this._pendingSec + '"]')) {
-      var ps = this._pendingSec, me = this; this._pendingSec = null; setTimeout(function () { me.goSec(ps); }, 60);
-    }
-    var wasLb = this._wasLb, isLb = this.state.lb >= 0, de = document.documentElement; this._wasLb = isLb;
-    if (isLb && !wasLb && window.innerWidth < 1000) {
-      de.classList.add('lb-on');
-      try { history.pushState({ mgsLb: 1 }, ''); this._lbHist = true; } catch (e) {}
-    }
-    if (!isLb && wasLb) {
-      var hadOn = de.classList.contains('lb-on');
-      de.classList.remove('lb-on', 'lb-free', 'lb-hold');
-      if (hadOn && this._feedY != null) window.scrollTo({ top: this._feedY, behavior: 'instant' });
-      // закрыли крестиком/Esc — убираем свою запись из истории, чтобы следующий «Назад» не был пустым
-      if (this._lbHist && !this._byBack) { this._lbHist = false; try { history.back(); } catch (e) {} }
-      this._byBack = false;
-    }
-    if (this._bgFor !== this.state.filter) { this._bgFor = this.state.filter; this.bgPhotos(); }
-    // открыли просмотр изделия — подгружаем в память только его фото (листание без вспышек)
-    var lz = this.state.lbZone || '';
-    if (lz !== this._lzPre) { this._lzPre = lz; if (lz.indexOf('item:') === 0) { var it = this.data().byKey[lz.slice(5)]; if (it) this.preloadPhotos(it.photos); } }
-    if (this.state.lb < 0 && this._vpend) { var pd = this._vpend, ks = Object.keys(pd); if (ks.length) { var me = this; ks.forEach(function (k) { me.vurls[k] = pd[k]; if (me._vp) delete me._vp[k]; }); this._vpend = {}; } }
-    if (this._animIn != null && this._animIn !== undefined && this._outA) this.animateIn();
-    this.syncTrack();
-    this.syncVideos();
-    this.ensureVideo();
-    this.watchNear();
-    var me2 = this, mode = (this.state.slide ? 's' : 'g') + (this.slideOn() ? 'f' : '') + this.state.filter;
-    if (mode !== this._fpMode) { this._fpMode = mode; setTimeout(function () { me2.focusPlay(); }, 260); }
-  }
-  // свой файл или встроенный — такие видео грузим сами
-  // лёгкое превью для плитки ленты (tools/make_thumbs.py), полное фото — только в просмотре
-  thumb(src) { return /^assets\/[^/]+\.(jpg|webp)$/.test(src || '') ? src.replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : src; }
-  // режим «1 в ряд» (телефон, REELS / «Комплекс»): играет только карточка в фокусе, остальные на паузе
-  // телефон, REELS / «Комплекс»: «1 в ряд» — играет карточка в фокусе; «2 в ряд» — та, которой коснулись
-  // телефон «2 в ряд» в REELS/«Комплексе» — лёгкая копия <имя>-mini.mp4 (360px), иначе обычное превью
-  gridMini() { try { var c = document.documentElement.classList; return c.contains('mgs-focus') && !c.contains('mgs-snap'); } catch (e) { return false; } }
-  // без заставки: плитка показывает первый кадр самого видео (#t=0.001 — iPhone тогда рисует кадр, а не чёрное),
-  // поэтому при запуске нет никакого скачка картинки
-  feedSrc(v) { if (v.closest && v.closest('.feed.rl-reels')) { var fs = v.getAttribute('data-src') || ''; return fs && fs.indexOf('#') < 0 ? fs + '#t=0.001' : fs; }
-    var w = v.getAttribute('data-want') || v.getAttribute('data-src') || ''; if (!w) return w; w = this.gridMini() ? w.replace(/-preview\.mp4$/, '-mini.mp4') : w; return w.indexOf('#') < 0 ? w + '#t=0.001' : w; }
-  // заставка плитки рилса = первый кадр её превью (<имя>-preview.jpg), иначе при запуске картинка «прыгает»
-  tilePoster(src, fallback) { return /^assets\/[^/]+\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.jpg').replace('assets/', 'assets/t/').replace(/\.jpg$/, '.webp') : fallback; }
-  // ТЕСТ (Макс 23.10): превью-видео играют сами, как только видны и загрузились (как на ПК), не по касанию; на телефоне — лёгкие -mini
-  slideOn() { return false; }
-  // ТЕСТ: рилс-лента — играет только карточка, вставшая наверх; остальные на паузе
-  cxFocus() {
-    var box = document.querySelector('.feed.rl'); if (!box) { this._cxOn = null; return; }
-    var best = null, bd = 1e9, self = this, reels = box.classList.contains('rl-reels');
-    var ps = box.querySelectorAll('.pin');
-    for (var i = 0; i < ps.length; i++) { var d = Math.abs(ps[i].getBoundingClientRect().top - 5); if (d < bd) { bd = d; best = ps[i]; } }
-    for (var j = 0; j < ps.length; j++) {
-      var on = ps[j] === best, v = ps[j].querySelector('video');
-      ps[j].classList.toggle('rl-on', on);
-      if (!v) continue;
-      if (on) {
-        if (best !== this._cxOn) ps[j].classList.remove('rl-paused');
-        var w = self.feedSrc(v); if (w && v.getAttribute('src') !== w) { v.preload = 'auto'; v.src = w; }
-        if (reels) v.muted = !self._snd;
-        if (v.paused && !ps[j].classList.contains('rl-paused')) { (function (v) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () { if (!v.muted) { v.muted = true; self._snd = false; document.documentElement.classList.remove('rl-sound'); var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {}); } }); })(v); }
-      } else { if (!v.paused) v.pause(); if (reels) v.muted = true; }
-    }
-    this._cxOn = best;
-    if (reels && !this._progRaf) { var loop = function () { var b = document.querySelector('.feed.rl-reels .pin.rl-on'); if (!b) { self._progRaf = 0; return; } var vv = b.querySelector('video'), bar = b.querySelector('.rl-prog i'); if (vv && bar && vv.duration) bar.style.width = (vv.currentTime / vv.duration * 100) + '%'; self._progRaf = requestAnimationFrame(loop); }; this._progRaf = requestAnimationFrame(loop); }
-  }
-  // касание рилса в рилс-ленте — пауза / продолжить
-  rlTap(i) {
-    var pin = document.querySelectorAll('.feed.rl-reels .pin')[i]; if (!pin) return; var v = pin.querySelector('video'); if (!v) return;
-    if (pin !== this._cxOn) { this.cxFocus(); return; }
-    if (v.paused) { pin.classList.remove('rl-paused'); v.muted = !this._snd; var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
-    else { v.pause(); pin.classList.add('rl-paused'); }
-  }
-  // кнопка звука: включает/выключает звук у рилсов (запоминается для следующих)
-  rlSound() {
-    this._snd = !this._snd; document.documentElement.classList.toggle('rl-sound', this._snd);
-    var b = document.querySelector('.feed.rl-reels .pin.rl-on video'); if (!b) return;
-    b.muted = !this._snd; if (b.paused) { var pr = b.play(); if (pr && pr.catch) pr.catch(function () {}); }
-  }
-  focusPlay() {
-    var self0 = this, pins = [].slice.call(document.querySelectorAll('.feed .pin')), vh = window.innerHeight, best = null, bestV = 0;
-    if (!this.slideOn()) {  // обычная сетка — играют все видимые
-      pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return; var r = p.getBoundingClientRect();
-        if (r.bottom > 0 && r.top < vh) { var w = self0.feedSrc(v); if (w && v.getAttribute('src') !== w) v.src = w; var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } });
-      return;
-    }
-    var snap = false; try { snap = document.documentElement.classList.contains('mgs-snap'); } catch (e) {}
-    if (!snap) {
-      // «2 в ряд» на телефоне: играет только то видео, которого коснулись пальцем (пока оно на экране)
-      var tp = this._touchPin && document.body.contains(this._touchPin) ? this._touchPin : null;
-      if (tp) { var tr = tp.getBoundingClientRect(); if (tr.bottom <= 0 || tr.top >= vh) tp = null; }
-      best = tp;
-    } else {
-    // «1 в ряд»: в фокусе — карточка, которая видна больше всех; при равенстве — верхняя/левая
-    var bestD = 1e9;
-    pins.forEach(function (p) { var r = p.getBoundingClientRect(); var vis = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)) / Math.max(1, r.height);
-      var d = Math.max(r.top, 0) * 4 + r.left;  // при равенстве — та, что выше (а в ряду — левее)
-      if (vis <= 0 || !p.querySelector('video')) return;  // вне экрана или без видео — не в фокусе
-      if (vis > bestV + 0.02 || (Math.abs(vis - bestV) <= 0.02 && d < bestD)) { bestV = vis; bestD = d; best = p; } });
-    }
-    this._focusV = best ? best.querySelector('video') : null;
-    // плитки у экрана — заранее нужная версия файла (после смены «2/1 в ряд» иначе был бы чёрный кадр)
-    pins.forEach(function (p) { var v = p.querySelector('video'); if (!v || !v.getAttribute('src')) return; var r = p.getBoundingClientRect();
-      if (r.bottom > -vh && r.top < 2 * vh) { var w = self0.feedSrc(v); if (w && v.getAttribute('src') !== w && v !== self0._focusV) { v.preload = 'auto'; v.src = w; } } });
-    pins.forEach(function (p) { var v = p.querySelector('video'); if (!v) return;
-      if (p === best) { var dp = v.getAttribute('data-poster'); if (dp && !v.getAttribute('poster')) v.setAttribute('poster', dp);
-        var w = self0.feedSrc(v); if (w && v.getAttribute('src') !== w) v.src = w;
-        if (v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } }
-      else if (!v.paused) v.pause(); });
-  }
-  // догрузка фото ленты: плитка на экране или в пределах ~60% экрана ниже — разрешаем её картинку
-  watchNear() {
-    var self = this; this._near = this._near || {}; this._want = this._want || {}; this._loading = this._loading || {};
-    if (!window.IntersectionObserver) { var all = document.querySelectorAll('.feed .pin[data-key]'); for (var i = 0; i < all.length; i++) this._near[all[i].getAttribute('data-key')] = 1; return; }
-    if (!this._nio) this._nio = new IntersectionObserver(function (es) {
-      var add = false;
-      es.forEach(function (e) { if (!e.isIntersecting) return; var k = e.target.getAttribute('data-key'); if (k && !self._near[k]) self._want[k] = 1; self._nio.unobserve(e.target); });
-      self.pumpImg();
-    }, { rootMargin: '0px 0px 100% 0px' });
-    var ps = document.querySelectorAll('.feed .pin[data-key]');
-    // плитки переиспользуются при смене ленты — следим по паре «плитка + её фото», а не по плитке
-    for (var j = 0; j < ps.length; j++) { var el = ps[j], k = el.getAttribute('data-key'); if (!k || self._near[k] || el._nk === k) continue; el._nk = k; this._nio.unobserve(el); this._nio.observe(el); }
-  }
-  // ПО ПОРЯДКУ: фото грузятся по 2 за раз, сверху вниз и слева направо, как стоят плитки; следующее — когда загрузилось предыдущее
-  pumpImg() {
-    var self = this, now = Date.now(), busy = 0, k;
-    for (k in this._loading) { if (now - this._loading[k] > 4000) delete this._loading[k]; else busy++; }  // зависшее — не ждём дольше 4 с
-    if (busy >= 2) return;
-    var ps = [].slice.call(document.querySelectorAll('.feed .pin[data-key]')).filter(function (el) { var kk = el.getAttribute('data-key'); return kk && self._want[kk] && !self._near[kk]; });
-    if (!ps.length) return;
-    ps.sort(function (a, b) { var ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); return (Math.round(ra.top / 40) - Math.round(rb.top / 40)) || (ra.left - rb.left); });
-    var changed = false;
-    for (var i = 0; i < ps.length && busy < 2; i++) { var kk = ps[i].getAttribute('data-key'); if (self._near[kk]) continue; self._near[kk] = 1; changed = true;
-      if (ps[i].classList.contains('cx-pin') && !ps[i].querySelector('video')) continue;  // тёмная плитка без видео — грузить нечего, место в очереди не занимает
-      self._loading[kk] = now; busy++; }
-    if (changed && !this._nearRaf) this._nearRaf = requestAnimationFrame(function () { self._nearRaf = 0; self.forceUpdate(); });
-    clearTimeout(this._pumpT); this._pumpT = setTimeout(function () { self.pumpImg(); }, 4100);
-  }
-  // ПО ПОРЯДКУ: видео ленты грузятся по одному, в порядке плиток; следующее — когда у текущего появился кадр
-  pumpVid() {
-    var self = this, b = this._vBusy;
-    if (b && document.body.contains(b.el) && !b.el.classList.contains('ready') && Date.now() - b.t < 1500) return;  // ТЕСТ: не ждём кадр дольше 1,5 с (iPhone в энергосбережении кадр не даёт — раньше каждое видео ждало 6 с)
-    this._vBusy = null;
-    var list = []; (this._vq || []).forEach(function (el) { if (document.body.contains(el)) list.push(el); });
-    this._vq = list;
-    var next = null, bestR = null;
-    list.forEach(function (el) { var w = self.feedSrc(el); if (!w || el.getAttribute('src') === w) return; var r = el.getBoundingClientRect();
-      if (!next || (Math.round(r.top / 40) - Math.round(bestR.top / 40)) < 0 || (Math.round(r.top / 40) === Math.round(bestR.top / 40) && r.left < bestR.left)) { next = el; bestR = r; } });
-    if (!next) return;
-    next.preload = 'auto'; next.src = self.feedSrc(next); this._vBusy = { el: next, t: Date.now() };
-    if (!self.slideOn()) { var pr = next.play(); if (pr && pr.catch) pr.catch(function () {}); }
-    clearTimeout(this._vT); this._vT = setTimeout(function () { self.pumpVid(); }, 1600);
-  }
-  isLocal(src) { return !!src && (src.indexOf('assets/') === 0 || src.indexOf('data:') === 0 || src.indexOf('blob:') === 0); }
+/* ---------- рилс-лента ---------- */
+function lentaHTML(f) {
+  var reels = f === 'REELS', list = reels ? REELS : CX, n = list.length;
+  if (!n) return '<div class="empty">Скоро здесь появятся работы</div>';
+  return '<div class="lenta">' + list.map(function (x, i) {
+    var anim = i < 3 ? ' in" style="animation-delay:' + (i * 70) + 'ms' : '';
+    if (reels) return '<div class="card reel' + anim + '" data-src="' + esc(x.src) + '">' +
+      '<img class="poster" src="' + esc(reelPoster(x.src)) + '" alt="" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
+      '<video muted playsinline loop preload="none"></video>' +
+      '<span class="num">' + (i + 1) + ' / ' + n + '</span><span class="play-ico">' + PLAY + '</span><span class="spin"></span>' +
+      '<button class="snd" aria-label="Звук">' + SND_OFF + SND_ON + '</button>' +
+      '<div class="prog" aria-label="Перемотка"><b><i></i></b></div></div>';
+    var poster = x.coverPoster ? 'assets/t/' + base(x.coverPoster) + '.webp' : thumb(x.cover);
+    return '<div class="card cx' + anim + '" data-href="' + esc(x.href) + '"' + (x.coverVideo ? ' data-src="' + esc(x.coverVideo) + '"' : '') + ' aria-label="' + esc(x.title) + '">' +
+      '<img class="poster" src="' + esc(poster) + '" alt="' + esc(x.title) + '" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
+      (x.coverVideo ? '<video muted playsinline loop preload="none"></video><span class="spin"></span>' : '') +
+      '<span class="num">' + (i + 1) + ' / ' + n + '</span></div>';
+  }).join('') + '</div>';
+}
+// запас снизу — чтобы и последняя карточка вставала наверх
+function fitPad() { var l = $('.lenta', feedEl), c = S.cards[S.cards.length - 1]; if (l && c) l.style.setProperty('--ch', c.offsetHeight + 'px'); }
 
-  // iPhone/Android запускают видео сами только если оно без звука и «inline»;
-  // React не выставляет атрибут muted в HTML, поэтому ставим его вручную и запускаем
-  // каждое видео скачиваем ОДИН раз и дальше отдаём всем плеерам из памяти (лента, просмотр, полный экран)
-  videoURL(orig) {
-    var self = this; this._vp = this._vp || {}; this.vurls = this.vurls || {};
-    // играем потоком сразу; полную версию тем временем тихо докачиваем в память (bgLoadVideos)
-    if (!this._vp[orig]) { if (!self.vurls[orig]) self.vurls[orig] = orig; this._vp[orig] = Promise.resolve(self.vurls[orig]); }
-    return this._vp[orig];
+function bindCard(card) {
+  var v = $('video', card), reel = card.classList.contains('reel');
+  card._v = v; card._userPaused = false;
+  if (v) {
+    v.muted = true; v.defaultMuted = true; v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
+    v.addEventListener('playing', function () { v.classList.add('ready'); card.classList.remove('wait'); });
+    v.addEventListener('loadeddata', function () { v.classList.add('ready'); if (!v.paused) card.classList.remove('wait'); });
+    v.addEventListener('waiting', function () { if (card === S.active && !card._userPaused) card.classList.add('wait'); });
+    v.addEventListener('pause', function () { card.classList.toggle('paused', card._userPaused); });
   }
-  // короткие 10-секундные превью для ленты (без звука, лёгкие)
-  previewOf(src) { return /\.mp4$/.test(src || '') && !/-preview\.mp4$/.test(src) ? src.replace(/\.mp4$/, '-preview.mp4') : src; }  // уже превью — не трогаем
-  ensureVideo() {
-    var self = this;
-    var vs = document.querySelectorAll('video');
-    for (var i = 0; i < vs.length; i++) {
-      var v = vs[i];
-      if (v.getAttribute('data-ready') || v.getAttribute('data-full')) continue;
-      v.setAttribute('data-ready', '1');
-      if (!v.getAttribute('data-lb')) { v.muted = true; v.defaultMuted = true; v.setAttribute('muted', ''); } v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
-      // iPhone требует от сервера отдачу видео кусками; если хранилище так не умеет,
-      // видео не грузится (зачёркнутый play). Поэтому скачиваем файл целиком и играем из памяти.
-      var orig = v.getAttribute('data-src') || v.getAttribute('src');
-      if (!v.getAttribute('data-lb') && window.IntersectionObserver && self.isLocal(orig)) {
-        v.preload = 'none'; v.setAttribute('data-want', self.previewOf(orig));
-        if (!self._io) self._io = new IntersectionObserver(function (es) {
-          es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-want');
-            if (e.isIntersecting) { var dp = el.getAttribute('data-poster'); if (dp && !el.getAttribute('poster')) el.setAttribute('poster', dp);
-              // подходит к экрану — заранее грузим видео (без запуска), чтобы по касанию оно стартовало сразу, без чёрного кадра
-              s = self.feedSrc(el); if (s && el.getAttribute('src') !== s) { self._vq = self._vq || []; if (self._vq.indexOf(el) < 0) self._vq.push(el); self.pumpVid(); } else if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
-            else { if (self._vq) { var qi = self._vq.indexOf(el); if (qi >= 0) self._vq.splice(qi, 1); } if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src') && !document.documentElement.classList.contains('lb-on')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
-        }, { rootMargin: '60% 0px 40% 0px' });
-        self._io.observe(v); continue;
-      }
-      if (self.isLocal(orig) && window.fetch && window.URL && window.Blob) {
-        (function (v, orig) {
-          self.videoURL(orig).then(function (u) {
-            if (!v.getAttribute('data-lb') && window.IntersectionObserver) {
-              // видео в ленте грузим и запускаем только когда оно на экране — страница открывается быстро
-              v.preload = 'none';
-              if (!self._io) self._io = new IntersectionObserver(function (es) {
-                es.forEach(function (e) { var el = e.target, s = el.getAttribute('data-src') || el.getAttribute('data-want');
-                  if (e.isIntersecting) { if (s && el.getAttribute('src') !== s) { el.src = s; } if (!self.slideOn()) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); } else self.focusPlay(); }
-                  else { if (self._vq) { var qi = self._vq.indexOf(el); if (qi >= 0) self._vq.splice(qi, 1); } if (!el.paused) el.pause(); if (!el.getAttribute('data-lb') && el.getAttribute('src') && !document.documentElement.classList.contains('lb-on')) { el.classList.remove('ready'); el.removeAttribute('src'); try { el.load(); } catch (x) {} } } });
-              }, { rootMargin: '60% 0px 40% 0px' });
-              v.setAttribute('data-want', u); self._io.observe(v); return;
-            }
-            if (v.getAttribute('src') !== u) { v.src = u; v.load(); }
-            if (v === self._activeV) self.playWithSound(v);
-            else if (!v.getAttribute('data-lb') && !self.slideOn()) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
-          }).catch(function () {});
-        })(v, orig);
-      } else {
-        if (!v.getAttribute('data-lb') && !self.slideOn()) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
-      }
-    }
-  }
-  // телефон: слайдер свайпом — прокручиваем ленту слайдов к текущему фото
-  syncTrack() {
-    var lb = this.state.lb, z = (this.state.lbZone || '*') + '#' + (this.state.lbStart || 0);
-    var pl = (this._pl === undefined) ? -1 : this._pl, pz = (this._pz === undefined) ? null : this._pz;
-    this._pl = lb; this._pz = z;
-    if (lb < 0) return;
-    if (this.fromScroll) { this.fromScroll = false; return; }
-    if (pl === lb && pz === z) return;
-    var opened = pl < 0 || pz !== z;
-    if (opened) this.vsnap();
-    this.resnap(opened ? 'auto' : 'smooth', opened ? null : pl);
-  }
-  // в карусели играет только видео текущего слайда, остальные — на паузе
-  seekTo(e) {
-    var bar = e.currentTarget, v = bar.parentElement.querySelector('video'); if (!v || !v.duration) return;
-    var r = bar.getBoundingClientRect(), f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-    v.currentTime = f * v.duration;
-    var fill = bar.querySelector('.v-fill'); if (fill) fill.style.width = (f * 100).toFixed(2) + '%';
-  }
-  playWithSound(v) {
-    v.muted = false;
-    var pp = v.play();
-    if (pp && pp.catch) pp.catch(function () { v.muted = true; var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {}); });
-  }
-  syncVideos() {
-    var all = document.querySelectorAll('video[data-lb]');
-    if (!all.length || this.state.lb < 0) { this._activeV = null; return; }
-    var phone = window.innerWidth < 1000, act = null;
-    if (phone) { var vs = document.querySelectorAll('.lb-vslide'); act = vs[this.state.lb] ? vs[this.state.lb].querySelector('video') : null; }
-    else { var sl = document.querySelectorAll('#lb-track .lb-slide'); var c = sl[this.state.lb + (this.loopOff || 0)]; act = c ? c.querySelector('video') : null; }
-    for (var i = 0; i < all.length; i++) if (all[i] !== act && !all[i].paused) all[i].pause();
-    if (this._atPanel && phone) act = null;
-    for (var j = 0; j < all.length; j++) if (all[j] !== act && !all[j].paused) all[j].pause();
-    if (act && act !== this._activeV) this.playWithSound(act);
-    this._activeV = act;
-  }
-  vsnap() {
-    this._atPanel = false;
-    if (window.innerWidth >= 1000) return;
-    var el = document.getElementById('lb-wrap'); if (!el) return;
-    var sl = el.querySelectorAll('.lb-vslide'), c = sl[this.state.lb];
-    var de = document.documentElement; de.classList.add('lb-hold');
-    window.scrollTo({ top: c ? Math.max(0, c.getBoundingClientRect().top + window.scrollY - 5) : 0, behavior: 'instant' });
-    requestAnimationFrame(function () { requestAnimationFrame(function () { setTimeout(function () { de.classList.remove('lb-hold'); }, 60); }); });
-  }
-  slideLeft(el, i) {
-    var sl = el.querySelectorAll('.lb-slide'); var c = sl[i]; if (!c) return 0;
-    if (window.innerWidth >= 1000) return Math.max(0, c.offsetLeft + c.offsetWidth / 2 - el.clientWidth / 2);
-    return c.offsetLeft - (parseFloat(getComputedStyle(el).paddingLeft) || 0);
-  }
-  // в просмотре фото догружаются после открытия (и копии по краям для бесконечной прокрутки) и меняют ширину —
-  // после каждой загрузки возвращаем слайдер точно на текущее фото, иначе оно «уезжает»
-  snapSoon() { var self = this; clearTimeout(this._snapT); this._snapT = setTimeout(function () { if (!self.animating && self.state.lb >= 0) self.resnap('auto'); }, 30); }
-  resnap(behavior, fromLb) {
-    var el = document.getElementById('lb-track');
-    if (!el || !el.clientWidth || this.state.lb < 0) return;
-    var self = this, off = this.loopOff || 0, idx = this.state.lb + off, after = null;
-    var pc = off ? (el.querySelectorAll('.lb-slide').length - 1) / 2 : el.querySelectorAll('.lb-slide').length;
-    // по кругу: с последнего вперёд едем на копию первого, с первого назад — на копию последнего,
-    // а потом незаметно перескакиваем на настоящее фото
-    if (behavior === 'smooth' && off && typeof fromLb === 'number') {
-      if (this.dir === 1 && fromLb === pc - 1 && this.state.lb === 0) { idx = pc + 1; after = 1; }
-      else if (this.dir === -1 && fromLb === 0 && this.state.lb === pc - 1) { idx = 0; after = pc; }
-    }
-    this.dir = 0;
-    // далёкий переход (клик по миниатюре через несколько фото): не прокручиваем через все фото,
-    // а мягко растворяем и показываем нужное — без мелькания промежуточных кадров
-    if (behavior === 'smooth' && after === null && typeof fromLb === 'number' && Math.abs(idx - (fromLb + off)) > 1) {
-      cancelAnimationFrame(this.raf); this.animating = true;
-      el.style.transition = 'opacity .22s ease'; el.style.opacity = '0';
-      setTimeout(function () {
-        self.markSlides(el, idx, true);
-        el.style.scrollSnapType = 'none'; el.scrollLeft = self.slideLeft(el, idx); el.style.scrollSnapType = '';
-        el.style.opacity = '1';
-        setTimeout(function () { self.animating = false; el.style.transition = ''; }, 240);
-      }, 230);
-      return;
-    }
-    if (behavior !== 'smooth') { cancelAnimationFrame(this.raf); this.animating = false; this.markSlides(el, idx, true); el.scrollLeft = this.slideLeft(el, idx); return; }
-    this.markSlides(el, idx, false);
-    this.animateTo(el, this.slideLeft(el, idx), function () {
-      if (after !== null) { self.markSlides(el, after, true); el.style.scrollSnapType = 'none'; el.scrollLeft = self.slideLeft(el, after); el.style.scrollSnapType = ''; }
-    });
-  }
-  // REELS на ПК: текущее видео по центру, слева пусто, следующие справа затемнены
-  markSlides(el, idx, instant) {
-    var reels = this.state.lbZone === '__reels', sl = el.querySelectorAll('.lb-slide');
-    if (instant) el.classList.add('rs-nt');
-    for (var i = 0; i < sl.length; i++) {
-      sl[i].classList.toggle('rs-prev', reels && i < idx);
-      sl[i].classList.toggle('rs-next', reels && i > idx);
-      sl[i].classList.toggle('rs-dim', !reels && i !== idx);
-    }
-    if (instant) { void el.offsetWidth; requestAnimationFrame(function () { el.classList.remove('rs-nt'); }); }
-  }
-  // плавная прокрутка с мягким разгоном и торможением
-  animateTo(el, left, done) {
-    left = Math.round(left);
-    var self = this, start = el.scrollLeft, dist = left - start, t0 = null;
-    cancelAnimationFrame(this.raf);
-    if (Math.abs(dist) < 1) { if (done) done(); return; }
-    var dur = Math.min(1000, 550 + Math.abs(dist) * 0.2);
-    var ease = function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
-    this.animating = true; el.style.scrollSnapType = 'none';
-    var step = function (ts) {
-      if (t0 === null) t0 = ts;
-      var pr = Math.min(1, (ts - t0) / dur);
-      el.scrollLeft = start + dist * ease(pr);
-      if (pr < 1) self.raf = requestAnimationFrame(step);
-      else { el.style.scrollSnapType = ''; self.animating = false; if (done) done(); }
-    };
-    this.raf = requestAnimationFrame(step);
-  }
-
-  plural(n, one, few, many) {
-    var m10 = n % 10, m100 = n % 100;
-    if (m10 === 1 && m100 !== 11) return one;
-    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
-    return many;
-  }
-
-  renderVals() {
-    // пропорции всех фото известны заранее (assets/dims.js) — слайдер просмотра сразу раскладывается как надо
-    if (window.MGS_RATIOS && !this._dimsIn) { this._dimsIn = 1; var R = window.MGS_RATIOS, own = this.ratios || {}; this.ratios = {}; for (var rk in R) this.ratios[rk] = R[rk]; for (var ok in own) this.ratios[ok] = own[ok]; }
-    var self = this, D = this.data(), f = this.state.filter;
-    // ТЕСТ: на телефоне REELS и «Комплекс» — «рилс-лента»: по одной карточке в ряд, листается страница с примагничиванием, играет только верхняя
-    var vw0 = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440), rl = (f === 'REELS' || f === 'Комплекс') && vw0 < 760;
-    var accent = this.props.accent ?? '#bfd630';
-
-    // ---- плитки выбранной ленты ----
-    var secOf = function (sf) {
-    var pins = [];
-    if (sf === 'REELS') {
-      D.reels.forEach(function (r, i) {
-        pins.push({ isVideo: true, src: r.src, poster: self.tilePoster(r.src, r.poster), ph: self.tilePoster(r.src, r.poster), label: r.project, zone: r.zone, hasZone: !!r.zone, num: (i + 1) + ' / ' + D.reels.length,
-          snd: function (e) { if (e && e.stopPropagation) e.stopPropagation(); self.rlSound(); },
-          open: function () { if (rl) self.rlTap(i); else self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
-      });
-    } else if (sf === 'Комплекс') {
-      // обложка проекта — видео (coverVideo); пока видео нет — тёмная плитка с названием
-      D.projects.forEach(function (pr) {
-        if (!pr.complex || !pr.href) return;
-        pins.push({ num: '', isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '', ph: pr.coverPoster || '' });
-      });
-    } else {
-      D.items.forEach(function (it) {
-        if (it.type !== sf || !it.photos.length) return;
-        self._feedPhotos.push(it.photos);
-        pins.push({ isPhoto: true, src: self.thumb(it.photos[0]), label: it.name, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
-      });
-    }
-
-    return pins;
-    };
-    self._feedPhotos = []; self._feedPhotosFor = f;
-    var secNames = [f];
-    var secPins = secNames.map(function (k) { return secOf(k); });
-    if (f === 'Комплекс') secPins[0].forEach(function (pn, i, a) { pn.num = (i + 1) + ' / ' + a.length; });
-    var pins = [].concat.apply([], secPins);
-    // разная высота плиток — эффект Pinterest, как в ленте проекта
-    var ratios = ['4 / 5', '3 / 4', '1 / 1', '4 / 5', '2 / 3', '5 / 6', '3 / 4', '4 / 5'];
-    var poses = ['center', 'center 40%', 'center 65%', 'center', 'center 55%', 'center 35%'];
-    var gi = 0;
-    pins.forEach(function (pn) {
-      if (pn.ph) { self._near = self._near || {}; pn.key = pn.ph; pn.ph = self._near[pn.key] ? pn.ph : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; }
-      if (pn.isVideo) return;
-      pn.ratio = pn.isLink && rl ? '4 / 5' : ratios[gi % ratios.length]; pn.pos = poses[gi % poses.length]; gi++;
-      var r = pn.ratio.split('/'); pn.padTop = (parseFloat(r[1]) / parseFloat(r[0]) * 100).toFixed(2) + '%';
-      // фото грузим только у плиток на экране и чуть ниже (watchNear), остальные — пустышка до подхода к экрану
-      var phKey = pn.key; pn.key = phKey || pn.src; self._near = self._near || {};
-      pn.src = self._near[pn.key] ? ((self.mem && self.mem[pn.src]) || pn.src) : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-    });
-
-    // сетка как в ленте проекта: ПК — 4 колонки, планшет — 3, телефон — 2, при любом числе плиток
-    var vw = this.state.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
-    var modeFeed = vw < 760 && (f === 'REELS' || f === 'Комплекс');
-    var slide = modeFeed && !!this.state.slide;
-    var cols = slide || rl ? 1 : vw < 760 ? 2 : vw < 1100 ? 3 : 4;
-    var est = function (pn) { if (pn.isVideo) return 16 / 9; var r = pn.ratio.split('/'); return parseFloat(r[1]) / parseFloat(r[0]); };
-    var layout = function (list) {
-    var columns = [];
-    for (var ci = 0; ci < cols; ci++) columns.push({ pins: [], h: 0 });
-    list.forEach(function (pn) {
-      var best = columns[0];
-      columns.forEach(function (c) { if (c.h < best.h - 0.001) best = c; });
-      best.pins.push(pn); best.h += est(pn) + 0.06;
-    });
-    // фото тянутся, чтобы колонки кончались ровно, — но только если колонка почти такой же высоты:
-    // одна плитка рядом с длинной колонкой не раздувается
-    var maxH = 0; columns.forEach(function (c) { if (c.h > maxH) maxH = c.h; });
-    columns.forEach(function (c) { var st = c.h >= maxH * 0.8; c.pins.forEach(function (pn) { pn.flex = st ? '1 0 auto' : 'none'; }); });
-    return columns;
-    };
-    var sections = secNames.map(function (k, i) { return { name: k, columns: layout(secPins[i]) }; }).filter(function (sc) { return sc.columns.some(function (c) { return c.pins.length; }); });
-    var columns = sections.length ? sections[0].columns : [];
-
-    try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); document.documentElement.classList.toggle('mgs-focus', modeFeed && !rl); document.documentElement.classList.toggle('cx-snap', rl && !(this.state.lb >= 0)); } catch (e) {}
-
-    // ---- плашки ----
-    var countOf = function (k) {
-      if (k === 'REELS') return D.reels.length;
-      if (k === 'Комплекс') return D.projects.filter(function (p) { return p.complex && p.href; }).length;
-      return D.items.filter(function (it) { return it.type === k && it.photos.length; }).length;
-    };
-    var chips = this.FILTERS().map(function (k) {
-      var on = k === (self.state.chipF || f);  // в сплошной ленте горит раздел, который сейчас на экране
-      return { name: k, label: k === 'Комплекс' ? '🔥 Комплекс' : k, count: countOf(k), pressed: on ? 'true' : 'false', bg: on ? accent : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setFilter(k); } };
-    });
-    var n = pins.length;
-    var countLine = f === 'REELS' ? n + ' видео'
-      : f === 'Комплекс' ? n + ' ' + this.plural(n, 'проект', 'проекта', 'проектов')
-      : n + ' ' + this.plural(n, 'работа', 'работы', 'работ');
-
-    // ---- просмотр: рилсы или одно изделие со всеми его фото и видео ----
-    var lz = this.state.lbZone || null;
-    var isReels = lz === '__reels';
-    var view = [];
-    if (isReels) {
-      view = D.reels.map(function (r) { return { src: r.src, poster: r.poster, isVideo: true, zone: 'REELS', text: '', price: '', korpus: '', fasady: '', furn: '', project: r.project, href: r.href, priceDate: '' }; });
-    } else if (lz && lz.indexOf('item:') === 0 && D.byKey[lz.slice(5)]) {
-      var it = D.byKey[lz.slice(5)];
-      var ent = function (src, isVideo, poster) { return { src: src, poster: poster || '', isVideo: isVideo, zone: it.name, text: it.text, price: it.price, korpus: it.korpus, fasady: it.fasady, furn: it.furn, project: it.project, href: it.href, priceDate: it.priceDate }; };
-      it.photos.forEach(function (s) { view.push(ent(s, false)); });
-      it.videos.forEach(function (v) { view.push(ent(v.src, true, v.poster)); });
-    }
-    if (!view.length) view = [{ src: '', poster: '', isVideo: false, zone: '', text: '', price: '', korpus: '', fasady: '', furn: '', project: '', href: '#', priceDate: '' }];
-    // фото, по которому кликнули в ленте, всегда идёт первым; остальные — следом по кругу
-    var st = (this.state.lbStart || 0) % view.length;
-    if (st > 0) view = view.slice(st).concat(view.slice(0, st));
-    var pc = view.length, li = this.state.lb >= 0 ? this.state.lb % pc : 0;
-
-    return {
-      accent: accent,
-      countLine: countLine,
-      chips: chips, columns: columns, sections: sections, isEmpty: n === 0,
-      feedCls: slide ? 'feed slide' : rl ? 'feed rl ' + (f === 'REELS' ? 'rl-reels' : 'rl-cx') : 'feed', showModes: modeFeed, gridOn: slide ? 'false' : 'true', slideOn: slide ? 'true' : 'false',
-      setGrid: function () { self.setMode(false); }, setSlide: function () { self.setMode(true); },
-      priceDate: view[li].priceDate || 'октябрь 2026',
-      lbOpen: this.state.lb >= 0,
-      lb: { src: view[li].src, zone: view[li].zone, text: view[li].text, price: view[li].price, korpus: view[li].korpus, fasady: view[li].fasady, furn: view[li].furn, project: view[li].project, href: view[li].href, hasPage: !!view[li].href, pos: pc > 1 ? (li + 1) + ' / ' + pc : '1 фото' },
-      lbMulti: pc > 1,
-      isReels: isReels, panelCls: isReels ? 'lb-hide' : '', trackCls: isReels ? 'lb-reels' : '',
-      lbH: (function () { var r = (self.ratios || {})[view[li].src] || 1.25; return (r * 100).toFixed(2) + 'vw'; })(),
-      // бесконечный слайдер: по краям стоят копии последнего и первого фото,
-      // и когда свайп на них останавливается, лента незаметно перескакивает на настоящее фото
-      lbLoop: (function () {
-        var base = view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster ? self.thumb(p.poster) : '', pt: p.poster ? self.thumb(p.poster) : '', ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) { self.snapSoon(); return; } self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); setTimeout(function () { self.resnap('auto'); }, 0); } }; });
-        self.loopOff = pc > 1 ? 1 : 0;
-        // после последнего фото — полная копия набора, чтобы справа всегда «подглядывало» следующее фото, а не пустота
-        return pc > 1 ? [base[pc - 1]].concat(base, base) : base;
-      })(),
-      // ПК: колесо и тачпад листают ровно на одно фото
-      // телефон: какое фото сейчас на экране — для счётчика
-      vScroll: self._vs = function (e) {
-        if (window.innerWidth >= 1000) return;
-        var el = document.getElementById('lb-wrap'); if (!el) return;
-        var stp = window.scrollY, chh = window.innerHeight;
-        var sl = el.querySelectorAll('.lb-vslide'), k = 0;
-        for (var i = 0; i < sl.length; i++) if (sl[i].offsetTop <= stp + chh * 0.4) k = i;
-        // описание после последнего фото листается свободно, вернулся к последнему фото — снова примагничивание
-        var pnl = el.querySelector('.lb-panel'), lastS = sl[sl.length - 1];
-        document.documentElement.classList.toggle('lb-free', !!pnl && pnl.offsetParent !== null && !!lastS && stp > lastS.offsetTop - 5 + 40);
-        if (k !== li && k < pc) { self.fromScroll = true; self.setState({ lb: k }); }
-        // долистали до описания — видео на паузу; вернулись к фото — снова играет
-        var panel = el.querySelector('.lb-panel');
-        var atPanel = !!panel && panel.offsetParent !== null && stp + chh * 0.5 >= panel.offsetTop;
-        if (atPanel && !self._atPanel) {
-          self._atPanel = true; self._activeV = null;
-          var vv = el.querySelectorAll('video[data-lb]'); for (var j = 0; j < vv.length; j++) if (!vv[j].paused) vv[j].pause();
-        } else if (!atPanel && self._atPanel) { self._atPanel = false; self.syncVideos(); }
-      },
-      // своё управление видео: клик — пауза/запуск, кнопка звука в правом верхнем углу
-      // полоса проигрывания: показывает ход видео, тап/перетаскивание — перемотка
-      vTime: function (e) {
-        var v = e.currentTarget, f = v.parentElement && v.parentElement.querySelector('.v-fill');
-        if (f && v.duration) f.style.width = (v.currentTime / v.duration * 100).toFixed(2) + '%';
-      },
-      vSeekDown: function (e) { e.stopPropagation(); self._seek = true; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} self.seekTo(e); },
-      vSeekMove: function (e) { if (self._seek) self.seekTo(e); },
-      vSeekUp: function () { self._seek = false; },
-      vClick: function (e) { var v = e.currentTarget; if (v.paused) { var pp = v.play(); if (pp && pp.catch) pp.catch(function () {}); } else v.pause(); },
-      vSnd: function (e) {
-        e.stopPropagation();
-        var v = e.currentTarget.parentElement.querySelector('video'); if (!v) return;
-        v.muted = !v.muted; if (!v.muted && v.paused) { var pp = v.play(); if (pp && pp.catch) pp.catch(function () {}); }
-      },
-      vEv: function (e) {
-        var v = e.currentTarget, k = v.getAttribute('data-k') || '';
-        var st = Object.assign({}, self.state.vst || {}); var cur = st[k] || {};
-        if (cur.p === v.paused && cur.m === v.muted) return;
-        st[k] = { p: v.paused, m: v.muted }; self.setState({ vst: st });
-      },
-      vf: (function () { var c = (self.state.vst || {})['full'] || { p: false, m: false }; return { sndOn: !c.m, sndOff: !!c.m, paused: !!c.p }; })(),
-      lbWheel: function (e) {
-        if (window.innerWidth < 1000 || pc < 2) return;
-        var dlt = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-        if (Math.abs(dlt) < 12) return;
-        var now = Date.now(); if (self._wt && now - self._wt < 700) return; self._wt = now;
-        self.dir = dlt > 0 ? 1 : -1; self.setState({ lb: dlt > 0 ? (li + 1) % pc : (li - 1 + pc) % pc });
-      },
-      lbScroll: function (e) {
-        var el = e.currentTarget; if (!el.clientWidth || self.animating) return;
-        var off = pc > 1 ? 1 : 0;
-        var nearest = function () {
-          var sl = el.querySelectorAll('.lb-slide'), pad = parseFloat(getComputedStyle(el).paddingLeft) || 0, best = 1e9, kk = 0;
-          for (var i = 0; i < sl.length; i++) { var d = Math.abs(self.slideLeft(el, i) - el.scrollLeft); if (d < best) { best = d; kk = i; } }
-          return kk;
-        };
-        var k = nearest();
-        var real = ((k - off) % pc + pc) % pc;
-        if (real !== li) { self.fromScroll = true; self.setState({ lb: real }); }
-        clearTimeout(self.loopT);
-        self.loopT = setTimeout(function () {
-          var kk = nearest();
-          if (off && (kk === 0 || kk >= pc + 1)) {
-            el.style.scrollSnapType = 'none';
-            el.scrollLeft = self.slideLeft(el, kk === 0 ? pc : kk - pc);
-            el.style.scrollSnapType = '';
-          }
-        }, 140);
-      },
-      lbList: view.map(function (p, k) { var vs = (self.state.vst || {})[p.src] || { p: false, m: false }; return { key: p.src, vsrc: p.isVideo ? ((self.vurls && self.vurls[p.src]) || '') : '', sndOn: !vs.m, sndOff: !!vs.m, paused: !!vs.p, isVideo: !!p.isVideo, isImg: !p.isVideo, poster: p.poster ? self.thumb(p.poster) : '', pt: p.poster ? self.thumb(p.poster) : '', measure: function (e) { var im = e.currentTarget; if (!im.naturalWidth) return; self.ratios = self.ratios || {}; if (self.ratios[p.src]) { self.snapSoon(); return; } self.ratios[p.src] = im.naturalHeight / im.naturalWidth; self.forceUpdate(); }, src: p.isVideo ? ((self.vurls && self.vurls[p.src]) || p.src) : ((self.mem && self.mem[p.src]) || self.thumb(p.src)), ar: p.isVideo ? '9 / 16' : '1 / ' + (((self.ratios || {})[p.src]) || 1.25).toFixed(4), n: k + 1, op: k === li ? '1' : '0.45', ring: k === li ? '2px solid ' + (self.props.accent ?? '#bfd630') : 'none', open: function () { if (k === li) return; self.dir = (k === (li + 1) % pc) ? 1 : (k === (li - 1 + pc) % pc) ? -1 : 0; self.setState({ lb: k }); } }; }),
-      closeLb: function () { self.setState({ lb: -1, lbZone: null, lbStart: 0 }); },
-      lbPrev: function () { self.dir = -1; self.setState({ lb: (li - 1 + pc) % pc }); },
-      lbNext: function () { self.dir = 1; self.setState({ lb: (li + 1) % pc }); }
-    };
+  card.addEventListener('click', function (e) {
+    if (e.target.closest('.snd') || e.target.closest('.prog')) return;
+    if (!reel) { var h = card.getAttribute('data-href'); if (h) location.href = h; return; }
+    if (card !== S.active) { setActive(card); return; }
+    if (v.paused) { card._userPaused = false; card.classList.remove('paused'); playV(card); }
+    else { card._userPaused = true; v.pause(); card.classList.add('paused'); }
+  });
+  var snd = $('.snd', card);
+  if (snd) snd.addEventListener('click', function (e) {
+    e.stopPropagation();
+    S.sound = !S.sound; de.classList.toggle('sound', S.sound);
+    if (S.active && S.active._v) { S.active._v.muted = !S.sound; if (S.active._v.paused && !S.active._userPaused) playV(S.active); }
+  });
+  var pg = $('.prog', card);
+  if (pg) {
+    var seek = function (e) { if (!v.duration) return; var r = pg.getBoundingClientRect(), x = Math.max(0, Math.min(1, (e.clientX - r.left - 8) / (r.width - 16))); v.currentTime = x * v.duration; $('i', pg).style.width = (x * 100) + '%'; };
+    pg.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); if (card !== S.active) setActive(card); pg.classList.add('drag'); try { pg.setPointerCapture(e.pointerId); } catch (x) {} seek(e); });
+    pg.addEventListener('pointermove', function (e) { if (pg.classList.contains('drag')) seek(e); });
+    var up = function (e) { if (!pg.classList.contains('drag')) return; pg.classList.remove('drag'); try { pg.releasePointerCapture(e.pointerId); } catch (x) {} };
+    pg.addEventListener('pointerup', up); pg.addEventListener('pointercancel', up);
+    pg.addEventListener('click', function (e) { e.stopPropagation(); });
   }
 }
+function loadV(card, eager) { var v = card._v; if (!v) return; var s = card.getAttribute('data-src'); if (v.getAttribute('src') !== s) { v.classList.remove('ready'); v.preload = eager ? 'auto' : 'metadata'; v.src = s; } }
+function unloadV(card) { var v = card._v; if (!v || !v.getAttribute('src')) return; v.pause(); v.classList.remove('ready'); v.removeAttribute('src'); try { v.load(); } catch (e) {} }
+function playV(card) {
+  var v = card._v; if (!v) return;
+  loadV(card, true);
+  v.muted = card.classList.contains('reel') ? !S.sound : true;
+  if (v.readyState < 3) card.classList.add('wait');
+  var p = v.play();
+  if (p && p.catch) p.catch(function () {
+    if (!v.muted) { v.muted = true; S.sound = false; de.classList.remove('sound'); var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {}); }
+  });
+}
+function setActive(card) {
+  if (card === S.active) return;
+  S.active = card;
+  var idx = S.cards.indexOf(card);
+  S.cards.forEach(function (c, i) {
+    if (c === card) return;
+    if (c._v) { c._v.pause(); c._userPaused = false; c.classList.remove('paused', 'wait'); }
+    if (Math.abs(i - idx) === 1) loadV(c, false);   // соседей заранее подгружаем (кадр готов к свайпу)
+    else if (Math.abs(i - idx) > 2) unloadV(c);      // дальние выгружаем — iPhone держит мало видео
+  });
+  card._userPaused = false; card.classList.remove('paused');
+  if (card._v) playV(card);
+}
+// активная — карточка, верх которой ближе всего к верху экрана
+function pickActive() {
+  if (S.viewing || !S.cards.length) return;
+  var best = null, bd = 1e9;
+  S.cards.forEach(function (c) { var d = Math.abs(c.getBoundingClientRect().top - 5); if (d < bd) { bd = d; best = c; } });
+  if (best) setActive(best);
+}
+var sRaf = 0;
+window.addEventListener('scroll', function () {
+  if (S.viewing) { vScroll(); return; }
+  if (sRaf) return; sRaf = requestAnimationFrame(function () { sRaf = 0; pickActive(); });
+}, { passive: true });
+// полоска прогресса у активного рилса
+(function prog() {
+  var c = S.active;
+  if (c && c._v && c._v.duration && !S.viewing) { var pg = $('.prog', c); if (pg && !pg.classList.contains('drag')) $('i', pg).style.width = (c._v.currentTime / c._v.duration * 100) + '%'; }
+  requestAnimationFrame(prog);
+})();
+// iPhone в энергосбережении не даёт видео стартовать само — первое касание запускает
+document.addEventListener('touchend', function () { var c = S.active; if (c && c._v && c._v.paused && !c._userPaused && !S.viewing) playV(c); }, { passive: true });
+document.addEventListener('visibilitychange', function () { if (document.hidden) stopPlaying(); else if (S.active && !S.active._userPaused && !S.viewing) playV(S.active); });
+function stopPlaying() { $$('video').forEach(function (v) { v.pause(); }); }
+
+/* ---------- сетка ---------- */
+function gridHTML(f) {
+  var list = ITEMS.filter(function (it) { return it.type === f; });
+  if (!list.length) return '<div class="empty">Скоро здесь появятся работы</div>';
+  var w = window.innerWidth, n = w < 760 ? 2 : w < 1100 ? 3 : 4, cols = [], hs = [];
+  for (var i = 0; i < n; i++) { cols.push([]); hs.push(0); }
+  list.forEach(function (it, k) {
+    var r = Math.max(.8, Math.min(1.45, ratio(it.photos[0]))), c = hs.indexOf(Math.min.apply(null, hs));
+    cols[c].push('<a class="tile in" href="#" data-k="' + ITEMS.indexOf(it) + '" style="padding-top:' + (r * 100).toFixed(2) + '%;animation-delay:' + Math.min(k * 45, 450) + 'ms" aria-label="' + esc(it.name) + '">' +
+      '<img src="' + esc(thumb(it.photos[0])) + '" alt="' + esc(it.name) + '" ' + (k > 5 ? 'loading="lazy" ' : '') + 'decoding="async"></a>');
+    hs[c] += r;
+  });
+  S.gridN = n;
+  return '<div class="grid">' + cols.map(function (c) { return '<div class="col">' + c.join('') + '</div>'; }).join('') + '</div>';
+}
+feedEl.addEventListener('click', function (e) { var t = e.target.closest('.tile'); if (!t) return; e.preventDefault(); openView(ITEMS[+t.getAttribute('data-k')]); });
+window.addEventListener('resize', function () {
+  fitPad();
+  if (!S.viewing && S.feed && S.feed !== 'REELS' && S.feed !== 'Комплекс') { var w = window.innerWidth, n = w < 760 ? 2 : w < 1100 ? 3 : 4; if (n !== S.gridN) feedEl.innerHTML = gridHTML(S.feed); }
+});
+
+/* ---------- просмотр изделия («как лента»): фото одно под другим, ниже — описание и цена ---------- */
+function openView(it) {
+  if (!it) return;
+  S.viewing = true; S.feedY = window.scrollY; stopPlaying();
+  var media = it.photos.map(function (p) {
+    var r = ratio(p);
+    return '<div class="vm" style="aspect-ratio:1/' + r + ';background-image:url(\'' + esc(thumb(p)) + '\')"><img src="' + esc(p) + '" alt="' + esc(it.name) + '" decoding="async"></div>';
+  }).concat(it.videos.map(function (vv) {
+    return '<div class="vm vid" style="background-image:url(\'' + esc(reelPoster(vv.src)) + '\')"><video muted playsinline loop preload="metadata" data-src="' + esc(vv.src) + '"></video>' +
+      '<span class="play-ico">' + PLAY + '</span><span class="spin"></span><button class="snd" aria-label="Звук">' + SND_OFF + SND_ON + '</button></div>';
+  }));
+  var sub = [it.project !== it.name ? it.project : '', it.address].filter(Boolean).join(' · ');
+  viewEl.innerHTML = '<div class="vl">' + media.join('') + '</div><div class="vpanel"><h1>' + esc(it.name) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') +
+    (it.text ? '<p>' + esc(it.text) + '</p>' : '') +
+    '<dl class="specs"><dt>Корпус</dt><dd>' + esc(it.korpus) + '</dd><dt>Фасады</dt><dd>' + esc(it.fasady) + '</dd><dt>Фурнитура</dt><dd>' + esc(it.furn) + '</dd></dl>' +
+    (it.price ? '<div class="price">' + esc(it.price) + '</div><div class="pdate">Цена на ' + esc(it.priceDate || 'октябрь 2026') + '</div>' : '') +
+    '<div class="btns"><a class="btn main" href="home.html#calc">Хочу такую же</a>' + (it.href ? '<a class="btn sec" href="' + esc(it.href) + '">Открыть весь проект</a>' : '') + '</div></div><div class="vend"></div>';
+  S.vms = $$('.vm', viewEl);
+  $$('.vm.vid', viewEl).forEach(function (box) {
+    var v = $('video', box); v.muted = true;
+    v.addEventListener('playing', function () { box.classList.remove('wait'); });
+    v.addEventListener('waiting', function () { box.classList.add('wait'); });
+    box.addEventListener('click', function (e) {
+      if (e.target.closest('.snd')) { v.muted = !v.muted; de.classList.toggle('sound', !v.muted); if (v.paused) v.play().catch(function () {}); return; }
+      if (v.paused) { box.classList.remove('paused'); v.play().catch(function () {}); } else { v.pause(); box.classList.add('paused'); }
+    });
+  });
+  try { history.pushState({ mgsView: 1 }, ''); S.pushed = true; } catch (e) { S.pushed = false; }
+  de.classList.add('viewing', 'snap'); de.classList.remove('vfree');
+  jump(0);
+  vScroll();
+}
+function vScroll() {
+  var vms = S.vms || []; if (!vms.length) return;
+  var last = vms[vms.length - 1], y = window.scrollY, i = 0, bd = 1e9;
+  de.classList.toggle('vfree', y > last.offsetTop + 40);   // описание — без примагничивания
+  vms.forEach(function (m, k) { var d = Math.abs(m.getBoundingClientRect().top - 5); if (d < bd) { bd = d; i = k; } });
+  $('#vcount').textContent = (i + 1) + ' / ' + vms.length;
+  // видео в просмотре: играет только то, что на экране
+  vms.forEach(function (m, k) { var v = $('video', m); if (!v) return;
+    if (k === i && !m.classList.contains('paused')) { if (!v.getAttribute('src')) { v.src = v.getAttribute('data-src'); m.classList.add('wait'); } v.play().catch(function () {}); }
+    else if (!v.paused) v.pause(); });
+}
+function closeView(fromPop) {
+  if (!S.viewing) return;
+  S.viewing = false; stopPlaying();
+  $$('video', viewEl).forEach(function (v) { v.removeAttribute('src'); try { v.load(); } catch (e) {} });
+  viewEl.innerHTML = ''; S.vms = [];
+  de.classList.remove('viewing', 'vfree'); de.classList.toggle('snap', S.feed === 'REELS' || S.feed === 'Комплекс');
+  jump(S.feedY); var fy = S.feedY; requestAnimationFrame(function () { if (Math.abs(window.scrollY - fy) > 2) jump(fy); });
+  if (!fromPop && S.pushed) { S.pushed = false; history.back(); }
+  S.pushed = false;
+}
+$('#vclose').addEventListener('click', function () { closeView(false); });
+window.addEventListener('popstate', function () { if (S.viewing) { S.pushed = false; closeView(true); } });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeView(false); });
+window.addEventListener('hashchange', function () { var h = ''; try { h = decodeURIComponent(location.hash.slice(1)); } catch (e) {} if (h && FEEDS.indexOf(h) >= 0 && h !== S.feed) setFeed(h); });
+
+/* ---------- меню ---------- */
+(function () {
+  var m = $('#menu'), b = $('#menuBtn');
+  var set = function (o) { if (o) { m.hidden = false; void m.offsetWidth; } else m.hidden = true; m.classList.toggle('open', o); b.classList.toggle('open', o); de.classList.toggle('menu-open', o); };
+  b.addEventListener('click', function () { set(!m.classList.contains('open')); });
+  $$('a', m).forEach(function (a) { a.addEventListener('click', function (e) { if (a.classList.contains('active')) e.preventDefault(); set(false); }); });
+})();
+
+/* ---------- старт ---------- */
+try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; if (history.state && history.state.mgsView) history.replaceState(null, ''); } catch (e) {}
+var h0 = ''; try { h0 = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+var startFeed = function () { setFeed(FEEDS.indexOf(h0) >= 0 ? h0 : 'REELS', true); };
+if (window.MGS_RATIOS) startFeed(); else { var t0 = Date.now(), w = function () { if (window.MGS_RATIOS || Date.now() - t0 > 1500) startFeed(); else setTimeout(w, 30); }; w(); }
+window.MGS_TEST = S;  // для автопроверок
+})();
 </script>
+
 </body>
 </html>
