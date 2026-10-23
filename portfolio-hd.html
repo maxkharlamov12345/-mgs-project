@@ -1139,8 +1139,10 @@ class Component extends DCLogic {
     this.onTouchPin = function (e) {
       if (!self.slideOn()) return;
       var t = e.target && e.target.closest ? e.target.closest('.feed .pin') : null;
-      if (t && t.querySelector('video')) { self._touchPin = t; self.focusPlay(); }
+      if (t && t.querySelector('video')) { self._touchPin = t; }
+      self.focusPlay();  // ТЕСТ: любое касание экрана — запустить все видимые превью (iPhone в режиме энергосбережения не даёт видео стартовать само)
     };
+    document.addEventListener('touchend', function () { self.focusPlay(); }, { passive: true });
     document.addEventListener('touchstart', this.onTouchPin, { passive: true });
     document.addEventListener('pointerdown', this.onTouchPin, { passive: true });
     // страховка: в режимах «одно видео» любое другое видео ленты, которое запустилось само, ставим на паузу
