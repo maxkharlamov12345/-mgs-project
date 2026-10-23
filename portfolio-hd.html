@@ -51,6 +51,16 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 .chips-in{display:flex;gap:8px;width:max-content;margin:0 auto;padding-right:2px}
 .chip{flex:none;height:44px;padding:0 18px;border-radius:999px;background:var(--chip);color:var(--tx);font-size:15px;font-weight:500;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.4)}
 .chip.on{background:var(--lime);color:#1c1a17}
+/* подфильтры ленты (Кухни: форма) — всплывают строкой над плашками */
+.subchips{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) - 8px + 66px);z-index:45;overflow-x:auto;scrollbar-width:none;padding:14px var(--side) 6px;
+  opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .22s,transform .3s cubic-bezier(.2,.7,.2,1)}
+.subchips::-webkit-scrollbar{display:none}
+.subchips.show{opacity:1;transform:none;pointer-events:auto}
+.subchips .chips-in{gap:6px}
+.sub{flex:none;height:34px;padding:0 14px;border-radius:999px;background:rgba(38,34,31,.92);color:var(--tx);font-size:14px;font-weight:400;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.5)}
+.sub.on{background:var(--tx);color:#1c1a17;font-weight:500}
+html.menu-open .subchips,html.viewing .subchips{display:none}
+.grid.has-sub{padding-bottom:140px}
 
 /* ---------- лента ---------- */
 /* в начале контент — с отступом под шапку; при прокрутке уходит под неё */
@@ -156,6 +166,7 @@ html.vfree .vcount{opacity:0}
 
 <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Наши работы — MGS Mebel</h1>
 <main id="feed"></main>
+<nav class="subchips" id="subchips" aria-label="Подфильтры"><div class="chips-in" id="subIn"></div></nav>
 <nav class="chips" id="chips" aria-label="Ленты"><div class="chips-in" id="chipsIn"></div></nav>
 <section id="view" aria-label="Просмотр изделия"></section>
 <span class="vtop vcount" id="vcount"></span>
@@ -583,6 +594,22 @@ var S = { feed: null, cards: [], active: null, sound: false, gen: 0, viewing: fa
 /* ---------- плашки ---------- */
 chipsIn.innerHTML = FEEDS.map(function (f) { return '<button class="chip" data-f="' + f + '">' + (f === 'Комплекс' ? '🔥 Комплекс' : f) + '</button>'; }).join('');
 chipsIn.addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) setFeed(b.getAttribute('data-f')); });
+/* подфильтры: у ленты — своя строка плашек. Форма кухонь — тестовая разметка по фото/описаниям */
+var SUBS = { 'Кухни': ['Все', 'Прямая', 'Угловая', 'П-образная'] };
+var KSHAPE = { 'p2-kitchen-1': 'П-образная', 'p5-kitchen-1': 'П-образная', 'k964-1': 'П-образная', 'k1550-1': 'Прямая', 'k1514-1': 'Прямая' };
+function subOf(it) { if (it.type === 'Кухни') return KSHAPE[base(it.photos[0])] || 'Угловая'; return ''; }
+var subEl = $('#subchips'), subIn = $('#subIn');
+function renderSubs() {
+  var list = SUBS[S.feed];
+  subEl.classList.toggle('show', !!list);
+  if (!list) return;
+  subIn.innerHTML = list.map(function (x) { return '<button class="sub' + ((S.sub || 'Все') === x ? ' on' : '') + '" data-s="' + x + '">' + x + '</button>'; }).join('');
+}
+subIn.addEventListener('click', function (e) {
+  var b = e.target.closest('.sub'); if (!b) return;
+  var v = b.getAttribute('data-s'); S.sub = v === 'Все' ? '' : v;
+  renderSubs(); jump(0); feedEl.innerHTML = gridHTML(S.feed);
+});
 function markChip() {
   var on = null;
   $$('.chip', chipsIn).forEach(function (b) { var o = b.getAttribute('data-f') === S.feed; b.classList.toggle('on', o); if (o) on = b; });
@@ -655,7 +682,8 @@ function setFeed(f, first) {
   if (FEEDS.indexOf(f) < 0) f = 'REELS';
   if (f === S.feed && !first) { jump(0); return; }
   stopAll();
-  S.feed = f; S.gen++; S.cards = []; S.active = null;
+  S.feed = f; S.sub = ''; S.gen++; S.cards = []; S.active = null;
+  renderSubs();
   try { history.replaceState(history.state, '', f === 'REELS' ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
   markChip();
   var lenta = f === 'REELS' || f === 'Комплекс', gen = S.gen;
@@ -808,7 +836,7 @@ function stopPlaying() { $$('video').forEach(function (v) { v.pause(); }); }
 
 /* ---------- сетка ---------- */
 function gridHTML(f) {
-  var list = ITEMS.filter(function (it) { return it.type === f; });
+  var list = ITEMS.filter(function (it) { return it.type === f && (!S.sub || subOf(it) === S.sub); });
   if (!list.length) return '<div class="empty">Скоро здесь появятся работы</div>';
   var w = window.innerWidth, n = w < 760 ? 2 : w < 1100 ? 3 : 4, cols = [], hs = [];
   for (var i = 0; i < n; i++) { cols.push([]); hs.push(0); }
@@ -819,7 +847,7 @@ function gridHTML(f) {
     hs[c] += r;
   });
   S.gridN = n;
-  return '<div class="grid">' + cols.map(function (c) { return '<div class="col">' + c.join('') + '</div>'; }).join('') + '</div>';
+  return '<div class="grid' + (SUBS[f] ? ' has-sub' : '') + '">' + cols.map(function (c) { return '<div class="col">' + c.join('') + '</div>'; }).join('') + '</div>';
 }
 feedEl.addEventListener('click', function (e) { var t = e.target.closest('.tile'); if (!t) return; e.preventDefault(); openView(ITEMS[+t.getAttribute('data-k')]); });
 window.addEventListener('resize', function () {

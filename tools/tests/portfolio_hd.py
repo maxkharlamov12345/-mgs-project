@@ -102,6 +102,16 @@ with sync_playwright() as p:
     ok(not J("document.documentElement.classList.contains('snap')") and J("document.querySelectorAll('.tile').length")>5 and J("scrollY")==0,'Кухни: сетка, без примагничивания, с начала (%d плиток)'%J("document.querySelectorAll('.tile').length"))
     ok(J("[...document.querySelectorAll('video')].every(v=>v.paused)"),'в сетке видео не играют')
     pg.screenshot(path=D+'h_k.png')
+    # подфильтры кухонь
+    allk=J("document.querySelectorAll('.tile').length")
+    ok(J("document.getElementById('subchips').classList.contains('show')") and J("document.querySelectorAll('.sub').length")==4,'Кухни: строка подфильтров всплыла')
+    sb=J("document.getElementById('subchips').getBoundingClientRect().bottom"); ct=J("document.getElementById('chipsIn').getBoundingClientRect().top")
+    ok(sb<=ct+2,'подфильтры над плашками (%d ≤ %d)'%(sb,ct))
+    pg.tap('.sub[data-s="П-образная"]'); pg.wait_for_timeout(700); pg.screenshot(path=D+'h_sub.png')
+    n=J("document.querySelectorAll('.tile').length")
+    ok(0<n<allk and J("document.querySelector('.sub.on').dataset.s")=='П-образная','П-образная: %d из %d'%(n,allk))
+    pg.tap('.sub[data-s="Все"]'); pg.wait_for_timeout(500)
+    ok(J("document.querySelectorAll('.tile').length")==allk,'«Все» возвращает все кухни')
     J("scrollTo(0,700)"); pg.wait_for_timeout(400); y0=J("scrollY")
     t=J("(()=>{const t=[...document.querySelectorAll('.tile')].find(e=>e.getBoundingClientRect().top>60);const r=t.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()")
     pg.touchscreen.tap(t[0],t[1]); pg.wait_for_timeout(1000)
@@ -117,6 +127,7 @@ with sync_playwright() as p:
     ok(not J("document.documentElement.classList.contains('viewing')") and abs(J("scrollY")-y0)<3 and 'portfolio-hd' in pg.url,'«Назад» закрывает просмотр, лента на том же месте')
     # снова REELS — примагничивание работает
     pg.tap('.chip[data-f="REELS"]'); pg.wait_for_timeout(1200)
+    ok(not J("document.getElementById('subchips').classList.contains('show')"),'в REELS подфильтров нет')
     h=J("MGS_TEST.cards[1].getBoundingClientRect().top+scrollY-parseFloat(getComputedStyle(document.getElementById('feed')).paddingTop)"); J("scrollTo(0,%d)"%(h*0.6)); pg.wait_for_timeout(900); s=st()
     ok(s['act']==1 and abs(s['y']-h)<3 and s['playing']==[1],'после Кухонь лента REELS снова листается по одной')
     # меню
