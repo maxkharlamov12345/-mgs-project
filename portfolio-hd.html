@@ -269,18 +269,14 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 @media (max-width:999px){ .cx-open{left:10px;bottom:10px;height:40px;padding:0 16px;font-size:14px} }
 
-/* ТЕСТ: «Комплекс» на телефоне — слайдер как рилсы: своя прокрутка на весь экран (закреплённый слой) с примагничиванием,
-   карточки 4:5 идут встык (видно начало следующей), свайп доводит ровно до следующей. Прокрутка страницы в Safari примагничивание не держала — поэтому свой слой */
-.feed.cx1{position:fixed !important;left:0;right:0;top:0;height:100svh;z-index:1;display:block !important;max-width:none !important;margin:0 !important;
-  overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scroll-padding-top:5px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.feed.cx1::-webkit-scrollbar{display:none}
-.feed.cx1 .feed-col{gap:5px !important;padding:5px 0 calc(100svh - (100vw - 10px) * 1.25 - 10px) !important}  /* карточки встык, как в просмотре рилсов; снизу запас — чтобы и последняя вставала наверх */
-.feed.cx1 .cx-pin{flex:none !important;padding:0 5px;box-sizing:border-box;scroll-snap-align:start;scroll-snap-stop:always}
-.feed.cx1 .cx-pin > div[aria-hidden]{display:none}
-.feed.cx1 .cx-pin{transition:filter .3s ease} .feed.cx1 .cx-pin:not(.cx-on){filter:brightness(.28)}
-
-.feed.cx1 .cx-pin a.pin-btn{position:relative !important;top:auto !important;left:auto !important;right:auto !important;bottom:auto !important;width:100% !important;height:auto !important;aspect-ratio:4/5}
-.feed.cx1 .cx-open{left:15px;bottom:10px}
+/* ТЕСТ: «Комплекс» на телефоне — как просмотр рилсов: листается сама страница (Safari прячет панели, видео заходит под часы и строку адреса),
+   карточки 4:5 встык, свайп доводит ровно до следующей (примагничивание на html) */
+html.cx-snap{scroll-snap-type:y mandatory;scroll-padding-top:5px}
+html.cx-snap .chips-nav ~ .pad{padding-top:5px !important}
+.feed.cx1 .feed-col{gap:5px !important;padding-bottom:calc(100lvh - (100vw - 10px) * 1.25 - 10px) !important}
+.feed.cx1 .cx-pin{flex:none !important;scroll-snap-align:start;scroll-snap-stop:always;transition:filter .3s ease}
+.feed.cx1 .cx-pin:not(.cx-on){filter:brightness(.28)}
+.feed.cx1 .cx-open{left:10px;bottom:10px}
 </style>
 </helmet>
 
@@ -1136,6 +1132,7 @@ class Component extends DCLogic {
     document.addEventListener('pointerdown', function () {
       if (fm.state.lb >= 0 || !phoneW()) return;
       fm._feedY = window.scrollY;
+      if (document.documentElement.classList.contains('cx-snap')) return;  // ТЕСТ: в «Комплексе» не выключаем примагничивание касанием (иначе оно пропадало от первого касания)
       // на миг выключаем примагничивание — иначе Safari, увидев просмотр на месте прокрутки ленты, примагничивал к случайному фото
       document.documentElement.classList.add('lb-hold');
     }, true);
@@ -1155,7 +1152,7 @@ class Component extends DCLogic {
     window.addEventListener('resize', this.onResize);
     this.onHash = function () { var f = self.readHash(); if (f) self.setFilter(f); };
     window.addEventListener('hashchange', this.onHash);
-    var cxRaf = 0; document.addEventListener('scroll', function (e) { if (!e.target || !e.target.classList || !e.target.classList.contains('cx1') || cxRaf) return; cxRaf = requestAnimationFrame(function () { cxRaf = 0; self.cxFocus(); }); }, true);
+    var cxRaf = 0; window.addEventListener('scroll', function () { if (cxRaf || !document.querySelector('.feed.cx1')) return; cxRaf = requestAnimationFrame(function () { cxRaf = 0; self.cxFocus(); }); }, true);
     document.addEventListener('play', function (e) { var v = e.target, pin = v && v.closest ? v.closest('.feed.cx1 .cx-pin') : null; if (pin && !pin.classList.contains('cx-on') && self._cxOn) v.pause(); }, true);
     var spyRaf = 0; window.addEventListener('scroll', function () { if (spyRaf) return; spyRaf = requestAnimationFrame(function () { spyRaf = 0; self.spyCheck(); }); }, { passive: true });
     this.onFocusScroll = function () { if (self._fpRaf) return; self._fpRaf = requestAnimationFrame(function () { self._fpRaf = 0; if (self.slideOn()) self.focusPlay(); }); };
@@ -1242,7 +1239,7 @@ class Component extends DCLogic {
   // ТЕСТ: «Комплекс»-слайдер — играет только проект, вставший наверх; остальные на паузе и притемнены (как в просмотре рилсов)
   cxFocus() {
     var box = document.querySelector('.feed.cx1'); if (!box) return;
-    var top = box.getBoundingClientRect().top + 5, best = null, bd = 1e9, self = this;
+    var top = 5, best = null, bd = 1e9, self = this;
     var ps = box.querySelectorAll('.cx-pin');
     for (var i = 0; i < ps.length; i++) { var d = Math.abs(ps[i].getBoundingClientRect().top - top); if (d < bd) { bd = d; best = ps[i]; } }
     for (var j = 0; j < ps.length; j++) {
