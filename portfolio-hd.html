@@ -250,6 +250,11 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   .feed-col:last-child{padding-bottom:0}
   .feed-sec:last-child .feed-col{padding-bottom:70px}
 }
+/* подпись раздела в сплошной ленте: тонкий текст с лаймовым маркером, как заголовок «Наши работы» */
+.sec-ttl{display:flex;justify-content:center;padding:34px 0 18px}
+.sec-ttl span{font-size:40px;font-weight:300;line-height:1.05;letter-spacing:-.02em;padding:0 .12em;
+  background:linear-gradient(#bfd630,#bfd630) no-repeat 0 80%/100% .42em;border-radius:.1em .3em .12em .25em}
+@media (max-width:999px){ .sec-ttl{padding:22px 0 12px} .sec-ttl span{font-size:28px} }
 .feed-sec + .feed-sec{margin-top:16px}
 @media (max-width:999px){ .feed-sec + .feed-sec{margin-top:5px} }
 </style>
@@ -276,6 +281,7 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
     </sc-if>
     <sc-for list="{{sections}}" as="sec" hint-placeholder-count="1">
     <div class="feed-sec" data-sec="{{sec.name}}">
+    <sc-if value="{{sec.showTitle}}" hint-placeholder-val="{{ false }}"><div class="sec-ttl"><span>{{sec.name}}</span></div></sc-if>
     <div class="{{feedCls}}" style="display: flex; gap: 16px; align-items: stretch; max-width: 1920px; margin: 0 auto">
       <sc-for list="{{sec.columns}}" as="col" hint-placeholder-count="4">
       <div class="feed-col" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 16px">
@@ -1509,7 +1515,7 @@ class Component extends DCLogic {
     columns.forEach(function (c) { var st = c.h >= maxH * 0.8; c.pins.forEach(function (pn) { pn.flex = st ? '1 0 auto' : 'none'; }); });
     return columns;
     };
-    var sections = secNames.map(function (k, i) { return { name: k, columns: layout(secPins[i]) }; }).filter(function (sc) { return sc.columns.some(function (c) { return c.pins.length; }); });
+    var sections = secNames.map(function (k, i) { return { name: k, showTitle: i > 0, columns: layout(secPins[i]) }; }).filter(function (sc) { return sc.columns.some(function (c) { return c.pins.length; }); });
     var columns = sections.length ? sections[0].columns : [];
 
     try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); document.documentElement.classList.toggle('mgs-focus', modeFeed); } catch (e) {}
