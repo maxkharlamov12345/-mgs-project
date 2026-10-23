@@ -20,9 +20,7 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:Onest,system-ui,s
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 a{color:inherit;-webkit-tap-highlight-color:transparent}
 img,video{display:block}
-/* примагничивание: рилс-лента и просмотр изделия; листается сама страница (Safari прячет панели) */
-html.snap{scroll-snap-type:y mandatory;scroll-padding-top:5px}
-html.vfree{scroll-snap-type:none}
+/* листание по одной карточке — своё (JS, см. «листание»), НЕ css scroll-snap: на iPhone он дёргал страницу и путал ленты */
 
 /* ---------- шапка: отдельные небольшие элементы (полоса во всю ширину заставляет Safari заливать зону часов) ---------- */
 .hd-btn{position:fixed;z-index:46;top:calc(env(safe-area-inset-top) + (var(--hd) - 40px)/2);width:40px;height:40px;border-radius:50%;
@@ -62,12 +60,11 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 
 /* рилс-лента (REELS, Комплекс) */
 .lenta{display:flex;flex-direction:column;align-items:center;gap:5px;padding-bottom:calc(100lvh - var(--ch, 400px) - 10px)}
-.card{position:relative;flex:none;width:calc(100vw - 10px);border-radius:10px;overflow:hidden;background:#1d1a17;scroll-snap-align:start;scroll-snap-stop:always;cursor:pointer}
+.card{position:relative;flex:none;width:calc(100vw - 10px);border-radius:10px;overflow:hidden;background:#1d1a17;cursor:pointer}
 .card.reel{height:min(177.78vw, calc(100svh - 10px))}
-/* первая карточка примагничивается в начальном положении (под шапкой), остальные — к верху экрана */
-.lenta .card:first-child{scroll-margin-top:calc(var(--top) - 5px)}
+/* первая карточка стоит под шапкой, остальные при листании встают к верху экрана */
 .lenta .card:first-child .num{top:10px}
-/* первый рилс помещается целиком под шапкой (иначе примагничивание его не держит — карточка выше экрана) */
+/* первый рилс помещается целиком под шапкой */
 .lenta .card.reel:first-child{height:min(177.78vw, calc(100svh - var(--top) - 5px))}
 @media (min-width:760px){ .lenta .card.cx:first-child{width:min(calc(100vw - 10px), calc((100svh - var(--top) - 5px) * .8))} .lenta .card.reel:first-child{height:calc(100svh - var(--top) - 5px);width:calc((100svh - var(--top) - 5px) * .5625)} }
 .card.cx{aspect-ratio:4/5;border-radius:14px}
@@ -107,14 +104,12 @@ html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
 html.viewing #view{display:block}
 html.viewing #feed,html.viewing .chips,html.viewing .hd-btn,html.viewing .hd-logo{display:none}
 .vl{display:flex;flex-direction:column;align-items:center;gap:5px;padding:calc(var(--top) + 10px) 5px 0}
-.vl .vm:first-child{scroll-margin-top:calc(var(--top) + 5px)}
-.vm{position:relative;width:calc(100vw - 10px);max-width:900px;border-radius:10px;overflow:hidden;background:#1d1a17 center/cover no-repeat;scroll-snap-align:start;scroll-snap-stop:always}
+.vm{position:relative;width:calc(100vw - 10px);max-width:900px;border-radius:10px;overflow:hidden;background:#1d1a17 center/cover no-repeat}
 .vm img{width:100%;height:100%;object-fit:cover}
 .vm.vid{height:min(177.78vw, calc(100svh - 10px));max-width:calc((100svh - 10px) * .5625)}
 .vm.vid video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .vm.vid .snd{bottom:16px}
 .vpanel{width:100%;max-width:900px;margin:0 auto;padding:26px 16px 60px}
-.vend{height:1px;scroll-snap-align:end}  /* точка у самого низа — до описания можно долистать (без неё примагничивание тянуло обратно к фото) */
 .vpanel h1{margin:0 0 6px;font-size:30px;font-weight:300;letter-spacing:-.01em}
 .vpanel .sub{color:var(--lime);font-size:14px;font-weight:500;margin-bottom:16px}
 .vpanel p{margin:0 0 18px;color:#d9d4cc;font-size:15px;line-height:1.55}
@@ -569,6 +564,64 @@ function markChip() {
 }
 var jump = function (y) { var sb = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; window.scrollTo(0, y); de.style.scrollBehavior = sb; };
 
+/* ---------- листание по одной карточке ----------
+   Палец двигает страницу как обычно (Safari прячет панели), а при отпускании гасим инерцию и плавно доводим
+   до следующей/предыдущей карточки. Колесо и клавиши — доводка к ближайшей после остановки. */
+var P = { touch: false, y0: 0, i0: 0, t0: 0, anim: 0, animating: false, cur: 0, lastY: 0, lastT: 0, v: 0, idle: 0, free: false };
+function killMomentum() { de.style.overflow = 'hidden'; void de.offsetHeight; requestAnimationFrame(function () { de.style.overflow = ''; }); }
+function pages() {
+  var list = S.viewing ? (S.vms || []) : (S.feed === 'REELS' || S.feed === 'Комплекс' ? S.cards : []), y = window.scrollY;
+  return list.map(function (el, i) { return { el: el, y: i === 0 ? 0 : Math.round(el.getBoundingClientRect().top + y - 5), h: el.offsetHeight }; });
+}
+function nearest(ps) { var y = window.scrollY, b = 0, bd = 1e9; ps.forEach(function (p, i) { var d = Math.abs(p.y - y); if (d < bd) { bd = d; b = i; } }); return b; }
+function inFree(ps) { return S.viewing && ps.length && window.scrollY > ps[ps.length - 1].y + 40; }   // описание под фото — листается свободно
+function animTo(y, ms) {
+  cancelAnimationFrame(P.anim);
+  var y0 = window.scrollY, d = y - y0, t0 = performance.now();
+  if (Math.abs(d) < 1) { P.animating = false; return; }
+  P.animating = true;
+  var step = function (t) {
+    var k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+    window.scrollTo(0, y0 + d * e);
+    if (k < 1) P.anim = requestAnimationFrame(step); else { P.animating = false; pickActive(); if (S.viewing) vScroll(); }
+  };
+  P.anim = requestAnimationFrame(step);
+}
+function goPage(i, ps) { ps = ps || pages(); if (!ps.length) return; i = Math.max(0, Math.min(ps.length - 1, i)); P.cur = i; killMomentum(); animTo(ps[i].y, 340); }
+document.addEventListener('touchstart', function (e) {
+  if (e.touches && e.touches.length > 1) return;
+  var ps = pages(); if (!ps.length) return;
+  P.touch = true; cancelAnimationFrame(P.anim); P.animating = false;
+  P.y0 = window.scrollY; P.t0 = performance.now(); P.free = inFree(ps);
+  P.i0 = P.free ? ps.length - 1 : nearest(ps);
+}, { passive: true });
+document.addEventListener('touchend', function () {
+  if (!P.touch) return; P.touch = false;
+  var ps = pages(); if (!ps.length) return;
+  var dy = window.scrollY - P.y0, dt = Math.max(1, performance.now() - P.t0), v = P.v;
+  if (P.free && dy > -40) return;                                   // в описании — свободно
+  var last = ps.length - 1, i = P.i0, h = ps[i].h || window.innerHeight;
+  if (S.viewing && i === last && dy > 0) return;                    // с последнего фото вниз — к описанию, свободно
+  var go = Math.abs(dy) > Math.min(90, h * .15) || Math.abs(v) > .45 || (Math.abs(dy) > 20 && Math.abs(dy) / dt > .35);
+  var dir = dy !== 0 ? (dy > 0 ? 1 : -1) : (v > 0 ? 1 : -1);
+  goPage(go ? i + dir : i, ps);
+}, { passive: true });
+document.addEventListener('touchcancel', function () { P.touch = false; }, { passive: true });
+// скорость прокрутки и доводка после колеса/клавиш (когда пальца нет)
+window.addEventListener('scroll', function () {
+  var t = performance.now(), y = window.scrollY; if (t - P.lastT < 120) P.v = (y - P.lastY) / Math.max(1, t - P.lastT); P.lastY = y; P.lastT = t;
+  if (P.touch || P.animating) return;
+  clearTimeout(P.idle);
+  P.idle = setTimeout(function () {
+    if (P.touch || P.animating) return;
+    var ps = pages(); if (!ps.length || inFree(ps)) return;
+    var c = Math.min(P.cur, ps.length - 1), d = window.scrollY - ps[c].y, h = ps[c].h || window.innerHeight, i;
+    if (Math.abs(d) < 3) return;
+    i = Math.abs(d) > h * 1.2 ? nearest(ps) : Math.abs(d) > h * .15 ? c + (d > 0 ? 1 : -1) : c;
+    goPage(i, ps);
+  }, 160);
+}, { passive: true });
+
 /* ---------- смена ленты ---------- */
 function setFeed(f, first) {
   if (FEEDS.indexOf(f) < 0) f = 'REELS';
@@ -578,15 +631,12 @@ function setFeed(f, first) {
   try { history.replaceState(history.state, '', f === 'REELS' ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
   markChip();
   var lenta = f === 'REELS' || f === 'Комплекс', gen = S.gen;
-  de.classList.remove('snap');   // на время смены примагничивание выкл. — иначе Safari ставил новую ленту на «тот же номер» карточки
+  killMomentum(); cancelAnimationFrame(P.anim); P.animating = false; P.cur = 0;
+  de.classList.toggle('snap', lenta);
   feedEl.innerHTML = lenta ? lentaHTML(f) : gridHTML(f);
   jump(0);
   if (lenta) { S.cards = $$('.card', feedEl); S.cards.forEach(bindCard); fitPad(); }
-  requestAnimationFrame(function () { requestAnimationFrame(function () {
-    if (gen !== S.gen) return;
-    jump(0); de.classList.toggle('snap', lenta); jump(0);
-    if (lenta) pickActive();
-  }); });
+  requestAnimationFrame(function () { if (gen !== S.gen) return; jump(0); if (lenta) pickActive(); });
 }
 function stopAll() { $$('video', feedEl).forEach(function (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); }
 
@@ -595,7 +645,7 @@ function lentaHTML(f) {
   var reels = f === 'REELS', list = reels ? REELS : CX, n = list.length;
   if (!n) return '<div class="empty">Скоро здесь появятся работы</div>';
   return '<div class="lenta">' + list.map(function (x, i) {
-    var anim = i < 3 ? ' in" style="animation-delay:' + (i * 70) + 'ms' : '';
+    var anim = '';  // без анимации появления — сдвиг карточек мешал листанию
     if (reels) return '<div class="card reel' + anim + '" data-src="' + esc(x.src) + '">' +
       '<img class="poster" src="' + esc(reelPoster(x.src)) + '" alt="" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
       '<video muted playsinline loop preload="none"></video>' +
@@ -730,7 +780,7 @@ function openView(it) {
     (it.text ? '<p>' + esc(it.text) + '</p>' : '') +
     '<dl class="specs"><dt>Корпус</dt><dd>' + esc(it.korpus) + '</dd><dt>Фасады</dt><dd>' + esc(it.fasady) + '</dd><dt>Фурнитура</dt><dd>' + esc(it.furn) + '</dd></dl>' +
     (it.price ? '<div class="price">' + esc(it.price) + '</div><div class="pdate">Цена на ' + esc(it.priceDate || 'октябрь 2026') + '</div>' : '') +
-    '<div class="btns"><a class="btn main" href="home.html#calc">Хочу такую же</a>' + (it.href ? '<a class="btn sec" href="' + esc(it.href) + '">Открыть весь проект</a>' : '') + '</div></div><div class="vend"></div>';
+    '<div class="btns"><a class="btn main" href="home.html#calc">Хочу такую же</a>' + (it.href ? '<a class="btn sec" href="' + esc(it.href) + '">Открыть весь проект</a>' : '') + '</div></div>';
   S.vms = $$('.vm', viewEl);
   $$('.vm.vid', viewEl).forEach(function (box) {
     var v = $('video', box); v.muted = true;
@@ -742,14 +792,15 @@ function openView(it) {
     });
   });
   try { history.pushState({ mgsView: 1 }, ''); S.pushed = true; } catch (e) { S.pushed = false; }
-  de.classList.add('viewing', 'snap'); de.classList.remove('vfree');
+  killMomentum(); cancelAnimationFrame(P.anim); P.animating = false; P.cur = 0;
+  de.classList.add('viewing'); de.classList.remove('vfree');
   jump(0);
   vScroll();
 }
 function vScroll() {
   var vms = S.vms || []; if (!vms.length) return;
   var last = vms[vms.length - 1], y = window.scrollY, i = 0, bd = 1e9;
-  de.classList.toggle('vfree', y > last.offsetTop + 40);   // описание — без примагничивания
+  de.classList.toggle('vfree', y > last.offsetTop + 40);   // на описании прячем счётчик
   vms.forEach(function (m, k) { var d = Math.abs(m.getBoundingClientRect().top - 5); if (d < bd) { bd = d; i = k; } });
   $('#vcount').textContent = (i + 1) + ' / ' + vms.length;
   // видео в просмотре: играет только то, что на экране
@@ -762,8 +813,9 @@ function closeView(fromPop) {
   S.viewing = false; stopPlaying();
   $$('video', viewEl).forEach(function (v) { v.removeAttribute('src'); try { v.load(); } catch (e) {} });
   viewEl.innerHTML = ''; S.vms = [];
-  de.classList.remove('viewing', 'vfree'); de.classList.toggle('snap', S.feed === 'REELS' || S.feed === 'Комплекс');
-  jump(S.feedY); var fy = S.feedY; requestAnimationFrame(function () { if (Math.abs(window.scrollY - fy) > 2) jump(fy); });
+  killMomentum(); cancelAnimationFrame(P.anim); P.animating = false;
+  de.classList.remove('viewing', 'vfree');
+  jump(S.feedY); var fy = S.feedY; P.cur = Math.max(0, S.cards.indexOf(S.active)); requestAnimationFrame(function () { if (Math.abs(window.scrollY - fy) > 2) jump(fy); });
   if (!fromPop && S.pushed) { S.pushed = false; history.back(); }
   S.pushed = false;
 }
