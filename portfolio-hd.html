@@ -269,14 +269,16 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 @media (max-width:999px){ .cx-open{left:10px;bottom:10px;height:40px;padding:0 16px;font-size:14px} }
 
-/* ТЕСТ: «Комплекс» на телефоне листается как рилсы — каждый проект на весь экран (видео заполняет экран, заходит под часы и панель Safari), с примагничиванием */
-html.cx-snap{scroll-snap-type:y mandatory}
-html.cx-snap .chips-nav ~ .pad{padding:0 !important}
+/* ТЕСТ: «Комплекс» на телефоне — слайдер как рилсы: своя прокрутка на весь экран (закреплённый слой) с примагничиванием,
+   по одному проекту на экран, видео в родном формате 4:5 по центру. Прокрутка страницы в Safari примагничивание не держала — поэтому свой слой */
+.feed.cx1{position:fixed !important;left:0;right:0;top:0;height:100svh;z-index:1;display:block !important;max-width:none !important;margin:0 !important;
+  overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.feed.cx1::-webkit-scrollbar{display:none}
 .feed.cx1 .feed-col{gap:0 !important;padding-bottom:0 !important}
-.feed.cx1 .cx-pin{height:100lvh;flex:none !important;scroll-snap-align:start;scroll-snap-stop:always}
+.feed.cx1 .cx-pin{height:100svh;flex:none !important;display:flex;align-items:center;padding:0 5px;box-sizing:border-box;scroll-snap-align:start;scroll-snap-stop:always}
 .feed.cx1 .cx-pin > div[aria-hidden]{display:none}
-.feed.cx1 .cx-pin a.pin-btn{border-radius:0 !important}
-.feed.cx1 .cx-open{bottom:calc(84px + env(safe-area-inset-bottom))}
+.feed.cx1 .cx-pin a.pin-btn{position:relative !important;top:auto !important;left:auto !important;right:auto !important;bottom:auto !important;width:100% !important;height:auto !important;aspect-ratio:4/5}
+.feed.cx1 .cx-open{left:15px;bottom:calc(50svh - (100vw - 10px) * .625 + 10px)}
 </style>
 </helmet>
 
