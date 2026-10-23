@@ -223,6 +223,7 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 
 /* ===== ТЕСТ (Макс 23.10, вариант 2 из top-test.html): телефон — лента с самого верха, телефон/логотип/меню поверх фото на мягком затемнении, плашки-ленты внизу (без подложки) ===== */
 .site-call{display:none}
+.site-bfade{display:none}
 @media (max-width:999px){
   :root{--site-hd:58px}
   .site-hd{position:fixed}
@@ -246,6 +247,9 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   /* у каждой плашки своя тень; отступы у ленты плашек — чтобы тень не обрезалась прокруткой/маской в общую полосу */
   .chips-nav .chip{box-shadow:0 4px 14px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.4)}
   .feed-col:last-child{padding-bottom:70px}
+  /* мягкое затемнение снизу под плашками (как сверху): iPhone сам тёмнит низ под своей панелью — без этого под плашками виднелась полоса */
+  .site-bfade{display:block;position:fixed;left:0;right:0;bottom:0;height:calc(150px + env(safe-area-inset-bottom));z-index:43;pointer-events:none;
+    background:linear-gradient(to top,rgba(15,14,12,.85) 0%,rgba(15,14,12,.78) 14%,rgba(15,14,12,.65) 28%,rgba(15,14,12,.49) 42%,rgba(15,14,12,.33) 56%,rgba(15,14,12,.19) 70%,rgba(15,14,12,.08) 84%,rgba(15,14,12,0) 100%)}
 }
 </style>
 </helmet>
@@ -447,6 +451,7 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
 </template>
 
 <!-- ===== Шапка как на главной (home.html): логотип по центру закреплён сверху, справа кружок меню; меню на весь экран ===== -->
+<div class="site-bfade" aria-hidden="true"></div>
 <header class="site-hd"><a href="tel:84957773575" class="site-call" aria-label="Позвонить 8-495-777-35-75"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a><a href="home.html" class="site-logo" aria-label="MGS MEBEL — на главную"><img src="assets/logo.webp" alt="MGS MEBEL" width="400" height="217"></a>
   <button class="site-menu-btn" id="siteMenuBtn" aria-label="Меню"><span></span><span></span><span></span></button></header>
 <nav class="site-menu" id="siteMenu" aria-label="Меню сайта" hidden>
