@@ -247,8 +247,11 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
   .chips-nav .chip{font-size:0 !important} .chips-nav .chip > .sc-interp{font-size:15px}
   /* у каждой плашки своя тень; отступы у ленты плашек — чтобы тень не обрезалась прокруткой/маской в общую полосу */
   .chips-nav .chip{box-shadow:0 4px 14px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.4)}
-  .feed-col:last-child{padding-bottom:70px}
+  .feed-col:last-child{padding-bottom:0}
+  .feed-sec:last-child .feed-col{padding-bottom:70px}
 }
+.feed-sec + .feed-sec{margin-top:16px}
+@media (max-width:999px){ .feed-sec + .feed-sec{margin-top:5px} }
 </style>
 </helmet>
 
@@ -271,8 +274,10 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
     <sc-if value="{{isEmpty}}" hint-placeholder-val="{{ false }}">
       <div style="text-align: center; color: #a89f92; font-size: 15px; padding: 40px 0">Скоро здесь появятся проекты</div>
     </sc-if>
+    <sc-for list="{{sections}}" as="sec" hint-placeholder-count="1">
+    <div class="feed-sec" data-sec="{{sec.name}}">
     <div class="{{feedCls}}" style="display: flex; gap: 16px; align-items: stretch; max-width: 1920px; margin: 0 auto">
-      <sc-for list="{{columns}}" as="col" hint-placeholder-count="4">
+      <sc-for list="{{sec.columns}}" as="col" hint-placeholder-count="4">
       <div class="feed-col" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 16px">
       <sc-for list="{{col.pins}}" as="p" hint-placeholder-count="3">
 
@@ -333,6 +338,8 @@ html:has(#lb-wrap) body > :not(#dc-root):not(script):not(style):not([data-dbg]){
       </div>
       </sc-for>
     </div>
+    </div>
+    </sc-for>
   </div>
 
 
@@ -475,7 +482,10 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     var sl = false;  // переключатель «2 в ряд / 1 в ряд» убран (Макс 22.10) — всегда сетка
-    this.state = { filter: this.readHash() || this.DEFAULT(), lb: -1, slide: sl };
+    // ТЕСТ (Макс 23.10): одна сплошная лента — Комплекс, потом Кухни, Спальни… плашка переезжает сама при прокрутке; REELS — отдельно
+    var h0 = this.readHash();
+    this._pendingSec = (h0 && h0 !== 'REELS' && h0 !== 'Комплекс') ? h0 : null;
+    this.state = { filter: h0 === 'REELS' ? 'REELS' : 'Комплекс', lb: -1, slide: sl, spy: this._pendingSec };
   }
 
   // ===== ЛЕНТЫ =====
@@ -905,12 +915,44 @@ class Component extends DCLogic {
     return this._data;
   }
 
+  // прокрутка к разделу сплошной ленты
+  goSec(name) {
+    var el = document.querySelector('.feed-sec[data-sec="' + name + '"]'); if (!el) return;
+    var off = window.innerWidth < 1000 ? 64 : 16;
+    var y = name === 'Комплекс' ? 0 : el.getBoundingClientRect().top + (window.scrollY || 0) - off;
+    this._spyLock = name; clearTimeout(this._spyT);
+    var self = this; this._spyT = setTimeout(function () { self._spyLock = null; self.spyCheck(); }, 1100);
+    this.setSpy(name);
+    try { window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); } catch (e) { window.scrollTo(0, Math.max(0, y)); }
+  }
+  setSpy(name) {
+    if (this.state.spy !== name) this.setState({ spy: name });
+    try { history.replaceState(null, '', name === this.DEFAULT() ? location.pathname + location.search : '#' + encodeURIComponent(name)); } catch (e) {}
+    // активную плашку — в видимую часть строки плашек
+    var nav = document.querySelector('.chips-nav'), self = this;
+    requestAnimationFrame(function () {
+      var b = nav && nav.querySelector('.chip[aria-pressed="true"]'); if (!b || nav.scrollWidth <= nav.clientWidth) return;
+      var x = b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2;
+      try { nav.scrollTo({ left: Math.max(0, x), behavior: 'smooth' }); } catch (e) { nav.scrollLeft = x; }
+    });
+  }
+  spyCheck() {
+    if (this.state.filter === 'REELS' || this.state.lb >= 0 || this._spyLock) return;
+    var secs = document.querySelectorAll('.feed-sec[data-sec]'); if (!secs.length) return;
+    var line = window.innerHeight * 0.4, cur = secs[0].getAttribute('data-sec');
+    for (var i = 0; i < secs.length; i++) { if (secs[i].getBoundingClientRect().top <= line) cur = secs[i].getAttribute('data-sec'); }
+    // дошли до самого низа — последний раздел
+    if (window.innerHeight + (window.scrollY || 0) >= document.documentElement.scrollHeight - 4) cur = secs[secs.length - 1].getAttribute('data-sec');
+    if (cur !== this.state.spy) this.setSpy(cur);
+  }
   readHash() {
     var h = '';
     try { h = decodeURIComponent((location.hash || '').slice(1)); } catch (e) {}
     return this.FILTERS().indexOf(h) >= 0 ? h : '';
   }
   setFilter(f) {
+    if (f !== 'REELS' && this.state.filter !== 'REELS') { this.goSec(f); return; }  // та же сплошная лента — просто едем к разделу
+    if (f !== 'REELS') { this._pendingSec = f === 'Комплекс' ? null : f; this.setState({ spy: f }); f = 'Комплекс'; }
     if (f === this.state.filter) return;
     // адрес обновляем, где это разрешено (во встроенных окнах превью — нельзя, лента всё равно переключится)
     try { history.replaceState(null, '', f === this.DEFAULT() ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
@@ -1067,8 +1109,9 @@ class Component extends DCLogic {
     var self = this;
     this.onResize = function () { self.setState({ vw: window.innerWidth }); clearTimeout(self._rz); self._rz = setTimeout(function () { self.resnap('auto'); }, 80); };
     window.addEventListener('resize', this.onResize);
-    this.onHash = function () { var f = self.readHash(); if (f && f !== self.state.filter) self.switchFeed(f); };
+    this.onHash = function () { var f = self.readHash(); if (f) self.setFilter(f); };
     window.addEventListener('hashchange', this.onHash);
+    var spyRaf = 0; window.addEventListener('scroll', function () { if (spyRaf) return; spyRaf = requestAnimationFrame(function () { spyRaf = 0; self.spyCheck(); }); }, { passive: true });
     this.onFocusScroll = function () { if (self._fpRaf) return; self._fpRaf = requestAnimationFrame(function () { self._fpRaf = 0; if (self.slideOn()) self.focusPlay(); }); };
     window.addEventListener('scroll', this.onFocusScroll, { passive: true });
     // касание пальцем видео-плитки в «2 в ряд» — запускаем её, остальные на паузу
@@ -1104,6 +1147,9 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('hashchange', this.onHash); }
   componentDidUpdate() {
+    if (this._pendingSec && this.state.filter !== 'REELS' && document.querySelector('.feed-sec[data-sec="' + this._pendingSec + '"]')) {
+      var ps = this._pendingSec, me = this; this._pendingSec = null; setTimeout(function () { me.goSec(ps); }, 60);
+    }
     var wasLb = this._wasLb, isLb = this.state.lb >= 0, de = document.documentElement; this._wasLb = isLb;
     if (isLb && !wasLb && window.innerWidth < 1000) {
       de.classList.add('lb-on');
@@ -1403,26 +1449,32 @@ class Component extends DCLogic {
     var accent = this.props.accent ?? '#bfd630';
 
     // ---- плитки выбранной ленты ----
+    var secOf = function (sf) {
     var pins = [];
-    if (f === 'REELS') {
+    if (sf === 'REELS') {
       D.reels.forEach(function (r, i) {
         pins.push({ isVideo: true, src: r.src, poster: self.tilePoster(r.src, r.poster), ph: self.tilePoster(r.src, r.poster), label: r.project, zone: r.zone, hasZone: !!r.zone, open: function () { self.setState({ lb: 0, lbZone: '__reels', lbStart: i }); } });
       });
-    } else if (f === 'Комплекс') {
+    } else if (sf === 'Комплекс') {
       // обложка проекта — видео (coverVideo); пока видео нет — тёмная плитка с названием
       D.projects.forEach(function (pr) {
         if (!pr.complex || !pr.href) return;
         pins.push({ isLink: true, src: pr.cover, href: pr.href, label: pr.title, address: pr.address || 'Смотреть проект', hasVideo: !!pr.coverVideo, noVideo: !pr.coverVideo, video: pr.coverVideo || '', poster: pr.coverPoster || '', ph: pr.coverPoster || '' });
       });
     } else {
-      self._feedPhotos = []; self._feedPhotosFor = f;
       D.items.forEach(function (it) {
-        if (it.type !== f || !it.photos.length) return;
+        if (it.type !== sf || !it.photos.length) return;
         self._feedPhotos.push(it.photos);
         pins.push({ isPhoto: true, src: self.thumb(it.photos[0]), label: it.name, sub: it.address, open: function () { self.setState({ lb: 0, lbZone: 'item:' + it.key, lbStart: 0 }); } });
       });
     }
 
+    return pins;
+    };
+    self._feedPhotos = []; self._feedPhotosFor = f;
+    var secNames = f === 'REELS' ? ['REELS'] : this.FILTERS().filter(function (k) { return k !== 'REELS'; });
+    var secPins = secNames.map(function (k) { return secOf(k); });
+    var pins = [].concat.apply([], secPins);
     // разная высота плиток — эффект Pinterest, как в ленте проекта
     var ratios = ['4 / 5', '3 / 4', '1 / 1', '4 / 5', '2 / 3', '5 / 6', '3 / 4', '4 / 5'];
     var poses = ['center', 'center 40%', 'center 65%', 'center', 'center 55%', 'center 35%'];
@@ -1443,9 +1495,10 @@ class Component extends DCLogic {
     var slide = modeFeed && !!this.state.slide;
     var cols = slide ? 1 : vw < 760 ? 2 : vw < 1100 ? 3 : 4;
     var est = function (pn) { if (pn.isVideo) return 16 / 9; var r = pn.ratio.split('/'); return parseFloat(r[1]) / parseFloat(r[0]); };
+    var layout = function (list) {
     var columns = [];
     for (var ci = 0; ci < cols; ci++) columns.push({ pins: [], h: 0 });
-    pins.forEach(function (pn) {
+    list.forEach(function (pn) {
       var best = columns[0];
       columns.forEach(function (c) { if (c.h < best.h - 0.001) best = c; });
       best.pins.push(pn); best.h += est(pn) + 0.06;
@@ -1454,6 +1507,10 @@ class Component extends DCLogic {
     // одна плитка рядом с длинной колонкой не раздувается
     var maxH = 0; columns.forEach(function (c) { if (c.h > maxH) maxH = c.h; });
     columns.forEach(function (c) { var st = c.h >= maxH * 0.8; c.pins.forEach(function (pn) { pn.flex = st ? '1 0 auto' : 'none'; }); });
+    return columns;
+    };
+    var sections = secNames.map(function (k, i) { return { name: k, columns: layout(secPins[i]) }; }).filter(function (sc) { return sc.columns.some(function (c) { return c.pins.length; }); });
+    var columns = sections.length ? sections[0].columns : [];
 
     try { document.documentElement.classList.toggle('mgs-snap', slide && !(this.state.lb >= 0)); document.documentElement.classList.toggle('mgs-focus', modeFeed); } catch (e) {}
 
@@ -1464,7 +1521,7 @@ class Component extends DCLogic {
       return D.items.filter(function (it) { return it.type === k && it.photos.length; }).length;
     };
     var chips = this.FILTERS().map(function (k) {
-      var on = k === (self.state.chipF || f);  // плашка загорается сразу, лента меняется после анимации
+      var on = k === (self.state.chipF || (f === 'REELS' ? 'REELS' : (self.state.spy || 'Комплекс')));  // в сплошной ленте горит раздел, который сейчас на экране
       return { name: k, label: k === 'Комплекс' ? '🔥 Комплекс' : k, count: countOf(k), pressed: on ? 'true' : 'false', bg: on ? accent : '#26221f', fg: on ? '#1c1a17' : '#f4f1ec', pick: function () { self.setFilter(k); } };
     });
     var n = pins.length;
@@ -1493,7 +1550,7 @@ class Component extends DCLogic {
     return {
       accent: accent,
       countLine: countLine,
-      chips: chips, columns: columns, isEmpty: n === 0,
+      chips: chips, columns: columns, sections: sections, isEmpty: n === 0,
       feedCls: slide ? 'feed slide' : 'feed', showModes: modeFeed, gridOn: slide ? 'false' : 'true', slideOn: slide ? 'true' : 'false',
       setGrid: function () { self.setMode(false); }, setSlide: function () { self.setMode(true); },
       priceDate: view[li].priceDate || 'октябрь 2026',
