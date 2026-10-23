@@ -73,6 +73,8 @@ html.menu-open .subchips,html.viewing .subchips{display:none}
 /* рилс-лента листается СДВИГОМ ленты (transform), страница стоит: плавно, как в Reels/TikTok (Макс 24.10 — прокрутка дёргалась) */
 html.trk,html.trk body{overflow:hidden;overscroll-behavior:none}
 html.trk .lenta{will-change:transform;touch-action:none;padding-bottom:0}
+.vtrk{position:relative}
+html.trk .vtrk{will-change:transform;touch-action:none}
 .card{position:relative;flex:none;width:calc(100vw - 10px);border-radius:10px;overflow:hidden;background:#1d1a17;cursor:pointer}
 /* все карточки встают на одну высоту — под шапкой (--top) и целиком помещаются на экране */
 .card.reel{height:min(177.78vw, calc(100svh - var(--top) - 5px))}
@@ -154,7 +156,7 @@ html.viewing #feed,html.viewing .chips,html.viewing .hd-btn,html.viewing .hd-log
 .btn.main{background:var(--lime);color:#1c1a17} .btn.sec{background:var(--chip)}
 .vtop{position:fixed;z-index:50;top:calc(14px + env(safe-area-inset-top));height:40px;display:none}
 html.viewing .vtop{display:flex}
-.vcount{left:14px;align-items:center;padding:0 14px;border-radius:999px;background:rgba(15,14,12,.7);font-size:13px;height:32px;top:calc(18px + env(safe-area-inset-top))}
+.vcount{transition:opacity .2s;left:14px;align-items:center;padding:0 14px;border-radius:999px;background:rgba(15,14,12,.7);font-size:13px;height:32px;top:calc(18px + env(safe-area-inset-top))}
 html.vfree .vcount{opacity:0}
 .vclose{right:14px;width:40px;border-radius:50%;background:rgba(15,14,12,.7);align-items:center;justify-content:center}
 </style>
@@ -685,14 +687,21 @@ window.addEventListener('scroll', function () {
 /* ---------- рилс-лента: листание сдвигом ленты ----------
    Страница не прокручивается (html.trk): лента едет transform'ом за пальцем и мягко доезжает до карточки.
    Без прокрутки окна Safari не дёргает экран (панели, инерция, доводка scrollTo). */
-var T = { el: null, i: 0, y: 0, drag: false, axis: null, x0: 0, y0: 0, dy: 0, lastY: 0, lastT: 0, v: 0, dragEnd: 0, far: false, wheelT: 0, wheelUsed: false };
-function trkOff(i) { var c = S.cards[i], c0 = S.cards[0]; return c && c0 ? c.offsetTop - c0.offsetTop : 0; }
+var T = { mode: '', el: null, i: 0, y: 0, drag: false, axis: null, x0: 0, y0: 0, dy: 0, lastY: 0, lastT: 0, v: 0, dragEnd: 0, far: false, wheelT: 0, wheelUsed: false };
+function trkOff(i) {
+  if (T.mode === 'view') { var m = (S.vms || [])[i]; return m && i ? m.offsetTop - 5 : 0; }   // фото встаёт в 5 px от верха
+  var c = S.cards[i], c0 = S.cards[0]; return c && c0 ? c.offsetTop - c0.offsetTop : 0;
+}
+function trkN() { return T.mode === 'view' ? (S.vms || []).length : S.cards.length; }
+// просмотр изделия: ниже последнего фото — описание, его можно двигать свободно до самого низа
+function trkLast() { return trkOff(trkN() - 1); }
+function trkMax() { return T.mode === 'view' ? Math.max(trkLast(), T.el.offsetHeight - window.innerHeight) : trkLast(); }
 var EASE = 'cubic-bezier(.22,.8,.24,1)';
 function trkApply(y, ms) {
   if (!T.el) return; T.y = y;
   T.el.style.transition = ms ? 'transform ' + ms + 'ms ' + EASE : 'none';
   T.el.style.transform = 'translate3d(0,' + (-y).toFixed(1) + 'px,0)';
-  trkDims(y, ms);
+  if (T.mode === 'view') vScroll(); else trkDims(y, ms);
 }
 // затемнение соседей и плашки — по положению ленты, одновременно со сдвигом (без скачков классов)
 function trkDims(y, ms) {
@@ -706,13 +715,20 @@ function trkDims(y, ms) {
     c._ov.forEach(function (e) { e.style.transition = tr; e.style.opacity = o; });
   });
 }
-function trkSet(el) { T.el = el || null; T.drag = false; de.classList.toggle('trk', !!T.el); if (T.el) jump(0); }
+function trkSet(el, mode) { T.el = el || null; T.mode = el ? (mode || 'lenta') : ''; T.drag = false; T.i = 0; de.classList.toggle('trk', !!T.el); if (T.el) jump(0); }
 function trkGo(i, ms) {
-  if (!T.el || !S.cards.length) return;
+  if (!T.el || !trkN()) return;
+  ms = ms == null ? 420 : ms;
+  if (T.mode === 'view') {
+    var n = trkN();
+    if (i >= n) { var mx = trkMax(); T.i = n - 1; trkApply(Math.min(mx, trkLast() + window.innerHeight * .6), ms); return; }   // к описанию
+    i = Math.max(0, i); T.i = i; trkApply(trkOff(i), ms); return;
+  }
   i = Math.max(0, Math.min(S.cards.length - 1, i)); T.i = i; P.cur = i;
-  trkApply(trkOff(i), ms == null ? 420 : ms);
+  trkApply(trkOff(i), ms);
   setActive(S.cards[i]);
 }
+function trkFree() { return T.mode === 'view' && T.y > trkLast() + 2; }
 function trkSkip(t) { return t.closest && t.closest('.prog,.chips,.subchips,.menu,.hd-btn,.hd-logo,.vtop'); }
 document.addEventListener('touchstart', function (e) {
   if (!T.el || (e.touches && e.touches.length > 1) || trkSkip(e.target)) { T.drag = false; return; }
@@ -728,7 +744,7 @@ document.addEventListener('touchmove', function (e) {
   if (e.cancelable) e.preventDefault();
   var now = performance.now(), dt = now - T.lastT; if (dt > 0) T.v = T.v * .3 + ((t.clientY - T.lastY) / dt) * .7; T.lastY = t.clientY; T.lastT = now;
   T.dy = dy; if (Math.abs(dy) > 10) T.far = true;
-  var y = T.base - dy, max = trkOff(S.cards.length - 1);
+  var y = T.base - dy, max = trkMax();
   if (y < 0) y *= .35; else if (y > max) y = max + (y - max) * .35;   // у краёв — упругое сопротивление
   trkApply(y, 0);
 }, { passive: false });
@@ -736,8 +752,15 @@ function trkEnd() {
   if (!T.drag) return; T.drag = false;
   if (T.axis !== 'y') return;
   T.dragEnd = performance.now();
-  var h = (S.cards[T.i] && S.cards[T.i].offsetHeight) || window.innerHeight, from = T.base;
-  var cur = T.i; S.cards.forEach(function (c, k) { if (Math.abs(trkOff(k) - from) < Math.abs(trkOff(cur) - from)) cur = k; });
+  var last = trkLast();
+  if (T.mode === 'view' && (T.y > last + 2 || T.base > last + 2)) {      // описание: свободно, с инерцией
+    var to = T.y - T.v * 320, mx = trkMax();
+    if (to < last + 50) { trkGo(T.y < last - 60 && T.base <= last + 2 ? trkN() - 2 : trkN() - 1, 380); return; }
+    trkApply(Math.min(mx, to), 520); return;
+  }
+  var list = T.mode === 'view' ? S.vms : S.cards;
+  var h = (list[T.i] && list[T.i].offsetHeight) || window.innerHeight, from = T.base;
+  var cur = T.i; list.forEach(function (c, k) { if (Math.abs(trkOff(k) - from) < Math.abs(trkOff(cur) - from)) cur = k; });
   var dur = Math.max(1, T.dragEnd - T.t0), fast = (Math.abs(T.v) > .35 || Math.abs(T.dy) / dur > .3) && Math.abs(T.dy) > 12, go = Math.abs(T.dy) > Math.min(90, h * .15) || fast;
   var dir = (Math.abs(T.v) > .35 ? -T.v : -T.dy) > 0 ? 1 : -1;
   trkGo(go ? cur + dir : cur, go ? 420 : 300);
@@ -752,13 +775,18 @@ window.addEventListener('wheel', function (e) {
   e.preventDefault();
   var now = performance.now(), fresh = now - T.wheelT > 220; T.wheelT = now;
   if (fresh) T.wheelUsed = false;
+  if (T.mode === 'view' && (trkFree() || (T.i === trkN() - 1 && e.deltaY > 0 && !T.wheelUsed))) {   // описание — колесом свободно
+    var ny = Math.min(trkMax(), T.y + e.deltaY);
+    if (ny <= trkLast()) { T.wheelUsed = true; trkGo(trkN() - 1, 300); return; }
+    T.wheelUsed = false; trkApply(ny, 120); T.wheelT = now; return;
+  }
   if (T.wheelUsed || Math.abs(e.deltaY) < 8) return;
   T.wheelUsed = true; trkGo(T.i + (e.deltaY > 0 ? 1 : -1));
 }, { passive: false });
 document.addEventListener('keydown', function (e) {
   if (!T.el || de.classList.contains('menu-open')) return;
   var k = e.key, d = k === 'ArrowDown' || k === 'PageDown' || k === ' ' ? 1 : k === 'ArrowUp' || k === 'PageUp' ? -1 : 0;
-  if (d) { e.preventDefault(); trkGo(T.i + d); }
+  if (d) { e.preventDefault(); trkGo(trkFree() && d < 0 ? trkN() - 1 : T.i + d); }
 });
 
 /* ---------- смена ленты ---------- */
@@ -950,11 +978,11 @@ function openView(it) {
       '<span class="play-ico">' + PLAY + '</span><span class="spin"></span><button class="snd" aria-label="Звук">' + SND_OFF + SND_ON + '</button></div>';
   }));
   var sub = [it.project !== it.name ? it.project : '', it.address].filter(Boolean).join(' · ');
-  viewEl.innerHTML = '<div class="vl">' + media.join('') + '</div><div class="vpanel"><h1>' + esc(it.name) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') +
+  viewEl.innerHTML = '<div class="vtrk"><div class="vl">' + media.join('') + '</div><div class="vpanel"><h1>' + esc(it.name) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') +
     (it.text ? '<p>' + esc(it.text) + '</p>' : '') +
     '<dl class="specs"><dt>Корпус</dt><dd>' + esc(it.korpus) + '</dd><dt>Фасады</dt><dd>' + esc(it.fasady) + '</dd><dt>Фурнитура</dt><dd>' + esc(it.furn) + '</dd></dl>' +
     (it.price ? '<div class="price">' + esc(it.price) + '</div><div class="pdate">Цена на ' + esc(it.priceDate || 'октябрь 2026') + '</div>' : '') +
-    '<div class="btns"><a class="btn main" href="home.html#calc">Хочу такую же</a>' + (it.href ? '<a class="btn sec" href="' + esc(it.href) + '">Открыть весь проект</a>' : '') + '</div></div>';
+    '<div class="btns"><a class="btn main" href="home.html#calc">Хочу такую же</a>' + (it.href ? '<a class="btn sec" href="' + esc(it.href) + '">Открыть весь проект</a>' : '') + '</div></div></div>';
   S.vms = $$('.vm', viewEl);
   $$('.vm.vid', viewEl).forEach(function (box) {
     var v = $('video', box); v.muted = true;
@@ -968,14 +996,13 @@ function openView(it) {
   try { history.pushState({ mgsView: 1 }, ''); S.pushed = true; } catch (e) { S.pushed = false; }
   killMomentum(); cancelAnimationFrame(P.anim); P.animating = false; P.cur = 0;
   de.classList.add('viewing'); de.classList.remove('vfree');
-  jump(0);
-  vScroll();
+  trkSet($('.vtrk', viewEl), 'view'); trkApply(0, 0);   // «сдвиг»: фото листаются сдвигом, описание — свободно
 }
 function vScroll() {
   var vms = S.vms || []; if (!vms.length) return;
-  var last = vms[vms.length - 1], y = window.scrollY, i = 0, bd = 1e9;
-  de.classList.toggle('vfree', y > last.offsetTop + 40);   // на описании прячем счётчик
-  vms.forEach(function (m, k) { var d = Math.abs(m.getBoundingClientRect().top - 5); if (d < bd) { bd = d; i = k; } });
+  var y = T.mode === 'view' ? T.y : window.scrollY, i = 0, bd = 1e9;
+  de.classList.toggle('vfree', y > trkOff(vms.length - 1) + 40);   // на описании прячем счётчик
+  vms.forEach(function (m, k) { var d = Math.abs(trkOff(k) - y); if (d < bd) { bd = d; i = k; } });
   $('#vcount').textContent = (i + 1) + ' / ' + vms.length;
   // видео в просмотре: играет только то, что на экране
   vms.forEach(function (m, k) { var v = $('video', m); if (!v) return;
@@ -991,7 +1018,7 @@ function closeView(fromPop) {
   var wasRv = S.rv;
   if (wasRv) { S.rv = false; S.cards = S.feedCards || []; S.active = null; }
   de.classList.remove('viewing', 'vfree', 'rv');
-  if (wasRv) { trkSet($('.lenta', feedEl)); trkGo(S.feedIdx || 0, 0); }
+  if (wasRv) { trkSet($('.lenta', feedEl)); trkGo(S.feedIdx || 0, 0); } else trkSet(null);
   jump(S.feedY); var fy = S.feedY; P.cur = Math.max(0, S.cards.indexOf(S.active)); requestAnimationFrame(function () { if (Math.abs(window.scrollY - fy) > 2) jump(fy); });
   if (!fromPop && S.pushed) { S.pushed = false; history.back(); }
   S.pushed = false;
