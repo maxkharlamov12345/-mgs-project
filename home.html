@@ -96,6 +96,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webki
 /* ---------- экран 4: салоны ---------- */
 #salons{display:flex;flex-direction:column;padding:calc(var(--header-h) + 20px) var(--side) 0}
 .seg-row{position:relative;z-index:3;display:flex;justify-content:center;margin-bottom:22px;flex:none;pointer-events:none}
+/* свой слой: иначе Safari во время перелёта экрана рисует карту (WebGL) поверх плашки и она появляется только после остановки */
+.seg-row{transform:translateZ(0);-webkit-transform:translateZ(0)}
 .seg{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--chip);pointer-events:auto}
 .seg-btn{min-height:40px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:500;transition:background-color .2s ease,color .2s ease}
 .seg-btn.on{background:var(--accent);color:var(--ink)}
