@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="ru">
+<head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>ТЕСТ 2 · Тест — Наши работы — MGS Mebel</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Наши работы — MGS Mebel: кухни, шкафы и гардеробные на заказ.">
+<link rel="preload" href="assets/fonts/onest-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/onest-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+20BD}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}</style>
+<script>/* кэш сайта в браузере — sw.js */if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})</script>
+<script src="assets/dims.js"></script>
+</head>
+<body>
+<style>
+:root{--uz:160px;--bg:#0f0e0c;--tx:#f4f1ec;--chip:#26221f;--lime:#bfd630;--dim:#a89f92;--side:16px;--hd:58px;--top:calc(var(--hd) + env(safe-area-inset-top) + 14px)}  /* --top — отступ контента от верха; от этой же высоты листаются рилсы и «Комплекс» */
+*{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Onest,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:inherit;-webkit-tap-highlight-color:transparent}
+img,video{display:block}
+/* листание по одной карточке — своё (JS, см. «листание»), НЕ css scroll-snap: на iPhone он дёргал страницу и путал ленты */
+
+/* ---------- шапка: отдельные небольшие элементы (полоса во всю ширину заставляет Safari заливать зону часов) ---------- */
+.hd-btn{position:fixed;z-index:46;top:calc(env(safe-area-inset-top) + (var(--hd) - 40px)/2);width:40px;height:40px;border-radius:50%;
+  background:rgba(30,27,24,.72);border:1px solid rgba(244,241,236,.12);display:flex;align-items:center;justify-content:center;color:var(--tx);text-decoration:none}
+.hd-call{left:var(--side)}
+.hd-menu{right:var(--side)}
+.hd-menu span{position:absolute;left:12px;right:12px;height:1.6px;border-radius:2px;background:var(--tx);transition:transform .3s,opacity .2s,top .3s}
+.hd-menu span:nth-child(1){top:13px}.hd-menu span:nth-child(2){top:19px}.hd-menu span:nth-child(3){top:25px}
+.hd-menu.open{background:var(--lime)} .hd-menu.open span{background:#1c1a17}
+.hd-menu.open span:nth-child(1){top:19px;transform:rotate(45deg)} .hd-menu.open span:nth-child(2){opacity:0} .hd-menu.open span:nth-child(3){top:19px;transform:rotate(-45deg)}
+.hd-logo{position:fixed;z-index:46;left:0;right:0;width:max-content;margin:0 auto;top:calc(env(safe-area-inset-top) + (var(--hd) - 34px)/2);line-height:0;filter:drop-shadow(0 2px 10px rgba(0,0,0,.55))}
+.hd-logo img{height:34px;width:auto}
+.menu{position:fixed;inset:0;z-index:45;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;padding:calc(var(--hd) + 20px) 24px 114px;opacity:0;transition:opacity .2s}
+.menu.open{opacity:1}
+.menu[hidden]{display:none}
+.menu > a{font-size:30px;font-weight:300;letter-spacing:-.01em;padding:8px 0;text-decoration:none}
+.menu > a.active{color:var(--lime)}
+.menu .mm{margin-top:22px;display:flex;flex-direction:column;gap:8px}
+.menu .mm > a{font-size:22px;font-weight:500;color:var(--lime);text-decoration:none}
+.menu .mm span{display:flex;gap:18px} .menu .mm span a{font-size:16px;color:var(--dim);text-decoration:none}
+html.menu-open #feed,html.menu-open .chips{opacity:0;transition:opacity 0s .2s}
+@media (min-width:1000px){ .menu{padding-left:12vw;padding-bottom:126px} .menu > a{font-size:44px} }
+
+/* ---------- плашки-ленты внизу ---------- */
+.chips{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) - 8px);z-index:44;overflow-x:auto;scrollbar-width:none;padding:20px var(--side);
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent)}
+.chips::-webkit-scrollbar{display:none}
+.chips-in{display:flex;gap:8px;width:max-content;margin:0 auto;padding-right:2px}
+.chip{flex:none;height:44px;padding:0 18px;border-radius:999px;background:var(--chip);color:var(--tx);font-size:15px;font-weight:500;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.4)}
+.chip.on{background:var(--lime);color:#1c1a17}
+/* подфильтры ленты (Кухни: форма) — всплывают строкой над плашками */
+.subchips{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) - 8px + 66px);z-index:45;overflow-x:auto;scrollbar-width:none;padding:14px var(--side) 6px;
+  opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .22s,transform .3s cubic-bezier(.2,.7,.2,1)}
+.subchips::-webkit-scrollbar{display:none}
+.subchips.show{opacity:1;transform:none;pointer-events:auto}
+.subchips .chips-in{gap:6px}
+.sub{flex:none;height:34px;padding:0 14px;border-radius:999px;background:rgba(38,34,31,.92);color:var(--tx);font-size:14px;font-weight:400;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.5)}
+.sub.on{background:var(--tx);color:#1c1a17;font-weight:500}
+html.menu-open .subchips,html.viewing .subchips{display:none}
+.grid.has-sub{padding-bottom:140px}
+
+/* ---------- лента ---------- */
+/* в начале контент — с отступом под шапку; при прокрутке уходит под неё */
+#feed{padding:var(--top) 5px 0;min-height:calc(100vh + 2px);min-height:calc(100lvh + 2px)}  /* страница всегда чуть выше экрана: короткая лента (подфильтр) не возвращает панель Safari — иначе плашки дёргались вверх */
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.in{animation:up .5s cubic-bezier(.2,.7,.2,1) backwards}
+
+/* рилс-лента (REELS, Комплекс) */
+.lenta{display:flex;flex-direction:column;align-items:center;gap:5px;padding-bottom:calc(100lvh - var(--ch, 400px) - var(--top))}
+/* рилс-лента листается СДВИГОМ ленты (transform), страница стоит: плавно, как в Reels/TikTok (Макс 24.10 — прокрутка дёргалась) */
+html.trk,html.trk body{overflow:hidden;overscroll-behavior:none}
+/* ТЕСТ hd2 (Макс 24.10): под часами тоже контент. Страница при «сдвиге» стоит не в самом верху, а прокручена на --uz (запас),
+   а лента сдвинута вниз на столько же — на экране всё на прежних местах, но над экраном есть содержимое, и Safari рисует его под часами
+   (как раньше, когда страница прокручивалась сама). Механика «сдвига» не меняется. */
+html.trk #feed,html.viewing #view{min-height:calc(100lvh + var(--uz) + 2px)}
+html.trk .lenta{will-change:transform;touch-action:none;padding-bottom:0}
+.vtrk{position:relative}
+html.trk .vtrk{will-change:transform;touch-action:none}
+.card{position:relative;flex:none;width:calc(100vw - 10px);border-radius:10px;overflow:hidden;background:#1d1a17;cursor:pointer}
+/* все карточки встают на одну высоту — под шапкой (--top) и целиком помещаются на экране */
+.card.reel{height:min(177.78vw, calc(100svh - var(--top) - 5px))}
+/* то, что выше и ниже текущей карточки, — притемнено градиентом: глаз смотрит на текущую */
+/* затемнение (.dim) и плашки меняются ВМЕСТЕ со сдвигом ленты: JS ставит прозрачность по положению карточки
+   и ту же длительность/кривую, что у сдвига (trkDims) — без мигания. Свой слой (translateZ) — iPhone не рисует видео поверх */
+.card .dim{position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0;background:linear-gradient(to top, rgba(15,14,12,.98), rgba(15,14,12,.78))}
+.card.up .dim{background:linear-gradient(to bottom, rgba(15,14,12,.98), rgba(15,14,12,.82))}
+.card .dim,.card .num,.card .cx-chips,.card .cx-bottom,.card .snd,.card .prog,.card .play-ico{-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.card .play-ico{transform:translate(-50%,-50%) translateZ(0)}
+.card.cx{aspect-ratio:4/5;border-radius:14px}
+@media (min-width:760px){
+  .card.reel{width:calc((100svh - var(--top) - 5px) * .5625);height:calc(100svh - var(--top) - 5px)}
+  .card.cx{width:min(calc(100vw - 10px), calc((100svh - var(--top) - 5px) * .8))}
+}
+.card .poster,.card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card video{opacity:0;transition:opacity .15s}
+.card video.ready{opacity:1}
+.num{position:absolute;left:10px;top:10px;z-index:3;height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:rgba(15,14,12,.7);font-size:13px;pointer-events:none}
+.play-ico{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;width:64px;height:64px;border-radius:50%;background:rgba(15,14,12,.6);align-items:center;justify-content:center;pointer-events:none}
+.card.paused .play-ico{display:flex}
+.snd{position:absolute;right:12px;bottom:92px;z-index:4;width:40px;height:40px;border-radius:50%;background:rgba(15,14,12,.6);display:flex;align-items:center;justify-content:center}
+.snd .on{display:none} html.sound .snd .on{display:block} html.sound .snd .off{display:none}
+/* полоска прогресса: тянется пальцем (перемотка); зона касания выше самой полоски */
+.prog{position:absolute;left:4px;right:4px;bottom:62px;z-index:4;height:26px;padding:11px 8px;touch-action:none;cursor:pointer}
+.prog b{display:block;height:4px;border-radius:2px;background:rgba(244,241,236,.3);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--tx)}
+.prog.drag b{height:6px;margin-top:-1px}
+/* «Комплекс», вариант 4: плашки сверху, крупное тонкое название снизу */
+.cx-chips{position:absolute;left:10px;top:10px;right:10px;z-index:3;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.cx-chips span{height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;background:rgba(244,241,236,.94);color:#1c1a17;font-size:13px;font-weight:500}
+.cx-chips span.dark{background:rgba(15,14,12,.7);color:var(--tx)}
+.cx-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:90px 16px 18px;background:linear-gradient(to top,rgba(10,9,8,.85),rgba(10,9,8,0));pointer-events:none}
+.cx-bottom h3{margin:0 0 8px;font-size:34px;font-weight:300;line-height:1.05;letter-spacing:-.02em;text-wrap:balance}
+.cx-zones{font-size:13px;color:#cfc9bf;line-height:1.4}
+@media (min-width:760px){ .cx-bottom h3{font-size:40px} .cx-zones{font-size:14px} }
+/* просмотр рилсов (касание превью REELS): рилс-лента на весь экран — шапки нет, ролики 9:16 от верха */
+.rvl{padding:5px 0 calc(100lvh - var(--ch, 400px) - 10px)}
+.rvl .card.reel{height:min(177.78vw, calc(100svh - 10px))}
+@media (min-width:760px){ .rvl .card.reel{width:calc((100svh - 10px) * .5625);height:calc(100svh - 10px)} }
+.rvl .num{top:10px}
+html.rv .vcount{display:none !important}
+.rvl .prog{bottom:8px} .rvl .snd{bottom:40px}  /* в просмотре плашек снизу нет — полоска и звук у края ролика */
+html.rv .vclose{top:calc(10px + env(safe-area-inset-top))}
+.rvl .card.reel .num{left:10px}
+/* кружок загрузки */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:none;position:absolute;left:50%;top:50%;z-index:3;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:3px solid rgba(244,241,236,.25);border-top-color:var(--lime);animation:spin .8s linear infinite;pointer-events:none}
+.wait .spin{display:block}
+.wait.paused .play-ico{display:none}
+
+/* сетка (Кухни, Спальни, …) */
+.grid{display:flex;gap:5px;align-items:flex-start;padding-bottom:90px}
+.col{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.tile{position:relative;display:block;width:100%;border-radius:14px;overflow:hidden;background:#1d1a17}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.empty{padding:120px 20px;text-align:center;color:var(--dim)}
+@media (min-width:760px){ #feed{padding:var(--top) 12px 0} .grid,.col{gap:16px} .tile{border-radius:18px} }
+
+/* ---------- просмотр изделия: сама страница, фото одно под другим ---------- */
+#view{display:none}
+html.viewing #view{display:block}
+html.viewing #feed,html.viewing .chips,html.viewing .hd-btn,html.viewing .hd-logo{display:none}
+.vl{display:flex;flex-direction:column;align-items:center;gap:5px;padding:calc(var(--top) + 10px) 5px 0}
+.vm{position:relative;width:calc(100vw - 10px);max-width:900px;border-radius:10px;overflow:hidden;background:#1d1a17 center/cover no-repeat}
+.vm img{width:100%;height:100%;object-fit:cover}
+.vm.vid{height:min(177.78vw, calc(100svh - 10px));max-width:calc((100svh - 10px) * .5625)}
+.vm.vid video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vm.vid .snd{bottom:16px}
+.vpanel{width:100%;max-width:900px;margin:0 auto;padding:26px 16px 60px}
+.vpanel h1{margin:0 0 6px;font-size:30px;font-weight:300;letter-spacing:-.01em}
+.vpanel .sub{color:var(--lime);font-size:14px;font-weight:500;margin-bottom:16px}
+.vpanel p{margin:0 0 18px;color:#d9d4cc;font-size:15px;line-height:1.55}
+.specs{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px;margin-bottom:22px}
+.specs dt{color:var(--dim)} .specs dd{margin:0}
+.price{font-size:28px;font-weight:500;margin-bottom:4px} .pdate{color:var(--dim);font-size:13px;margin-bottom:20px}
+.btns{display:flex;flex-direction:column;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;height:52px;border-radius:999px;font-size:16px;font-weight:600;text-decoration:none}
+.btn.main{background:var(--lime);color:#1c1a17} .btn.sec{background:var(--chip)}
+.vtop{position:fixed;z-index:50;top:calc(14px + env(safe-area-inset-top));height:40px;display:none}
+html.viewing .vtop{display:flex}
+.vcount{transition:opacity .2s;left:14px;align-items:center;padding:0 14px;border-radius:999px;background:rgba(15,14,12,.7);font-size:13px;height:32px;top:calc(18px + env(safe-area-inset-top))}
+html.vfree .vcount{opacity:0}
+.vclose{right:14px;width:40px;border-radius:50%;background:rgba(15,14,12,.7);align-items:center;justify-content:center}
+</style>
+
+<a class="hd-btn hd-call" href="tel:84957773575" aria-label="Позвонить 8-495-777-35-75"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a>
+<a class="hd-logo" href="home.html" aria-label="MGS MEBEL — на главную"><img src="assets/logo-cut.webp" alt="MGS MEBEL" width="400" height="217"></a>
+<button class="hd-btn hd-menu" id="menuBtn" aria-label="Меню"><span></span><span></span><span></span></button>
+<nav class="menu" id="menu" aria-label="Меню сайта" hidden>
+  <a href="home.html">Главная</a><a href="#">О нас</a><a href="#">Фирменные салоны</a><a href="portfolio.html" class="active">Наши работы</a>
+  <a href="#">Каталоги</a><a href="#">Дизайнерам</a><a href="news.html">Новости / новинки</a>
+  <div class="mm"><a href="tel:84957773575">8-495-777-35-75</a><span><a href="#">Telegram</a><a href="#">WhatsApp</a></span></div>
+</nav>
+
+<h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Наши работы — MGS Mebel</h1>
+<main id="feed"></main>
+<nav class="subchips" id="subchips" aria-label="Подфильтры"><div class="chips-in" id="subIn"></div></nav>
+<nav class="chips" id="chips" aria-label="Ленты"><div class="chips-in" id="chipsIn"></div></nav>
+<section id="view" aria-label="Просмотр изделия"></section>
+<span class="vtop vcount" id="vcount"></span>
+<button class="vtop vclose" id="vclose" aria-label="Закрыть"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+
+<script>
+/* ===== ТЕСТ «Наши работы» (portfolio-hd), Макс 23.10 — написано заново, без движка страниц.
+   REELS и «Комплекс» — «рилс-лента»; остальные ленты — сетка, касание — просмотр изделия «как лента». ===== */
+(function () {
+'use strict';
+var de = document.documentElement, $ = function (s, r) { return (r || document).querySelector(s); }, $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+var FEEDS = ['REELS', 'Комплекс', 'Кухни', 'Спальни', 'Гардеробные', 'Прихожие', 'Санузлы', 'Детские', 'Гостиные'];
+var SND_OFF = '<svg class="off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+var SND_ON = '<svg class="on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+var PLAY = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+
+/* ---------- данные (те же, что в portfolio.html) ---------- */
+function projectsRaw() {
+    var P = {
+      k1: 'assets/51b3a741d39db0d4301d3aa373ff7deb.jpg', k2: 'assets/1df78be4ea18f381158d3b6f19fb0650.jpg', k3: 'assets/bf2bd4491530627d1ddddc9a7168d603.jpg',
+      l1: 'assets/852969a9418bd9af724aadd3b339a6a4.jpg', l2: 'assets/16c8149d74c21abbbe503503db9855c9.jpg',
+      b1: 'assets/afbdb40f8ab83b0c8cd8cbc128206fe6.jpg', b2: 'assets/b831b81840edffbf15c0404891a16a1e.jpg', b3: 'assets/3c05a41db1716a4f183f4c2b81c98a08.jpg',
+      h1: 'assets/3cfcf686eab5b7ab3072c5817360f51f.jpg', h2: 'assets/10a1df574d7617bbbecc858b0109f42e.jpg', h3: 'assets/30df34888ada3997b4dd8c5ac601aa88.jpg',
+      w1: 'assets/61eb3ef72c07f95746daa6f6ca26a80a.jpg', w2: 'assets/4ba006136224ef583eb1266d27d9aa59.jpg'
+    };
+    var V = {
+      kitchen:  { src: 'assets/b808bde975a2d936c5b588e3ccd832a6.mp4', poster: 'assets/3e0259f301dba983b78349f5a604e115.jpg' },
+      bath:     { src: 'assets/e973636b1be0fa442bd7abad4e80c1fc.mp4', poster: 'assets/6c99a6c59a75e664d36f16d87121653d.jpg' },
+      wardrobe: { src: 'assets/cc34b5de93f0f3885d7d5bb75804001d.mp4', poster: 'assets/63fd036724736762c0d1b1c7c10fd77c.jpg' }
+    };
+    return [
+      {
+        title: 'Квартира в тёплых тонах', href: 'index.html', coverVideo: 'assets/p1-preview.mp4', coverPoster: 'assets/p1-preview.jpg', address: 'ЖК Уно', cover: 'assets/cover-warm-apartment.jpg', complex: true,
+        priceDate: 'октябрь 2026',
+        reels: [V.kitchen, V.bath, V.wardrobe],
+        items: [
+          { name: 'Кухня', type: 'Кухни', photos: [P.k1, P.k2, P.k3], price: '950 000 ₽',
+            text: 'Угловая кухня до потолка: верхний ярус в дубе, нижние фасады матовые светлые, чёрная столешница. Духовой шкаф и микроволновка встроены в колонну, рабочая зона и витрина со стеклом — с подсветкой.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые светлые + дуб', furn: 'Blum' },
+          { name: 'Прихожая', type: 'Прихожие', photos: [P.h1, P.h2, P.h3], price: '280 000 ₽',
+            text: 'Шкафы до потолка заподлицо со стеной и скрытой дверью, дубовая панель с крючками и банкетка с мягким сиденьем.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые светлые', furn: 'Blum' },
+          { name: 'Гардеробная', type: 'Гардеробные', photos: [P.w1, P.w2], videos: [V.wardrobe], price: '320 000 ₽',
+            text: 'Угловая система в графитовом декоре: комод с ящиками, штанга и полки с подсветкой. В спальне — шкаф-купе с чёрными профилями.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Графитовый декор', furn: 'Blum' },
+          { name: 'Санузел', type: 'Санузлы', photos: [P.b1, P.b2, P.b3], videos: [V.bath], price: '330 000 ₽',
+            text: 'Шкаф-колонна в дубе с нишей под стиральную и сушильную машины, подвесная тумба с рифлёными фасадами, пенал за рифлёным стеклом и полки с подсветкой.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Дуб, рифлёные', furn: 'Blum' },
+          { name: 'Гостиная', type: 'Гостиные', photos: [P.l1, P.l2], price: '420 000 ₽',
+            text: 'Шкаф до потолка с длинными чёрными ручками, открытый стеллаж с подсветкой, подвесная ТВ-тумба с подсветкой снизу и рабочее место на фоне дубовой панели.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые светлые', furn: 'Blum' }
+        ]
+      },
+      // второй комплексный проект: фото приходят по изделиям, страница — project-2.html
+      {
+        title: 'Квартира в светлом беже', href: 'project-2.html', coverVideo: 'assets/p2-preview.mp4', coverPoster: 'assets/p2-preview.jpg', address: 'ЖК Символ', cover: 'assets/p2-kitchen-1.jpg', complex: true,
+        priceDate: 'октябрь 2026',
+        reels: [
+          { src: 'assets/p2-bath-reel-1.mp4', poster: 'assets/p2-bath-reel-1.jpg' },
+          { src: 'assets/p2-bath-reel-2.mp4', poster: 'assets/p2-bath-reel-2.jpg' },
+          { src: 'assets/p2-bedroom-reel-1.mp4', poster: 'assets/p2-bedroom-reel-1.jpg' },
+          { src: 'assets/p2-kitchen-reel-1.mp4', poster: 'assets/p2-kitchen-reel-1.jpg' }
+        ],
+        items: [
+          { name: 'Кухня', type: 'Кухни', photos: ['assets/p2-kitchen-1.jpg', 'assets/p2-kitchen-2.jpg', 'assets/p2-kitchen-3.jpg', 'assets/p2-kitchen-4.jpg',
+                      'assets/p2-kitchen-5.jpg', 'assets/p2-kitchen-6.jpg'],
+            videos: [{ src: 'assets/p2-kitchen-reel-1.mp4', poster: 'assets/p2-kitchen-reel-1.jpg' }],
+            price: '780 000 ₽', text: 'П-образная кухня до потолка с барной стойкой в сторону гостиной. Колонна со встроенными духовым шкафом и микроволновкой, витрина в чёрной раме с подсветкой, светлая столешница и фартук под мрамор с подсветкой рабочей зоны.', korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые бежевые, без ручек', furn: 'Blum' },
+          { name: 'Прихожая', type: 'Прихожие', photos: ['assets/p2-hall-1.jpg', 'assets/p2-hall-2.jpg'],
+            price: '260 000 ₽', text: 'Шкафы до потолка с вертикальными чёрными профилями-ручками, подвесная тумба с ящиками и зеркальные панели с линейной подсветкой.', korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые бежевые', furn: 'Blum' },
+          { name: 'Санузел', type: 'Санузлы', photos: ['assets/p2-bath-1.jpg', 'assets/p2-bath-2.jpg', 'assets/p2-bath-3.jpg'],
+            videos: [{ src: 'assets/p2-bath-reel-1.mp4', poster: 'assets/p2-bath-reel-1.jpg' }, { src: 'assets/p2-bath-reel-2.mp4', poster: 'assets/p2-bath-reel-2.jpg' }],
+            price: '190 000 ₽', text: 'Подвесная тумба с каменной столешницей, шкафы до потолка над инсталляцией, открытые ниши в шпоне с подсветкой и пенал за рифлёным стеклом в чёрной раме. В гостевом санузле — узкий стеллаж в шпоне.', korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые светлые + шпон, рифлёное стекло', furn: 'Blum' },
+          { name: 'Спальня', type: 'Спальни', photos: ['assets/p2-bedroom-1.jpg', 'assets/p2-bedroom-2.jpg', 'assets/p2-bedroom-3.jpg', 'assets/p2-bedroom-4.jpg'],
+            videos: [{ src: 'assets/p2-bedroom-reel-1.mp4', poster: 'assets/p2-bedroom-reel-1.jpg' }],
+            price: '340 000 ₽', text: 'Шкаф до потолка с чёрными профилями-ручками, подвесные тумбы у кровати, рабочее место у окна с полкой и подсветкой и подвесная консоль с ящиками.', korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые серо-бежевые', furn: 'Blum' }
+        ]
+      },
+      // пятый комплексный проект — фото от Макса («Загрузки», 17 фото), страница — project-5.html
+      {
+        title: 'Квартира в белом и дубе', href: 'project-5.html', address: 'ЖК Домашний', cover: 'assets/p5-kitchen-1.jpg', complex: true,
+        priceDate: 'октябрь 2026',
+        items: [
+          { name: 'Кухня', type: 'Кухни', photos: ['assets/p5-kitchen-1.jpg', 'assets/p5-kitchen-2.jpg', 'assets/p5-kitchen-3.jpg', 'assets/p5-kitchen-4.jpg'], price: '850 000 ₽',
+            text: 'П-образная кухня до потолка в белом матовом: фасады без ручек, колонна со встроенной техникой, барная стойка в сторону гостиной и столешница из кварцевого агломерата с подсветкой рабочей зоны.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Белые матовые, без ручек', furn: 'Blum' },
+          { name: 'Гостиная', type: 'Гостиные', photos: ['assets/p5-living-1.jpg', 'assets/p5-living-2.jpg'], price: '260 000 ₽',
+            text: 'ТВ-зона с панелью в тёплом сером, стеллаж-витрина у стены и шкаф до потолка; напротив — стол-консоль и открытые полки.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Белые матовые + серая панель', furn: 'Blum' },
+          { name: 'Гардеробная', type: 'Гардеробные', photos: ['assets/p5-wardrobe-1.jpg', 'assets/p5-wardrobe-2.jpg', 'assets/p5-wardrobe-3.jpg'], price: '290 000 ₽',
+            text: 'Гардеробная за раздвижной дверью из рифлёного стекла: открытые полки, комод с ящиками без ручек, штанги и подсветка.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Рифлёное стекло, белые матовые', furn: 'Hettich' },
+          { name: 'Детская', type: 'Детские', photos: ['assets/p5-kids-1.jpg', 'assets/p5-kids-2.jpg', 'assets/p5-kids-3.jpg'], price: '310 000 ₽',
+            text: 'Комната подростка: шкаф до потолка, подвесные полки-ниши над письменным столом и мягкая кровать с изголовьем.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Белые матовые', furn: 'Blum' },
+          { name: 'Спальня', type: 'Спальни', photos: ['assets/p5-bedroom-1.jpg'], price: '180 000 ₽',
+            text: 'Шкафы до потолка заподлицо со стеной и перегородка из вертикальных реек, отделяющая спальное место.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Белые матовые + рейки', furn: 'Blum' },
+          { name: 'Санузел', type: 'Санузлы', photos: ['assets/p5-bath-1.jpg', 'assets/p5-bath-2.jpg', 'assets/p5-bath-3.jpg'], price: '240 000 ₽',
+            text: 'Подвесные тумбы с раковиной, зеркальные шкафы до потолка, ниша под стиральную и сушильную машины в колонну и подсветка снизу.',
+            korpus: 'ЛДСП Egger 18 мм, влагостойкая', fasady: 'Матовые тауп', furn: 'Blum' },
+          { name: 'Прихожая', type: 'Прихожие', photos: ['assets/p5-hall-1.jpg'], price: '170 000 ₽',
+            text: 'Шкаф до потолка с открытой нишей и полками для обуви, белые фасады без ручек в тон стен.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Белые матовые, без ручек', furn: 'Blum' }
+        ]
+      },
+      // шестой комплексный проект — фото от Макса («Загрузки», 15 фото), страница — project-6.html
+      {
+        title: 'Квартира с перегородками', href: 'project-6.html', address: 'ЖК Люблинский Парк', cover: 'assets/p6-kitchen-1.jpg', complex: true,
+        priceDate: 'октябрь 2026',
+        items: [
+          { name: 'Кухня', type: 'Кухни', photos: ['assets/p6-kitchen-1.jpg', 'assets/p6-kitchen-2.jpg'], price: '920 000 ₽',
+            text: 'Угловая кухня в графите и дубе: колонна с техникой, верхние шкафы в дубе и витрины в чёрной раме, остров со столешницей под мрамор и фартук из камня.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые графит + шпон дуба', furn: 'Blum' },
+          { name: 'Гостиная', type: 'Гостиные', photos: ['assets/p6-living-1.jpg', 'assets/p6-living-2.jpg', 'assets/p6-living-3.jpg', 'assets/p6-living-4.jpg'], price: '340 000 ₽',
+            text: 'Стеллаж до потолка в дубе со стеклянными дверцами и открытыми нишами, ТВ-тумба и стеклянная перегородка в чёрной раме между гостиной и спальней.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Шпон дуба, стекло в чёрной раме', furn: 'Blum' },
+          { name: 'Спальня', type: 'Спальни', photos: ['assets/p6-bedroom-1.jpg', 'assets/p6-bedroom-2.jpg', 'assets/p6-bedroom-3.jpg', 'assets/p6-bedroom-4.jpg', 'assets/p6-bedroom-5.jpg'], price: '380 000 ₽',
+            text: 'Спальня за стеклянной перегородкой: подвесная консоль с ящиками, туалетный столик у зеркала и рабочее место у окна с полками в дубе и графитовой панелью.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Шпон дуба + графит, стекло в раме', furn: 'Hettich' },
+          { name: 'Санузел', type: 'Санузлы', photos: ['assets/p6-bath-1.jpg', 'assets/p6-bath-2.jpg', 'assets/p6-bath-3.jpg'], price: '250 000 ₽',
+            text: 'Подвесная тумба в дубе с каменной столешницей, шкафы до потолка в тёплом сером, ниша под стиральную и сушильную машины и подсветка снизу.',
+            korpus: 'ЛДСП Egger 18 мм, влагостойкая', fasady: 'Матовые серые + дуб', furn: 'Blum' },
+          { name: 'Прихожая', type: 'Прихожие', photos: ['assets/p6-hall-1.jpg', 'assets/p6-hall-2.jpg'], price: '220 000 ₽',
+            text: 'Шкафы до потолка с длинными чёрными ручками, банкетка с мягким сиденьем и панель из реек с крючками.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые светлые, рейки', furn: 'Blum' }
+        ]
+      },
+      // седьмой комплексный проект — фото от Макса («Загрузки», 18 фото), страница — project-7.html
+      {
+        title: 'Квартира в дубе и камне', href: 'project-7.html', address: 'ЖК Гармония', cover: 'assets/p7-kitchen-1.jpg', complex: true,
+        priceDate: 'октябрь 2026',
+        items: [
+          { name: 'Кухня', type: 'Кухни', photos: ['assets/p7-kitchen-1.jpg', 'assets/p7-kitchen-2.jpg', 'assets/p7-kitchen-3.jpg', 'assets/p7-kitchen-4.jpg'], price: '880 000 ₽',
+            text: 'Угловая кухня: верхний ярус и колонны в дубе, нижние фасады матовые бежевые с профилем-ручкой, фартук и столешница под тёмный камень. Колонна с техникой и стеллаж в дубе с подсветкой у ТВ-зоны.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Шпон дуба + матовые бежевые', furn: 'Blum' },
+          { name: 'Гостиная', type: 'Гостиные', photos: ['assets/p7-living-1.jpg', 'assets/p7-living-2.jpg', 'assets/p7-living-3.jpg'], price: '260 000 ₽',
+            text: 'Подвесная консоль в дубе с подсветкой, шкафы до потолка заподлицо со стеной и панель в дубе с линейным светильником в зоне отдыха.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Шпон дуба, матовые светлые', furn: 'Blum' },
+          { name: 'Кабинет', type: 'Гостиные', photos: ['assets/p7-office-1.jpg'], price: '190 000 ₽',
+            text: 'Рабочее место у окна: стол в дубе на металлических опорах, открытые полки с подсветкой и шкаф до потолка.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Шпон дуба, матовые светлые', furn: 'Blum' },
+          { name: 'Спальня', type: 'Спальни', photos: ['assets/p7-bedroom-1.jpg', 'assets/p7-bedroom-2.jpg', 'assets/p7-bedroom-3.jpg', 'assets/p7-bedroom-4.jpg', 'assets/p7-bedroom-5.jpg'], price: '360 000 ₽',
+            text: 'Стена за кроватью в камне и дубе с подсветкой, подвесные тумбы, туалетный столик-консоль с ящиками и зеркальная колонна.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Шпон дуба + матовые светлые', furn: 'Hettich' },
+          { name: 'Гардеробная', type: 'Гардеробные', photos: ['assets/p7-wardrobe-1.jpg'], price: '270 000 ₽',
+            text: 'Гардеробная в дубе: открытые полки и ниши, штанги на два уровня, комод с ящиками и подсветка по всей высоте.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'ЛДСП в декоре дуба', furn: 'Hettich' },
+          { name: 'Санузел', type: 'Санузлы', photos: ['assets/p7-bath-1.jpg', 'assets/p7-bath-2.jpg', 'assets/p7-bath-3.jpg'], price: '280 000 ₽',
+            text: 'Подвесная тумба в дубе с каменной столешницей, шкафы до потолка над инсталляцией, открытые ниши и зеркало с подсветкой.',
+            korpus: 'ЛДСП Egger 18 мм, влагостойкая', fasady: 'Шпон дуба', furn: 'Blum' },
+          { name: 'Прихожая', type: 'Прихожие', photos: ['assets/p7-hall-1.jpg'], price: '190 000 ₽',
+            text: 'Шкафы до потолка с длинными чёрными ручками, ниша с банкеткой и полкой и подсветка по контуру потолка.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые светлые', furn: 'Blum' }
+        ]
+      },
+      // восьмой комплексный проект — фото от Макса («Загрузки», 15 фото; одно — почти дубль, не взято), страница — project-8.html
+      {
+        title: 'Квартира с рейками', href: 'project-8.html', address: 'ЖК Шагал', cover: 'assets/p8-kitchen-1.jpg', complex: true,
+        priceDate: 'октябрь 2026',
+        items: [
+          { name: 'Кухня', type: 'Кухни', photos: ['assets/p8-kitchen-1.jpg', 'assets/p8-kitchen-2.jpg', 'assets/p8-kitchen-3.jpg', 'assets/p8-kitchen-4.jpg'], price: '690 000 ₽',
+            text: 'Угловая кухня: верхний ярус в светло-сером до потолка, нижние фасады в дубе с профилем-ручкой, полки в дубе с подсветкой и барная стойка на металлическом каркасе.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые светло-серые + дуб', furn: 'Blum' },
+          { name: 'Гостиная', type: 'Гостиные', photos: ['assets/p8-living-1.jpg', 'assets/p8-living-2.jpg'], price: '180 000 ₽',
+            text: 'Стена из реек в дубе с подсветкой, открытые полки и мягкая зона, переходящая в кухню.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Рейки в дубе', furn: 'Blum' },
+          { name: 'Спальня', type: 'Спальни', photos: ['assets/p8-bedroom-1.jpg', 'assets/p8-bedroom-2.jpg', 'assets/p8-bedroom-3.jpg', 'assets/p8-bedroom-4.jpg', 'assets/p8-bedroom-5.jpg'], price: '330 000 ₽',
+            text: 'Спальня со стеной из реек и подсветкой, шкаф до потолка, рабочее место в нише за шторой и ТВ-тумба.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Рейки в дубе + матовые светлые', furn: 'Hettich' },
+          { name: 'Гардеробная', type: 'Гардеробные', photos: ['assets/p8-wardrobe-1.jpg'], price: '220 000 ₽',
+            text: 'Гардеробная-постирочная: колонна под стиральную и сушильную машины, полки, штанги и раздвижная дверь в чёрном профиле.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые серые, стекло в профиле', furn: 'Hettich' },
+          { name: 'Санузел', type: 'Санузлы', photos: ['assets/p8-bath-1.jpg'], price: '170 000 ₽',
+            text: 'Подвесная тумба с раковиной и зеркальный шкаф до потолка, рейки в дубе в душевой зоне.',
+            korpus: 'ЛДСП Egger 18 мм, влагостойкая', fasady: 'Матовые белые + дуб', furn: 'Blum' },
+          { name: 'Прихожая', type: 'Прихожие', photos: ['assets/p8-hall-1.jpg'], price: '160 000 ₽',
+            text: 'Шкафы до потолка в дубе со скрытой дверью и зеркальной панелью на всю высоту.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Шпон дуба, зеркало', furn: 'Blum' }
+        ]
+      },
+      // отдельные работы (не комплекс): своей страницы нет — только плитка в своей ленте
+      {
+        title: 'Кухня в загородный дом', href: '', cover: 'assets/k1441-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1441',
+        items: [
+          { name: 'Кухня в загородный дом', type: 'Кухни', photos: ['assets/k1441-1.jpg', 'assets/k1441-2.jpg', 'assets/k1441-3.jpg'], price: '1 150 000 ₽',
+            text: 'Большая кухня в загородный дом. Стильная и современная кухня без верхних шкафов с чёрной трубой вытяжки. Кухня выполнена в трендовом зелёном цвете, чёрная ручка Gola как акцент отлично сочетается с чёрной техникой. Мойка у окна — мечта каждой хозяйки.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Зелёные матовые, ручка Gola', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Угловая кухня под потолок', href: '', cover: 'assets/k1050-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1050',
+        items: [
+          { name: 'Угловая кухня под потолок', type: 'Кухни', photos: ['assets/k1050-1.jpg', 'assets/k1050-2.jpg', 'assets/k1050-3.jpg'], price: '890 000 ₽',
+            text: 'Современная угловая кухня под потолок с профильной ручкой Gola. Фасады — сочетание белого и тёплого древесного декора EGGER. Столешница из кварцевого агломерата с мойкой подстольного монтажа, духовка, СВЧ и холодильник встроены в шкафы-пеналы.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Белые + древесный декор EGGER, ручка Gola', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Кухня с барной стойкой', href: '', cover: 'assets/k964-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/964',
+        items: [
+          { name: 'Кухня с барной стойкой', type: 'Кухни', photos: ['assets/k964-1.jpg', 'assets/k964-2.jpg', 'assets/k964-3.jpg', 'assets/k964-4.jpg'], price: '980 000 ₽',
+            text: 'П-образная кухня в современном стиле с барной стойкой и высокими верхними шкафами до потолка. Сверху фасады открываются нажатием (push to open), снизу — интегрированная ручка. Столешница из белого искусственного камня с интегрированной мойкой, духовка и холодильник — в пеналах, цилиндрическая вытяжка как отдельный декоративный акцент.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'МДФ, матовая эмаль: кашемир и пыльная роза', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Шкаф в детскую', href: '', cover: 'assets/kids1581-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1581',
+        items: [
+          { name: 'Шкаф в детскую', type: 'Детские', photos: ['assets/kids1581-1.jpg', 'assets/kids1581-2.jpg'], price: '210 000 ₽',
+            text: 'Распашной шкаф до потолка в детскую: белые фасады и дуб, соединённые фрезеровкой в виде гор, и ручки-динозаврики. Внутри — штанга для одежды, полки и выдвижные ящики на всю ширину, всё на уровне роста ребёнка.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Белые + дуб, фигурная фрезеровка', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Шкаф вокруг кровати', href: '', cover: 'assets/bed1408-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1408',
+        items: [
+          { name: 'Шкаф вокруг кровати', type: 'Спальни', photos: ['assets/bed1408-1.jpg', 'assets/bed1408-3.jpg', 'assets/bed1408-2.jpg', 'assets/bed1408-4.jpg'], price: '420 000 ₽',
+            text: 'Шкаф в спальню, обрамляющий кровать: колонны по бокам и антресоли над изголовьем. Отлично вписывается в интерьер и даёт много мест для хранения. Над кроватью — подсветка, а открытые полки смотрят в сторону кровати: удобно положить книгу или телефон, не вставая.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'ЛДСП, серый матовый', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Спальня в графите', href: '', cover: 'assets/bed1407-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1407',
+        items: [
+          { name: 'Спальня в графите', type: 'Спальни', photos: ['assets/bed1407-1.jpg', 'assets/bed1407-3.jpg', 'assets/bed1407-2.jpg', 'assets/bed1407-4.jpg'], price: '380 000 ₽',
+            text: 'Тёмно-серый шкаф, который переходит в рабочий стол, и комод в том же стиле — вся мебель в одной гамме, ничего не выбивается. С торца шкафа — открытые полки для книг и декора, ручки — чёрные профильные.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Графитовые матовые, профильные ручки', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Комната подростка', href: '', cover: 'assets/kids1364-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1364',
+        items: [
+          { name: 'Комната подростка', type: 'Детские', photos: ['assets/kids1364-1.jpg', 'assets/kids1364-4.jpg', 'assets/kids1364-7.jpg', 'assets/kids1364-6.jpg', 'assets/kids1364-2.jpg', 'assets/kids1364-3.jpg', 'assets/kids1364-5.jpg'], price: '460 000 ₽',
+            text: 'Шкаф и рабочее место в комнату подростка — стиль, который подойдёт для любого возраста. Рифлёные фасады, открытые полки с подсветкой, выдвижные ящики, рабочий стол у окна и панели из ЛДСП на потолке. Чёрные ручки перекликаются с чёрными софитами.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Светло-серые, рифлёные + дуб', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Цветная детская', href: '', cover: 'assets/kids1342-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1342',
+        items: [
+          { name: 'Цветная детская', type: 'Детские', photos: ['assets/kids1342-1.jpg', 'assets/kids1342-2.jpg', 'assets/kids1342-4.jpg', 'assets/kids1342-3.jpg'], price: '390 000 ₽',
+            text: 'Шкаф в детскую в нежном голубом цвете — правильно подобранные акценты создают уютную и счастливую атмосферу. Фасады из МДФ, покрытые эмалью с фрезеровкой, открытые полки для декора. В той же гамме — стол на два рабочих места с тумбами.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'МДФ, эмаль с фрезеровкой, голубые', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Прихожая с рейками', href: '', cover: 'assets/hall1278-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1278',
+        items: [
+          { name: 'Прихожая с рейками', type: 'Прихожие', photos: ['assets/hall1278-1.jpg', 'assets/hall1278-2.jpg', 'assets/hall1278-3.jpg', 'assets/hall1278-4.jpg'], price: '240 000 ₽',
+            text: 'Серый шкаф до потолка в прихожую, который впишется в любую светлую квартиру. Чёрные профильные ручки — как акцент, рядом панель из древесных реек с крючками для верхней одежды и банкетка с нишей для обуви.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'ЛДСП, серый матовый, чёрные профильные ручки', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Прихожая в пурпурном', href: '', cover: 'assets/hall1303-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1303',
+        items: [
+          { name: 'Прихожая в пурпурном', type: 'Прихожие', photos: ['assets/hall1303-1.jpg', 'assets/hall1303-2.jpg', 'assets/hall1303-4.jpg'], price: '270 000 ₽',
+            text: 'Стильный современный шкаф в прихожую в мягком пурпурном цвете — цветной акцент делает интерьер интереснее. Рядом консольная тумба с ящиками и панель с рейками. Фасады из фрезерованного МДФ, покрытого эмалью, ручка интегрированная.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'МДФ, эмаль, пурпурный, интегрированная ручка', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Светлая прихожая с банкеткой', href: '', cover: 'assets/hall1312-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1312',
+        items: [
+          { name: 'Светлая прихожая с банкеткой', type: 'Прихожие', photos: ['assets/hall1312-1.jpg', 'assets/hall1312-3.jpg', 'assets/hall1312-2.jpg'], price: '220 000 ₽',
+            text: 'Светло-серый шкаф в прихожую, который впишется в любую светлую квартиру. Фасады из МДФ ПВХ с тонкой фрезерованной рамкой и чёрные ручки-кнопки как акцент. Древесные рейки с крючками и банкетка в тон древесному корпусу.',
+            korpus: 'ЛДСП Egger 18 мм, древесный декор', fasady: 'МДФ ПВХ, светло-серые, с рамкой', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'ТВ-зона с витриной', href: '', cover: 'assets/live1335-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1335',
+        items: [
+          { name: 'ТВ-зона с витриной', type: 'Гостиные', photos: ['assets/live1335-1.jpg', 'assets/live1335-3.jpg', 'assets/live1335-2.jpg'], price: '310 000 ₽',
+            text: 'Напольная консоль под телевизор в светлом тоне, которая впишется в любой интерьер: ящики открываются нажатием, ручка на фасадах интегрированная. Рядом — высокий витринный шкаф в чёрной раме с подсветкой, она создаёт уютную атмосферу вечером.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'МДФ, эмаль, push-to-open', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Шкаф с рабочим столом у окна', href: '', cover: 'assets/kids1341-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1341',
+        items: [
+          { name: 'Шкаф с рабочим столом у окна', type: 'Детские', photos: ['assets/kids1341-1.jpg', 'assets/kids1341-4.jpg', 'assets/kids1341-2.jpg', 'assets/kids1341-3.jpg'], price: '350 000 ₽',
+            text: 'Шкаф до потолка, который переходит в длинный рабочий стол вдоль окна, — удобное и практичное решение для детской. Сочетание белого и древесного цвета впишется в любой светлый интерьер, открытые полки — для книг и декора, ручки накладные профильные чёрные.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Белые — МДФ эмаль, древесные — ЛДСП', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Гардеробная за стеклянными дверями', href: '', cover: 'assets/ward1398-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1398',
+        items: [
+          { name: 'Гардеробная за стеклянными дверями', type: 'Гардеробные', photos: ['assets/ward1398-1.jpg', 'assets/ward1398-2.jpg', 'assets/ward1398-3.jpg'], price: '360 000 ₽',
+            text: 'Удобная и функциональная гардеробная для небольшой спальни, отгороженная дверями-купе из тонированного стекла. Внутри — открытые полки и штанги в древесном декоре и туалетный столик, подсветка создаёт уютную атмосферу вечером.',
+            korpus: 'ЛДСП Egger 18 мм, древесный декор', fasady: 'Двери-купе, тонированное стекло', furn: 'Blum, система купе' }
+        ]
+      },
+      {
+        title: 'Санузел с подсветкой', href: '', cover: 'assets/bath1465-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1465',
+        items: [
+          { name: 'Санузел с подсветкой', type: 'Санузлы', photos: ['assets/bath1465-1.jpg', 'assets/bath1465-2.jpg', 'assets/bath1465-4.jpg', 'assets/bath1465-3.jpg'], price: '180 000 ₽',
+            text: 'Подвесная тумба в тёплом древесном декоре со светлой столешницей и накладной раковиной, рядом — ниша под стиральную машину. Над инсталляцией — шкаф с подсвеченной нишей, у зеркала — круглая LED-подсветка. Широкие ящики выдвигаются полностью.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Древесный декор, светлая столешница', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Зелёная прихожая в неоклассике', href: '', cover: 'assets/hall1466-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1466',
+        items: [
+          { name: 'Зелёная прихожая в неоклассике', type: 'Прихожие', photos: ['assets/hall1466-1.jpg', 'assets/hall1466-2.jpg', 'assets/hall1466-4.jpg', 'assets/hall1466-3.jpg', 'assets/hall1466-5.jpg'], price: '290 000 ₽',
+            text: 'Распашной шкаф до потолка в насыщенном зелёном цвете с фрезерованными фасадами в стиле неоклассики и аккуратными ручками-кнопками. Рядом — открытая ниша с крючками для одежды и сиденьем с ящиком, внутри шкафа — штанга и полки.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'МДФ, эмаль, фрезеровка, зелёные', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Мятная прихожая с рифлёными фасадами', href: '', cover: 'assets/hall1476-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1476',
+        items: [
+          { name: 'Мятная прихожая с рифлёными фасадами', type: 'Прихожие', photos: ['assets/hall1476-1.jpg', 'assets/hall1476-2.jpg', 'assets/hall1476-3.jpg', 'assets/hall1476-4.jpg'], price: '300 000 ₽',
+            text: 'Шкафы до потолка в мятном цвете с рифлёной фрезеровкой внизу и длинными чёрными ручками. Между ними — консоль с открытой нишей в тёмном дереве, крючки для одежды и место, чтобы присесть.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'МДФ, эмаль, мятные, рифлёная фрезеровка', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Санузел в оливковом', href: '', cover: 'assets/bath1479-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1479',
+        items: [
+          { name: 'Санузел в оливковом', type: 'Санузлы', photos: ['assets/bath1479-1.jpg', 'assets/bath1479-2.jpg'], price: '160 000 ₽',
+            text: 'Подвесная тумба в древесном декоре с белой столешницей и накладной раковиной, рядом — шкаф-пенал в оливковом цвете и открытые полки из дерева по обе стороны от арочного зеркала.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Оливковые матовые + древесный декор', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Санузел в терраццо', href: '', cover: 'assets/bath1507-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1507',
+        items: [
+          { name: 'Санузел в терраццо', type: 'Санузлы', photos: ['assets/bath1507-1.jpg', 'assets/bath1507-2.jpg', 'assets/bath1507-3.jpg'], price: '170 000 ₽',
+            text: 'Подвесная тумба в тёплом древесном декоре с чёрными профильными ручками и накладной раковиной, над инсталляцией — шкаф из того же декора. За его фасадами спрятан коллектор с трубами и счётчиками, а рядом — полки для хранения.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Древесный декор, чёрные профильные ручки', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Шкаф в шпоне с зеркалом', href: '', cover: 'assets/hall1568-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1568',
+        items: [
+          { name: 'Шкаф в шпоне с зеркалом', type: 'Прихожие', photos: ['assets/hall1568-1.jpg', 'assets/hall1568-3.jpg', 'assets/hall1568-2.jpg'], price: '420 000 ₽',
+            text: 'Распашной шкаф до потолка в прихожую с выразительным рисунком натурального шпона и тонкими чёрными ручками-профилями. Центральная секция — зеркальная, она визуально расширяет пространство и отражает мраморный пол.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Натуральный шпон + зеркало', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Детская с арочными фасадами', href: '', cover: 'assets/kids1582-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1582',
+        items: [
+          { name: 'Детская с арочными фасадами', type: 'Детские', photos: ['assets/kids1582-1.jpg', 'assets/kids1582-2.jpg', 'assets/kids1582-4.jpg', 'assets/kids1582-3.jpg'], price: '330 000 ₽',
+            text: 'Распашной шкаф до потолка с дизайнерской фрезеровкой — белые фасады с арками и рифлёной полосой над ящиками. Рядом — стеллаж-соты в сером цвете для книг и игрушек и прикроватная тумба с ящиками в той же гамме.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'МДФ, эмаль, арочная фрезеровка', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Кухня в неоклассике', href: '', cover: 'assets/k1457-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1457',
+        items: [
+          { name: 'Кухня в неоклассике', type: 'Кухни', photos: ['assets/k1457-1.jpg', 'assets/k1457-3.jpg', 'assets/k1457-4.jpg', 'assets/k1457-2.jpg'], price: '860 000 ₽',
+            text: 'Угловая кухня до потолка в стиле неоклассика с самой популярной фрезеровкой — тонкая рамка подчёркивает объём фасадов. Чёрные ручки работают как акцент и перекликаются с чёрной встроенной техникой, столешница и фартук — светлый камень с подсветкой.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'МДФ эмаль, фрезеровка «тонкая рамка»', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Светлая кухня с витринами', href: '', cover: 'assets/k1545-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1545',
+        items: [
+          { name: 'Светлая кухня с витринами', type: 'Кухни', photos: ['assets/k1545-1.jpg', 'assets/k1545-2.jpg', 'assets/k1545-3.jpg', 'assets/k1545-5.jpg', 'assets/k1545-4.jpg'], price: '1 050 000 ₽',
+            text: 'Большая угловая кухня до потолка в светлом серо-бежевом цвете с глянцевыми фасадами. По краям — высокие витрины из стекла с подсветкой, рабочая зона и фартук из светлого камня подсвечены, а открытая полка с посудой добавляет уюта.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Глянцевые серо-бежевые + стеклянные витрины', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Кухня с островом в сером', href: '', cover: 'assets/k1550-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1550',
+        items: [
+          { name: 'Кухня с островом в сером', type: 'Кухни', photos: ['assets/k1550-1.jpg', 'assets/k1550-2.jpg', 'assets/k1550-4.jpg', 'assets/k1550-3.jpg', 'assets/k1550-5.jpg'], price: '1 120 000 ₽',
+            text: 'Современная кухня с большим белым островом и барными стульями. Фасады в одном сером цвете без ручек — с интегрированным профилем, фартук и стеновая панель — под мрамор, над островом — чёрная цилиндрическая вытяжка как акцент.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Серые матовые, интегрированный профиль', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Кухня с витриной и островом', href: '', cover: 'assets/k1514-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1514',
+        items: [
+          { name: 'Кухня с витриной и островом', type: 'Кухни', photos: ['assets/k1514-1.jpg', 'assets/k1514-2.jpg', 'assets/k1514-3.jpg', 'assets/k1514-4.jpg', 'assets/k1514-5.jpg'], price: '1 180 000 ₽',
+            text: 'Светлая кухня до потолка с рифлёными фасадами верхнего яруса и высокой витриной из тонированного стекла в чёрной раме. Остров со столешницей под мрамор и барными стульями в изумрудном бархате, встроенная техника — в колонне.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Светло-серые, рифлёные + стеклянная витрина', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Бирюзовая кухня', href: '', cover: 'assets/k1243-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1243',
+        items: [
+          { name: 'Бирюзовая кухня', type: 'Кухни', photos: ['assets/k1243-1.jpg', 'assets/k1243-2.jpg', 'assets/k1243-3.jpg', 'assets/k1243-4.jpg'], price: '720 000 ₽',
+            text: 'Современная угловая кухня с профильной ручкой Gola и высокими верхними шкафами до потолка. Фасады — матовый белый и матовый бирюзовый, столешница и стеновая панель — компакт-пластик под белый мрамор. Духовка, СВЧ и холодильник встроены в шкафы-пеналы.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Матовые белые + бирюзовые, ручка Gola', furn: 'Blum' }
+        ]
+      },
+      {
+        title: 'Серый шкаф с антресолью', href: '', cover: 'assets/hall1331-1.jpg', complex: false, priceDate: 'октябрь 2026', source: 'etopodbor.ru/product/1331',
+        items: [
+          { name: 'Серый шкаф с антресолью', type: 'Прихожие', photos: ['assets/hall1331-1.jpg', 'assets/hall1331-2.jpg', 'assets/hall1331-3.jpg'], price: '230 000 ₽',
+            text: 'Шкаф до потолка в прихожую в светло-сером цвете с акцентными чёрными ручками — впишется в любой современный интерьер. Внутри — выдвижные ящики для мелочей и полки, сверху антресоль, а рядом — зеркало и консоль с ящиком для ключей.',
+            korpus: 'ЛДСП Egger 18 мм', fasady: 'Светло-серые матовые, чёрные ручки', furn: 'Blum' }
+        ]
+      }
+    ];
+  
+}
+var PRS = projectsRaw(), REELS = [], ITEMS = [];
+PRS.forEach(function (pr) {
+  (pr.reels || []).forEach(function (r) {
+    var zone = ''; (pr.items || []).forEach(function (it) { (it.videos || []).forEach(function (v) { if (v.src === r.src) zone = it.name; }); });
+    REELS.push({ src: r.src, poster: r.poster, project: pr.title, href: pr.href, address: pr.address || '', zone: zone });
+  });
+  (pr.items || []).forEach(function (it) { if ((it.photos || []).length) ITEMS.push({ name: it.name, type: it.type, photos: it.photos || [], videos: it.videos || [], text: it.text || '',
+    price: it.price || '', korpus: it.korpus || '—', fasady: it.fasady || '—', furn: it.furn || '—', project: pr.title, href: pr.href, address: pr.address || '', priceDate: pr.priceDate || '' }); });
+});
+var CX = PRS.filter(function (p) { return p.complex && p.href; });
+// год проекта — как на его странице («ЖК …, Москва, год»)
+var YEAR = { 'index.html': '2025', 'project-2.html': '2026', 'project-5.html': '2025', 'project-6.html': '2026', 'project-7.html': '2025', 'project-8.html': '2026' };
+var zonesOf = function (pr) { var z = []; (pr.items || []).forEach(function (it) { if (z.indexOf(it.name) < 0) z.push(it.name); }); return z; };
+var plural = function (n, a, b, c) { var m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
+var base = function (s) { return (s || '').replace(/^.*\//, '').replace(/\.(jpg|jpeg|png|webp|mp4)$/, ''); };
+var thumb = function (s) { return /^assets\/[^/]+\.(jpg|webp)$/.test(s || '') ? 'assets/t/' + base(s) + '.webp' : s; };
+var reelPoster = function (src) { return 'assets/t/' + base(src) + '-preview.webp'; };
+var ratio = function (s) { var R = window.MGS_RATIOS || {}; return R[s] || 1.25; };
+var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+var feedEl = $('#feed'), chipsIn = $('#chipsIn'), chipsEl = $('#chips'), viewEl = $('#view');
+var S = { feed: null, cards: [], active: null, sound: false, gen: 0, viewing: false, feedY: 0 };
+
+/* ---------- плашки ---------- */
+chipsIn.innerHTML = FEEDS.map(function (f) { return '<button class="chip" data-f="' + f + '">' + (f === 'Комплекс' ? '🔥 Комплекс' : f) + '</button>'; }).join('');
+chipsIn.addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) setFeed(b.getAttribute('data-f')); });
+/* подфильтры: у ленты — своя строка плашек. Форма кухонь — тестовая разметка по фото/описаниям */
+var SUBS = { 'Кухни': ['Все', 'Прямая', 'Угловая', 'П-образная'] };
+var KSHAPE = { 'p2-kitchen-1': 'П-образная', 'p5-kitchen-1': 'П-образная', 'k964-1': 'П-образная', 'k1550-1': 'Прямая', 'k1514-1': 'Прямая' };
+function subOf(it) { if (it.type === 'Кухни') return KSHAPE[base(it.photos[0])] || 'Угловая'; return ''; }
+var subEl = $('#subchips'), subIn = $('#subIn');
+function renderSubs() {
+  var list = SUBS[S.feed];
+  subEl.classList.toggle('show', !!list);
+  if (!list) return;
+  subIn.innerHTML = list.map(function (x) { return '<button class="sub' + ((S.sub || 'Все') === x ? ' on' : '') + '" data-s="' + x + '">' + x + '</button>'; }).join('');
+}
+subIn.addEventListener('click', function (e) {
+  var b = e.target.closest('.sub'); if (!b) return;
+  var v = b.getAttribute('data-s'); S.sub = v === 'Все' ? '' : v;
+  renderSubs(); jump(0); feedEl.innerHTML = gridHTML(S.feed);
+});
+function markChip() {
+  var on = null;
+  $$('.chip', chipsIn).forEach(function (b) { var o = b.getAttribute('data-f') === S.feed; b.classList.toggle('on', o); if (o) on = b; });
+  if (on && chipsEl.scrollWidth > chipsEl.clientWidth) { var x = on.offsetLeft - (chipsEl.clientWidth - on.offsetWidth) / 2; try { chipsEl.scrollTo({ left: Math.max(0, x), behavior: 'smooth' }); } catch (e) { chipsEl.scrollLeft = x; } }
+}
+var jump = function (y) { var sb = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; window.scrollTo(0, y); de.style.scrollBehavior = sb; };
+
+/* ---------- листание по одной карточке ----------
+   Палец двигает страницу как обычно (Safari прячет панели), а при отпускании гасим инерцию и плавно доводим
+   до следующей/предыдущей карточки. Колесо и клавиши — доводка к ближайшей после остановки. */
+var P = { touch: false, y0: 0, i0: 0, t0: 0, anim: 0, animating: false, cur: 0, lastY: 0, lastT: 0, v: 0, idle: 0, free: false };
+function killMomentum() { de.style.overflow = 'hidden'; void de.offsetHeight; requestAnimationFrame(function () { de.style.overflow = ''; }); }
+function pages() {
+  if (T.el) return [];
+  var list = S.rv ? S.cards : S.viewing ? (S.vms || []) : (S.feed === 'REELS' || S.feed === 'Комплекс' ? S.cards : []), y = window.scrollY;
+  var off = S.viewing ? 5 : topPx();
+  return list.map(function (el, i) { return { el: el, y: i === 0 ? 0 : Math.max(0, Math.round(el.getBoundingClientRect().top + y - off)), h: el.offsetHeight }; });
+}
+function topPx() { return parseFloat(getComputedStyle(feedEl).paddingTop) || 72; }   // высота, на которую встают карточки
+function nearest(ps) { var y = window.scrollY, b = 0, bd = 1e9; ps.forEach(function (p, i) { var d = Math.abs(p.y - y); if (d < bd) { bd = d; b = i; } }); return b; }
+function inFree(ps) { return S.viewing && !S.rv && ps.length && window.scrollY > ps[ps.length - 1].y + 40; }   // описание под фото — листается свободно
+function animTo(y, ms) {
+  cancelAnimationFrame(P.anim);
+  var y0 = window.scrollY, d = y - y0, t0 = performance.now();
+  if (Math.abs(d) < 1) { P.animating = false; return; }
+  P.animating = true;
+  var step = function (t) {
+    var k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+    window.scrollTo(0, y0 + d * e);
+    if (k < 1) P.anim = requestAnimationFrame(step); else { P.animating = false; pickActive(); if (S.viewing) vScroll(); }
+  };
+  P.anim = requestAnimationFrame(step);
+}
+function goPage(i, ps) { if (T.el) { trkGo(i); return; } ps = ps || pages(); if (!ps.length) return; i = Math.max(0, Math.min(ps.length - 1, i)); P.cur = i; killMomentum(); animTo(ps[i].y, 340); }
+document.addEventListener('touchstart', function (e) {
+  if (e.touches && e.touches.length > 1) return;
+  var ps = pages(); if (!ps.length) return;
+  P.touch = true; cancelAnimationFrame(P.anim); P.animating = false;
+  P.y0 = window.scrollY; P.t0 = performance.now(); P.free = inFree(ps);
+  P.i0 = P.free ? ps.length - 1 : nearest(ps);
+}, { passive: true });
+document.addEventListener('touchend', function () {
+  if (!P.touch) return; P.touch = false;
+  var ps = pages(); if (!ps.length) return;
+  var dy = window.scrollY - P.y0, dt = Math.max(1, performance.now() - P.t0), v = P.v;
+  if (P.free && dy > -40) return;                                   // в описании — свободно
+  var last = ps.length - 1, i = P.i0, h = ps[i].h || window.innerHeight;
+  if (S.viewing && !S.rv && i === last && dy > 0) return;                    // с последнего фото вниз — к описанию, свободно
+  var go = Math.abs(dy) > Math.min(90, h * .15) || Math.abs(v) > .45 || (Math.abs(dy) > 20 && Math.abs(dy) / dt > .35);
+  var dir = dy !== 0 ? (dy > 0 ? 1 : -1) : (v > 0 ? 1 : -1);
+  goPage(go ? i + dir : i, ps);
+}, { passive: true });
+document.addEventListener('touchcancel', function () { P.touch = false; }, { passive: true });
+// скорость прокрутки и доводка после колеса/клавиш (когда пальца нет)
+window.addEventListener('scroll', function () {
+  var t = performance.now(), y = window.scrollY; if (t - P.lastT < 120) P.v = (y - P.lastY) / Math.max(1, t - P.lastT); P.lastY = y; P.lastT = t;
+  if (P.touch || P.animating) return;
+  clearTimeout(P.idle);
+  P.idle = setTimeout(function () {
+    if (P.touch || P.animating) return;
+    var ps = pages(); if (!ps.length || inFree(ps)) return;
+    var c = Math.min(P.cur, ps.length - 1), d = window.scrollY - ps[c].y, h = ps[c].h || window.innerHeight, i;
+    if (Math.abs(d) < 3) return;
+    i = Math.abs(d) > h * 1.2 ? nearest(ps) : Math.abs(d) > h * .15 ? c + (d > 0 ? 1 : -1) : c;
+    goPage(i, ps);
+  }, 160);
+}, { passive: true });
+
+/* ---------- рилс-лента: листание сдвигом ленты ----------
+   Страница не прокручивается (html.trk): лента едет transform'ом за пальцем и мягко доезжает до карточки.
+   Без прокрутки окна Safari не дёргает экран (панели, инерция, доводка scrollTo). */
+var T = { mode: '', el: null, i: 0, y: 0, drag: false, axis: null, x0: 0, y0: 0, dy: 0, lastY: 0, lastT: 0, v: 0, dragEnd: 0, far: false, wheelT: 0, wheelUsed: false };
+function trkOff(i) {
+  if (T.mode === 'view') { var m = (S.vms || [])[i]; return m && i ? m.offsetTop - 5 : 0; }   // фото встаёт в 5 px от верха
+  var c = S.cards[i], c0 = S.cards[0]; return c && c0 ? c.offsetTop - c0.offsetTop : 0;
+}
+function trkN() { return T.mode === 'view' ? (S.vms || []).length : S.cards.length; }
+// просмотр изделия: ниже последнего фото — описание, его можно двигать свободно до самого низа
+function trkLast() { return trkOff(trkN() - 1); }
+function trkMax() { return T.mode === 'view' ? Math.max(trkLast(), T.el.offsetHeight - window.innerHeight) : trkLast(); }
+var EASE = 'cubic-bezier(.22,.8,.24,1)';
+function trkApply(y, ms) {
+  if (!T.el) return; T.y = y;
+  T.el.style.transition = ms ? 'transform ' + ms + 'ms ' + EASE : 'none';
+  T.el.style.transform = 'translate3d(0,' + (UZ - y).toFixed(1) + 'px,0)';
+  if (T.mode === 'view') vScroll(); else trkDims(y, ms);
+}
+// затемнение соседей и плашки — по положению ленты, одновременно со сдвигом (без скачков классов)
+function trkDims(y, ms) {
+  var tr = ms ? 'opacity ' + ms + 'ms ' + EASE : 'none';
+  S.cards.forEach(function (c, k) {
+    var off = trkOff(k), h = c.offsetHeight || 1, d = Math.min(1, Math.abs(off - y) / (h * .6));
+    if (!c._dim) { c._dim = $('.dim', c); c._ov = $$('.num,.cx-chips,.cx-bottom', c); }
+    if (d > .02) c.classList.toggle('up', off < y);
+    if (c._dim) { c._dim.style.transition = tr; c._dim.style.opacity = d.toFixed(3); }
+    var o = Math.max(0, 1 - d * 1.6).toFixed(3);
+    c._ov.forEach(function (e) { e.style.transition = tr; e.style.opacity = o; });
+  });
+}
+var UZ = 160;   // запас над экраном (= --uz): страница прокручена на него, лента сдвинута на него вниз
+function trkSet(el, mode) { T.el = el || null; T.mode = el ? (mode || 'lenta') : ''; T.drag = false; T.i = 0; de.classList.toggle('trk', !!T.el); if (T.el) { trkPin(); requestAnimationFrame(trkPin); } }
+function trkPin() { if (T.el && Math.abs(window.scrollY - UZ) > 0.5) jump(UZ); }
+function trkGo(i, ms) {
+  if (!T.el || !trkN()) return;
+  ms = ms == null ? 420 : ms;
+  if (T.mode === 'view') {
+    var n = trkN();
+    if (i >= n) { var mx = trkMax(); T.i = n - 1; trkApply(Math.min(mx, trkLast() + window.innerHeight * .6), ms); return; }   // к описанию
+    i = Math.max(0, i); T.i = i; trkApply(trkOff(i), ms); return;
+  }
+  i = Math.max(0, Math.min(S.cards.length - 1, i)); T.i = i; P.cur = i;
+  trkApply(trkOff(i), ms);
+  setActive(S.cards[i]);
+}
+function trkFree() { return T.mode === 'view' && T.y > trkLast() + 2; }
+function trkSkip(t) { return t.closest && t.closest('.prog,.chips,.subchips,.menu,.hd-btn,.hd-logo,.vtop'); }
+document.addEventListener('touchstart', function (e) {
+  if (!T.el || (e.touches && e.touches.length > 1) || trkSkip(e.target)) { T.drag = false; return; }
+  var t = e.touches[0]; T.drag = true; T.axis = null; T.x0 = t.clientX; T.y0 = t.clientY; T.dy = 0; T.far = false;
+  T.lastY = t.clientY; T.lastT = T.t0 = performance.now(); T.v = 0; T.base = T.y;
+  trkApply(T.y, 0);   // если лента ещё ехала — ловим её на месте
+}, { passive: true });
+document.addEventListener('touchmove', function (e) {
+  if (!T.drag) return;
+  var t = e.touches[0], dx = t.clientX - T.x0, dy = t.clientY - T.y0;
+  if (!T.axis) { if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return; T.axis = Math.abs(dy) >= Math.abs(dx) ? 'y' : 'x'; }
+  if (T.axis !== 'y') return;
+  if (e.cancelable) e.preventDefault();
+  var now = performance.now(), dt = now - T.lastT; if (dt > 0) T.v = T.v * .3 + ((t.clientY - T.lastY) / dt) * .7; T.lastY = t.clientY; T.lastT = now;
+  T.dy = dy; if (Math.abs(dy) > 10) T.far = true;
+  var y = T.base - dy, max = trkMax();
+  if (y < 0) y *= .35; else if (y > max) y = max + (y - max) * .35;   // у краёв — упругое сопротивление
+  trkApply(y, 0);
+}, { passive: false });
+function trkEnd() {
+  if (!T.drag) return; T.drag = false;
+  if (T.axis !== 'y') return;
+  T.dragEnd = performance.now();
+  var last = trkLast();
+  if (T.mode === 'view' && (T.y > last + 2 || T.base > last + 2)) {      // описание: свободно, с инерцией
+    var to = T.y - T.v * 320, mx = trkMax();
+    if (to < last + 50) { trkGo(T.y < last - 60 && T.base <= last + 2 ? trkN() - 2 : trkN() - 1, 380); return; }
+    trkApply(Math.min(mx, to), 520); return;
+  }
+  var list = T.mode === 'view' ? S.vms : S.cards;
+  var h = (list[T.i] && list[T.i].offsetHeight) || window.innerHeight, from = T.base;
+  var cur = T.i; list.forEach(function (c, k) { if (Math.abs(trkOff(k) - from) < Math.abs(trkOff(cur) - from)) cur = k; });
+  var dur = Math.max(1, T.dragEnd - T.t0), fast = (Math.abs(T.v) > .35 || Math.abs(T.dy) / dur > .3) && Math.abs(T.dy) > 12, go = Math.abs(T.dy) > Math.min(90, h * .15) || fast;
+  var dir = (Math.abs(T.v) > .35 ? -T.v : -T.dy) > 0 ? 1 : -1;
+  trkGo(go ? cur + dir : cur, go ? 420 : 300);
+}
+document.addEventListener('touchend', trkEnd, { passive: true });
+document.addEventListener('touchcancel', trkEnd, { passive: true });
+// после перетаскивания касание не считается нажатием на карточку
+document.addEventListener('click', function (e) { if (T.far && performance.now() - T.dragEnd < 400) { e.stopPropagation(); e.preventDefault(); T.far = false; } }, true);
+// колесо/тачпад: один жест — одна карточка; клавиши
+window.addEventListener('wheel', function (e) {
+  if (!T.el || e.ctrlKey) return;
+  e.preventDefault();
+  var now = performance.now(), fresh = now - T.wheelT > 220; T.wheelT = now;
+  if (fresh) T.wheelUsed = false;
+  if (T.mode === 'view' && (trkFree() || (T.i === trkN() - 1 && e.deltaY > 0 && !T.wheelUsed))) {   // описание — колесом свободно
+    var ny = Math.min(trkMax(), T.y + e.deltaY);
+    if (ny <= trkLast()) { T.wheelUsed = true; trkGo(trkN() - 1, 300); return; }
+    T.wheelUsed = false; trkApply(ny, 120); T.wheelT = now; return;
+  }
+  if (T.wheelUsed || Math.abs(e.deltaY) < 8) return;
+  T.wheelUsed = true; trkGo(T.i + (e.deltaY > 0 ? 1 : -1));
+}, { passive: false });
+document.addEventListener('keydown', function (e) {
+  if (!T.el || de.classList.contains('menu-open')) return;
+  var k = e.key, d = k === 'ArrowDown' || k === 'PageDown' || k === ' ' ? 1 : k === 'ArrowUp' || k === 'PageUp' ? -1 : 0;
+  if (d) { e.preventDefault(); trkGo(trkFree() && d < 0 ? trkN() - 1 : T.i + d); }
+});
+
+/* ---------- смена ленты ---------- */
+function setFeed(f, first) {
+  if (FEEDS.indexOf(f) < 0) f = 'REELS';
+  if (f === S.feed && !first) { if (T.el) trkGo(0); else jump(0); return; }
+  stopAll();
+  S.feed = f; S.sub = ''; S.gen++; S.cards = []; S.active = null;
+  renderSubs();
+  try { history.replaceState(history.state, '', f === 'REELS' ? location.pathname + location.search : '#' + encodeURIComponent(f)); } catch (e) {}
+  markChip();
+  var lenta = f === 'REELS' || f === 'Комплекс', gen = S.gen;
+  killMomentum(); cancelAnimationFrame(P.anim); P.animating = false; P.cur = 0;
+  de.classList.toggle('snap', lenta);
+  feedEl.innerHTML = lenta ? lentaHTML(f) : gridHTML(f);
+  trkSet(lenta ? $('.lenta', feedEl) : null);
+  if (T.el) trkPin(); else jump(0);
+  if (lenta) { S.cards = $$('.card', feedEl); S.cards.forEach(bindCard); trkGo(0, 0); }
+  requestAnimationFrame(function () { if (gen !== S.gen) return; if (T.el) trkPin(); else jump(0); });
+}
+function stopAll() { $$('video', feedEl).forEach(function (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); }
+
+/* ---------- рилс-лента ---------- */
+function lentaHTML(f) {
+  var reels = f === 'REELS-full', list = f === 'Комплекс' ? CX : REELS, n = list.length;
+  if (!n) return '<div class="empty">Скоро здесь появятся работы</div>';
+  return '<div class="lenta">' + list.map(function (x, i) {
+    var anim = '';  // без анимации появления — сдвиг карточек мешал листанию
+    if (reels) return '<div class="card reel' + anim + '" data-src="' + esc(x.src) + '">' +
+      '<img class="poster" src="' + esc(reelPoster(x.src)) + '" alt="" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
+      '<video muted playsinline loop preload="none"></video>' +
+      '<i class="dim"></i><span class="num">' + (i + 1) + ' / ' + n + '</span><span class="play-ico">' + PLAY + '</span><span class="spin"></span>' +
+      '<button class="snd" aria-label="Звук">' + SND_OFF + SND_ON + '</button>' +
+      '<div class="prog" aria-label="Перемотка"><b><i></i></b></div></div>';
+    if (f === 'REELS') return '<div class="card cx rp" data-reel="' + i + '" data-src="' + esc(x.src.replace(/\.mp4$/, '-preview.mp4')) + '" aria-label="Открыть рилс">' +
+      '<img class="poster" src="' + esc(reelPoster(x.src)) + '" alt="" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
+      '<video muted playsinline loop preload="none"></video><span class="spin"></span><i class="dim"></i>' + rpInfo(x, i, n) + '</div>';
+    var poster = x.coverPoster ? 'assets/t/' + base(x.coverPoster) + '.webp' : thumb(x.cover);
+    return '<div class="card cx' + anim + '" data-href="' + esc(x.href) + '"' + (x.coverVideo ? ' data-src="' + esc(x.coverVideo) + '"' : '') + ' aria-label="' + esc(x.title) + '">' +
+      '<img class="poster" src="' + esc(poster) + '" alt="' + esc(x.title) + '" ' + (i > 1 ? 'loading="lazy" ' : '') + 'decoding="async">' +
+      (x.coverVideo ? '<video muted playsinline loop preload="none"></video><span class="spin"></span>' : '') +
+      '<i class="dim"></i>' + cxInfo(x, i, n) + '</div>';
+  }).join('') + '</div>';
+}
+// «Комплекс», вариант 4 (Макс 24.10): сверху плашки (номер, ЖК, год, сколько зон), снизу крупное тонкое название и строка зон
+function cxInfo(x, i, n) {
+  var z = zonesOf(x), y = YEAR[x.href] || '';
+  return '<div class="cx-chips"><span class="dark">' + (i + 1) + ' / ' + n + '</span>' + (x.address ? '<span>' + esc(x.address) + '</span>' : '') + (y ? '<span>' + y + '</span>' : '') +
+    (z.length ? '<span>' + z.length + ' ' + plural(z.length, 'зона', 'зоны', 'зон') + '</span>' : '') + '</div>' +
+    '<div class="cx-bottom"><h3>' + esc(x.title) + '</h3>' + (z.length ? '<div class="cx-zones">' + esc(z.map(function (w, k) { return k ? w.charAt(0).toLowerCase() + w.slice(1) : w; }).join(', ')) + '</div>' : '') + '</div>';
+}
+// REELS в ленте — короткое превью 4:5, поверх только номер
+function rpInfo(x, i, n) {
+  return '<div class="cx-chips"><span class="dark">' + (i + 1) + ' / ' + n + '</span></div>';   // только номер (Макс 24.10)
+}
+// касание превью — полноценный просмотр рилсов («рилс-лента») с этого ролика
+function openReels(i) {
+  if (S.viewing) return;
+  S.feedY = window.scrollY; S.feedCards = S.cards; S.feedIdx = T.i;
+  S.cards.forEach(unloadV); S.active = null;
+  viewEl.innerHTML = lentaHTML('REELS-full').replace('<div class="lenta">', '<div class="lenta rvl">');
+  S.rv = true; S.viewing = true;
+  try { history.pushState({ mgsView: 1 }, ''); S.pushed = true; } catch (e) { S.pushed = false; }
+  killMomentum(); cancelAnimationFrame(P.anim); P.animating = false;
+  de.classList.add('viewing', 'rv'); de.classList.remove('vfree');
+  S.cards = $$('.card', viewEl); S.cards.forEach(bindCard);
+  trkSet($('.lenta', viewEl)); trkGo(S.cards[i] ? i : 0, 0);
+}
+// запас снизу — чтобы и последняя карточка вставала наверх
+function fitPad() { var l = $('.lenta', feedEl), c = S.cards[S.cards.length - 1]; if (l && c) l.style.setProperty('--ch', c.offsetHeight + 'px'); }
+
+function bindCard(card) {
+  var v = $('video', card), reel = card.classList.contains('reel');
+  card._v = v; card._userPaused = false;
+  if (v) {
+    v.muted = true; v.defaultMuted = true; v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
+    v.addEventListener('playing', function () { v.classList.add('ready'); card.classList.remove('wait'); });
+    v.addEventListener('loadeddata', function () { v.classList.add('ready'); if (!v.paused) card.classList.remove('wait'); });
+    v.addEventListener('waiting', function () { if (card === S.active && !card._userPaused) card.classList.add('wait'); });
+    v.addEventListener('pause', function () { card.classList.toggle('paused', card._userPaused); });
+  }
+  card.addEventListener('click', function (e) {
+    if (e.target.closest('.snd') || e.target.closest('.prog')) return;
+    if (!reel) {
+      if (card.hasAttribute('data-reel')) { if (card !== S.active) { goPage(S.cards.indexOf(card)); return; } openReels(+card.getAttribute('data-reel')); return; }
+      var h = card.getAttribute('data-href'); if (h) location.href = h; return;
+    }
+    if (card !== S.active) { goPage(S.cards.indexOf(card)); return; }
+    if (v.paused) { card._userPaused = false; card.classList.remove('paused'); playV(card); }
+    else { card._userPaused = true; v.pause(); card.classList.add('paused'); }
+  });
+  var snd = $('.snd', card);
+  if (snd) snd.addEventListener('click', function (e) {
+    e.stopPropagation();
+    S.sound = !S.sound; de.classList.toggle('sound', S.sound);
+    if (S.active && S.active._v) { S.active._v.muted = !S.sound; if (S.active._v.paused && !S.active._userPaused) playV(S.active); }
+  });
+  var pg = $('.prog', card);
+  if (pg) {
+    var seek = function (e) { if (!v.duration) return; var r = pg.getBoundingClientRect(), x = Math.max(0, Math.min(1, (e.clientX - r.left - 8) / (r.width - 16))); v.currentTime = x * v.duration; $('i', pg).style.width = (x * 100) + '%'; };
+    pg.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); if (card !== S.active) setActive(card); pg.classList.add('drag'); try { pg.setPointerCapture(e.pointerId); } catch (x) {} seek(e); });
+    pg.addEventListener('pointermove', function (e) { if (pg.classList.contains('drag')) seek(e); });
+    var up = function (e) { if (!pg.classList.contains('drag')) return; pg.classList.remove('drag'); try { pg.releasePointerCapture(e.pointerId); } catch (x) {} };
+    pg.addEventListener('pointerup', up); pg.addEventListener('pointercancel', up);
+    pg.addEventListener('click', function (e) { e.stopPropagation(); });
+  }
+}
+function loadV(card, eager) { var v = card._v; if (!v) return; var s = card.getAttribute('data-src'); if (v.getAttribute('src') !== s) { v.classList.remove('ready'); v.preload = eager ? 'auto' : 'metadata'; v.src = s; } }
+function unloadV(card) { var v = card._v; if (!v || !v.getAttribute('src')) return; v.pause(); v.classList.remove('ready'); v.removeAttribute('src'); try { v.load(); } catch (e) {} }
+function playV(card) {
+  var v = card._v; if (!v) return;
+  loadV(card, true);
+  v.muted = card.classList.contains('reel') ? !S.sound : true;
+  if (v.readyState < 3) card.classList.add('wait');
+  var p = v.play();
+  if (p && p.catch) p.catch(function () {
+    if (!v.muted) { v.muted = true; S.sound = false; de.classList.remove('sound'); var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {}); }
+  });
+}
+function setActive(card) {
+  if (card === S.active) return;
+  S.active = card;
+  var idx = S.cards.indexOf(card);
+  S.cards.forEach(function (c, i) {
+    c.classList.toggle('above', i < idx); c.classList.toggle('below', i > idx);
+    if (c === card) return;
+    if (c._v) { c._v.pause(); c._userPaused = false; c.classList.remove('paused', 'wait'); }
+    if (Math.abs(i - idx) === 1) loadV(c, false);   // соседей заранее подгружаем (кадр готов к свайпу)
+    else if (Math.abs(i - idx) > 2) unloadV(c);      // дальние выгружаем — iPhone держит мало видео
+  });
+  card._userPaused = false; card.classList.remove('paused');
+  if (card._v) playV(card);
+}
+// активная — карточка, верх которой ближе всего к верху экрана
+function pickActive() {
+  if (T.el) { if (S.cards[T.i]) setActive(S.cards[T.i]); return; }
+  if ((S.viewing && !S.rv) || !S.cards.length) return;
+  var best = null, bd = 1e9;
+  var TOP = S.rv ? 5 : topPx();
+  S.cards.forEach(function (c) { var d = Math.abs(c.getBoundingClientRect().top - TOP); if (d < bd) { bd = d; best = c; } });
+  if (best) setActive(best);
+}
+var sRaf = 0;
+window.addEventListener('scroll', function () {
+  if (S.viewing && !S.rv) { vScroll(); return; }
+  if (sRaf) return; sRaf = requestAnimationFrame(function () { sRaf = 0; pickActive(); });
+}, { passive: true });
+// полоска прогресса у активного рилса
+(function prog() {
+  var c = S.active;
+  if (c && c._v && c._v.duration && (!S.viewing || S.rv)) { var pg = $('.prog', c); if (pg && !pg.classList.contains('drag')) $('i', pg).style.width = (c._v.currentTime / c._v.duration * 100) + '%'; }
+  requestAnimationFrame(prog);
+})();
+// iPhone в энергосбережении не даёт видео стартовать само — первое касание запускает
+document.addEventListener('touchend', function () { var c = S.active; if (c && c._v && c._v.paused && !c._userPaused && (!S.viewing || S.rv)) playV(c); }, { passive: true });
+document.addEventListener('visibilitychange', function () { if (document.hidden) stopPlaying(); else if (S.active && !S.active._userPaused && (!S.viewing || S.rv)) playV(S.active); });
+function stopPlaying() { $$('video').forEach(function (v) { v.pause(); }); }
+
+/* ---------- сетка ---------- */
+function gridHTML(f) {
+  var list = ITEMS.filter(function (it) { return it.type === f && (!S.sub || subOf(it) === S.sub); });
+  if (!list.length) return '<div class="empty">Скоро здесь появятся работы</div>';
+  var w = window.innerWidth, n = w < 760 ? 2 : w < 1100 ? 3 : 4, cols = [], hs = [];
+  for (var i = 0; i < n; i++) { cols.push([]); hs.push(0); }
+  list.forEach(function (it, k) {
+    var r = Math.max(.8, Math.min(1.45, ratio(it.photos[0]))), c = hs.indexOf(Math.min.apply(null, hs));
+    cols[c].push('<a class="tile in" href="#" data-k="' + ITEMS.indexOf(it) + '" style="padding-top:' + (r * 100).toFixed(2) + '%;animation-delay:' + Math.min(k * 45, 450) + 'ms" aria-label="' + esc(it.name) + '">' +
+      '<img src="' + esc(thumb(it.photos[0])) + '" alt="' + esc(it.name) + '" ' + (k > 5 ? 'loading="lazy" ' : '') + 'decoding="async"></a>');
+    hs[c] += r;
+  });
+  S.gridN = n;
+  return '<div class="grid' + (SUBS[f] ? ' has-sub' : '') + '">' + cols.map(function (c) { return '<div class="col">' + c.join('') + '</div>'; }).join('') + '</div>';
+}
+feedEl.addEventListener('click', function (e) { var t = e.target.closest('.tile'); if (!t) return; e.preventDefault(); openView(ITEMS[+t.getAttribute('data-k')]); });
+window.addEventListener('resize', function () {
+  fitPad(); if (T.el) { trkPin(); trkApply(T.y, 0); }
+  if (!S.viewing && S.feed && S.feed !== 'REELS' && S.feed !== 'Комплекс') { var w = window.innerWidth, n = w < 760 ? 2 : w < 1100 ? 3 : 4; if (n !== S.gridN) feedEl.innerHTML = gridHTML(S.feed); }
+});
+
+/* ---------- просмотр изделия («как лента»): фото одно под другим, ниже — описание и цена ---------- */
+function openView(it) {
+  if (!it) return;
+  S.viewing = true; S.feedY = window.scrollY; stopPlaying();
+  var media = it.photos.map(function (p) {
+    var r = ratio(p);
+    return '<div class="vm" style="aspect-ratio:1/' + r + ';background-image:url(\'' + esc(thumb(p)) + '\')"><img src="' + esc(p) + '" alt="' + esc(it.name) + '" decoding="async"></div>';
+  }).concat(it.videos.map(function (vv) {
+    return '<div class="vm vid" style="background-image:url(\'' + esc(reelPoster(vv.src)) + '\')"><video muted playsinline loop preload="metadata" data-src="' + esc(vv.src) + '"></video>' +
+      '<span class="play-ico">' + PLAY + '</span><span class="spin"></span><button class="snd" aria-label="Звук">' + SND_OFF + SND_ON + '</button></div>';
+  }));
+  var sub = [it.project !== it.name ? it.project : '', it.address].filter(Boolean).join(' · ');
+  viewEl.innerHTML = '<div class="vtrk"><div class="vl">' + media.join('') + '</div><div class="vpanel"><h1>' + esc(it.name) + '</h1>' + (sub ? '<div class="sub">' + esc(sub) + '</div>' : '') +
+    (it.text ? '<p>' + esc(it.text) + '</p>' : '') +
+    '<dl class="specs"><dt>Корпус</dt><dd>' + esc(it.korpus) + '</dd><dt>Фасады</dt><dd>' + esc(it.fasady) + '</dd><dt>Фурнитура</dt><dd>' + esc(it.furn) + '</dd></dl>' +
+    (it.price ? '<div class="price">' + esc(it.price) + '</div><div class="pdate">Цена на ' + esc(it.priceDate || 'октябрь 2026') + '</div>' : '') +
+    '<div class="btns"><a class="btn main" href="home.html#calc">Хочу такую же</a>' + (it.href ? '<a class="btn sec" href="' + esc(it.href) + '">Открыть весь проект</a>' : '') + '</div></div></div>';
+  S.vms = $$('.vm', viewEl);
+  $$('.vm.vid', viewEl).forEach(function (box) {
+    var v = $('video', box); v.muted = true;
+    v.addEventListener('playing', function () { box.classList.remove('wait'); });
+    v.addEventListener('waiting', function () { box.classList.add('wait'); });
+    box.addEventListener('click', function (e) {
+      if (e.target.closest('.snd')) { v.muted = !v.muted; de.classList.toggle('sound', !v.muted); if (v.paused) v.play().catch(function () {}); return; }
+      if (v.paused) { box.classList.remove('paused'); v.play().catch(function () {}); } else { v.pause(); box.classList.add('paused'); }
+    });
+  });
+  try { history.pushState({ mgsView: 1 }, ''); S.pushed = true; } catch (e) { S.pushed = false; }
+  killMomentum(); cancelAnimationFrame(P.anim); P.animating = false; P.cur = 0;
+  de.classList.add('viewing'); de.classList.remove('vfree');
+  trkSet($('.vtrk', viewEl), 'view'); trkApply(0, 0);   // «сдвиг»: фото листаются сдвигом, описание — свободно
+}
+function vScroll() {
+  var vms = S.vms || []; if (!vms.length) return;
+  var y = T.mode === 'view' ? T.y : window.scrollY, i = 0, bd = 1e9;
+  de.classList.toggle('vfree', y > trkOff(vms.length - 1) + 40);   // на описании прячем счётчик
+  vms.forEach(function (m, k) { var d = Math.abs(trkOff(k) - y); if (d < bd) { bd = d; i = k; } });
+  $('#vcount').textContent = (i + 1) + ' / ' + vms.length;
+  // видео в просмотре: играет только то, что на экране
+  vms.forEach(function (m, k) { var v = $('video', m); if (!v) return;
+    if (k === i && !m.classList.contains('paused')) { if (!v.getAttribute('src')) { v.src = v.getAttribute('data-src'); m.classList.add('wait'); } v.play().catch(function () {}); }
+    else if (!v.paused) v.pause(); });
+}
+function closeView(fromPop) {
+  if (!S.viewing) return;
+  S.viewing = false; stopPlaying();
+  $$('video', viewEl).forEach(function (v) { v.removeAttribute('src'); try { v.load(); } catch (e) {} });
+  viewEl.innerHTML = ''; S.vms = [];
+  killMomentum(); cancelAnimationFrame(P.anim); P.animating = false;
+  var wasRv = S.rv;
+  if (wasRv) { S.rv = false; S.cards = S.feedCards || []; S.active = null; }
+  de.classList.remove('viewing', 'vfree', 'rv');
+  if (wasRv) { trkSet($('.lenta', feedEl)); trkGo(S.feedIdx || 0, 0); } else trkSet(null);
+  jump(S.feedY); var fy = S.feedY; P.cur = Math.max(0, S.cards.indexOf(S.active)); requestAnimationFrame(function () { if (Math.abs(window.scrollY - fy) > 2) jump(fy); });
+  if (!fromPop && S.pushed) { S.pushed = false; history.back(); }
+  S.pushed = false;
+}
+$('#vclose').addEventListener('click', function () { closeView(false); });
+window.addEventListener('popstate', function () { if (S.viewing) { S.pushed = false; closeView(true); } });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeView(false); });
+window.addEventListener('hashchange', function () { var h = ''; try { h = decodeURIComponent(location.hash.slice(1)); } catch (e) {} if (h && FEEDS.indexOf(h) >= 0 && h !== S.feed) setFeed(h); });
+
+/* ---------- меню ---------- */
+(function () {
+  var m = $('#menu'), b = $('#menuBtn');
+  var set = function (o) { if (o) { m.hidden = false; void m.offsetWidth; } else m.hidden = true; m.classList.toggle('open', o); b.classList.toggle('open', o); de.classList.toggle('menu-open', o); };
+  b.addEventListener('click', function () { set(!m.classList.contains('open')); });
+  $$('a', m).forEach(function (a) { a.addEventListener('click', function (e) { if (a.classList.contains('active')) e.preventDefault(); set(false); }); });
+})();
+
+/* ---------- старт ---------- */
+try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; if (history.state && history.state.mgsView) history.replaceState(null, ''); } catch (e) {}
+var h0 = ''; try { h0 = decodeURIComponent(location.hash.slice(1)); } catch (e) {}
+var startFeed = function () { setFeed(FEEDS.indexOf(h0) >= 0 ? h0 : 'REELS', true); };
+if (window.MGS_RATIOS) startFeed(); else { var t0 = Date.now(), w = function () { if (window.MGS_RATIOS || Date.now() - t0 > 1500) startFeed(); else setTimeout(w, 30); }; w(); }
+window.MGS_TEST = S; S.T = T;  // для автопроверок
+})();
+</script>
+
+</body>
+</html>

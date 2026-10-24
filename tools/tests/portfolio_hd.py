@@ -12,6 +12,7 @@ for f in sorted(set(re.findall(r'assets/[\w-]+\.mp4', open('portfolio-hd.html').
         if not os.path.exists(out): subprocess.run(['ffmpeg','-nostdin','-loglevel','error','-y','-t','6','-i',f,'-vf','scale=270:-2','-c:v','libvpx','-b:v','300k','-an',out])
 URL=sys.argv[1] if len(sys.argv)>1 else 'http://localhost:8812/portfolio-hd.html'
 fails=[]
+Y0=160 if 'hd2' in URL else 0   # hd2: при «сдвиге» страница стоит прокрученной на запас (контент под часами)
 def ok(c,msg):
     print(('OK   ' if c else 'FAIL ')+msg)
     if not c: fails.append(msg)
@@ -45,7 +46,7 @@ with sync_playwright() as p:
     ok(J("MGS_TEST.cards[0].getBoundingClientRect().top")>50,'первое превью — с отступом под шапкой')
     pg.wait_for_timeout(800); ok(st()['playing']==[0],'в ленте играет только первое превью')
     tf=J(TF); swipe(-140, 500); s=st()
-    ok(s['act']==1 and s['ti']==1 and abs(top(1)-tf)<2 and s['y']==0,'лента превью: свайп → следующее встаёт под шапку, страница не прокручивается (%.0f/%.0f)'%(top(1),tf))
+    ok(s['act']==1 and s['ti']==1 and abs(top(1)-tf)<2 and s['y']==Y0,'лента превью: свайп → следующее встаёт под шапку, страница не прокручивается (%.0f/%.0f)'%(top(1),tf))
     ok(J("document.documentElement.classList.contains('trk')") and 'translate3d' in J("document.querySelector('#feed .lenta').style.transform"),'лента едет сдвигом (transform), а не прокруткой')
     swipe(200, 500); ok(st()['ti']==0 and abs(top(0)-tf)<2,'свайп вниз — назад к первому')
     # касание превью → полноценная рилс-лента
@@ -57,7 +58,7 @@ with sync_playwright() as p:
     ok(s2['playing']==[0] and s2['t']>0.3,'играет только первый рилс (t=%.1f)'%(s2['t'] or 0))
     ok(set(s2['loaded'])<= {0,1},'загружены только текущий и следующий: %s'%s2['loaded'])
     swipe(-150, 500); s=st()
-    ok(s['act']==1 and abs(top(1)-5)<2 and s['y']==0,'медленный свайп → доезжает до 2-го (верх %.0f)'%top(1))
+    ok(s['act']==1 and abs(top(1)-5)<2 and s['y']==Y0,'медленный свайп → доезжает до 2-го (верх %.0f)'%top(1))
     swipe(-70, 20, n=2)
     ok(st()['ti']==2 and abs(top(2)-5)<2,'быстрый короткий флик (70 px) — к следующему')
     swipe(-40, 700)
@@ -126,13 +127,13 @@ with sync_playwright() as p:
     J("scrollTo(0,700)"); pg.wait_for_timeout(400); y0=J("scrollY")
     t=J("(()=>{const t=[...document.querySelectorAll('.tile')].find(e=>e.getBoundingClientRect().top>60);const r=t.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()")
     pg.touchscreen.tap(t[0],t[1]); pg.wait_for_timeout(1000)
-    ok(J("document.documentElement.classList.contains('viewing')") and J("scrollY")==0,'касание плитки — просмотр изделия сверху')
+    ok(J("document.documentElement.classList.contains('viewing')") and J("scrollY")==Y0,'касание плитки — просмотр изделия сверху')
     ok(J("document.getElementById('vcount').textContent").startswith('1 /'),'счётчик фото: '+J("document.getElementById('vcount').textContent"))
     pg.screenshot(path=D+'h_v.png')
     ok(J("document.documentElement.classList.contains('trk') && MGS_TEST.T.mode")=='view','просмотр изделия листается сдвигом')
     swipe(-150,500)
     vt=J("document.querySelectorAll('.vm')[1].getBoundingClientRect().top")
-    ok(abs(vt-5)<2 and J("document.getElementById('vcount').textContent").startswith('2 /') and J("scrollY")==0,'в просмотре свайп → следующее фото встаёт к верху (%.0f)'%vt)
+    ok(abs(vt-5)<2 and J("document.getElementById('vcount').textContent").startswith('2 /') and J("scrollY")==Y0,'в просмотре свайп → следующее фото встаёт к верху (%.0f)'%vt)
     swipe(150,500); ok(J("document.getElementById('vcount').textContent").startswith('1 /'),'свайп вниз — к предыдущему фото')
     for k in range(6): swipe(-150,400)
     ok(J("document.documentElement.classList.contains('vfree')"),'после последнего фото — описание')
