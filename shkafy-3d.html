@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Прихожая — шкафы в 3D · MGS Mebel</title>
+<link rel="preload" href="assets/fonts/onest-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--bg:#0f0e0c;--panel:#151311;--chip:#26221f;--chip-h:#322d29;--text:#f4f1ec;--muted:#a89f92;--ink:#1c1a17;--accent:#bfd630;--line:rgba(244,241,236,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:Onest,system-ui,sans-serif;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100svh}
+header{padding:14px 16px 10px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+h1{font-weight:300;font-size:22px;letter-spacing:.01em}
+h1 b{font-weight:500;color:var(--accent)}
+.sub{font-size:13px;color:var(--muted)}
+#wrap{position:relative;flex:1;min-height:420px;margin:0 10px;border-radius:14px;overflow:hidden;background:var(--panel)}
+#wrap canvas{display:block;touch-action:none}
+#lab{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.dl{position:absolute;transform:translate(-50%,-50%);font-size:11px;line-height:1.25;padding:3px 6px;border-radius:6px;background:rgba(21,19,17,.88);color:var(--text);border:1px solid rgba(133,183,235,.55);white-space:nowrap;text-align:center}
+.dl.w{color:#d3d1c7;border-color:rgba(244,241,236,.25)}
+.dl.r{color:#f09595;border-color:rgba(226,75,74,.7)}
+.dl.g{color:#9fe1cb;border-color:rgba(29,158,117,.7)}
+.dl.a{color:#fac775;border-color:rgba(186,117,23,.8)}
+.dl.i{color:var(--ink);background:var(--accent);border-color:var(--accent)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;padding:12px 10px 6px}
+.chip{height:32px;padding:0 14px;border-radius:16px;border:0;background:var(--chip);color:var(--text);font:inherit;font-size:13px;cursor:pointer;transition:background .15s}
+.chip:hover{background:var(--chip-h)}
+.chip.on{background:var(--text);color:var(--ink)}
+.leg{display:flex;flex-wrap:wrap;gap:14px;padding:4px 16px calc(14px + env(safe-area-inset-bottom));font-size:12px;color:var(--muted)}
+.leg span{display:inline-flex;align-items:center;gap:6px}
+.leg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.hint{position:absolute;right:12px;bottom:10px;font-size:11px;color:var(--muted);pointer-events:none}
+@media (max-width:600px){h1{font-size:19px}.dl{font-size:10px;padding:2px 5px}}
+</style>
+<script type="importmap">{"imports":{"three":"./assets/three/three.module.min.js"}}</script>
+</head>
+<body>
+<header>
+  <h1>Прихожая — <b>шкафы в 3D</b></h1>
+  <span class="sub">По замеру · зеркальный шкаф + шкаф «дерево», стык 90° без накладки</span>
+</header>
+<div id="wrap"><div id="lab"></div><div class="hint">Крутить — пальцем/мышью · зум — щипок/колесо</div></div>
+<div class="bar">
+  <button class="chip" id="bf">Открыть фасады</button>
+  <button class="chip on" id="bd">Размеры</button>
+  <button class="chip on" id="ba">Углы</button>
+  <button class="chip" id="bv1">От входа</button>
+  <button class="chip" id="bv3">Левый шкаф</button>
+  <button class="chip" id="bv4">Правый шкаф</button>
+  <button class="chip" id="bv2">Сверху</button>
+</div>
+<div class="leg">
+  <span><i style="background:#BA7517"></i>Углы стен (верх / середина / низ)</span>
+  <span><i style="background:#1D9E75"></i>Углы шкафов</span>
+  <span><i style="background:#EF9F27"></i>Щитки, розетки</span>
+  <span><i style="background:#E24B4A"></i>Заход на дверь</span>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from './assets/three/OrbitControls.js';
+
+const W = document.getElementById('wrap'), L = document.getElementById('lab');
+const R = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+R.setPixelRatio(Math.min(devicePixelRatio, 2));
+W.insertBefore(R.domElement, L);
+const S = new THREE.Scene();
+const C = new THREE.PerspectiveCamera(45, 1, 0.05, 50);
+const ctl = new OrbitControls(C, R.domElement); ctl.enableDamping = true;
+S.add(new THREE.AmbientLight(0xffffff, 1.9));
+const dl = new THREE.DirectionalLight(0xffffff, 1.5); dl.position.set(4, 6, 5); S.add(dl);
+
+const H = 2.871, T = 0.016, A = 2 * Math.PI / 180, ca = Math.cos(A), sa = Math.sin(A);
+const P0x = 1.828 - 1.827 * ca, P0z = -1.827 * sa;   // угол А–Б (стена Б под 88° к В)
+const fronts = [];
+function mk(w, h, d, color, op) {
+  const g = new THREE.BoxGeometry(w, h, d);
+  const m = new THREE.MeshLambertMaterial({ color, transparent: op < 1, opacity: op });
+  const b = new THREE.Mesh(g, m);
+  b.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0x5F5E5A, transparent: true, opacity: 0.5 })));
+  return b;
+}
+function lb(g, u1, u2, y1, y2, w1, w2, color, cat, op) {
+  const b = mk(u2 - u1, y2 - y1, w2 - w1, color, op || 1);
+  b.position.set((u1 + u2) / 2, (y1 + y2) / 2, (w1 + w2) / 2); g.add(b);
+  if (cat === 'f') fronts.push(b); return b;
+}
+const box = (x1, x2, y1, y2, z1, z2, color, op) => lb(S, x1, x2, y1, y2, z1, z2, color, null, op);
+const G = new THREE.Group(); G.position.set(P0x, 0, P0z); G.rotation.y = -A; S.add(G);
+const wP = (u, y, v) => new THREE.Vector3(P0x + u * ca - v * sa, y, P0z + u * sa + v * ca);
+
+// помещение
+box(-0.6, 3.8, -0.02, 0, -2.6, 1.6, 0xD9C3A0);
+const wc = 0xF1EFE8, am = 0xEF9F27;
+lb(G, 0, 1.827, 0, H, -0.1, 0, wc);                    // стена Б
+lb(G, -0.1, 0, 0, H, 0, 0.618, wc);                    // стена А
+lb(G, 0.158, 0.556, 1.415, 1.95, 0, 0.04, 0x2C2C2A);   // чёрная панель
+lb(G, 1.421, 1.503, 2.115, 2.197, 0, 0.02, am);        // розетка Б, h 2155
+lb(G, 0, 0.02, 1.217, 1.484, 0.217, 0.484, am);        // щиток на А
+box(1.728, 1.828, 0, H, -2.276, 0, wc);                // стена В
+box(1.828, 2.413, 0, H, -2.376, -2.276, wc);           // стена Г до двери
+box(2.413, 3.213, 2.125, H, -2.376, -2.276, wc);       // над дверью
+box(3.213, 3.8, 0, H, -2.376, -2.276, wc);
+box(2.41, 2.43, 0, 2.125, -2.376, -2.276, 0x2C2C2A);   // откос двери
+box(1.808, 1.828, 0.224, 0.304, -2.058, -1.978, am);   // розетка В, h 264
+box(2.413, 2.452, 0, 2.2, -2.276, -2.2, 0xE24B4A, 0.85); // заход на проём
+box(0.002, 0.020, 0, 2.861, 0, 0.504, 0x888780);       // добор у стены А
+
+function carcass(g, u1, u2, y1, y2, D, col, back, plinth) {
+  lb(g, u1, u1 + T, y1, y2, 0, D, col); lb(g, u2 - T, u2, y1, y2, 0, D, col);
+  lb(g, u1 + T, u2 - T, y1, y1 + T, 0, D, col); lb(g, u1 + T, u2 - T, y2 - T, y2, 0, D, col);
+  if (back) lb(g, u1 + T, u2 - T, y1 + T, y2 - T, 0, 0.004, 0xE6E1D6);
+  if (plinth) lb(g, u1, u2, 0, y1, D - 0.06, D - 0.044, 0x5F5E5A);
+}
+function rail(g, u1, u2, y, w) {
+  const c = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, u2 - u1 - 0.01, 12), new THREE.MeshLambertMaterial({ color: 0x444441 }));
+  c.rotation.z = Math.PI / 2; c.position.set((u1 + u2) / 2, y, w); g.add(c);
+}
+function column(g, u1, u2, yb, yt, D, col, items, back) {
+  if (back) lb(g, u1, u2, yb, yt, 0, 0.004, 0xE6E1D6);
+  const n = items.length; let sum = 0; items.forEach(i => sum += i[0]);
+  const sc = (yt - yb - (n - 1) * T) / sum; let y = yb;
+  items.forEach((it, i) => {
+    const h = it[0] * sc;
+    if (it[1] === 'd') { lb(g, u1 + 0.004, u2 - 0.004, y + 0.004, y + h - 0.004, D - 0.03, D - 0.012, 0xB4B2A9); lb(g, u1 + 0.02, u2 - 0.02, y + 0.01, y + h * 0.7, 0.03, D - 0.03, 0xD3D1C7); }
+    if (it[1] === 'h') rail(g, u1, u2, y + h - 0.07, D / 2);
+    y += h;
+    if (i < n - 1) { lb(g, u1, u2, y, y + T, 0.004, D - 0.004, col); y += T; }
+  });
+}
+const div = (g, um, yb, yt, D, col) => lb(g, um - T / 2, um + T / 2, yb, yt, 0.004, D - 0.004, col);
+const yb = 0.066, yt = 2.305;
+
+// правый шкаф «дерево», вдоль стены В
+const GR = new THREE.Group(); GR.position.set(1.828, 0, 0); GR.rotation.y = Math.PI / 2; S.add(GR);
+const wd = 0xC79A6B, wood = 0xA0612E, DR = 0.6;
+carcass(GR, 0, 1.135, 0.05, 2.321, DR, wd, false, true);
+carcass(GR, 1.135, 2.270, 0.05, 2.321, DR, wd, false, true);
+carcass(GR, 0, 1.135, 2.321, 2.821, DR, wd, true);
+carcass(GR, 1.135, 2.270, 2.321, 2.821, DR, wd, true);
+column(GR, 0.016, 1.119, yb, 0.796, DR, wd, [[350, 'd'], [350, 'd']], true);
+lb(GR, 0.016, 1.119, 0.796, 0.812, 0.004, DR - 0.004, wd);
+div(GR, 0.5675, 0.812, yt, DR, wd);
+column(GR, 0.016, 0.5595, 0.812, yt, DR, wd, [[584], [421], [421]], true);
+column(GR, 0.5755, 1.119, 0.812, yt, DR, wd, [[584], [421], [421]], true);
+div(GR, 1.7025, yb, yt, DR, wd);
+column(GR, 1.151, 1.6945, yb, yt, DR, wd, [[990, 'h'], [1233, 'h']], true);
+column(GR, 1.7105, 2.254, yb, yt, DR, wd, [[359], [360], [360], [360], [360], [360]], true);
+for (let i = 0; i < 4; i++) { const a = i * 0.5675, b = a + 0.5655; lb(GR, a, b, 0.01, 2.321, DR, DR + 0.02, wood, 'f'); lb(GR, a, b, 2.323, 2.861, DR, DR + 0.02, wood, 'f'); }
+
+// левый зеркальный шкаф, вдоль стены Б, под 90° к правому
+const GL = new THREE.Group(); GL.position.set(0.020, 0, 0); S.add(GL);
+const mc = 0xE8E6E0, mir = 0xC9D6DF, DL = 0.484;
+carcass(GL, 0, 1.214, 0.05, 2.321, DL, mc, false, true);
+carcass(GL, 1.214, 2.428, 0.05, 2.321, DL, mc, false, true);
+carcass(GL, 0, 1.214, 2.321, 2.821, DL, mc, true);
+carcass(GL, 1.214, 2.428, 2.321, 2.821, DL, mc, true);
+div(GL, 0.607, yb, yt, DL, mc); div(GL, 1.821, yb, yt, DL, mc);
+column(GL, 0.016, 0.599, yb, yt, DL, mc, [[400], [150, 'd'], [1283], [200]], false);
+column(GL, 0.615, 1.198, yb, yt, DL, mc, [[300], [1420, 'h'], [399]], false);
+column(GL, 1.230, 1.813, yb, yt, DL, mc, [[280, 'd'], [200, 'd'], [200, 'd'], [200, 'd'], [200, 'd'], [577], [200]], true);
+column(GL, 1.829, 2.412, yb, yt, DL, mc, [[360], [360], [360], [360], [360], [360]], true);
+lb(GL, -0.003, 0, 1.217, 1.484, 0.217, 0.484, am, null, 0.7);   // люк в боковине
+const fw = 2.428 / 4;
+for (let i = 0; i < 4; i++) { const a = i * fw, b = a + fw - 0.002; lb(GL, a, b, 0.01, 2.321, DL, DL + 0.02, mir, 'f'); lb(GL, a, b, 2.323, 2.861, DL, DL + 0.02, mir, 'f'); }
+
+// размеры, углы, подписи
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const dims = new THREE.Group(), angs = new THREE.Group(); S.add(dims); S.add(angs);
+const labs = [];
+function mkLab(p, txt, cls, grp, n) { const el = document.createElement('div'); el.className = 'dl' + (cls ? ' ' + cls : ''); el.innerHTML = txt; L.appendChild(el); labs.push({ el, p, grp, n }); }
+function dim(a, b, txt, cls, tick) {
+  const n = tick || V(0, 0.05, 0);
+  const pts = [a, b, a.clone().sub(n), a.clone().add(n), b.clone().sub(n), b.clone().add(n)];
+  dims.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: cls === 'w' ? 0xB4B2A9 : 0x85B7EB })));
+  if (txt) mkLab(a.clone().add(b).multiplyScalar(0.5), txt, cls, 'd');
+}
+function arc(cx, cz, y, t1, t2, r, col, txt, cls, lr) {
+  const pts = [V(cx, y, cz)];
+  for (let i = 0; i <= 24; i++) { const t = (t1 + (t2 - t1) * i / 24) * Math.PI / 180; pts.push(V(cx + r * Math.cos(t), y, cz + r * Math.sin(t))); }
+  pts.push(V(cx, y, cz));
+  angs.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: col })));
+  const tm = ((t1 + t2) / 2) * Math.PI / 180;
+  mkLab(V(cx + lr * Math.cos(tm), y, cz + lr * Math.sin(tm)), txt, cls, 'a');
+}
+const tx = V(0.05, 0, 0), tz = V(0, 0, 0.05);
+dim(wP(0, 2.98, -0.05), wP(1.827, 2.98, -0.05), 'Стена Б 1827', 'w');
+dim(V(1.78, 2.98, -2.276), V(1.78, 2.98, 0), 'Стена В 2274', 'w', tx);
+dim(V(1.828, 2.98, -2.2), V(2.413, 2.98, -2.2), 'Г 585 до двери', 'w');
+dim(V(3.5, 0, -2.2), V(3.5, H, -2.2), 'Потолок 2871', 'w', tx);
+dim(V(0.02, 0.03, 0.85), V(2.448, 0.03, 0.85), 'Левый корпус 2428', null, tz);
+dim(V(2.75, 0.03, -2.270), V(2.75, 0.03, 0), 'Правый 2270', null, tx);
+dim(V(0.6, 2.9, 0), V(0.6, 2.9, 0.504), 'Глубина 504', null, tx);
+dim(V(1.828, 2.9, -1.2), V(2.448, 2.9, -1.2), 'Глубина 620', null, tz);
+dim(V(2.6, 0, 0.7), V(2.6, 2.321, 0.7), 'Корпус 2321', null, tx);
+dim(V(2.6, 2.321, 0.7), V(2.6, 2.821, 0.7), 'Антресоль 500', null, tx);
+dim(V(2.85, 2.821, 0.7), V(2.85, H, 0.7), 'Зазор 50', null, tx);
+mkLab(V(2.47, 2.35, -2.24), 'Заход на проём ~35', 'r', 'd');
+const AY = H + 0.01;
+arc(P0x, P0z, AY, 2, 92, 0.3, 0xBA7517, 'А–Б<br>90° / 89,9° / 90,2°', 'a', 0.65);
+arc(1.828, 0, AY, 182, 270, 0.3, 0xBA7517, 'Б–В внешний<br>88° / 88,1° / 88,2°', 'a', 0.7);
+arc(1.828, -2.276, AY, 0, 90, 0.3, 0xBA7517, 'В–Г<br>89,9° / 90,1° / 90,1°', 'a', 0.7);
+arc(2.448, 0.504, 2.87, 180, 270, 0.25, 0x1D9E75, 'Стык шкафов 90°', 'g', 0.55);
+mkLab(V(0.35, 3.12, 0.25), 'Клин к стене Б 2°: 0 → 64 мм', 'g', 'a');
+const NZ = V(0, 0, 1), NX = V(1, 0, 0);
+mkLab(V(0.36, 1.68, 0.3), 'Эл. щиток, без ЗС', 'i', 'i', NZ);
+mkLab(V(1.48, 2.2, 0.3), 'Розетка h 2155', 'i', 'i', NZ);
+mkLab(V(0.95, 1.3, 0.3), 'Штанга', 'i', 'i', NZ);
+mkLab(V(1.52, 0.6, 0.3), '5 ящиков', 'i', 'i', NZ);
+mkLab(V(2.5, 0.45, -0.56), 'Ящики Blum', 'i', 'i', NX);
+mkLab(V(2.5, 1.3, -1.42), 'Штанги 1233 / 990', 'i', 'i', NX);
+mkLab(V(2.5, 0.27, -2.02), 'Розетка h 264', 'i', 'i', NX);
+
+let showD = true, showA = true, open = false;
+const v = new THREE.Vector3();
+function place() {
+  const w = W.clientWidth, h = W.clientHeight;
+  labs.forEach(l => {
+    const on = l.grp === 'a' ? showA : (l.grp === 'i' ? open : showD);
+    if (!on) { l.el.style.display = 'none'; return; }
+    if (l.n && C.position.clone().sub(l.p).dot(l.n) < 0.3) { l.el.style.display = 'none'; return; }
+    v.copy(l.p).project(C);
+    if (v.z > 1) { l.el.style.display = 'none'; return; }
+    l.el.style.display = 'block';
+    l.el.style.left = ((v.x + 1) / 2 * w) + 'px';
+    l.el.style.top = ((1 - v.y) / 2 * h) + 'px';
+  });
+}
+function cam(px, py, pz, x, y, z) { C.position.set(px, py, pz); ctl.target.set(x, y, z); ctl.update(); }
+const narrow = () => W.clientWidth < 600;
+const views = {
+  v1: () => narrow() ? cam(6.4, 3.6, 5.2, 1.2, 1.4, -0.4) : cam(4.9, 3.0, 3.9, 1.2, 1.4, -0.4),
+  v2: () => cam(1.4, narrow() ? 11 : 8, 0.01, 1.4, 0, -0.6),
+  v3: () => cam(1.23, 1.45, narrow() ? 6.4 : 4.2, 1.23, 1.45, 0),
+  v4: () => cam(narrow() ? 7.6 : 5.6, 1.45, -1.13, 2, 1.45, -1.13),
+};
+function resize() {
+  const w = W.clientWidth, h = W.clientHeight;
+  R.setSize(w, h); C.aspect = w / h; C.updateProjectionMatrix();
+}
+resize(); views.v1();
+addEventListener('resize', resize);
+
+const $ = id => document.getElementById(id);
+$('bf').onclick = function () { open = !open; fronts.forEach(f => f.visible = !open); this.textContent = open ? 'Закрыть фасады' : 'Открыть фасады'; this.classList.toggle('on', open); };
+$('bd').onclick = function () { showD = !showD; dims.visible = showD; this.classList.toggle('on', showD); };
+$('ba').onclick = function () { showA = !showA; angs.visible = showA; this.classList.toggle('on', showA); };
+['v1', 'v2', 'v3', 'v4'].forEach(k => $('b' + k).onclick = views[k]);
+
+(function loop() { requestAnimationFrame(loop); ctl.update(); R.render(S, C); place(); })();
+</script>
+</body>
+</html>
