@@ -1,0 +1,12 @@
+newmtl wall
+Kd 0.863 0.863 0.843
+
+newmtl floor
+Kd 0.667 0.549 0.392
+
+newmtl socket
+Kd 0.863 0.118 0.118
+
+newmtl water
+Kd 0.118 0.353 0.863
+

@@ -1,0 +1,15 @@
+newmtl wall
+Kd 0.882 0.871 0.831
+
+newmtl floor
+Kd 0.667 0.549 0.392
+
+newmtl socket
+Kd 0.863 0.118 0.118
+
+newmtl panel
+Kd 0.980 0.980 0.980
+
+newmtl dark
+Kd 0.118 0.118 0.118
+
