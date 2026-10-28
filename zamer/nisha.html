@@ -39,13 +39,30 @@ button,input{font:inherit;color:inherit}
   .wrap.two{flex:1;min-height:0;max-width:none;margin:0;width:100%;display:flex;gap:10px;padding:10px max(10px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
   .wrap.two .stage{flex:1;height:100%;display:grid;place-items:center;background:#111}
   .wrap.two .stage img{height:100%}
-  .wrap.two #panel{width:330px;flex:none;height:100%;overflow-y:auto;display:grid;gap:10px;align-content:start;-webkit-overflow-scrolling:touch}
+  .wrap.two #panel{width:300px;flex:none;height:100%;overflow-y:auto;display:grid;gap:10px;align-content:start;-webkit-overflow-scrolling:touch}
   .wrap.two.res #panel{width:min(460px,44vw)}
   .wrap.two #panel .card{padding:14px}
   .wrap.two #panel h1{font-size:19px}
   .wrap.two #panel .big input{font-size:26px;padding:8px 12px}
   .wrap.two .views{grid-template-columns:1fr}
   .wrap.two .stage .tip{left:50%;right:auto;transform:translateX(-50%);max-width:90%;font-size:15px}
+}
+/* телефон, повёрнутый горизонтально: панель узкая, шапка тонкая — фото как можно больше */
+@media (min-width:700px) and (max-height:520px){
+  html.full .top{padding-top:4px;padding-bottom:4px}
+  html.full .top .logo{font-size:13px}
+  html.full .steps{margin-top:4px}
+  .wrap.two{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom));gap:6px}
+  .wrap.two #panel{width:250px}
+  .wrap.two.res #panel{width:min(400px,46vw)}
+  .wrap.two #panel .card{padding:10px}
+  .wrap.two #panel h1{font-size:16px;margin-bottom:4px}
+  .wrap.two #panel h2{font-size:14px}
+  .wrap.two #panel .hint{font-size:12.5px;margin-bottom:8px}
+  .wrap.two #panel .big input{font-size:22px;padding:6px 10px}
+  .wrap.two #panel .btn{padding:9px 12px}
+  .wrap.two #panel .bar{margin-top:8px}
+  .wrap.two .stage .tip{top:6px;bottom:auto;font-size:13px;padding:6px 10px}
 }
 /* планшет вертикально: фото сверху на всю ширину, панель снизу */
 @media (min-width:700px) and (orientation:portrait){
