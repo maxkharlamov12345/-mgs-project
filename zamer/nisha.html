@@ -25,10 +25,35 @@ button,input{font:inherit;color:inherit}
 .steps i.on{background:var(--acc)}
 .steps i.cur{background:#f4f1ec}
 .wrap{max-width:980px;margin:0 auto;padding:12px max(12px,env(safe-area-inset-right)) 140px max(12px,env(safe-area-inset-left));display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
-@media (min-width:860px){.wrap.two{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}.wrap.two .stage{position:sticky;top:78px}}
 .stage{position:relative;min-width:0;background:#222;border-radius:16px;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.stage .fit{position:relative}
 .stage img{display:block;width:100%;height:auto}
 .stage svg{position:absolute;inset:0;width:100%;height:100%}
+/* Планшет и ПК: фото на весь экран, справа компактная панель с вопросом */
+@media (min-width:700px){
+  html.full,html.full body{height:100%;overflow:hidden}
+  html.full body{display:flex;flex-direction:column}
+  html.full .top{position:relative;padding-top:calc(env(safe-area-inset-top) + 6px);padding-bottom:6px}
+  html.full .steps{max-width:none;margin-top:6px}
+  html.full .top .r{max-width:none}
+  .wrap.two{flex:1;min-height:0;max-width:none;margin:0;width:100%;display:flex;gap:10px;padding:10px max(10px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+  .wrap.two .stage{flex:1;height:100%;display:grid;place-items:center;background:#111}
+  .wrap.two .stage img{height:100%}
+  .wrap.two #panel{width:330px;flex:none;height:100%;overflow-y:auto;display:grid;gap:10px;align-content:start;-webkit-overflow-scrolling:touch}
+  .wrap.two.res #panel{width:min(460px,44vw)}
+  .wrap.two #panel .card{padding:14px}
+  .wrap.two #panel h1{font-size:19px}
+  .wrap.two #panel .big input{font-size:26px;padding:8px 12px}
+  .wrap.two .views{grid-template-columns:1fr}
+  .wrap.two .stage .tip{left:50%;right:auto;transform:translateX(-50%);max-width:90%;font-size:15px}
+}
+/* планшет вертикально: фото сверху на всю ширину, панель снизу */
+@media (min-width:700px) and (orientation:portrait){
+  .wrap.two{flex-direction:column}
+  .wrap.two #panel,.wrap.two.res #panel{width:auto;height:auto;max-height:38%;flex:none}
+  .wrap.two.res #panel{max-height:55%}
+  .wrap.two .stage{height:auto;flex:1;min-height:0}
+}
 .stage .tip{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(21,19,17,.86);color:#f4f1ec;border-radius:12px;padding:9px 12px;font-size:14px;pointer-events:none}
 .stage .tip b{color:var(--acc)}
 .card{background:var(--card);border-radius:16px;padding:16px;min-width:0}
@@ -223,14 +248,23 @@ table.t th{color:var(--mute);font-weight:500}
 
   /* ---------- фото и разметка ---------- */
   function stageHTML(tip) {
-    return '<div class="stage" id="stage"><img id="ph" src="' + esc(N.photo) + '" alt="Фото ниши"><svg id="ov"></svg>' + (tip ? '<div class="tip">' + tip + '</div>' : '') + '</div>';
+    return '<div class="stage" id="stage"><div class="fit" id="fit"><img id="ph" src="' + esc(N.photo) + '" alt="Фото ниши"><svg id="ov"></svg></div>' + (tip ? '<div class="tip">' + tip + '</div>' : '') + '</div>';
   }
+  /* на планшете фото вписывается в экран целиком */
+  function fit() {
+    var st = $('#stage'), f = $('#fit'), img = $('#ph'); if (!st || !f || !img || !img.naturalWidth) return;
+    if (window.innerWidth < 700) { f.style.width = ''; f.style.height = ''; return; }
+    var s = Math.min(st.clientWidth / img.naturalWidth, st.clientHeight / img.naturalHeight);
+    f.style.width = Math.floor(img.naturalWidth * s) + 'px'; f.style.height = Math.floor(img.naturalHeight * s) + 'px';
+  }
+  window.addEventListener('resize', fit);
   var CN = ['левый верхний', 'правый верхний', 'правый нижний', 'левый нижний'];
   function drawOverlay() {
     var img = $('#ph'), ov = $('#ov'); if (!img || !ov) return;
     var iw = img.naturalWidth, ih = img.naturalHeight; if (!iw) { img.onload = drawOverlay; return; }
+    fit();
     ov.setAttribute('viewBox', '0 0 ' + iw + ' ' + ih);
-    var k = iw / 1000, s = '', st = STEPS[S.step], c = N.c;
+    var rw = ov.getBoundingClientRect().width, k = rw ? iw / rw : iw / 400, s = '', st = STEPS[S.step], c = N.c;
     var lime = '#bfd630';
     function seg(a, b, col, w, dash) { return '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '" stroke="' + col + '" stroke-width="' + w * k + '" stroke-linecap="round"' + (dash ? ' stroke-dasharray="' + 10 * k + ' ' + 8 * k + '"' : '') + '/>'; }
     function dim(a, b) {
@@ -309,8 +343,9 @@ table.t th{color:var(--mute);font-weight:500}
     var st = STEPS[S.step];
     $('#steps').innerHTML = STEPS.map(function (x, i) { return '<i class="' + (i < S.step ? 'on' : i === S.step ? 'cur' : '') + '"></i>'; }).join('');
     stop3D();
+    document.documentElement.classList.toggle('full', st !== 'photo');
     if (st === 'photo') { app.className = 'wrap'; app.innerHTML = photoHTML(); return; }
-    app.className = 'wrap two';
+    app.className = 'wrap two' + (st === 'result' ? ' res' : '');
     var tip = '';
     if (st === 'corners') tip = N.c.length < 4 ? 'Коснитесь: <b>' + CN[N.c.length] + '</b> угол проёма (по плитке)' : 'Углы стоят. Кружки можно перетащить пальцем.';
     if (st === 'items') tip = S.mark ? (S.mark.p ? 'Теперь — <b>противоположный угол</b> элемента' : 'Коснитесь <b>одного угла</b> элемента «' + IT[S.mark.type].t + '»') : '';
