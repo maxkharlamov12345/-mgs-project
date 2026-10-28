@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MGS Замер ниши</title>
+<meta name="description" content="Пошаговый замер ниши с коммуникациями: фото → разметка пальцем → размеры по одному → три вида, 3D, свободная глубина и файл для PRO100.">
+<meta name="theme-color" content="#151311">
+<link rel="icon" href="../assets/logo.webp">
+<style>
+@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+/* Макет: тёмная шапка MGS → фото с разметкой (главное) → одна карточка-вопрос под ним. Палитра — как у приложения замера. */
+:root{--bg:#f3f1ec;--card:#fff;--ink:#1b1916;--mute:#77726a;--line:#e3dfd6;--acc:#bfd630;--dark:#151311;--err:#d93025;--ok:#3d9a3d;--warn:#e8a200}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 Onest,system-ui,-apple-system,sans-serif}
+button,input{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:20;background:var(--dark);color:#f4f1ec;padding:calc(env(safe-area-inset-top) + 8px) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left))}
+.top .r{display:flex;align-items:center;gap:10px;max-width:980px;margin:0 auto}
+.logo b{background:var(--acc);color:#111;border-radius:8px;padding:2px 7px;font-weight:700}
+.logo{font-weight:700;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.top a{color:#cfc9bd;font-size:13px;text-decoration:none;margin-left:auto;white-space:nowrap}
+.steps{display:flex;gap:4px;max-width:980px;margin:8px auto 0}
+.steps i{flex:1;height:4px;border-radius:2px;background:#2f2b26}
+.steps i.on{background:var(--acc)}
+.steps i.cur{background:#f4f1ec}
+.wrap{max-width:980px;margin:0 auto;padding:12px max(12px,env(safe-area-inset-right)) 140px max(12px,env(safe-area-inset-left));display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:860px){.wrap.two{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}.wrap.two .stage{position:sticky;top:78px}}
+.stage{position:relative;min-width:0;background:#222;border-radius:16px;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.stage img{display:block;width:100%;height:auto}
+.stage svg{position:absolute;inset:0;width:100%;height:100%}
+.stage .tip{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(21,19,17,.86);color:#f4f1ec;border-radius:12px;padding:9px 12px;font-size:14px;pointer-events:none}
+.stage .tip b{color:var(--acc)}
+.card{background:var(--card);border-radius:16px;padding:16px;min-width:0}
+h1{font-size:21px;margin:0 0 6px;text-wrap:balance}
+h2{font-size:17px;margin:0 0 8px}
+.eyebrow{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:0 0 4px}
+.hint{font-size:13.5px;color:var(--mute);margin:0 0 12px}
+.big{display:flex;align-items:center;gap:8px}
+.big input{flex:1;min-width:0;font-size:28px;font-weight:600;padding:10px 14px;border:2px solid var(--line);border-radius:14px;outline:none;font-variant-numeric:tabular-nums}
+.big input:focus{border-color:#9db21c;box-shadow:0 0 0 4px #bfd63040}
+.big span{font-size:18px;color:var(--mute)}
+.est{margin-top:8px;font-size:13.5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:12px 16px;cursor:pointer;font-weight:600;background:#ece8df}
+.btn.p{background:var(--acc);color:#111}
+.btn.d{background:var(--dark);color:#fff}
+.btn.s{padding:7px 11px;font-size:13.5px;border-radius:10px;font-weight:500}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn:focus-visible,.chip:focus-visible{outline:3px solid #9db21c;outline-offset:2px}
+.bar{display:flex;justify-content:space-between;gap:8px;margin-top:14px;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer;font-size:14px}
+.chip.on{background:var(--dark);border-color:var(--dark);color:#fff}
+.chip .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:0}
+.items .it{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.items .it:last-child{border-bottom:0}
+.items .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#111;flex:none}
+.items .sz{margin-left:auto;font-size:12.5px;color:var(--mute);text-align:right;font-variant-numeric:tabular-nums}
+.free{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.free .v{font-size:46px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.free .u{font-size:18px;color:var(--mute)}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12.5px;font-weight:600}
+.pill.e{background:#fde8e6;color:var(--err)}
+.pill.ok{background:#e6f3e2;color:var(--ok)}
+.views{display:grid;gap:12px}
+@media (min-width:700px){.views{grid-template-columns:1fr 1fr}.views .wide{grid-column:1/-1}}
+.vbox{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.vbox h3{font-size:13px;font-weight:600;margin:0;padding:8px 10px;border-bottom:1px solid var(--line);color:var(--mute);letter-spacing:.03em;text-transform:uppercase}
+.vbox svg{display:block;width:100%;height:auto}
+#v3d{display:block;width:100%;height:360px;background:#e9e6df;touch-action:none}
+table.t{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:6px 5px;text-align:left;vertical-align:top}
+table.t th{color:var(--mute);font-weight:500}
+.tbl{overflow-x:auto}
+.miss{font-size:13.5px;color:var(--err);margin:8px 0 0;padding-left:18px}
+.note{font-size:12.5px;color:var(--mute)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:12px;z-index:90;font-size:14px;max-width:90vw}
+@keyframes pulse{0%{r:14;opacity:.9}100%{r:44;opacity:0}}
+.pulse{animation:pulse 1.2s ease-out infinite}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+@media print{
+  .top,.stage,.noprint,.toast{display:none!important}
+  body{background:#fff}.wrap{display:block;padding:0}.card{padding:0 0 10px;break-inside:avoid}
+  #v3d{display:none}
+}
+</style>
+<script type="importmap">{"imports":{"three":"../assets/three/three.module.min.js"}}</script>
+</head>
+<body>
+<header class="top"><div class="r"><div class="logo"><b>MGS</b> Замер ниши</div><a href="./">← Замер помещения</a></div><div class="steps" id="steps"></div></header>
+<main class="wrap" id="app"></main>
+<input type="file" id="fCam" accept="image/*" capture="environment" hidden>
+<input type="file" id="fGal" accept="image/*" hidden>
+<script src="geom.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var app = $('#app');
+  function num(v) { if (v === '' || v == null) return null; var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : null; }
+  function fmt(n) { return n == null || !isFinite(n) ? '—' : String(Math.round(n)); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2400); }
+
+  /* ---------- типы того, что внутри ниши ---------- */
+  var IT = {
+    collector: { t: 'Коллектор (гребёнка) с кранами', c: [40, 110, 220] },
+    valve:     { t: 'Узел ввода: краны, фильтр, редуктор', c: [205, 45, 45] },
+    meter:     { t: 'Счётчик', c: [90, 190, 240] },
+    filter:    { t: 'Фильтр', c: [200, 160, 60] },
+    pipe:      { t: 'Трубы / подводка', c: [130, 130, 140] },
+    riser:     { t: 'Стояк', c: [110, 120, 130] },
+    cable:     { t: 'Вывод кабеля', c: [245, 205, 40] },
+    hatch:     { t: 'Лючок / ревизия', c: [180, 180, 180] },
+    other:     { t: 'Другое', c: [160, 160, 160] }
+  };
+  function rgb(c) { return 'rgb(' + c.join(',') + ')'; }
+
+  /* ---------- пример: ниша с коллектором (цифры условные, по фото замерщика) ---------- */
+  function sample() {
+    return {
+      sample: true, photo: 'nisha-primer.jpg',
+      c: [[298, 178], [846, 190], [850, 1150], [285, 1150]],
+      w: { t: '680', m: '688', b: '695' }, h: { l: '1224', c: '1224', r: '1220' },
+      d: { tl: '390', tr: '400', bl: '380', br: '390' },
+      r: { l: '80', r: '90', t: '60', tmode: 'out' }, a: { floor: '900', corner: '' },
+      items: [
+        { type: 'valve', uv: [[0.02, 0.635], [0.6, 0.715]], x: '15', y: '350', w: '400', h: '100', prot: '160', access: true },
+        { type: 'collector', uv: [[0.03, 0.745], [0.97, 0.83]], x: '20', y: '210', w: '645', h: '105', prot: '175', access: true },
+        { type: 'pipe', uv: [[0.36, 0.71], [0.85, 1.0]], x: '250', y: '0', w: '335', h: '355', prot: '90', access: false },
+        { type: 'cable', uv: [[0.69, 0.41], [0.84, 0.54]], x: '475', y: '565', w: '100', h: '160', prot: '50', access: false }
+      ],
+      note: ''
+    };
+  }
+  function blank(photo) { return { sample: false, photo: photo, c: [], w: {}, h: {}, d: {}, r: { tmode: 'flat' }, a: {}, items: [], note: '' }; }
+
+  var KEY = 'mgs-nisha';
+  var N = null, S = { step: 0, mark: null, edit: null, iq: 0, drag: -1 };
+  try { var raw = localStorage.getItem(KEY); if (raw) N = JSON.parse(raw); } catch (e) {}
+  if (!N) N = sample();
+  function save() { if (N.sample) return; try { localStorage.setItem(KEY, JSON.stringify(N)); } catch (e) { toast('Фото слишком большое для сохранения на устройстве'); } }
+
+  /* ---------- проекция «фото ↔ проём» (гомография по 4 углам) ---------- */
+  function solve(A, b) {
+    var n = b.length, M = A.map(function (r, i) { return r.concat([b[i]]); });
+    for (var i = 0; i < n; i++) {
+      var p = i; for (var k = i + 1; k < n; k++) if (Math.abs(M[k][i]) > Math.abs(M[p][i])) p = k;
+      var t = M[i]; M[i] = M[p]; M[p] = t;
+      for (k = i + 1; k < n; k++) { var f = M[k][i] / M[i][i]; for (var j = i; j <= n; j++) M[k][j] -= f * M[i][j]; }
+    }
+    var x = new Array(n);
+    for (i = n - 1; i >= 0; i--) { var s = M[i][n]; for (j = i + 1; j < n; j++) s -= M[i][j] * x[j]; x[i] = s / M[i][i]; }
+    return x;
+  }
+  function homog(src, dst) {
+    var A = [], b = [];
+    for (var i = 0; i < 4; i++) {
+      var x = src[i][0], y = src[i][1], X = dst[i][0], Y = dst[i][1];
+      A.push([x, y, 1, 0, 0, 0, -X * x, -X * y]); b.push(X);
+      A.push([0, 0, 0, x, y, 1, -Y * x, -Y * y]); b.push(Y);
+    }
+    var h = solve(A, b); h.push(1); return h;
+  }
+  function ap(h, p) { var w = h[6] * p[0] + h[7] * p[1] + h[8]; return [(h[0] * p[0] + h[1] * p[1] + h[2]) / w, (h[3] * p[0] + h[4] * p[1] + h[5]) / w]; }
+  var UV = [[0, 0], [1, 0], [1, 1], [0, 1]];
+  function toPh(uv) { return N.c.length === 4 ? ap(homog(UV, N.c), uv) : null; }
+  function toUV(p) { return N.c.length === 4 ? ap(homog(N.c, UV), p) : null; }
+
+  /* ---------- размеры ---------- */
+  function minOf(o, ks) { var v = ks.map(function (k) { return num(o[k]); }).filter(function (x) { return x > 0; }); return v.length ? Math.min.apply(null, v) : null; }
+  function W() { return minOf(N.w, ['t', 'm', 'b']) || 700; }
+  function H() { return minOf(N.h, ['l', 'c', 'r']) || 1200; }
+  function depthAt(u, v) {
+    var d = N.d, tl = num(d.tl), tr = num(d.tr), bl = num(d.bl), br = num(d.br);
+    var all = [tl, tr, bl, br].filter(function (x) { return x > 0; });
+    if (!all.length) return null;
+    var av = all.reduce(function (a, b) { return a + b; }, 0) / all.length;
+    tl = tl || av; tr = tr || av; bl = bl || av; br = br || av;
+    return tl * (1 - u) * (1 - v) + tr * u * (1 - v) + bl * (1 - u) * v + br * u * v;
+  }
+  /* элемент в миллиметрах: x от левого откоса, y от низа ниши */
+  function itMM(it) { return { x: num(it.x), y: num(it.y), w: num(it.w), h: num(it.h), p: num(it.prot) }; }
+  function itEst(it) {
+    var u0 = Math.min(it.uv[0][0], it.uv[1][0]), u1 = Math.max(it.uv[0][0], it.uv[1][0]), v0 = Math.min(it.uv[0][1], it.uv[1][1]), v1 = Math.max(it.uv[0][1], it.uv[1][1]);
+    u0 = Math.max(0, u0); u1 = Math.min(1, u1); v0 = Math.max(0, v0); v1 = Math.min(1, v1);
+    return { x: u0 * W(), w: (u1 - u0) * W(), y: (1 - v1) * H(), h: (v1 - v0) * H() };
+  }
+  function itFree(it) {
+    var m = itMM(it); if (m.x == null || m.y == null || m.w == null || m.h == null || m.p == null) return null;
+    var Wd = W(), Hd = H(), pts = [[m.x, m.y], [m.x + m.w, m.y], [m.x, m.y + m.h], [m.x + m.w, m.y + m.h]];
+    var d = Math.min.apply(null, pts.map(function (p) { return depthAt(Math.min(1, Math.max(0, p[0] / Wd)), Math.min(1, Math.max(0, 1 - p[1] / Hd))); }));
+    return d - m.p;
+  }
+  function result() {
+    var dmin = minOf(N.d, ['tl', 'tr', 'bl', 'br']), best = { v: dmin, by: dmin ? 'задняя стена (наименьшая глубина)' : null, i: -1 };
+    N.items.forEach(function (it, i) { var f = itFree(it); if (f != null && (best.v == null || f < best.v)) best = { v: f, by: (i + 1) + '. ' + IT[it.type].t, i: i }; });
+    return best;
+  }
+
+  /* ---------- шаги ---------- */
+  function ln(a, b) { return { a: a, b: b }; }
+  var Q = [
+    { k: 'w.t', g: 'Проём', t: 'Ширина проёма вверху', hint: 'По плоскости плитки, от откоса до откоса, под самым верхом.', hl: ln([0, .04], [1, .04]) },
+    { k: 'w.m', g: 'Проём', t: 'Ширина посередине', hint: 'Там же, на середине высоты.', hl: ln([0, .5], [1, .5]) },
+    { k: 'w.b', g: 'Проём', t: 'Ширина внизу', hint: 'У самого низа ниши.', hl: ln([0, .96], [1, .96]) },
+    { k: 'h.l', g: 'Проём', t: 'Высота у левого откоса', hint: 'От низа ниши до верха, по плоскости плитки.', hl: ln([.04, 0], [.04, 1]) },
+    { k: 'h.c', g: 'Проём', t: 'Высота по центру', hint: '', hl: ln([.5, 0], [.5, 1]) },
+    { k: 'h.r', g: 'Проём', t: 'Высота у правого откоса', hint: '', hl: ln([.96, 0], [.96, 1]) },
+    { k: 'd.tl', g: 'Глубина', t: 'Глубина: левый верхний угол', hint: 'От плоскости плитки до задней стены. Так видно «завал» задней стены — описывать его словами не нужно.', dot: [0, 0] },
+    { k: 'd.tr', g: 'Глубина', t: 'Глубина: правый верхний угол', hint: '', dot: [1, 0] },
+    { k: 'd.bl', g: 'Глубина', t: 'Глубина: левый нижний угол', hint: '', dot: [0, 1] },
+    { k: 'd.br', g: 'Глубина', t: 'Глубина: правый нижний угол', hint: '', dot: [1, 1] },
+    { k: 'r.l', g: 'Откосы', t: 'Откос слева: толщина обрамления', hint: 'Плитка + клей + штукатурка — на сколько откос выступает от стены ниши внутрь. Одна цифра.', hl: ln([-.02, 0], [-.02, 1]), thick: 1 },
+    { k: 'r.r', g: 'Откосы', t: 'Откос справа: толщина обрамления', hint: '', hl: ln([1.02, 0], [1.02, 1]), thick: 1 },
+    { k: 'r.t', g: 'Откосы', t: 'Верх: толщина обрамления', hint: 'Если верх (ГКЛ, короб) не в плоскости с плиткой — отметьте ниже, выступает он или утоплен.', hl: ln([0, -.02], [1, -.02]), thick: 1, mode: 1 },
+    { k: 'a.floor', g: 'Привязка', t: 'От чистового пола до низа ниши', hint: 'Если пола ещё нет — от стяжки, и напишите это в примечании в конце.', down: 1 },
+    { k: 'a.corner', g: 'Привязка', t: 'От угла стены до левого края ниши', hint: 'Необязательно, если ниша не у угла.', side: 1, opt: 1 }
+  ];
+  var STEPS = ['photo', 'corners'].concat(Q.map(function (q, i) { return 'q' + i; }), ['items', 'result']);
+  function getK(k) { var p = k.split('.'); return N[p[0]][p[1]]; }
+  function setK(k, v) { var p = k.split('.'); N[p[0]][p[1]] = v; save(); }
+
+  /* ---------- фото и разметка ---------- */
+  function stageHTML(tip) {
+    return '<div class="stage" id="stage"><img id="ph" src="' + esc(N.photo) + '" alt="Фото ниши"><svg id="ov"></svg>' + (tip ? '<div class="tip">' + tip + '</div>' : '') + '</div>';
+  }
+  var CN = ['левый верхний', 'правый верхний', 'правый нижний', 'левый нижний'];
+  function drawOverlay() {
+    var img = $('#ph'), ov = $('#ov'); if (!img || !ov) return;
+    var iw = img.naturalWidth, ih = img.naturalHeight; if (!iw) { img.onload = drawOverlay; return; }
+    ov.setAttribute('viewBox', '0 0 ' + iw + ' ' + ih);
+    var k = iw / 1000, s = '', st = STEPS[S.step], c = N.c;
+    var lime = '#bfd630';
+    function seg(a, b, col, w, dash) { return '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '" stroke="' + col + '" stroke-width="' + w * k + '" stroke-linecap="round"' + (dash ? ' stroke-dasharray="' + 10 * k + ' ' + 8 * k + '"' : '') + '/>'; }
+    function dim(a, b) {
+      var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L * 16 * k, ny = dx / L * 16 * k;
+      return seg(a, b, '#111', 11, 0) + seg(a, b, lime, 6, 0) + seg([a[0] - nx, a[1] - ny], [a[0] + nx, a[1] + ny], lime, 6) + seg([b[0] - nx, b[1] - ny], [b[0] + nx, b[1] + ny], lime, 6);
+    }
+    if (c.length) {
+      if (c.length === 4) s += '<polygon points="' + c.map(function (p) { return p.join(','); }).join(' ') + '" fill="rgba(191,214,48,.10)" stroke="' + lime + '" stroke-width="' + 3 * k + '"/>';
+      else s += '<polyline points="' + c.map(function (p) { return p.join(','); }).join(' ') + '" fill="none" stroke="' + lime + '" stroke-width="' + 3 * k + '"/>';
+      if (st === 'corners') c.forEach(function (p, i) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + 22 * k + '" fill="rgba(21,19,17,.75)" stroke="' + lime + '" stroke-width="' + 4 * k + '" data-h="' + i + '"/><text x="' + p[0] + '" y="' + (p[1] + 7 * k) + '" font-size="' + 20 * k + '" font-weight="700" text-anchor="middle" fill="' + lime + '" pointer-events="none">' + (i + 1) + '</text>'; });
+    }
+    if (c.length === 4) {
+      // элементы
+      N.items.forEach(function (it, i) {
+        var a = it.uv[0], b = it.uv[1], q = [[a[0], a[1]], [b[0], a[1]], [b[0], b[1]], [a[0], b[1]]].map(toPh), on = S.edit === i;
+        var col = rgb(IT[it.type].c);
+        if (st === 'items' || st === 'result') {
+          s += '<polygon points="' + q.map(function (p) { return p.join(','); }).join(' ') + '" fill="' + col + '" fill-opacity="' + (on ? .35 : .18) + '" stroke="' + (on ? lime : col) + '" stroke-width="' + (on ? 6 : 4) * k + '"/>';
+          s += '<circle cx="' + q[0][0] + '" cy="' + q[0][1] + '" r="' + 17 * k + '" fill="' + col + '" stroke="#fff" stroke-width="' + 3 * k + '"/><text x="' + q[0][0] + '" y="' + (q[0][1] + 6 * k) + '" font-size="' + 18 * k + '" font-weight="700" text-anchor="middle" fill="#fff">' + (i + 1) + '</text>';
+        }
+      });
+      if (S.mark && S.mark.p) { var p0 = S.mark.p; s += '<circle cx="' + p0[0] + '" cy="' + p0[1] + '" r="' + 12 * k + '" fill="' + lime + '" stroke="#111" stroke-width="' + 3 * k + '"/>'; }
+      // подсветка текущего вопроса
+      var q = st[0] === 'q' ? Q[+st.slice(1)] : null;
+      if (q && q.hl) { var A = toPh(q.hl.a), B = toPh(q.hl.b); s += q.thick ? seg(A, B, '#111', 22, 0) + seg(A, B, lime, 14, 0) : dim(A, B); }
+      if (q && q.dot) { var D = toPh(q.dot); s += '<circle class="pulse" cx="' + D[0] + '" cy="' + D[1] + '" r="14" fill="none" stroke="' + lime + '" stroke-width="' + 5 * k + '"/><circle cx="' + D[0] + '" cy="' + D[1] + '" r="' + 14 * k + '" fill="' + lime + '" stroke="#111" stroke-width="' + 4 * k + '"/>'; }
+      if (q && q.down) { var b1 = toPh([.5, 1]); s += dim(b1, [b1[0], ih - 8 * k]); }
+      if (q && q.side) { var l1 = toPh([0, .5]); s += dim([8 * k, l1[1]], l1); }
+      if (st === 'items' && S.edit != null && N.items[S.edit]) {
+        var iq = IQ[S.iq], it2 = N.items[S.edit], u0 = Math.min(it2.uv[0][0], it2.uv[1][0]), u1 = Math.max(it2.uv[0][0], it2.uv[1][0]), v1 = Math.max(it2.uv[0][1], it2.uv[1][1]), v0 = Math.min(it2.uv[0][1], it2.uv[1][1]);
+        if (iq && iq.k === 'x') s += dim(toPh([0, (v0 + v1) / 2]), toPh([u0, (v0 + v1) / 2]));
+        if (iq && iq.k === 'y') s += dim(toPh([(u0 + u1) / 2, 1]), toPh([(u0 + u1) / 2, v1]));
+        if (iq && iq.k === 'w') s += dim(toPh([u0, v1 + .01]), toPh([u1, v1 + .01]));
+        if (iq && iq.k === 'h') s += dim(toPh([u1 + .01, v0]), toPh([u1 + .01, v1]));
+      }
+    }
+    ov.innerHTML = s;
+  }
+  function evPt(e) {
+    var ov = $('#ov'), m = ov.getScreenCTM(); if (!m) return null;
+    var pt = ov.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; var r = pt.matrixTransform(m.inverse()); return [Math.round(r.x), Math.round(r.y)];
+  }
+  function bindStage() {
+    var ov = $('#ov'); if (!ov) return;
+    ov.addEventListener('pointerdown', function (e) {
+      var st = STEPS[S.step], p = evPt(e); if (!p) return;
+      if (st === 'corners') {
+        var h = e.target.getAttribute && e.target.getAttribute('data-h');
+        if (h != null) { S.drag = +h; ov.setPointerCapture(e.pointerId); e.preventDefault(); return; }
+        if (N.c.length < 4) { N.c.push(p); save(); render(); }
+        return;
+      }
+      if (st === 'items' && S.mark) {
+        if (!S.mark.p) { S.mark.p = p; drawOverlay(); renderPanel(); return; }
+        var a = toUV(S.mark.p), b = toUV(p);
+        var it = { type: S.mark.type, uv: [[Math.min(a[0], b[0]), Math.min(a[1], b[1])], [Math.max(a[0], b[0]), Math.max(a[1], b[1])]], x: '', y: '', w: '', h: '', prot: '', access: /collector|valve|meter|filter|hatch/.test(S.mark.type) };
+        N.items.push(it); S.mark = null; S.edit = N.items.length - 1; S.iq = 0; save(); render();
+      }
+    });
+    ov.addEventListener('pointermove', function (e) { if (S.drag < 0) return; var p = evPt(e); if (!p) return; N.c[S.drag] = p; drawOverlay(); });
+    ov.addEventListener('pointerup', function () { if (S.drag >= 0) { S.drag = -1; save(); drawOverlay(); } });
+  }
+
+  /* ---------- вопросы по элементу ---------- */
+  var IQ = [
+    { k: 'x', t: 'От левого откоса до левого края', est: 'x' },
+    { k: 'y', t: 'От низа ниши до низа элемента', est: 'y' },
+    { k: 'w', t: 'Ширина элемента', est: 'w' },
+    { k: 'h', t: 'Высота элемента', est: 'h' },
+    { k: 'prot', t: 'Насколько выступает от задней стены', hint: 'До самой выступающей детали: ручка крана, манометр, гайка. Это главная цифра для мебели.' },
+    { k: 'access', t: 'Нужен доступ после монтажа?', yn: 1, hint: 'Краны, счётчики, фильтры — за дверцей или съёмной панелью, не глухо.' }
+  ];
+
+  /* ---------- экран ---------- */
+  function render() {
+    var st = STEPS[S.step];
+    $('#steps').innerHTML = STEPS.map(function (x, i) { return '<i class="' + (i < S.step ? 'on' : i === S.step ? 'cur' : '') + '"></i>'; }).join('');
+    stop3D();
+    if (st === 'photo') { app.className = 'wrap'; app.innerHTML = photoHTML(); return; }
+    app.className = 'wrap two';
+    var tip = '';
+    if (st === 'corners') tip = N.c.length < 4 ? 'Коснитесь: <b>' + CN[N.c.length] + '</b> угол проёма (по плитке)' : 'Углы стоят. Кружки можно перетащить пальцем.';
+    if (st === 'items') tip = S.mark ? (S.mark.p ? 'Теперь — <b>противоположный угол</b> элемента' : 'Коснитесь <b>одного угла</b> элемента «' + IT[S.mark.type].t + '»') : '';
+    app.innerHTML = stageHTML(tip) + '<div id="panel"></div>';
+    renderPanel(); bindStage(); drawOverlay();
+  }
+  function photoHTML() {
+    return '<div class="card"><p class="eyebrow">Пример реализации</p><h1>Замер ниши с коммуникациями — по шагам</h1>' +
+      '<p class="hint" style="font-size:15px">Замерщик фотографирует нишу, отмечает пальцем углы проёма и всё, что внутри, а приложение по одному спрашивает размеры и подсвечивает на фото, что именно мерить. В конце — свободная глубина для мебели, три вида для дизайнера, 3D и файл для PRO100.</p>' +
+      '<div class="chips" style="gap:8px"><button class="btn p" data-a="sample">Открыть пример (ниша с коллектором)</button><button class="btn d" data-a="cam">📷 Снять свою нишу</button><button class="btn ghost" data-a="gal">Фото из галереи</button></div>' +
+      (N && !N.sample && N.photo ? '<div class="bar"><button class="btn ghost" data-a="resume">Продолжить мой замер ниши</button></div>' : '') +
+      '<p class="note" style="margin-top:14px">В примере цифры условные: взяты с вашего фото и дополнены там, где их не было (глубина внизу, выступ коллектора, высота от пола). Всё хранится только на этом телефоне.</p></div>' +
+      '<div class="card"><h2>Что меряем и в каком порядке</h2><table class="t"><tr><th>Шаг</th><th>Что</th><th>Зачем</th></tr>' +
+      '<tr><td>1</td><td>Фото и 4 угла проёма</td><td>Фото становится «бланком»: дальше всё отмечается на нём</td></tr>' +
+      '<tr><td>2</td><td>Ширина ×3, высота ×3</td><td>Видно, где проём сужается</td></tr>' +
+      '<tr><td>3</td><td>Глубина в 4 углах</td><td>Завал задней стены виден сам</td></tr>' +
+      '<tr><td>4</td><td>Откосы слева, справа, сверху</td><td>Сколько съедает обрамление</td></tr>' +
+      '<tr><td>5</td><td>Привязка к полу и углу</td><td>Где ниша в комнате</td></tr>' +
+      '<tr><td>6</td><td>Что внутри: отметить и обмерить</td><td>Свободная глубина и где нужен доступ</td></tr></table></div>';
+  }
+  function renderPanel() {
+    var p = $('#panel'); if (!p) return; var st = STEPS[S.step], h = '';
+    if (st === 'corners') {
+      h = '<div class="card"><p class="eyebrow">Шаг 1 · Фото</p><h1>Отметьте 4 угла проёма</h1><p class="hint">По порядку: левый верхний → правый верхний → правый нижний → левый нижний. Угол — по плоскости плитки. Фото может быть снято под углом: приложение само выпрямит его по этим точкам.</p>' +
+        '<div class="bar"><button class="btn ghost" data-a="back">← Назад</button><div class="chips"><button class="btn s ghost" data-a="reset">Сбросить углы</button><button class="btn p" data-a="next"' + (N.c.length === 4 ? '' : ' disabled') + '>Далее →</button></div></div></div>';
+    } else if (st[0] === 'q') {
+      var i = +st.slice(1), q = Q[i], v = getK(q.k) || '', grp = Q.filter(function (x) { return x.g === q.g; }), gi = grp.indexOf(q) + 1;
+      h = '<div class="card"><p class="eyebrow">' + q.g + ' · ' + gi + ' из ' + grp.length + '</p><h1>' + q.t + '</h1>' + (q.hint ? '<p class="hint">' + q.hint + '</p>' : '<p class="hint">Подсвечено на фото.</p>') +
+        '<div class="big"><input id="q" inputmode="decimal" autocomplete="off" value="' + esc(v) + '" placeholder="0"><span>мм</span></div>';
+      if (q.mode) h += '<div class="chips" style="margin-top:10px">' + [['flat', 'В плоскости с плиткой'], ['out', 'Выступает'], ['in', 'Утоплен']].map(function (m) { return '<button class="chip' + (N.r.tmode === m[0] ? ' on' : '') + '" data-tm="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>';
+      if (q.k === 'd.br') { var dd = ['tl', 'tr', 'bl', 'br'].map(function (k) { return num(N.d[k]); }); if (dd.every(function (x) { return x; })) { var top = (dd[0] + dd[1]) / 2, bot = (dd[2] + dd[3]) / 2; h += '<p class="note" style="margin-top:8px">Задняя стена: ' + (Math.abs(top - bot) < 3 ? 'вертикальна' : 'завал ' + fmt(Math.abs(top - bot)) + ' мм ' + (top > bot ? '(верх глубже)' : '(низ глубже)')) + '.</p>'; } }
+      h += '<div class="bar"><button class="btn ghost" data-a="back">← Назад</button><div class="chips">' + (q.opt ? '<button class="btn s ghost" data-a="next">Пропустить</button>' : '') + '<button class="btn p" data-a="next">Далее →</button></div></div></div>';
+    } else if (st === 'items') {
+      h = itemsPanel();
+    } else if (st === 'result') {
+      h = resultHTML();
+    }
+    p.innerHTML = h;
+    var inp = $('#q'); if (inp && !S.noFocus) { try { inp.focus({ preventScroll: true }); inp.select(); } catch (e) {} }
+    S.noFocus = false;
+    if (st === 'result') { start3D(); }
+  }
+  function itemsPanel() {
+    if (S.edit != null && N.items[S.edit]) {
+      var it = N.items[S.edit], q = IQ[S.iq], e = itEst(it), v = it[q.k];
+      var h = '<div class="card"><p class="eyebrow">Элемент ' + (S.edit + 1) + ' · вопрос ' + (S.iq + 1) + ' из ' + IQ.length + '</p><h1>' + IT[it.type].t + '</h1><h2>' + q.t + '</h2>' + (q.hint ? '<p class="hint">' + q.hint + '</p>' : '');
+      if (q.yn) h += '<div class="chips"><button class="chip' + (it.access ? ' on' : '') + '" data-acc="1">Да, нужен доступ</button><button class="chip' + (!it.access ? ' on' : '') + '" data-acc="0">Нет</button></div>';
+      else {
+        h += '<div class="big"><input id="q" inputmode="decimal" autocomplete="off" value="' + esc(v) + '" placeholder="0"><span>мм</span></div>';
+        if (q.est) h += '<div class="est"><span class="note">По фото ≈ <b>' + fmt(e[q.est]) + '</b> мм — уточните рулеткой</span><button class="btn s" data-a="acceptEst">Принять ≈' + fmt(e[q.est]) + '</button></div>';
+      }
+      h += '<div class="bar"><button class="btn ghost" data-a="iback">← Назад</button><div class="chips"><button class="btn s ghost" data-a="idel">Удалить</button><button class="btn p" data-a="inext">' + (S.iq === IQ.length - 1 ? 'Готово' : 'Далее →') + '</button></div></div></div>';
+      return h;
+    }
+    var h2 = '<div class="card"><p class="eyebrow">Что внутри ниши</p><h1>' + (S.mark ? 'Отметьте на фото' : 'Трубы, краны, счётчики, кабели') + '</h1>';
+    if (S.mark) h2 += '<p class="hint">Два касания по противоположным углам элемента. Размеры приложение предложит само — по фото, их останется уточнить рулеткой.</p><div class="bar"><button class="btn ghost" data-a="cancelMark">Отмена</button></div></div>';
+    else {
+      h2 += '<p class="hint">Выберите, что отмечаем, и коснитесь фото.</p><div class="chips">' + Object.keys(IT).map(function (k) { return '<button class="chip" data-mark="' + k + '"><span class="sw" style="background:' + rgb(IT[k].c) + '"></span>' + IT[k].t + '</button>'; }).join('') + '</div>';
+      if (N.items.length) h2 += '<div class="items" style="margin-top:12px">' + N.items.map(function (it, i) {
+        var m = itMM(it), f = itFree(it), ok = m.x != null && m.y != null && m.w != null && m.h != null && m.p != null;
+        return '<div class="it" data-edit="' + i + '"><span class="n" style="background:' + rgb(IT[it.type].c) + ';color:#fff">' + (i + 1) + '</span><span>' + IT[it.type].t + (it.access ? ' · <b>доступ</b>' : '') + '</span><span class="sz">' + (ok ? fmt(m.w) + '×' + fmt(m.h) + ', выступ ' + fmt(m.p) + '<br>свободно ' + fmt(f) : '<span class="pill e">не всё</span>') + '</span></div>';
+      }).join('') + '</div>';
+      h2 += '<div class="bar"><button class="btn ghost" data-a="back">← Назад</button><button class="btn p" data-a="next">Итог →</button></div></div>';
+    }
+    return h2;
+  }
+
+  /* ---------- итог: свободная глубина, три вида, 3D ---------- */
+  function missing() {
+    var m = [];
+    Q.forEach(function (q) { if (!q.opt && !num(getK(q.k)) && q.k !== 'r.t' && q.k !== 'a.floor') m.push(q.t); });
+    if (N.c.length < 4) m.push('Углы проёма на фото');
+    N.items.forEach(function (it, i) { var x = itMM(it); if (x.x == null || x.y == null || x.w == null || x.h == null || x.p == null) m.push('Элемент ' + (i + 1) + ': не все размеры'); });
+    return m;
+  }
+  function resultHTML() {
+    var r = result(), ms = missing();
+    var h = '<div class="card"><p class="eyebrow">Итог для дизайнера</p><div class="free"><span class="v">' + fmt(r.v) + '</span><span class="u">мм — свободная глубина</span></div>' +
+      '<p class="hint" style="margin-top:8px">' + (r.by ? 'Ограничивает: <b>' + esc(r.by) + '</b>. Мебель или фальш-панель внутри ниши должны быть не глубже этой цифры.' : 'Укажите глубину ниши.') + '</p>' +
+      (ms.length ? '<p><span class="pill e">Не хватает ' + ms.length + '</span></p><ul class="miss">' + ms.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '<p><span class="pill ok">Замер полный</span></p>') +
+      '<div class="chips noprint" style="gap:8px;margin-top:12px"><button class="btn p" data-a="3ds">⬇ Для PRO100 (.3ds)</button><button class="btn" data-a="print">Бланк в PDF</button><button class="btn ghost" data-a="items">← Что внутри</button><button class="btn ghost" data-a="restart">Начать заново</button></div></div>';
+    h += '<div class="card"><div class="views">' +
+      '<div class="vbox"><h3>Вид спереди</h3>' + frontSVG() + '</div>' +
+      '<div class="vbox"><h3>Разрез сбоку</h3>' + sideSVG() + '</div>' +
+      '<div class="vbox wide"><h3>Вид сверху</h3>' + topSVG() + '</div>' +
+      '<div class="vbox wide noprint"><h3>3D · крутите пальцем</h3><canvas id="v3d"></canvas></div></div></div>';
+    h += '<div class="card"><h2>Цифры</h2><div class="tbl"><table class="t">' +
+      '<tr><th>Ширина верх / сер. / низ</th><td>' + [N.w.t, N.w.m, N.w.b].map(num).map(fmt).join(' / ') + '</td></tr>' +
+      '<tr><th>Высота лево / центр / право</th><td>' + [N.h.l, N.h.c, N.h.r].map(num).map(fmt).join(' / ') + '</td></tr>' +
+      '<tr><th>Глубина ЛВ / ПВ / ЛН / ПН</th><td>' + [N.d.tl, N.d.tr, N.d.bl, N.d.br].map(num).map(fmt).join(' / ') + '</td></tr>' +
+      '<tr><th>Откосы лево / право / верх</th><td>' + fmt(num(N.r.l)) + ' / ' + fmt(num(N.r.r)) + ' / ' + fmt(num(N.r.t)) + (N.r.tmode === 'out' ? ' (верх выступает)' : N.r.tmode === 'in' ? ' (верх утоплен)' : '') + '</td></tr>' +
+      '<tr><th>От пола до низа ниши</th><td>' + fmt(num(N.a.floor)) + (num(N.a.corner) ? ' · от угла ' + fmt(num(N.a.corner)) : '') + '</td></tr></table></div>' +
+      (N.items.length ? '<div class="tbl" style="margin-top:10px"><table class="t"><tr><th>№</th><th>Элемент</th><th>X от лев.</th><th>Y от низа</th><th>Ш×В</th><th>Выступ</th><th>Свободно</th><th>Доступ</th></tr>' + N.items.map(function (it, i) { var m = itMM(it); return '<tr><td>' + (i + 1) + '</td><td>' + IT[it.type].t + '</td><td>' + fmt(m.x) + '</td><td>' + fmt(m.y) + '</td><td>' + fmt(m.w) + '×' + fmt(m.h) + '</td><td>' + fmt(m.p) + '</td><td>' + fmt(itFree(it)) + '</td><td>' + (it.access ? 'да' : '—') + '</td></tr>'; }).join('') + '</table></div>' : '') +
+      '<label class="note" for="nt" style="display:block;margin-top:12px">Примечание</label><textarea id="nt" style="width:100%;min-height:60px;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit">' + esc(N.note) + '</textarea></div>';
+    return h;
+  }
+  var FS = 34;
+  function svgOpen(x0, y0, w, h) { return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + [x0, y0, w, h].map(Math.round).join(' ') + '" font-family="Onest,Arial,sans-serif"><rect x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h + '" fill="#fff"/>'; }
+  function t(x, y, s, o) { o = o || {}; return '<text x="' + x + '" y="' + y + '" font-size="' + (o.fs || FS) + '" text-anchor="' + (o.a || 'middle') + '"' + (o.rot != null ? ' transform="rotate(' + o.rot + ' ' + x + ' ' + y + ')"' : '') + ' fill="' + (o.c || '#1b1916') + '"' + (o.b ? ' font-weight="700"' : '') + '>' + s + '</text>'; }
+  function dl(x1, y1, x2, y2) { return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#1b1916" stroke-width="3"/>'; }
+  function frontSVG() {
+    var Wt = num(N.w.t) || W(), Wm = num(N.w.m) || W(), Wb = num(N.w.b) || W(), Hl = num(N.h.l) || H(), Hr = num(N.h.r) || H(), Hm = Math.max(Hl, Hr), Wx = Math.max(Wt, Wm, Wb);
+    var pad = 190, s = svgOpen(-pad, -pad * 0.6, Wx + pad * 2, Hm + pad * 1.4);
+    s += '<polygon points="0,' + (Hm - Hl) + ' ' + Wt + ',' + (Hm - Hr) + ' ' + Wm + ',' + (Hm - Hr / 2) + ' ' + Wb + ',' + Hm + ' 0,' + Hm + '" fill="#f1eee6" stroke="#1b1916" stroke-width="5"/>';
+    N.items.forEach(function (it, i) {
+      var m = itMM(it); if (m.x == null || m.y == null || m.w == null || m.h == null) return;
+      s += '<rect x="' + m.x + '" y="' + (Hm - m.y - m.h) + '" width="' + m.w + '" height="' + m.h + '" fill="' + rgb(IT[it.type].c) + '" fill-opacity=".55" stroke="#1b1916" stroke-width="2"/>' + t(m.x + 30, Hm - m.y - m.h + 40, i + 1, { b: 1, fs: 34 });
+    });
+    s += t(Wt / 2, -24, fmt(Wt), { b: 1 }) + t(Wm + 12, Hm / 2, fmt(Wm), { a: 'start', b: 1 }) + t(Wb / 2, Hm + 50, fmt(Wb), { b: 1 });
+    s += t(-30, Hm / 2, fmt(Hl), { rot: -90, b: 1 }) + t(Wx + 70, Hm * 0.2, fmt(Hr), { rot: -90, b: 1, c: '#77726a' });
+    return s + '</svg>';
+  }
+  function sideSVG() {
+    var Hd = H(), dT = ((num(N.d.tl) || 0) + (num(N.d.tr) || 0)) / ((num(N.d.tl) ? 1 : 0) + (num(N.d.tr) ? 1 : 0) || 1), dB = ((num(N.d.bl) || 0) + (num(N.d.br) || 0)) / ((num(N.d.bl) ? 1 : 0) + (num(N.d.br) ? 1 : 0) || 1);
+    var Dx = Math.max(dT, dB, 100), pad = 170, r = result(), s = svgOpen(-pad, -pad * .6, Dx + pad * 2.4, Hd + pad * 1.4);
+    s += '<rect x="' + (-pad * .7) + '" y="0" width="' + pad * .7 + '" height="' + Hd + '" fill="#e6e1d6"/>' + t(-pad * .35, Hd / 2, 'плитка', { rot: -90, fs: 26, c: '#77726a' });
+    s += '<polygon points="0,0 ' + dT + ',0 ' + dB + ',' + Hd + ' 0,' + Hd + '" fill="#f1eee6" stroke="#1b1916" stroke-width="5"/>';
+    s += '<polygon points="' + dT + ',0 ' + (Dx + 60) + ',0 ' + (Dx + 60) + ',' + Hd + ' ' + dB + ',' + Hd + '" fill="#d9d3c6"/>';
+    N.items.forEach(function (it, i) {
+      var m = itMM(it); if (m.y == null || m.h == null || m.p == null) return;
+      var u = m.x != null ? (m.x + (m.w || 0) / 2) / W() : .5, d = depthAt(Math.min(1, Math.max(0, u)), 1 - (m.y + m.h / 2) / Hd) || Dx;
+      s += '<rect x="' + (d - m.p) + '" y="' + (Hd - m.y - m.h) + '" width="' + m.p + '" height="' + m.h + '" fill="' + rgb(IT[it.type].c) + '" fill-opacity=".6" stroke="#1b1916" stroke-width="2"/>' + t(d - m.p - 26, Hd - m.y - m.h / 2 + 12, i + 1, { b: 1 });
+    });
+    if (r.v != null) s += '<line x1="' + r.v + '" y1="-20" x2="' + r.v + '" y2="' + (Hd + 20) + '" stroke="#d93025" stroke-width="4" stroke-dasharray="18 12"/>' + t(r.v / 2, Hd + 60, 'свободно ' + fmt(r.v), { b: 1, c: '#d93025' });
+    s += t(dT / 2, -24, fmt(dT), { b: 1 }) + t(dB + 40, Hd - 20, fmt(dB), { a: 'start', b: 1 });
+    return s + '</svg>';
+  }
+  function topSVG() {
+    var Wd = W(), dL = ((num(N.d.tl) || 0) + (num(N.d.bl) || 0)) / ((num(N.d.tl) ? 1 : 0) + (num(N.d.bl) ? 1 : 0) || 1), dR = ((num(N.d.tr) || 0) + (num(N.d.br) || 0)) / ((num(N.d.tr) ? 1 : 0) + (num(N.d.br) ? 1 : 0) || 1);
+    var Dx = Math.max(dL, dR, 100), rl = num(N.r.l) || 0, rr = num(N.r.r) || 0, pad = 160, r = result(), s = svgOpen(-pad - rl, -pad * .5, Wd + pad * 2 + rl + rr, Dx + pad * 1.3);
+    s += '<polygon points="0,0 ' + Wd + ',0 ' + Wd + ',' + dR + ' 0,' + dL + '" fill="#f1eee6" stroke="#1b1916" stroke-width="5"/>';
+    s += '<rect x="' + (-rl - pad * .6) + '" y="-30" width="' + (pad * .6 + rl) + '" height="' + (Dx + 60) + '" fill="#d9d3c6"/><rect x="' + Wd + '" y="-30" width="' + (pad * .6 + rr) + '" height="' + (Dx + 60) + '" fill="#d9d3c6"/>';
+    s += '<line x1="' + (-rl - pad) + '" y1="0" x2="' + (Wd + rr + pad) + '" y2="0" stroke="#77726a" stroke-width="3" stroke-dasharray="10 8"/>' + t(Wd / 2, -40, 'плоскость плитки', { fs: 26, c: '#77726a' });
+    N.items.forEach(function (it, i) {
+      var m = itMM(it); if (m.x == null || m.w == null || m.p == null) return;
+      var d = depthAt(Math.min(1, Math.max(0, (m.x + m.w / 2) / Wd)), m.y != null ? 1 - (m.y + (m.h || 0) / 2) / H() : .5) || Dx;
+      s += '<rect x="' + m.x + '" y="' + (d - m.p) + '" width="' + m.w + '" height="' + m.p + '" fill="' + rgb(IT[it.type].c) + '" fill-opacity=".45" stroke="#1b1916" stroke-width="2"/>' + t(m.x + 26, d - m.p + 36, i + 1, { b: 1 });
+    });
+    if (r.v != null) s += '<line x1="-20" y1="' + r.v + '" x2="' + (Wd + 20) + '" y2="' + r.v + '" stroke="#d93025" stroke-width="4" stroke-dasharray="18 12"/>' + t(Wd + 30, r.v + 10, fmt(r.v), { a: 'start', b: 1, c: '#d93025' });
+    s += t(-20, dL / 2, fmt(dL), { a: 'end', b: 1 }) + t(Wd + 20 + rr, dR / 2 + 40, fmt(dR), { a: 'start', b: 1 });
+    return s + '</svg>';
+  }
+
+  /* ---------- модель (для 3D и для PRO100) ---------- */
+  var BF = [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]];
+  function model() {
+    var Wd = W(), Hd = H(), zb = num(N.a.floor) || 0, D = depthAt.bind(null), meshes = [];
+    var dmax = Math.max.apply(null, [N.d.tl, N.d.tr, N.d.bl, N.d.br].map(function (x) { return num(x) || 0; }).concat([100]));
+    var T = dmax + 60, M = 350;
+    function mesh(n, c) { var m = { name: n, c: c, v: [], f: [] }; meshes.push(m); return m; }
+    function box(m, x0, x1, y0, y1, z0, z1) { var o = m.v.length; [z0, z1].forEach(function (z) { [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].forEach(function (p) { m.v.push([p[0], p[1], z]); }); }); BF.forEach(function (f) { m.f.push([f[0] + o, f[1] + o, f[2] + o]); }); }
+    function quad(m, a, b, c, d) { var o = m.v.length; m.v.push(a, b, c, d); m.f.push([o, o + 1, o + 2], [o, o + 2, o + 3]); }
+    var wall = mesh('Stena', [228, 225, 216]);
+    box(wall, -M, 0, 0, T, 0, zb + Hd + M); box(wall, Wd, Wd + M, 0, T, 0, zb + Hd + M);
+    if (zb > 0) box(wall, 0, Wd, 0, T, 0, zb);
+    box(wall, 0, Wd, 0, T, zb + Hd, zb + Hd + M);
+    var back = mesh('Nisha', [200, 195, 185]);
+    var dd = function (u, v) { return depthAt(u, v) || dmax; };
+    quad(back, [0, dd(0, 1), zb], [Wd, dd(1, 1), zb], [Wd, dd(1, 0), zb + Hd], [0, dd(0, 0), zb + Hd]);
+    box(back, 0, Wd, Math.min(dd(0, 0), dd(1, 0), dd(0, 1), dd(1, 1)), T, zb - 0.5, zb);
+    N.items.forEach(function (it, i) {
+      var m = itMM(it); if (m.x == null || m.y == null || m.w == null || m.h == null || m.p == null) return;
+      var d = dd(Math.min(1, Math.max(0, (m.x + m.w / 2) / Wd)), Math.min(1, Math.max(0, 1 - (m.y + m.h / 2) / Hd)));
+      var mm = mesh((it.type.slice(0, 6) + '_' + (i + 1)), IT[it.type].c); mm.kind = it.type; mm.ref = i;
+      box(mm, m.x, m.x + m.w, d - m.p, d, zb + m.y, zb + m.y + m.h);
+    });
+    return { meshes: meshes, W: Wd, H: Hd, zb: zb, T: T };
+  }
+  var V3 = null;
+  function stop3D() { if (!V3) return; try { cancelAnimationFrame(V3.raf); V3.ctl.dispose(); V3.r.dispose(); } catch (e) {} V3 = null; }
+  function start3D() {
+    if (!$('#v3d')) return;
+    Promise.all([import('three'), import('../assets/three/OrbitControls.js')]).then(function (mods) {
+      var cv = $('#v3d'); if (!cv) return; stop3D();
+      var THREE = mods[0], g = model(), r = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+      r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); r.setClearColor(0xe9e6df);
+      var sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(42, 1, 0.01, 50), k = 0.001;
+      sc.add(new THREE.HemisphereLight(0xffffff, 0x80786a, 2.3)); var dl = new THREE.DirectionalLight(0xffffff, 1.4); dl.position.set(1, 2, 3); sc.add(dl);
+      g.meshes.forEach(function (m) {
+        var pos = []; m.f.forEach(function (f) { f.forEach(function (i) { var v = m.v[i]; pos.push(v[0] * k, v[2] * k, -v[1] * k); }); });
+        var geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.computeVertexNormals();
+        sc.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: new THREE.Color(rgb(m.c)), roughness: .85, side: THREE.DoubleSide })));
+        if (m.ref == null) sc.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: 0x8c867a })));
+      });
+      var cx = g.W / 2 * k, cy = (g.zb + g.H / 2) * k;
+      cam.position.set(cx + 0.9, cy + 0.35, 1.9); var ctl = new mods[1].OrbitControls(cam, cv); ctl.target.set(cx, cy, -0.2); ctl.enableDamping = true; ctl.update();
+      function size() { var w = cv.clientWidth, h = cv.clientHeight; r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+      size(); V3 = { r: r, ctl: ctl };
+      (function loop() { if (!V3) return; V3.raf = requestAnimationFrame(loop); ctl.update(); r.render(sc, cam); })();
+    }).catch(function () {});
+  }
+  function download(name, data) { var b = new Blob([data], { type: 'application/octet-stream' }), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(u); a.remove(); }, 3000); }
+
+  /* ---------- события ---------- */
+  function go(i) { S.step = Math.max(0, Math.min(STEPS.length - 1, i)); S.mark = null; S.edit = null; render(); window.scrollTo(0, 0); }
+  function commitQ() { var st = STEPS[S.step], inp = $('#q'); if (st[0] === 'q' && inp) setK(Q[+st.slice(1)].k, inp.value.trim()); }
+  function loadPhoto(f) {
+    if (!f) return;
+    var img = new Image(), u = URL.createObjectURL(f);
+    img.onload = function () {
+      var k = Math.min(1, 1400 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u); N = blank(c.toDataURL('image/jpeg', .75)); save(); go(1);
+    };
+    img.src = u;
+  }
+  $('#fCam').addEventListener('change', function (e) { loadPhoto(e.target.files[0]); e.target.value = ''; });
+  $('#fGal').addEventListener('change', function (e) { loadPhoto(e.target.files[0]); e.target.value = ''; });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-a],[data-mark],[data-edit],[data-tm],[data-acc]'); if (!b) return;
+    var a = b.dataset.a;
+    if (b.dataset.mark) { S.mark = { type: b.dataset.mark }; render(); return; }
+    if (b.dataset.edit) { S.edit = +b.dataset.edit; S.iq = 0; render(); return; }
+    if (b.dataset.tm) { commitQ(); N.r.tmode = b.dataset.tm; save(); S.noFocus = true; renderPanel(); drawOverlay(); return; }
+    if (b.dataset.acc) { N.items[S.edit].access = b.dataset.acc === '1'; save(); renderPanel(); return; }
+    if (a === 'sample') { N = sample(); go(STEPS.length - 1); return; }
+    if (a === 'cam') { $('#fCam').click(); return; }
+    if (a === 'gal') { $('#fGal').click(); return; }
+    if (a === 'resume') { go(1); return; }
+    if (a === 'restart') { go(0); return; }
+    if (a === 'reset') { N.c = []; save(); render(); return; }
+    if (a === 'next') { commitQ(); go(S.step + 1); return; }
+    if (a === 'back') { commitQ(); go(S.step - 1); return; }
+    if (a === 'items') { go(STEPS.indexOf('items')); return; }
+    if (a === 'cancelMark') { S.mark = null; render(); return; }
+    if (a === 'acceptEst') { var it = N.items[S.edit], q = IQ[S.iq]; it[q.k] = String(Math.round(itEst(it)[q.est])); save(); S.iq++; if (S.iq >= IQ.length) { S.edit = null; S.iq = 0; } render(); return; }
+    if (a === 'inext' || a === 'iback') {
+      var it2 = N.items[S.edit], inp = $('#q'); if (inp) it2[IQ[S.iq].k] = inp.value.trim(); save();
+      S.iq += a === 'inext' ? 1 : -1;
+      if (S.iq >= IQ.length || S.iq < 0) { S.edit = null; S.iq = 0; }
+      render(); return;
+    }
+    if (a === 'idel') { N.items.splice(S.edit, 1); S.edit = null; save(); render(); return; }
+    if (a === '3ds') { download('nisha_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '_mm.3ds', ZG.to3DS(model(), 1)); return; }
+    if (a === 'print') { window.print(); return; }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || e.target.id !== 'q') return; e.preventDefault();
+    if (STEPS[S.step] === 'items') $('[data-a=inext]').click(); else { commitQ(); go(S.step + 1); }
+  });
+  document.addEventListener('input', function (e) { if (e.target.id === 'nt') { N.note = e.target.value; save(); } });
+
+  render();
+})();
+</script>
+</body>
+</html>

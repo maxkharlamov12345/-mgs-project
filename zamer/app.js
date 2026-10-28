@@ -320,7 +320,7 @@
   function renderList() {
     var L = listAll();
     app.innerHTML = '<div class="hero"><h1>Замер помещения — <em>прямо с телефона</em></h1><p>По шагам: стены → всё, что на них есть → фото → проверка, что ничего не упущено → чертёж 2D, 3D и файл для PRO100.</p>' +
-      '<div class="chips"><button class="btn p" data-a="new">+ Новый замер</button><button class="btn ghost" style="color:#fff;border-color:#555" data-a="openjson">Открыть файл замера</button></div></div>' +
+      '<div class="chips"><button class="btn p" data-a="new">+ Новый замер</button><button class="btn ghost" style="color:#fff;border-color:#555" data-a="openjson">Открыть файл замера</button><a class="btn ghost" style="color:#fff;border-color:#555;text-decoration:none" href="nisha.html">Замер ниши (пример)</a></div></div>' +
       '<div class="card"><h2>Мои замеры</h2>' + (L.length ? L.map(function (m) {
         var c = check(m);
         return '<div class="list-item" data-open="' + m.id + '"><div class="a"><b>' + esc(m.name) + '</b><div class="b">' + esc(m.address || '') + (m.address ? ' · ' : '') + esc(m.date || '') + ' · стен: ' + m.walls.length + '</div></div>' +
