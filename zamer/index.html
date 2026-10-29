@@ -382,7 +382,7 @@ button,input,select{font:inherit;color:inherit}
     var h = '';
     if (p.t === 'wdims') {
       var i = S.wall, w = wd(i);
-      var row = function (k, m) { return '<div data-mi="' + k + ':' + m.id + '"><span>' + (k === 'l' ? '↔ ' : '↕ ') + '<b>' + fmt(m.v) + '</b>' + '</span></div>'; };
+      var row = function (k, m) { return '<div data-mi="' + k + ':' + m.id + '"><span>' + (k === 'l' ? '↔ <b>' : '↕ <b>h ') + fmt(m.v) + '</b>' + '</span></div>'; };
       h = head('Стена ' + (i + 1) + ': замеры') + '<p class="hint">Каждый размер стоит там, где его мерили. Стена строится по ним.</p>' +
         '<div class="lbl">Длина, мм</div><div class="issues">' + (w.lm.length ? w.lm.slice().sort(function (a, b) { return a.z - b.z; }).map(function (m) { return row('l', m); }).join('') : '<p class="hint">нет</p>') + '</div>' +
         '<div class="lbl">Высота, мм</div><div class="issues">' + (w.hm.length ? w.hm.slice().sort(function (a, b) { return a.u - b.u; }).map(function (m) { return row('h', m); }).join('') : '<p class="hint">нет</p>') + '</div>' +
@@ -526,7 +526,7 @@ button,input,select{font:inherit;color:inherit}
     var LB = lBase(i), selM = S.pop && S.pop.t === 'meas' ? S.pop.id : null;
     function dash(x1, y1, x2, y2, c, wdt) { return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + c + '" stroke-width="' + (wdt || 1.6) * k + '" stroke-dasharray="' + 7 * k + ' ' + 5 * k + '" pointer-events="none"/>'; }
     w.lm.forEach(function (m) { var on = m.id === selM, y = Y(m.z), x2 = L + (m.v > 0 && LB ? m.v - LB : 0); s += dash(0, y, x2 + 14 * k, y, on ? '#ff5a1f' : '#8c867a', on ? 2.4 : 1.6) + chip(L + 62 * k, y, m.v > 0 ? fmt(m.v) : '?', on ? 'cur' : m.v > 0 ? 'min' : 'miss', 'data-mi="l:' + m.id + '"'); });
-    w.hm.forEach(function (m) { var on = m.id === selM, x = m.u; s += dash(x, Y(m.v > 0 ? m.v : topAt(i, x)), x, H + 12 * k, on ? '#ff5a1f' : '#8c867a', on ? 2.4 : 1.6) + chip(Math.max(30 * k, Math.min(L - 30 * k, x)), H + 26 * k, m.v > 0 ? fmt(m.v) : '?', on ? 'cur' : m.v > 0 ? 'min' : 'miss', 'data-mi="h:' + m.id + '"'); });
+    w.hm.forEach(function (m) { var on = m.id === selM, x = m.u; s += dash(x, Y(m.v > 0 ? m.v : topAt(i, x)), x, H + 12 * k, on ? '#ff5a1f' : '#8c867a', on ? 2.4 : 1.6) + chip(Math.max(30 * k, Math.min(L - 30 * k, x)), H + 26 * k, m.v > 0 ? 'h ' + fmt(m.v) : 'h ?', on ? 'cur' : m.v > 0 ? 'min' : 'miss', 'data-mi="h:' + m.id + '"'); });
     if (S.meas && S.mpos != null) {   // пунктир, который бегает за пальцем
       if (S.meas === 'l') { var yy = Y(S.mpos); s += dash(-20 * k, yy, L + 30 * k, yy, '#ff5a1f', 3); }
       else { s += dash(S.mpos, -20 * k, S.mpos, H + 20 * k, '#ff5a1f', 3); }
@@ -736,51 +736,62 @@ button,input,select{font:inherit;color:inherit}
     function text(t, cu, cz, vert, c) { x.save(); x.translate(X(cu), Y(cz)); if (vert) x.rotate(-Math.PI / 2); x.fillStyle = c; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, 0, 0); x.restore(); }
     function tick(u, z) { var s = FS * .32; x.beginPath(); x.moveTo(X(u - s), Y(z - s)); x.lineTo(X(u + s), Y(z + s)); x.stroke(); }
     function line(u0, z0, u1, z1, c, dash) { x.strokeStyle = c; x.lineWidth = LW; x.setLineDash(dash ? [30, 22] : []); x.beginPath(); x.moveTo(X(u0), Y(z0)); x.lineTo(X(u1), Y(z1)); x.stroke(); x.setLineDash([]); }
-    // размер: линия a→b (горизонтальная или вертикальная) с засечками и числом над линией; подбираем место без наложений
+    // размеры ставим в два прохода: сначала все линии (они — препятствия), потом цифры — так цифра не ложится на чужую линию
+    var Q = [], NAMES = [];
     function dim(u0, z0, u1, z1, t, c, alongs) {
       var vert = Math.abs(u1 - u0) < 1, len = vert ? Math.abs(z1 - z0) : Math.abs(u1 - u0); if (len < 5) return;
-      font(1); var tw = x.measureText(t).width, place = null;
-      (alongs || [.5, .3, .7, .15, .85, .05, .95]).some(function (f) {
+      var g = LW + 2; taken.push(vert ? { u0: u0 - g, u1: u0 + g, z0: Math.min(z0, z1), z1: Math.max(z0, z1) } : { u0: Math.min(u0, u1), u1: Math.max(u0, u1), z0: z0 - g, z1: z0 + g });
+      Q.push({ u0: u0, z0: z0, u1: u1, z1: z1, t: t, c: c, alongs: alongs, vert: vert, len: len });
+    }
+    function place(d) {
+      font(1); var tw = x.measureText(d.t).width, pl = null, u0 = d.u0, z0 = d.z0, u1 = d.u1, z1 = d.z1, vert = d.vert;
+      (d.alongs || [.5, .3, .7, .15, .85, .05, .95]).some(function (f) {
         return [1, -1, 2, -2, 3, -3].some(function (side) {   // сначала у самой линии, потом дальше от неё — лишь бы не наложиться
           var off = (side > 0 ? 1 : -1) * (FS * .75 + (Math.abs(side) - 1) * FS * 1.2);
           var cu = vert ? u0 + off : u0 + (u1 - u0) * f, cz = vert ? z0 + (z1 - z0) * f : z0 + off, r = trect(cu, cz, tw, vert);
-          if (!hits(r)) { place = [cu, cz, r]; return true; } return false;
+          if (!hits(r)) { pl = [cu, cz, r]; return true; } return false;
         });
       });
-      if (!place && tw + 40 > len) { var cu2 = vert ? u0 + FS * .75 : u1 + tw / 2 + 40, cz2 = vert ? z1 + tw / 2 + 40 : z0 + FS * .75; place = [cu2, cz2, trect(cu2, cz2, tw, vert)]; }
-      if (!place) { var cu3 = vert ? u0 + FS * .75 : (u0 + u1) / 2, cz3 = vert ? (z0 + z1) / 2 : z0 + FS * .75; place = [cu3, cz3, trect(cu3, cz3, tw, vert)]; }
-      line(u0, z0, u1, z1, c); x.strokeStyle = c; tick(u0, z0); tick(u1, z1);
-      taken.push(place[2]); text(t, place[0], place[1], vert, c);
+      if (!pl && tw + 40 > d.len) { var cu2 = vert ? u0 + FS * .75 : u1 + tw / 2 + 40, cz2 = vert ? z1 + tw / 2 + 40 : z0 + FS * .75; pl = [cu2, cz2, trect(cu2, cz2, tw, vert)]; }
+      if (!pl) { var cu3 = vert ? u0 + FS * .75 : (u0 + u1) / 2, cz3 = vert ? (z0 + z1) / 2 : z0 + FS * .75; pl = [cu3, cz3, trect(cu3, cz3, tw, vert)]; }
+      taken.push(pl[2]); text(d.t, pl[0], pl[1], vert, d.c);
     }
-    var INK = '#1b1916', EST = '#e2531b', GRY = '#8c867a';
+    var INK = '#1b1916', EST = '#e2531b', GRY = '#8c867a', UP = [.88, .8, .94, .72, .64];   // высоты — цифрой в верхней части стены
     // замеры — на своих местах: длина на той высоте, где мерили; высота там, где мерили
     var LB = lBase(i);
     lms(i).forEach(function (m) { dim(0, m.z, Math.min(L, L + m.v - LB), m.z, fmt(m.v), INK, [.5, .3, .7, .15, .85]); });
-    hms(i).forEach(function (m) { dim(m.u, 0, m.u, Math.min(H, m.v), fmt(m.v), INK, [.5, .3, .7]); });
+    hms(i).forEach(function (m) { dim(m.u, 0, m.u, Math.min(H, m.v), 'h ' + fmt(m.v), INK, UP); });
     if (!lms(i).length) { line(0, 100, L, 100, EST, true); font(1); text('длина ?', L / 2, 100 + FS * .75, false, EST); }
-    if (!hms(i).length) { line(100, 0, 100, H, EST, true); font(1); text('высота ?', 100 + FS * .75, H / 2, true, EST); }
+    if (!hms(i).length) { line(100, 0, 100, H, EST, true); font(1); text('h ?', 100 + FS * .75, H * .85, true, EST); }
+    var nWall = Q.length;
     // элементы: контур, название, привязки
     items(i).forEach(function (it) {
       var r = rect(it, H), kk = K(it.type), okk = it.ok || {}, cx = (r.u0 + r.u1) / 2, cz = (r.z0 + r.z1) / 2;
       function cl(f) { return okk[f] ? INK : EST; }
       x.strokeStyle = INK; x.lineWidth = LW; x.strokeRect(X(r.u0), Y(r.z1), r.u1 - r.u0, r.z1 - r.z0);
-      taken.push({ u0: r.u0, u1: r.u1, z0: r.z0, z1: r.z1 });
-      var nm0 = (SHORT[it.type] || '') + (it.n > 1 ? ' ×' + it.n : '') + (it.note ? ' — ' + it.note : '');
-      x.font = '400 ' + FS * .85 + 'px Onest, Arial'; var nw = x.measureText(nm0).width;
-      [[cx, r.z1 + FS * .75], [cx, r.z0 - FS * .75], [r.u1 + nw / 2 + 30, cz], [r.u0 - nw / 2 - 30, cz]].some(function (q) { var rr = trect(q[0], q[1], nw, false); if (hits(rr)) return false; taken.push(rr); x.fillStyle = INK; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(nm0, X(q[0]), Y(q[1])); return true; });
+      if (kk === 'open') { var e = LW + 2; taken.push({ u0: r.u0 - e, u1: r.u1 + e, z0: r.z0 - e, z1: r.z0 + e }, { u0: r.u0 - e, u1: r.u1 + e, z0: r.z1 - e, z1: r.z1 + e }, { u0: r.u0 - e, u1: r.u0 + e, z0: r.z0, z1: r.z1 }, { u0: r.u1 - e, u1: r.u1 + e, z0: r.z0, z1: r.z1 }); }   // по стеклу подписи можно, по рамке — нет
+      else taken.push({ u0: r.u0, u1: r.u1, z0: r.z0, z1: r.z1 });
+      NAMES.push({ r: r, cx: cx, cz: cz, t: (SHORT[it.type] || '') + (it.n > 1 ? ' ×' + it.n : '') + (it.note ? ' — ' + it.note : '') });
       var au = kk === 'point' || kk === 'pipe' ? cx : r.u0;
       dim(0, cz, au, cz, fmt(it.off), cl('off'));
       if (kk !== 'pipe' && r.z0 > 1) dim(cx, 0, cx, kk === 'point' ? cz : r.z0, fmt(it.z), cl('z'));
       if (kk !== 'point' && r.u1 - r.u0 > 30) dim(r.u0, r.z1 + FS * .2, r.u1, r.z1 + FS * .2, fmt(it.w), cl('w'));
-      if (kk !== 'point' && kk !== 'pipe') dim(r.u1 + FS * .2, r.z0, r.u1 + FS * .2, r.z1, fmt(it.h), cl('h'));
+      if (kk !== 'point' && kk !== 'pipe') dim(r.u1 + FS * .2, r.z0, r.u1 + FS * .2, r.z1, 'h ' + fmt(it.h), cl('h'));
     });
+    Q.forEach(function (d) { line(d.u0, d.z0, d.u1, d.z1, d.c); x.strokeStyle = d.c; tick(d.u0, d.z0); tick(d.u1, d.z1); });   // все линии
+    Q.slice(0, nWall).forEach(place);   // цифры замеров стены — первыми
+    NAMES.forEach(function (n) {
+      x.font = '400 ' + FS * .85 + 'px Onest, Arial'; var nw = x.measureText(n.t).width, r = n.r;
+      [[n.cx, r.z1 + FS * .75], [n.cx, r.z0 - FS * .75], [r.u1 + nw / 2 + 30, n.cz], [r.u0 - nw / 2 - 30, n.cz]].some(function (q) { var rr = trect(q[0], q[1], nw, false); if (hits(rr)) return false; taken.push(rr); x.fillStyle = INK; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(n.t, X(q[0]), Y(q[1])); return true; });
+    });
+    Q.slice(nWall).forEach(place);
     font(1); x.fillStyle = GRY; x.textAlign = 'center'; x.fillText('Стена ' + (i + 1), X(L / 2), Y(H - FS * 2.1));
     return cv;
   }
   function dims() {
     var k = .001;
     for (var i = 0; i < nW(); i++) {
-      var L = wLen(i), H = wH(i), p = wPts(i)[0], d = wDir(i), nm = [d[1], -d[0]], t = 14;
+      var L = wLen(i), H = wH(i), p = wPts(i)[0], d = wDir(i), nm = [d[1], -d[0]], t = 18;
       function P(u, z) { return [(p.x + d[0] * u + nm[0] * t) * k, z * k, -(p.y + d[1] * u + nm[1] * t) * k]; }
       var g = wallGeo(i, P, L, H);
       var tx = new THREE.CanvasTexture(wallSheet(i)); tx.anisotropy = V.r.capabilities.getMaxAnisotropy(); tx.colorSpace = THREE.SRGBColorSpace;
