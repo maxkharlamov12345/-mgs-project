@@ -606,11 +606,19 @@ button,input,select{font:inherit;color:inherit}
     });
     V.walls = [];   // для каждой стены — середина и нормаль внутрь: стены, закрывающие вид, становятся прозрачными вместе с подписями
     for (var i = 0; i < nW(); i++) { var a = wPts(i), d = wDir(i); V.walls.push({ mid: new THREE.Vector3((a[0].x + a[1].x) / 2 * k, 0, -(a[0].y + a[1].y) / 2 * k), nrm: new THREE.Vector3(d[1], 0, d[0]), lab: new THREE.Group() }); grp.add(V.walls[i].lab); }
+    V.walls.forEach(function (w, i) {   // подсветка выбранной стены — только лицевая поверхность (тонкий слой поверх), не вся толщина
+      var L = wLen(i), H = wH(i), p = wPts(i)[0], d = wDir(i), nm = [d[1], -d[0]], t = 8;
+      function P(u, z) { return [(p.x + d[0] * u + nm[0] * t) * k, z * k, -(p.y + d[1] * u + nm[1] * t) * k]; }
+      var g = new THREE.BufferGeometry(), a = P(0, 0), b = P(L, 0), c = P(L, H), e = P(0, H);
+      g.setAttribute('position', new THREE.Float32BufferAttribute(a.concat(b, c, a, c, e), 3));
+      w.hl = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xff5a1f, transparent: true, opacity: .22, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+      w.hl.renderOrder = 4; w.hl.visible = false; grp.add(w.hl);
+    });
     var key = R.pts.length + '|' + R.closed; if (V.key !== key) { V.key = key; camView(V.view || 'out'); }
     selMark();
     if (!S.noDims) { if (document.fonts && !S.fontsOk) document.fonts.load('600 60px Onest').then(function () { S.fontsOk = 1; build3D(); }); dims(); }
   }
-  function selMark() { if (!V) return; V.grp.children.forEach(function (o) { if (o.isMesh && o.userData.isWall) o.material.emissive.setHex(o.userData.wall === S.sel3 ? 0x8a3a10 : 0); }); }
+  function selMark() { if (!V || !V.walls) return; V.walls.forEach(function (w, i) { if (w.hl) w.hl.visible = i === S.sel3; }); }
   function ghost() {   // каждый кадр: стена между камерой и комнатой — прозрачная, её размеры скрыты
     if (!V || !V.walls) return; var cp = V.cam.position, gs = V.walls.map(function (w) { return w.nrm.dot(cp.clone().setY(0).sub(w.mid)) < 0; });
     V.grp.children.forEach(function (o) {
