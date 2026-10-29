@@ -292,3 +292,13 @@
 - Образец экспорта — гардеробная Макса (2500×2710×835): 4 секции, 18 промежутков, 4 ящика по 149.
 - Дальше: свой плагин-кнопка для PRO100 (как у KK-3D: плагин `.plg` в `PRO100\plugins` запускает встроенный экспорт OBJ),
   проверка на кухне/шкафу с фасадами, роли (админ/менеджер), привязка к CRM.
+- Кнопка для PRO100 (`3d/pro100/`, архив `MGS3D_PRO100.zip`, ссылка «Скачать кнопку для PRO100» в кабинете): плагин `mgs3d.plg`
+  (C, MinGW x64; исходник `3d/pro100/src/mgs3d.c`) добавляет в «Экспорт» PRO100 пункт «Отправить в MGS 3D…».
+  Интерфейсы PRO100 (COM-подобные, выяснены по плагину KK-3D): экспорт `createObject(out)`; IPlugin e987c0b2 (slot3 GetId),
+  init 6f0f1740 (slot4 Init(app)), done b4dee719, IExportPlugin 9cad3fed (slot3 GetId, slot4 GetCaption, slot5 Execute(ctx));
+  app: QI 58ff9736 / 9692391b → slot18 GetPlugins → list slot4 Item(i), slot5 Count → QI IPluginInfo 8fa9494c → slot5 GetObject →
+  QI IExportPlugin → id "export.obj" → Execute(ctx). Перед вызовами — проверка адресов методов под PRO100 7.08 (RVA в коде; `skip_version_check=1` в ini).
+  Во время Execute таймер заполняет окна: TOBJForm «Экспорт в obj» (TCheckBox «копировать текстуры / только выбранное / добавить стены», TButton OK),
+  затем #32770 «Сохранить» (путь %LOCALAPPDATA%\MGS3D\export\<время>\model.obj). Потом запускается `mgs3d_send.ps1` (PowerShell 5.1 + WinForms, UTF-8 с BOM):
+  вход (refresh-токен под DPAPI в %LOCALAPPDATA%\MGS3D\session.dat), выбор/создание проекта, загрузка файлов в Storage, строка в items, открывает ссылку.
+  Журналы — %LOCALAPPDATA%\MGS3D\logs. Проверка плагина — `3d/pro100/src/host.c` (имитация PRO100) под Wine + xvfb.
