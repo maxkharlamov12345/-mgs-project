@@ -311,9 +311,8 @@ button,input,select{font:inherit;color:inherit}
       else br = '<button class="btn s ghost" data-a="redraw">✎ Начертить заново</button><button class="btn p" data-a="toWall">Развёртки →</button>';
     } else if (S.mode === 'wall') {
       var n = nW(), i = S.wall;
-      br = '<button class="btn s ghost" data-a="prevw"' + (i > 0 || R.closed ? '' : ' disabled') + '>← Стена ' + ((i - 1 + n) % n + 1) + '</button><button class="btn s ghost" data-a="nextw"' + (i < n - 1 || R.closed ? '' : ' disabled') + '>Стена ' + ((i + 1) % n + 1) + ' →</button>';
-      if (!S.side) bl = '<button class="btn p" data-a="side">＋ Элемент</button>';
-      tr = '<button class="btn s ghost" data-a="wdims">Размеры стены</button>';
+      // справа сверху: «＋ Элемент» (открыть/скрыть меню) и «Размеры стены»; переходы к другим стенам убраны (Макс) — стены выбираются на плане или в 3D
+      tr = '<button class="btn s ' + (S.side ? 'd' : 'p') + '" data-a="side">' + '＋ Элемент' + '</button><button class="btn s ghost" data-a="wdims">Размеры стены</button>';
     } else {
       tr = '<button class="btn s ghost" data-cam="in">Изнутри</button><button class="btn s ghost" data-cam="top">Сверху</button><button class="btn s ghost" data-cam="out">Общий</button>';
       if (S.sel3 >= 0) br = '<button class="btn p" data-a="open3">Открыть развёртку стены ' + (S.sel3 + 1) + ' →</button>';
@@ -448,7 +447,7 @@ button,input,select{font:inherit;color:inherit}
     var i = Math.max(0, Math.min(S.wall, nW() - 1)); S.wall = i;
     var w = wd(i), L = wLen(i), H = wH(i), sz = svSize(), ar = sz[0] / sz[1];
     // поля в пикселях: слева 30, справа 120 (размеры длины), сверху 70 (заголовок), снизу 54 (размеры высоты, кнопки)
-    var PL = 30, PRR = 120, PT = 70, PB = PHONE() ? 70 : 60, k = Math.max(L / Math.max(100, sz[0] - PL - PRR), H / Math.max(100, sz[1] - PT - PB));
+    var PL = 30, PRR = 120, PT = PHONE() ? 104 : 70, PB = PHONE() ? 70 : 60, k = Math.max(L / Math.max(100, sz[0] - PL - PRR), H / Math.max(100, sz[1] - PT - PB));
     var x0 = -PL * k - (sz[0] * k - (PL + PRR) * k - L) / 2, y0 = -PT * k - (sz[1] * k - (PT + PB) * k - H) / 2, ww = sz[0] * k, hh = sz[1] * k;
     EB = { L: L, H: H }; var s = '';
     sv.setAttribute('viewBox', [x0, y0, ww, hh].join(' '));
@@ -780,7 +779,6 @@ button,input,select{font:inherit;color:inherit}
     if (a === 'wdims') { openPop({ t: 'wdims', focus: 1 }); return; }
     if (a === 'open3') { var w3 = S.sel3; S.sel3 = -1; openWall(w3); return; }
     if (a === 'openWall') { openWall(S.pop.i); return; }
-    if (a === 'prevw' || a === 'nextw') { var n = nW(); S.wall = (S.wall + (a === 'nextw' ? 1 : -1) + n) % n; S.pop = null; renderAll(); return; }
     if (a === 'zin' || a === 'zout') { var r0 = sv.getBoundingClientRect(); zoomAt(a === 'zin' ? 1.3 : 1 / 1.3, r0.left + r0.width / 2, r0.top + r0.height / 2); return; }
     if (a === 'zfit') { S.vb = null; drawPlan(); return; }
     if (a === 'undo') { R.pts.pop(); save(); drawPlan(); renderFabs(); tip(); return; }
