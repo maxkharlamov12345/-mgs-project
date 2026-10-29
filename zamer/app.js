@@ -279,7 +279,7 @@
     var ty = TYPES[it.type] || TYPES.other, k = ty.kind, p = [];
     var side = it.from === 'R' ? 'от прав.' : 'от лев.';
     if (k === 'open') p.push(fmt(minOf(it.w)) + '×' + fmt(minOf(it.h)));
-    if (k === 'box') p.push(fmt(num(it.w0)) + '×' + fmt(num(it.h0)) + (num(it.depth) ? '×' + fmt(num(it.depth)) : ''));
+    if (k === 'box' || k === 'recess') p.push(fmt(num(it.w0)) + '×' + fmt(num(it.h0)) + (num(it.depth) ? '×' + fmt(num(it.depth)) : ''));
     if (k === 'pipe') p.push('Ø' + fmt(num(it.dia)));
     if (num(it.off) !== null) p.push(side + ' ' + fmt(num(it.off)));
     if (num(it.z) !== null) p.push('h ' + fmt(num(it.z)));
@@ -320,7 +320,7 @@
   function renderList() {
     var L = listAll();
     app.innerHTML = '<div class="hero"><h1>Замер помещения — <em>прямо с телефона</em></h1><p>По шагам: стены → всё, что на них есть → фото → проверка, что ничего не упущено → чертёж 2D, 3D и файл для PRO100.</p>' +
-      '<div class="chips"><button class="btn p" data-a="new">+ Новый замер</button><button class="btn ghost" style="color:#fff;border-color:#555" data-a="openjson">Открыть файл замера</button><a class="btn ghost" style="color:#fff;border-color:#555;text-decoration:none" href="nisha.html">Замер ниши (пример)</a></div></div>' +
+      '<div class="chips"><button class="btn p" data-a="new">+ Новый замер</button><button class="btn ghost" style="color:#fff;border-color:#555" data-a="openjson">Открыть файл замера</button><a class="btn ghost" style="color:#fff;border-color:#555;text-decoration:none" href="nisha.html">Замер ниши (пример)</a><a class="btn p" style="text-decoration:none" href="foto.html">Замер по фото — новый формат</a></div></div>' +
       '<div class="card"><h2>Мои замеры</h2>' + (L.length ? L.map(function (m) {
         var c = check(m);
         return '<div class="list-item" data-open="' + m.id + '"><div class="a"><b>' + esc(m.name) + '</b><div class="b">' + esc(m.address || '') + (m.address ? ' · ' : '') + esc(m.date || '') + ' · стен: ' + m.walls.length + '</div></div>' +
@@ -438,8 +438,8 @@
     if (!(w.items || []).length) return '<p class="hint" style="margin-top:10px">На стене нет элементов.</p>';
     return '<table class="t" style="margin-top:10px"><tr><th>№</th><th>Элемент</th><th>От угла</th><th>От пола</th><th>Ш×В</th><th>Выступ / глуб.</th><th>Прим.</th></tr>' + w.items.map(function (it, i) {
       var ty = TYPES[it.type] || TYPES.other, k = ty.kind;
-      var wh = k === 'open' ? fmt(minOf(it.w)) + '×' + fmt(minOf(it.h)) : k === 'box' ? fmt(num(it.w0)) + '×' + fmt(num(it.h0)) : k === 'pipe' ? 'Ø' + fmt(num(it.dia)) : (num(it.count) > 1 ? num(it.count) + ' шт' : '—');
-      var dp = k === 'open' ? fmt(num(it.depth)) + (num(it.sill) ? ', подок. ' + fmt(num(it.sill)) : '') : k === 'box' ? fmt(num(it.depth)) : k === 'pipe' ? fmt(num(it.gap)) : '—';
+      var wh = k === 'open' ? fmt(minOf(it.w)) + '×' + fmt(minOf(it.h)) : (k === 'box' || k === 'recess') ? fmt(num(it.w0)) + '×' + fmt(num(it.h0)) : k === 'pipe' ? 'Ø' + fmt(num(it.dia)) : (num(it.count) > 1 ? num(it.count) + ' шт' : '—');
+      var dp = k === 'open' ? fmt(num(it.depth)) + (num(it.sill) ? ', подок. ' + fmt(num(it.sill)) : '') : (k === 'box' || k === 'recess') ? fmt(num(it.depth)) : k === 'pipe' ? fmt(num(it.gap)) : '—';
       return '<tr><td>' + (i + 1) + '</td><td>' + esc(ty.t) + (it.purpose ? '<br><span class="st">' + esc(it.purpose) + '</span>' : '') + '</td><td>' + (it.from === 'R' ? 'прав. ' : 'лев. ') + fmt(num(it.off)) + (k === 'point' || k === 'pipe' ? ' (центр)' : '') + '</td><td>' + (k === 'pipe' ? 'от пола' : fmt(num(it.z) === null && ty.floor ? 0 : num(it.z))) + '</td><td>' + wh + '</td><td>' + dp + '</td><td>' + esc([it.opening, it.note].filter(Boolean).join('; ')) + '</td></tr>';
     }).join('') + '</table>';
   }

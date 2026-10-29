@@ -34,7 +34,7 @@
     box:      { t: 'Короб (ГКЛ, трубы)',   kind: 'box', c: [175, 175, 175] },
     ledge:    { t: 'Выступ / порог / подиум', kind: 'box', c: [175, 175, 175], floor: true },
     apron:    { t: 'Фартук',               kind: 'box', c: [210, 200, 170], flat: true },
-    niche:    { t: 'Ниша',                 kind: 'box', c: [95, 70, 55] },
+    niche:    { t: 'Ниша',                 kind: 'recess', c: [150, 140, 125] },
     other:    { t: 'Прочее',               kind: 'box', c: [190, 190, 190] }
   };
 
@@ -75,6 +75,12 @@
       if (off === null || z === null) return null;
       var uc = from === 'R' ? L - off : off;
       return { u0: uc - w / 2, u1: uc + w / 2, z0: z - h / 2, z1: z + h / 2, dep: 25 };
+    }
+    if (k === 'recess') {                                         // ниша: вырез в стене + углубление
+      w = num(it.w0); h = num(it.h0); dep = num(it.depth); z0 = z;
+      if (off === null || w === null || h === null || z0 === null || dep === null) return null;
+      var r0 = from === 'R' ? L - off - w : off;
+      return { u0: r0, u1: r0 + w, z0: z0, z1: z0 + h, dep: dep, cut: true, recess: true };
     }
     if (k === 'pipe') {
       var d = num(it.dia) || 110;
@@ -174,7 +180,14 @@
       var ty = TYPES[r.it.type] || TYPES.other;
       var tag = (r.it.type || 'el').slice(0, 5) + '_' + (r.wi + 1) + '_' + (cnt[r.it.type] = (cnt[r.it.type] || 0) + 1);
       var m = mesh(tag, ty.c, r.it.type); m.ref = r;
-      if (r.b.cut) {   // окно/дверь: тонкая рамка-«стекло» в проёме, чтобы было видно в PRO100
+      if (r.b.recess) {
+        var D = r.b.dep, s0 = 20;
+        lbox(m, r.wi, r.b.u0, r.b.u1, -D - s0, -D, r.b.z0, r.b.z1);
+        lbox(m, r.wi, r.b.u0 - s0, r.b.u0, -D - s0, 0, r.b.z0 - s0, r.b.z1 + s0);
+        lbox(m, r.wi, r.b.u1, r.b.u1 + s0, -D - s0, 0, r.b.z0 - s0, r.b.z1 + s0);
+        lbox(m, r.wi, r.b.u0, r.b.u1, -D - s0, 0, r.b.z1, r.b.z1 + s0);
+        if (r.b.z0 > 0.5) lbox(m, r.wi, r.b.u0, r.b.u1, -D - s0, 0, r.b.z0 - s0, r.b.z0);
+      } else if (r.b.cut) {   // окно/дверь: тонкая рамка-«стекло» в проёме, чтобы было видно в PRO100
         var col = r.it.type === 'door' ? -T * 0.5 - 20 : -T * 0.5 - 10;
         if (r.it.type !== 'arch') lbox(m, r.wi, r.b.u0, r.b.u1, col, col + (r.it.type === 'door' ? 40 : 20), r.b.z0, r.b.z1);
         else lbox(m, r.wi, r.b.u0, r.b.u1, -T, 0, r.b.z0 - 0.01, r.b.z0);
