@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MGS Mebel — 3D-проект</title>
+<style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2122,U+2212}</style>
+<link rel="stylesheet" href="viewer.css">
+<style>body{margin:0}</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="labels"></div>
+
+<header class="top">
+  <div class="brand">MGS<b>3D</b></div>
+  <div class="crumb" id="crumb"></div>
+  <div class="sp"></div>
+  <div class="views" role="group" aria-label="Вид">
+    <button data-v="persp" class="on">3D</button>
+    <button data-v="front">Спереди</button>
+    <button data-v="top">Сверху</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs" hidden></nav>
+
+<aside class="panel" id="panel" hidden>
+  <div class="sec">
+    <div class="cap">Габариты, мм</div>
+    <div class="overall">
+      <div><span>ШИРИНА</span><b id="oW">—</b></div>
+      <div><span>ВЫСОТА</span><b id="oH">—</b></div>
+      <div><span>ГЛУБИНА</span><b id="oD">—</b></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="cap">Показать размеры</div>
+    <div class="chips" id="chips">
+      <button class="chip on" data-k="overall"><i></i>Общие</button>
+      <button class="chip on" data-k="cols"><i></i>Секции</button>
+      <button class="chip on" data-k="gaps"><i></i>Между полками</button>
+      <button class="chip on" data-k="drawers"><i></i>Ящики</button>
+    </div>
+    <div class="stat opt" id="stat"></div>
+  </div>
+  <div class="sec opt">
+    <div class="cap">Деталь</div>
+    <div class="part" id="part"></div>
+  </div>
+</aside>
+
+<div class="empty" id="empty" hidden><div><h1 id="eT"></h1><p id="eP"></p></div></div>
+<div id="drop" hidden></div>
+<div id="status" hidden></div>
+
+<script type="importmap">
+{"imports":{"three":"./lib/three.module.min.js"}}
+</script>
+<script src="lib/supabase.min.js"></script>
+<script type="module">
+import {loadFromMap,status,base} from './viewer.js';
+import {sb,configured,publicUrl} from './db.js';
+const $=s=>document.querySelector(s);
+const q=new URLSearchParams(location.search);
+const token=q.get('s');
+function empty(t,p){$('#empty').hidden=false;$('#eT').textContent=t;$('#eP').textContent=p;$('#panel').hidden=true;}
+
+async function openItem(it){
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.id===it.id));
+  const u=new URL(location.href);u.searchParams.set('i',it.id);history.replaceState(null,'',u);
+  const files=it.files||[];
+  if(!files.some(f=>/\.obj$/i.test(f.name))){empty('Модель ещё не загружена','Для этого изделия пока нет 3D-модели.');return;}
+  $('#empty').hidden=true;$('#panel').hidden=false;
+  const map=new Map(files.map(f=>[base(f.name),{url:publicUrl(f.path)}]));
+  await loadFromMap(map,it.title);
+}
+
+(async()=>{
+  if(!configured){empty('Сервис не настроен','В config.js не указан адрес базы.');return;}
+  if(!token){empty('Нет ссылки на проект','Откройте ссылку, которую прислал менеджер MGS Mebel.');return;}
+  status('Загружаем проект…');
+  const {data,error}=await sb.rpc('shared_project',{t:token});
+  status('');
+  if(error||!data){empty('Проект не найден','Ссылка устарела или скопирована не полностью. Попросите менеджера прислать её ещё раз.');return;}
+  const P=data.project,items=data.items||[];
+  document.title=`${P.title} — MGS Mebel 3D`;
+  $('#crumb').innerHTML='<strong></strong>';$('#crumb strong').textContent=P.title+(P.address?' · '+P.address:'');
+  if(!items.length){empty('В проекте пока нет изделий','Менеджер добавит модели, и они появятся здесь.');return;}
+  const tabs=$('#tabs');
+  items.forEach(it=>{const b=document.createElement('button');b.dataset.id=it.id;
+    const k=document.createElement('small');k.textContent=it.kind||'Изделие';b.append(k,document.createTextNode(it.title));
+    b.onclick=()=>openItem(it);tabs.append(b);});
+  tabs.hidden=items.length<2;
+  $('#panel').classList.toggle('has-tabs',items.length>=2);
+  const want=items.find(i=>i.id===q.get('i'))||items[0];
+  openItem(want);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MGS 3D — проекты</title>
+<style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2122,U+2212}</style>
+<style>
+/* Layout: one centered work column; list of projects -> project page with its items */
+:root{--bg:#0f0e0c;--card:#17191b;--card2:#1d2022;--line:#2b2f33;--fg:#f4f1ec;--muted:#8d938c;--lime:#bfd630;--lime-ink:#141a03;--red:#ff6b5e;
+  --f-ui:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;--f-num:"Onest",system-ui,sans-serif;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-ui);
+  padding:calc(18px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.bar{display:flex;align-items:center;gap:14px}
+.brand{font-weight:800;letter-spacing:.06em;font-size:16px}.brand b{color:var(--lime)}
+.bar .sp{flex:1}
+.who{color:var(--muted);font-size:13px}
+h1{font-size:26px;margin:0;text-wrap:balance}
+h2{font-size:13px;margin:0;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:14px;padding:11px 16px;border-radius:10px;background:var(--lime);color:var(--lime-ink);text-align:center}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.small{font-size:13px;padding:8px 12px}
+.btn.danger{background:transparent;color:var(--red);border:1px solid #4a2a27}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;min-width:0}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.row>label{flex:1 1 200px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.proj{all:unset;cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.proj:hover{border-color:#4a5130}
+.proj:focus-visible{outline:2px solid var(--lime)}
+.proj b{font-size:16px}
+.proj span{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proj em{font-style:normal;font-family:var(--f-num);font-size:12px;color:var(--lime)}
+.item{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.item:first-child{border-top:0}
+.item .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--lime);background:#1f2416;border-radius:6px;padding:3px 7px}
+.item .t{font-weight:700;flex:1;min-width:140px}
+.item .f{color:var(--muted);font-size:12px;font-family:var(--f-num)}
+.share{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.share code{font-family:var(--f-num);font-size:12.5px;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:9px 10px;flex:1 1 300px;min-width:0;overflow-x:auto;white-space:nowrap;user-select:all}
+.drop{border:1.5px dashed #3c4230;border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:13.5px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.drop.on{border-color:var(--lime);background:#1a1f10;color:var(--fg)}
+.drop .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.files{font-family:var(--f-num);font-size:12px;color:var(--fg);text-align:left;align-self:stretch;max-height:120px;overflow:auto}
+.msg{font-size:13.5px;color:var(--muted)}
+.msg.err{color:var(--red)}
+.msg.ok{color:var(--lime)}
+.back{all:unset;cursor:pointer;color:var(--muted);font-size:13px;font-weight:700}
+.back:hover{color:var(--fg)}
+.login{max-width:380px;margin:12vh auto 0}
+.hint{font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="brand">MGS<b>3D</b></div>
+    <div class="sp"></div>
+    <div class="who" id="who"></div>
+    <button class="btn ghost small" id="logout" hidden>Выйти</button>
+  </div>
+
+  <!-- not configured -->
+  <div class="card" id="vConf" hidden>
+    <h1>Нужно подключить базу</h1>
+    <p class="msg">Откройте файл <b>config.js</b> и вставьте Project URL и ключ anon public из Supabase.</p>
+  </div>
+
+  <!-- login -->
+  <form class="card login" id="vLogin" hidden>
+    <h1>Вход для сотрудников</h1>
+    <label>Почта<input id="email" type="email" autocomplete="username" required></label>
+    <label>Пароль<input id="pass" type="password" autocomplete="current-password" required></label>
+    <button class="btn" type="submit" id="loginBtn">Войти</button>
+    <div class="msg" id="loginMsg"></div>
+  </form>
+
+  <!-- projects list -->
+  <section id="vList" hidden style="display:flex;flex-direction:column;gap:18px">
+    <div class="bar"><h1>Проекты</h1><div class="sp"></div><button class="btn" id="newBtn">Новый проект</button></div>
+    <form class="card" id="newForm" hidden>
+      <div class="row">
+        <label>Название проекта<input id="nTitle" required placeholder="Иванова — Химки"></label>
+        <label>Клиент<input id="nClient" placeholder="Анна Иванова"></label>
+        <label>Адрес<input id="nAddr" placeholder="ул. Бутаково 4, кв. 12"></label>
+      </div>
+      <div class="row"><button class="btn" type="submit">Создать</button><button class="btn ghost" type="button" id="newCancel">Отмена</button></div>
+    </form>
+    <div class="grid" id="projects"></div>
+    <div class="msg" id="listMsg"></div>
+  </section>
+
+  <!-- project page -->
+  <section id="vProj" hidden style="display:flex;flex-direction:column;gap:18px">
+    <button class="back" id="back">← Все проекты</button>
+    <div><h1 id="pTitle"></h1><div class="msg" id="pSub"></div></div>
+
+    <div class="card">
+      <h2>Ссылка для клиента</h2>
+      <div class="share"><code id="shareUrl"></code><button class="btn small" id="copy">Скопировать</button><a class="btn ghost small" id="openShare" target="_blank" rel="noopener">Открыть</a></div>
+      <div class="hint">Клиент открывает ссылку без пароля и видит только этот проект.</div>
+    </div>
+
+    <div class="card">
+      <h2>Изделия</h2>
+      <div id="items"></div>
+      <div class="msg" id="itemsMsg"></div>
+    </div>
+
+    <form class="card" id="addForm">
+      <h2>Добавить изделие из PRO100</h2>
+      <div class="row">
+        <label>Название<input id="iTitle" required placeholder="Кухня угловая"></label>
+        <label>Тип<select id="iKind">
+          <option>Кухня</option><option>Шкаф</option><option>Гардеробная</option><option>Прихожая</option>
+          <option>Ванная</option><option>Детская</option><option>Гостиная</option><option>Другое</option></select></label>
+      </div>
+      <div class="drop" id="drop">
+        <div>Перетащите сюда файлы экспорта: <b>.obj</b>, <b>.mtl</b> и папку текстур, или zip-архив</div>
+        <div class="btns"><button class="btn ghost small" type="button" id="pickF">Выбрать файлы</button><button class="btn ghost small" type="button" id="pickD">Выбрать папку</button></div>
+        <div class="files" id="fileList"></div>
+        <input type="file" id="fIn" multiple accept=".obj,.mtl,.png,.jpg,.jpeg,.bmp,.zip" hidden>
+        <input type="file" id="dIn" webkitdirectory multiple hidden>
+      </div>
+      <div class="row"><button class="btn" type="submit" id="upBtn">Загрузить</button></div>
+      <div class="msg" id="upMsg"></div>
+    </form>
+
+    <div class="row"><button class="btn danger small" id="delProj">Удалить проект</button><span class="msg" id="delMsg"></span></div>
+  </section>
+</div>
+
+<script src="lib/jszip.min.js"></script>
+<script src="lib/supabase.min.js"></script>
+<script type="module">
+import {sb,configured,BUCKET} from './db.js';
+const $=s=>document.querySelector(s);
+const views=['vConf','vLogin','vList','vProj'];
+const show=v=>views.forEach(x=>$('#'+x).hidden=x!==v);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const viewUrl=(tok,item)=>{const u=new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);if(item)u.searchParams.set('i',item);return u.toString();};
+let current=null, picked=[];
+
+if(!configured){show('vConf');}
+else init();
+
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  sb.auth.onAuthStateChange((_e,s)=>{if(!s)show('vLogin');});
+  if(!session){show('vLogin');return;}
+  afterLogin(session);
+}
+function afterLogin(session){
+  $('#who').textContent=session.user.email;$('#logout').hidden=false;
+  const pid=new URLSearchParams(location.search).get('p');
+  pid?openProject(pid):loadList();
+}
+$('#vLogin').onsubmit=async e=>{
+  e.preventDefault();$('#loginMsg').className='msg';$('#loginMsg').textContent='Проверяем…';$('#loginBtn').disabled=true;
+  const {data,error}=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});
+  $('#loginBtn').disabled=false;
+  if(error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Неверная почта или пароль.';return;}
+  $('#loginMsg').textContent='';afterLogin(data.session);
+};
+$('#logout').onclick=async()=>{await sb.auth.signOut();$('#who').textContent='';$('#logout').hidden=true;show('vLogin');};
+
+/* ---- list ---- */
+async function loadList(){
+  history.replaceState(null,'',location.pathname);
+  show('vList');$('#listMsg').textContent='Загружаем…';
+  const {data,error}=await sb.from('projects').select('id,title,client,address,created_at,items(count)').order('created_at',{ascending:false});
+  if(error){$('#listMsg').className='msg err';$('#listMsg').textContent='Не удалось загрузить проекты: '+error.message;return;}
+  $('#listMsg').className='msg';$('#listMsg').textContent=data.length?'':'Проектов пока нет. Нажмите «Новый проект».';
+  $('#projects').innerHTML=data.map(p=>`<button class="proj" data-id="${p.id}"><b>${esc(p.title)}</b><span>${esc([p.client,p.address].filter(Boolean).join(' · ')||'—')}</span><em>${p.items?.[0]?.count??0} изд. · ${new Date(p.created_at).toLocaleDateString('ru-RU')}</em></button>`).join('');
+  document.querySelectorAll('.proj').forEach(b=>b.onclick=()=>openProject(b.dataset.id));
+}
+$('#newBtn').onclick=()=>{$('#newForm').hidden=false;$('#nTitle').focus();};
+$('#newCancel').onclick=()=>{$('#newForm').hidden=true;};
+$('#newForm').onsubmit=async e=>{
+  e.preventDefault();
+  const {data,error}=await sb.from('projects').insert({title:$('#nTitle').value.trim(),client:$('#nClient').value.trim()||null,address:$('#nAddr').value.trim()||null}).select().single();
+  if(error){$('#listMsg').className='msg err';$('#listMsg').textContent='Не удалось создать проект: '+error.message;return;}
+  e.target.reset();$('#newForm').hidden=true;openProject(data.id);
+};
+
+/* ---- project ---- */
+async function openProject(id){
+  const {data:p,error}=await sb.from('projects').select('*').eq('id',id).single();
+  if(error){loadList();return;}
+  current=p;history.replaceState(null,'','?p='+id);show('vProj');
+  $('#pTitle').textContent=p.title;$('#pSub').textContent=[p.client,p.address].filter(Boolean).join(' · ');
+  const url=viewUrl(p.share_token);$('#shareUrl').textContent=url;$('#openShare').href=url;
+  resetUpload();loadItems();
+}
+$('#back').onclick=loadList;
+$('#copy').onclick=async()=>{
+  const t=$('#shareUrl').textContent;
+  try{await navigator.clipboard.writeText(t);$('#copy').textContent='Скопировано';}
+  catch{const r=document.createRange();r.selectNodeContents($('#shareUrl'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('#copy').textContent='Выделено — нажмите Ctrl+C';}
+  setTimeout(()=>$('#copy').textContent='Скопировать',2200);
+};
+async function loadItems(){
+  const {data,error}=await sb.from('items').select('*').eq('project_id',current.id).order('sort').order('created_at');
+  if(error){$('#itemsMsg').className='msg err';$('#itemsMsg').textContent=error.message;return;}
+  $('#itemsMsg').className='msg';$('#itemsMsg').textContent=data.length?'':'Пока пусто. Добавьте первое изделие ниже.';
+  $('#items').innerHTML=data.map(it=>{
+    const sz=(it.files||[]).reduce((a,f)=>a+(f.size||0),0);
+    return `<div class="item"><span class="k">${esc(it.kind||'Изделие')}</span><span class="t">${esc(it.title)}</span><span class="f">${(it.files||[]).length} файл. · ${(sz/1048576).toFixed(1)} МБ</span>
+      <a class="btn small" target="_blank" rel="noopener" href="${viewUrl(current.share_token,it.id)}">Открыть 3D</a>
+      <button class="btn danger small" data-del="${it.id}">Удалить</button></div>`;}).join('');
+  document.querySelectorAll('[data-del]').forEach(b=>{let armed=false;b.onclick=async()=>{
+    if(!armed){armed=true;b.textContent='Точно удалить?';setTimeout(()=>{armed=false;b.textContent='Удалить';},3000);return;}
+    const it=data.find(x=>x.id===b.dataset.del);
+    await sb.storage.from(BUCKET).remove((it.files||[]).map(f=>f.path));
+    await sb.from('items').delete().eq('id',it.id);loadItems();}});
+}
+let delArmed=false;
+$('#delProj').onclick=async()=>{
+  if(!delArmed){delArmed=true;$('#delMsg').textContent='Нажмите ещё раз, чтобы удалить проект со всеми моделями.';setTimeout(()=>{delArmed=false;$('#delMsg').textContent='';},4000);return;}
+  const {data:its}=await sb.from('items').select('files').eq('project_id',current.id);
+  const paths=(its||[]).flatMap(i=>(i.files||[]).map(f=>f.path));if(paths.length)await sb.storage.from(BUCKET).remove(paths);
+  await sb.from('projects').delete().eq('id',current.id);delArmed=false;$('#delMsg').textContent='';loadList();
+};
+
+/* ---- upload ---- */
+const OK=/\.(obj|mtl|png|jpe?g|bmp|gif|webp|tga)$/i;
+const bn=p=>String(p).replace(/\\/g,'/').split('/').pop();
+function resetUpload(){picked=[];$('#fileList').textContent='';$('#upMsg').textContent='';$('#addForm').reset();}
+async function addFiles(list){
+  for(const f of list){
+    if(/\.zip$/i.test(f.name)){const z=await JSZip.loadAsync(f);
+      for(const [path,en] of Object.entries(z.files)){if(en.dir||!OK.test(path))continue;const b=await en.async('blob');picked.push(new File([b],bn(path)));}}
+    else if(OK.test(f.name))picked.push(f);
+  }
+  const seen=new Set();picked=picked.filter(f=>{const k=f.name.toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+  $('#fileList').innerHTML=picked.map(f=>esc(f.name)+' · '+(f.size/1024).toFixed(0)+' КБ').join('<br>');
+  const obj=picked.find(f=>/\.obj$/i.test(f.name));
+  if(obj&&!$('#iTitle').value)$('#iTitle').value=obj.name.replace(/\.obj$/i,'');
+}
+$('#pickF').onclick=()=>$('#fIn').click();$('#pickD').onclick=()=>$('#dIn').click();
+$('#fIn').onchange=e=>addFiles([...e.target.files]);$('#dIn').onchange=e=>addFiles([...e.target.files]);
+const dz=$('#drop');
+dz.ondragover=e=>{e.preventDefault();dz.classList.add('on');};dz.ondragleave=()=>dz.classList.remove('on');
+async function walk(en,out){if(en.isFile){await new Promise(r=>en.file(f=>{out.push(f);r();},r));}
+  else if(en.isDirectory){const rd=en.createReader();let b;do{b=await new Promise(r=>rd.readEntries(r,()=>r([])));for(const x of b)await walk(x,out);}while(b.length);}}
+dz.ondrop=async e=>{e.preventDefault();dz.classList.remove('on');const out=[];
+  const its=[...(e.dataTransfer.items||[])];
+  if(its.length&&its[0].webkitGetAsEntry){for(const it of its){const en=it.webkitGetAsEntry();if(en)await walk(en,out);}}else out.push(...e.dataTransfer.files);
+  addFiles(out);};
+$('#addForm').onsubmit=async e=>{
+  e.preventDefault();const msg=$('#upMsg');msg.className='msg';
+  if(!picked.some(f=>/\.obj$/i.test(f.name))){msg.className='msg err';msg.textContent='Нужен файл .obj — сделайте в PRO100 экспорт в OBJ.';return;}
+  if(!picked.some(f=>/\.mtl$/i.test(f.name))){msg.textContent='Нет файла .mtl — модель будет без текстур. Загружаю…';}
+  $('#upBtn').disabled=true;
+  const itemId=crypto.randomUUID();const files=[];
+  try{
+    for(let i=0;i<picked.length;i++){
+      const f=picked[i];const ext=(f.name.match(/\.[a-z0-9]+$/i)||[''])[0].toLowerCase();
+      const path=`${current.id}/${itemId}/f${i}${ext}`;
+      msg.textContent=`Загружаем ${i+1} из ${picked.length}: ${f.name}`;
+      const type=/\.(obj|mtl)$/.test(ext)?'text/plain;charset=utf-8':(f.type||'application/octet-stream');
+      const {error}=await sb.storage.from(BUCKET).upload(path,f,{contentType:type,upsert:true});
+      if(error)throw error;
+      files.push({name:f.name,path,size:f.size});
+    }
+    const {error}=await sb.from('items').insert({id:itemId,project_id:current.id,title:$('#iTitle').value.trim()||'Изделие',kind:$('#iKind').value,files});
+    if(error)throw error;
+    resetUpload();msg.className='msg ok';msg.textContent='Готово — изделие добавлено.';loadItems();
+  }catch(err){msg.className='msg err';msg.textContent='Ошибка загрузки: '+(err.message||err);}
+  $('#upBtn').disabled=false;
+};
+</script>
+</body>
+</html>
