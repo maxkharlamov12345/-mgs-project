@@ -233,7 +233,9 @@ button,input,select{font:inherit;color:inherit}
   }
   function setAng(i, a) {
     var n = R.pts.length, c = R.pts[(i + 1) % n], da = (a - angAt(i)) * Math.PI / 180, cs = Math.cos(da), sn = Math.sin(da);
-    for (var j = i + 2; j < n; j++) { var x = R.pts[j].x - c.x, y = R.pts[j].y - c.y; R.pts[j].x = c.x + x * cs - y * sn; R.pts[j].y = c.y + x * sn + y * cs; }
+    // поворачиваем всё, что после угла: в замкнутой комнате — по кругу все точки, кроме угла и предыдущей (разницу забирает дальняя стена)
+    var ids = []; if (R.closed) { var ci = (i + 1) % n; for (var q = 1; q <= n - 2; q++) ids.push((ci + q) % n); } else for (var j0 = i + 2; j0 < n; j0++) ids.push(j0);
+    ids.forEach(function (j) { var x = R.pts[j].x - c.x, y = R.pts[j].y - c.y; R.pts[j].x = c.x + x * cs - y * sn; R.pts[j].y = c.y + x * sn + y * cs; });
   }
   function delPoint(v) {   // удалить угол: две стены сливаются, элементы второй переходят на первую
     var n = R.pts.length; if (n <= 2 || (R.closed && n <= 3)) { toast('Меньше нельзя'); return; }
@@ -328,7 +330,8 @@ button,input,select{font:inherit;color:inherit}
     if (S.mode === 'wall' && !S.place && !S.meas && !S.pop && (!lms(S.wall).length || !hms(S.wall).length)) h = 'Замерьте стену: <b>↔ Длина</b> и <b>↕ Высота</b> — ставьте пунктир туда, где мерили';
     if (S.mode === 'wall' && S.meas) h = S.meas === 'l' ? 'Ведите пальцем вверх-вниз — пунктир встанет на <b>высоту, где мерили длину</b>. Отпустите и впишите размер' : 'Ведите пальцем влево-вправо — пунктир встанет <b>туда, где мерили высоту</b>. Отпустите и впишите размер';
     if (S.mode === 'wall' && S.place) h = 'Коснитесь стены, где <b>' + esc((TY[S.place] || {}).t.toLowerCase()) + '</b> — точные размеры впишете цифрами';
-    if (S.mode === '3d' && S.sel3 >= 0) h = '<b>Стена ' + (S.sel3 + 1) + '</b> — коснитесь ещё раз, чтобы открыть развёртку';
+    if (S.mode === '3d' && S.cd) h = 'Коснитесь <b>боковой стены</b> на нужной глубине — пунктиром покажу длину соседней стены на этой глубине';
+    else if (S.mode === '3d' && S.sel3 >= 0) h = '<b>Стена ' + (S.sel3 + 1) + '</b> — коснитесь ещё раз, чтобы открыть развёртку';
     $('#tip').hidden = !h; $('#tip').innerHTML = h;
   }
   function renderFabs() {
@@ -345,6 +348,7 @@ button,input,select{font:inherit;color:inherit}
     } else {
       tr = '<button class="btn s ghost" data-cam="in">Изнутри</button><button class="btn s ghost" data-cam="top">Сверху</button><button class="btn s ghost" data-cam="out">Общий</button>';
       if (S.sel3 >= 0) br = '<button class="btn p" data-a="open3">Открыть развёртку стены ' + (S.sel3 + 1) + ' →</button>';
+      br = '<button class="btn s ' + (S.cd ? 'd' : 'ghost') + '" data-a="cd">↔ Размер по точке</button>' + ((R.cdims || []).length ? '<button class="btn s ghost" data-a="cdl">Список (' + R.cdims.length + ')</button>' : '') + br;
       bl = '<label class="chip"><input type="checkbox" id="cDims"' + (S.noDims ? '' : ' checked') + '> Размеры</label>';
     }
     if (PHONE() && S.pop) br = bl = '';
@@ -395,6 +399,9 @@ button,input,select{font:inherit;color:inherit}
       h = head(p.k === 'l' ? '↔ Длина стены ' + (S.wall + 1) : '↕ Высота стены ' + (S.wall + 1)) + '<p class="hint">' + (p.k === 'l' ? 'Длина от угла до угла на этой высоте.' : 'Высота от пола до потолка в этом месте.') + '</p><div class="f">' +
         inp('fMv', p.k === 'l' ? 'Длина, мм' : 'Высота, мм', mm.v, '', 'w2') + '</div>' +
         '<div class="row mt"><button class="btn s red" data-a="delmeas">Удалить</button><span class="sp"></span><button class="btn s" data-meas="' + p.k + '">＋ Ещё</button><button class="btn p" data-a="closePop">Готово</button></div>';
+    } else if (p.t === 'cdl') {
+      h = head('Размеры по точке') + '<p class="hint">Длина стены на глубине — по введённым углам. В скобках — разница с длиной от угла до угла.</p><div class="issues">' +
+        (R.cdims || []).map(function (c) { var g = cdGeo(c); return '<div><span>Стена ' + (c.w + 1) + ': <b>' + (g ? fmt(g.len) : '—') + '</b>' + (g ? ' в ' + fmt(g.dep) + ' мм, h ' + fmt(c.z) : '') + '</span><span class="sp"></span><button class="btn s red" data-a="delcd" data-id="' + c.id + '">✕</button></div>'; }).join('') + '</div>';
     } else if (p.t === 'pwall') {
       h = head('Стена ' + (p.i + 1)) + '<p class="hint">Размеры и элементы — в развёртке стены.</p><div class="row"><button class="btn p" data-a="openWall">Открыть развёртку</button></div>' +
         '<div class="lbl">Изменить контур</div><div class="row"><button class="btn s ghost" data-a="split">Добавить угол здесь</button><button class="btn s ghost" data-a="step">Добавить уступ здесь</button></div><p class="hint" style="margin-top:6px">Уступ — ступенька 300 мм под прямым углом; потом сдвиньте стену пальцем или впишите размеры.</p>';
@@ -677,7 +684,7 @@ button,input,select{font:inherit;color:inherit}
       w.hl.renderOrder = 4; w.hl.visible = false; grp.add(w.hl);
     });
     var key = R.pts.length + '|' + R.closed; if (V.key !== key) { V.key = key; camView(V.view || 'out'); }
-    selMark();
+    selMark(); ctrlDims();
     if (!S.noDims) { if (document.fonts && !S.fontsOk) document.fonts.load('600 60px Onest').then(function () { S.fontsOk = 1; build3D(); }); dims(); }
   }
   function wallGeo(i, P, L, H) {   // лицо стены реальной формы: верх по трём высотам, правый край — с завалом; веер треугольников от левого нижнего угла
@@ -709,6 +716,7 @@ button,input,select{font:inherit;color:inherit}
       var b = cv.getBoundingClientRect(); rc.setFromCamera(new THREE.Vector2((e.clientX - b.left) / b.width * 2 - 1, -(e.clientY - b.top) / b.height * 2 + 1), cam);
       var hit = rc.intersectObjects(grp.children.filter(function (o) { return o.isMesh && o.userData.wall >= 0 && !o.userData.ghost; }))[0];
       var wi = hit ? hit.object.userData.wall : -1;   // первое касание — выделить стену, второе по ней же — открыть развёртку
+      if (S.cd) { if (wi >= 0) addCD(wi, hit.point); return; }
       if (wi >= 0 && wi === S.sel3) { S.sel3 = -1; openWall(wi); return; }
       S.sel3 = wi; selMark(); tip(); renderFabs();
     });
@@ -788,6 +796,51 @@ button,input,select{font:inherit;color:inherit}
     font(1); x.fillStyle = GRY; x.textAlign = 'center'; x.fillText('Стена ' + (i + 1), X(L / 2), Y(H - FS * 2.1));
     return cv;
   }
+  /* ---------- размер по точке: длина стены W на глубине (параллельно W, от боковой стены до противоположной) ----------
+     касание боковой стены j → W — соседняя с j стена у ближнего к касанию угла; высота — как у замера длины W (ближайшего по высоте) */
+  function addCD(j, pt) {
+    var x = pt.x / .001, y = -pt.z / .001, zt = pt.y / .001, a = wPts(j)[0], d = wDir(j), L = wLen(j), u = Math.max(0, Math.min(L, d[0] * (x - a.x) + d[1] * (y - a.y))), n = nW();
+    var W0 = u < L / 2 ? (j - 1 + n) % n : (j + 1) % n; if (!R.closed && (W0 >= n || (u < L / 2 && j === 0) || (u >= L / 2 && j === n - 1))) { toast('Нужна соседняя стена'); return; }
+    var lm = lms(W0), z = lm.length ? lm.reduce(function (b, m) { return Math.abs(m.z - zt) < Math.abs(b.z - zt) ? m : b; }).z : Math.round(zt / 10) * 10;
+    (R.cdims = R.cdims || []).push({ id: uid(), j: j, u: Math.round(u / 10) * 10, w: W0, z: z }); save();
+    S.cd = false; tip(); renderFabs(); build3D();
+  }
+  function cdGeo(c) {   // концы пунктира и длина — по текущему плану (с введёнными углами)
+    var n = nW(); if (c.j >= n || c.w >= n) return null;
+    var a = wPts(c.j)[0], d = wDir(c.j), A = [a.x + d[0] * c.u, a.y + d[1] * c.u], dw = wDir(c.w), wa = wPts(c.w)[0], nw = [dw[1], -dw[0]];
+    var best = null;
+    [1, -1].forEach(function (sg) {
+      var D = [dw[0] * sg, dw[1] * sg];
+      for (var i = 0; i < n; i++) { if (i === c.j) continue; var p = wPts(i), q0 = [p[0].x, p[0].y], e = [p[1].x - q0[0], p[1].y - q0[1]], den = D[0] * e[1] - D[1] * e[0]; if (Math.abs(den) < 1e-9) continue;
+        var t = ((q0[0] - A[0]) * e[1] - (q0[1] - A[1]) * e[0]) / den, s2 = ((q0[0] - A[0]) * D[1] - (q0[1] - A[1]) * D[0]) / den;
+        if (t > 20 && s2 >= -.001 && s2 <= 1.001) { var mid = [A[0] + D[0] * t / 2, A[1] + D[1] * t / 2]; if (inRoom(mid) && (!best || t < best.t)) best = { t: t, B: [A[0] + D[0] * t, A[1] + D[1] * t], i: i }; } }
+    });
+    if (!best) return null;
+    return { A: A, B: best.B, len: best.t, dep: Math.abs(nw[0] * (A[0] - wa.x) + nw[1] * (A[1] - wa.y)) };
+  }
+  function inRoom(P) { var c = false, q = R.pts; for (var i = 0, j = q.length - 1; i < q.length; j = i++) if (((q[i].y > P[1]) !== (q[j].y > P[1])) && (P[0] < (q[j].x - q[i].x) * (P[1] - q[i].y) / (q[j].y - q[i].y) + q[i].x)) c = !c; return c; }
+  function ctrlDims() {
+    if (!R.cdims || !R.cdims.length) return; var k = .001;
+    R.cdims.forEach(function (c) {
+      var g = cdGeo(c); if (!g) return;
+      var A = new THREE.Vector3(g.A[0] * k, c.z * k, -g.A[1] * k), B = new THREE.Vector3(g.B[0] * k, c.z * k, -g.B[1] * k), dir = B.clone().sub(A), L = dir.length(); dir.normalize();
+      var mat = new THREE.MeshBasicMaterial({ color: 0xff5a1f, depthTest: false });
+      for (var s0 = 0; s0 < L; s0 += .09) {   // пунктир: штрихи 50 мм, промежутки 40 мм
+        var sl = Math.min(.05, L - s0), seg = new THREE.Mesh(new THREE.CylinderGeometry(.005, .005, sl, 6), mat);
+        seg.position.copy(A).addScaledVector(dir, s0 + sl / 2); seg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); seg.renderOrder = 11; V.grp.add(seg);
+      }
+      var full = wLen(c.w), dl = Math.round(g.len - full), txt = fmt(g.len) + (Math.abs(dl) >= 1 ? ' (' + (dl > 0 ? '+' : '−') + Math.abs(dl) + ')' : '') + ' · в ' + fmt(g.dep) + ' от стены ' + (c.w + 1);
+      var cv2 = document.createElement('canvas'), x = cv2.getContext('2d'), FS = 64; x.font = '600 ' + FS + 'px Onest, Arial'; cv2.width = Math.ceil(x.measureText(txt).width + 20); cv2.height = FS + 24;
+      x.font = '600 ' + FS + 'px Onest, Arial'; x.fillStyle = '#e2531b'; x.textBaseline = 'middle'; x.textAlign = 'center'; x.fillText(txt, cv2.width / 2, cv2.height / 2);
+      var tex = new THREE.CanvasTexture(cv2); tex.colorSpace = THREE.SRGBColorSpace;
+      var hgt = .085, wdt = hgt * cv2.width / cv2.height, mid = A.clone().add(B).multiplyScalar(.5).add(new THREE.Vector3(0, .07, 0));
+      [0, Math.PI].forEach(function (rot) {   // надпись лежит в вертикальной плоскости вдоль пунктира: с каждой стороны читается правильно
+        var pl = new THREE.Mesh(new THREE.PlaneGeometry(wdt, hgt), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, side: THREE.FrontSide }));
+        pl.position.copy(mid); pl.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(dir.clone().multiplyScalar(rot ? -1 : 1), new THREE.Vector3(0, 1, 0), new THREE.Vector3().crossVectors(dir.clone().multiplyScalar(rot ? -1 : 1), new THREE.Vector3(0, 1, 0))));
+        pl.renderOrder = 12; V.grp.add(pl);
+      });
+    });
+  }
   function dims() {
     var k = .001;
     for (var i = 0; i < nW(); i++) {
@@ -852,12 +905,15 @@ button,input,select{font:inherit;color:inherit}
     if (a === 'delmeas') { var w0 = wd(S.wall), key0 = S.pop.k === 'l' ? 'lm' : 'hm'; w0[key0] = w0[key0].filter(function (m) { return m.id !== S.pop.id; }); if (S.pop.k === 'l' && lBase(S.wall)) setLen(S.wall, lBase(S.wall)); S.pop = null; save(); renderAll(); return; }
     if (a === 'toPlan') { S.mode = 'plan'; S.pop = null; S.place = null; renderAll(); return; }
     if (a === 'toWall') { if (!nW()) return; if (S.draw) { S.draw = false; delete R.drawing; save(); } openWall(S.mode === 'wall' ? S.wall : 0); return; }
-    if (a === 'to3d') { if (!nW()) return; if (S.draw) { S.draw = false; delete R.drawing; save(); } S.mode = '3d'; S.sel3 = -1; S.pop = null; S.place = null; renderAll(); return; }
+    if (a === 'to3d') { S.cd = false; if (!nW()) return; if (S.draw) { S.draw = false; delete R.drawing; save(); } S.mode = '3d'; S.sel3 = -1; S.pop = null; S.place = null; renderAll(); return; }
     if (a === 'check') { openPop({ t: 'check' }); return; }
     if (a === 'menu') { openPop({ t: 'menu' }); return; }
     if (a === 'side') { S.side = !S.side; if (S.side && PHONE()) S.pop = null; layoutVars(); renderSide(); renderPop(); renderFabs(); redraw(); return; }
     if (a === 'room') { openPop({ t: 'room' }); return; }
     if (a === 'wdims') { openPop({ t: 'wdims', focus: 1 }); return; }
+    if (a === 'cd') { S.cd = !S.cd; S.sel3 = -1; selMark(); tip(); renderFabs(); return; }
+    if (a === 'cdl') { openPop({ t: 'cdl' }); return; }
+    if (a === 'delcd') { R.cdims = R.cdims.filter(function (c) { return c.id !== b.dataset.id; }); save(); build3D(); renderFabs(); if (R.cdims.length) renderPop(); else { S.pop = null; renderPop(); } return; }
     if (a === 'open3') { var w3 = S.sel3; S.sel3 = -1; openWall(w3); return; }
     if (a === 'openWall') { openWall(S.pop.i); return; }
     if (a === 'zin' || a === 'zout') { var r0 = sv.getBoundingClientRect(); zoomAt(a === 'zin' ? 1.3 : 1 / 1.3, r0.left + r0.width / 2, r0.top + r0.height / 2); return; }
