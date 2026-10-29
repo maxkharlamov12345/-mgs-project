@@ -21,7 +21,7 @@ const sun=new THREE.DirectionalLight(0xffffff,1.9);sun.position.set(1,1.6,1.2);s
 const fill=new THREE.DirectionalLight(0xffffff,.9);fill.position.set(-1,.4,-.8);scene.add(fill);
 
 let model=null, dimGroups={}, info=null, frontDir=new THREE.Vector3(0,0,1), selected=null;
-const vis={overall:true,cols:true,gaps:true,drawers:true};
+const vis={overall:true,gaps:true,drawers:true};
 
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);labelR.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
 addEventListener('resize',resize);resize();
@@ -161,7 +161,7 @@ function analyze(root){
     const drawers=groups.filter(g=>bottoms.some(b=>b.box.min.y>=g.y0-25&&b.box.min.y<=g.y0+45)).map(g=>{
       // facade = the front-most member
       const k=front.axis;const fr=g.items.slice().sort((a,b)=>front.sign>0?b.box.max[k]-a.box.max[k]:a.box.min[k]-b.box.min[k])[0];
-      return {y0:fr.box.min.y,y1:fr.box.max.y,h:fr.s.y,zone:[g.y0,g.y1]};
+      return {y0:fr.box.min.y,y1:fr.box.max.y,h:fr.s.y,zone:[g.y0,g.y1],face:front.sign>0?fr.box.max[k]:fr.box.min[k]};
     });
     // shelf stack: skip boards that belong to drawers
     const nearDrawer=p=>drawers.some(d=>p.box.max.y>=d.zone[0]-25&&p.box.min.y<=d.zone[1]+25);
@@ -178,7 +178,7 @@ function analyze(root){
     blocks.sort((a,b)=>a.y0-b.y0);
     const gaps=[];
     for(let i=0;i<blocks.length-1;i++){const a=blocks[i],b=blocks[i+1];const g=b.y0-a.y1;if(g>=40)gaps.push({y0:a.y1,y1:b.y0,h:g});}
-    columns.push({f,front,W,colW,shelfW,shelfD,gaps,drawers,yTop,yBot,count:shelves.length});
+    columns.push({f,front,W,colW,shelfW,shelfD,gaps,drawers,yTop,yBot,count:shelves.length,blockTop:blocks.length?blocks[blocks.length-1].y1:yTop,blockBot:blocks.length?blocks[0].y0:yBot});
   }
   const frontAll=frontOf(overall);
   return {parts,overall,room,columns,frontAll};
@@ -193,9 +193,9 @@ const V=(x,y,z)=>new THREE.Vector3(x,y,z);
 const r=n=>String(Math.round(n));
 var labels=[], TS=40;                       // TS — высота цифр, мм (от размера модели)
 const matCache={};
-function lineMat(color){return matCache['l'+color]||(matCache['l'+color]=new THREE.LineBasicMaterial({color,depthTest:false,transparent:true,opacity:.95}));}
-function fillMat(color){return matCache['f'+color]||(matCache['f'+color]=new THREE.MeshBasicMaterial({color,depthTest:false,transparent:true,opacity:.95,side:THREE.DoubleSide}));}
-function textMesh(text,color,h){
+function lineMat(color,d){const k='l'+color+d;return matCache[k]||(matCache[k]=new THREE.LineBasicMaterial({color,depthTest:!!d,transparent:true,opacity:.95}));}
+function fillMat(color,d){const k='f'+color+d;return matCache[k]||(matCache[k]=new THREE.MeshBasicMaterial({color,depthTest:!!d,transparent:true,opacity:.95,side:THREE.DoubleSide}));}
+function textMesh(text,color,h,d){
   const fs=96,pad=18,c=document.createElement('canvas'),x=c.getContext('2d');
   const font=`600 ${fs}px Onest, "Segoe UI", system-ui, sans-serif`;x.font=font;
   const w=Math.ceil(x.measureText(text).width)+pad*2;c.width=w;c.height=fs+pad*2;
@@ -203,7 +203,7 @@ function textMesh(text,color,h){
   x.lineWidth=fs*.22;x.strokeStyle='rgba(15,14,12,.92)';x.strokeText(text,w/2,c.height/2+fs*.04);
   x.fillStyle=CSS[color]||'#fff';x.fillText(text,w/2,c.height/2+fs*.04);
   const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;
-  const k=h/fs;const m=new THREE.Mesh(new THREE.PlaneGeometry(w*k,c.height*k),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthTest:false}));
+  const k=h/fs;const m=new THREE.Mesh(new THREE.PlaneGeometry(w*k,c.height*k),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthTest:!!d,depthWrite:false}));
   m.renderOrder=12;m.userData.hw=w*k/2;return m;
 }
 /* p1,p2 — точки на детали; side — куда (в плоскости размера) вынести размерную линию; dist — на сколько;
@@ -221,10 +221,10 @@ function dim(group,p1,p2,side,dist,n,text,color,opts={}){
   if(len>al*2.6){
     const tri=[];const add=(tip,dir)=>{const b=tip.clone().addScaledVector(dir,al);tri.push(tip,b.clone().addScaledVector(sd,aw),b.clone().addScaledVector(sd,-aw));};
     add(A,u);add(B,u.clone().negate());
-    const g=new THREE.BufferGeometry().setFromPoints(tri);const m=new THREE.Mesh(g,fillMat(color));m.renderOrder=11;group.add(m);
+    const g=new THREE.BufferGeometry().setFromPoints(tri);const m=new THREE.Mesh(g,fillMat(color,opts.depth));m.renderOrder=11;group.add(m);
   }else{const t=sd.clone().add(u).normalize().multiplyScalar(h*.35);pts.push(A.clone().sub(t),A.clone().add(t),B.clone().sub(t),B.clone().add(t));}
-  const ls=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),lineMat(color));ls.renderOrder=10;group.add(ls);
-  const tm=textMesh(text,color,h);group.add(tm);
+  const ls=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),lineMat(color,opts.depth));ls.renderOrder=10;group.add(ls);
+  const tm=textMesh(text,color,h,opts.depth);group.add(tm);
   const nn=(n||new THREE.Vector3().crossVectors(u,sd)).clone().normalize();
   labels.push({m:tm,mid:A.clone().lerp(B,.5),u,n:nn,sd,h,len,out:opts.inside?0:1});
 }
@@ -243,65 +243,55 @@ function updateLabels(){
     // цифры — над линией (с внешней стороны размера), если не помещаются — сдвигаем вдоль
     const sgn=L.out&&_y.dot(L.sd)<0?-1:1;
     const pos=L.mid.clone().addScaledVector(_y,sgn*L.h*.62);
-    if(L.m.userData.hw*2>L.len-L.h*1.6)pos.addScaledVector(L.u,L.len/2+L.m.userData.hw+L.h*.4);
+    if(L.out&&L.m.userData.hw*2>L.len-L.h*1.6)pos.addScaledVector(L.u,L.len/2+L.m.userData.hw+L.h*.4);
     _m.makeBasis(_x,_y,_z);L.m.quaternion.setFromRotationMatrix(_m);L.m.position.copy(pos);
   }
 }
 
 function buildDims(I){
   labels=[];
-  ['overall','cols','gaps','drawers'].forEach(k=>{const g=new THREE.Group();g.visible=vis[k];dimGroups[k]=g;scene.add(g);});
+  ['overall','gaps','drawers'].forEach(k=>{const g=new THREE.Group();g.visible=vis[k];dimGroups[k]=g;scene.add(g);});
   const o=I.overall,s=o.getSize(V());
   $('#oW').textContent=r(s.x);$('#oH').textContent=r(s.y);$('#oD').textContent=r(s.z);
   TS=THREE.MathUtils.clamp(Math.max(s.x,s.y,s.z)*.02,24,80);
   const step=TS*2.6;
   const UP=V(0,1,0);
-  // перед / право для общих габаритов
   const fa=I.frontAll;const F=fa.axis,FS=fa.sign;const W=F==='z'?'x':'z';
-  const FD=V();FD[F]=FS;const RD=new THREE.Vector3().crossVectors(UP,FD); // вправо, если смотреть спереди
+  const FD=V();FD[F]=FS;const RD=new THREE.Vector3().crossVectors(UP,FD);
   const fv=FS>0?o.max[F]:o.min[F];
-  const rightW=RD[W]>0?o.max[W]:o.min[W], leftW=RD[W]>0?o.min[W]:o.max[W];
+  const rightW=RD[W]>0?o.max[W]:o.min[W];
   const P=(w,y,f=fv)=>{const p=V(0,y,0);p[F]=f;p[W]=w;return p;};
 
-  // цепочки ширин секций: секции с одним «перёдом» и близким верхом — в один ряд
-  const rows=[];
-  I.columns.forEach(c=>{
-    const key=c.front.axis+c.front.sign;
-    let row=rows.find(rw=>rw.key===key&&Math.abs(rw.top-c.yTop)<150);
-    if(!row){row={key,top:c.yTop,cols:[]};rows.push(row);}
-    row.cols.push(c);row.top=Math.max(row.top,c.yTop);
-  });
-  let topChain=o.max.y;
-  rows.forEach(rw=>{
-    rw.cols.forEach(c=>{
-      const cF=c.front.axis,S=c.front.sign,cW=c.W,f=c.f;
-      const w0=cW==='x'?f.x0:f.z0,w1=cW==='x'?f.x1:f.z1;
-      const cf=S>0?(cF==='x'?f.x1:f.z1):(cF==='x'?f.x0:f.z0);
-      const Q=(w,y)=>{const p=V(0,y,0);p[cF]=cf;p[cW]=w;return p;};
-      const n=V();n[cF]=S;
-      dim(dimGroups.cols,Q(w0,c.yTop),Q(w1,c.yTop),UP,(rw.top-c.yTop)+step,n,r(c.colW),COL.c);
-      topChain=Math.max(topChain,rw.top+step);
-    });
-  });
-
-  // общие: ширина — над цепочками, высота — справа, глубина — справа внизу
-  dim(dimGroups.overall,P(o.min[W],o.max.y),P(o.max[W],o.max.y),UP,(topChain-o.max.y)+step,FD,r(s[W]),COL.w,{size:1.15});
+  // общие: ширина — сверху, высота — справа, глубина — справа внизу
+  dim(dimGroups.overall,P(o.min[W],o.max.y),P(o.max[W],o.max.y),UP,step,FD,r(s[W]),COL.w,{size:1.15});
   dim(dimGroups.overall,P(rightW,o.min.y),P(rightW,o.max.y),RD,step*1.4,FD,r(s.y),COL.w,{size:1.15});
   const backF=FS>0?o.min[F]:o.max[F];
   dim(dimGroups.overall,P(rightW,o.min.y,backF),P(rightW,o.min.y,fv),UP.clone().negate(),step*.9,RD,r(s[F]),COL.w,{size:1.15});
 
-  // внутри секций: промежутки между полками и высоты ящиков — на лицевой плоскости секции
+  // препятствия над/под секцией: любые видимые детали, накрывающие середину секции
+  const solid=I.parts.filter(p=>p.kind!=='marker'&&p.kind!=='metiz'&&!/кромка/i.test(p.label));
+  const hits=(cx,cz)=>solid.filter(p=>p.box.min.x<=cx&&p.box.max.x>=cx&&p.box.min.z<=cz&&p.box.max.z>=cz);
+
   let nGaps=0,nDr=0;
   I.columns.forEach(c=>{
     const cF=c.front.axis,S=c.front.sign,cW=c.W,f=c.f;
     const w0=cW==='x'?f.x0:f.z0,w1=cW==='x'?f.x1:f.z1;
-    const cf=(S>0?(cF==='x'?f.x1:f.z1):(cF==='x'?f.x0:f.z0))+S*6;
-    const Q=(w,y)=>{const p=V(0,y,0);p[cF]=cf;p[cW]=w;return p;};
+    const back=(S>0?(cF==='x'?f.x0:f.z0):(cF==='x'?f.x1:f.z1))+S*4;   // размеры полок — по заду секции
+    const Q=(w,y,at=back)=>{const p=V(0,y,0);p[cF]=at;p[cW]=w;return p;};
     const n=V();n[cF]=S;const along=V();along[cW]=1;
     const wm=(w0+w1)/2;
-    c.gaps.forEach(g=>{nGaps++;dim(dimGroups.gaps,Q(wm,g.y0),Q(wm,g.y1),along,0,n,r(g.h),COL.l,{ext:false,size:1,inside:true});});
+    const ins={ext:false,size:1,inside:true,depth:true};
+    const gaps=c.gaps.slice();
+    // сверху и снизу секции — до ближайшей детали или до края изделия
+    const cx=(f.x0+f.x1)/2,cz=(f.z0+f.z1)/2,hs=hits(cx,cz);
+    const above=hs.filter(p=>p.box.min.y>=c.blockTop-1).reduce((m,p)=>Math.min(m,p.box.min.y),o.max.y);
+    const below=hs.filter(p=>p.box.max.y<=c.blockBot+1).reduce((m,p)=>Math.max(m,p.box.max.y),o.min.y);
+    if(above-c.blockTop>=20)gaps.push({y0:c.blockTop,y1:above,h:above-c.blockTop});
+    if(c.blockBot-below>=20)gaps.push({y0:below,y1:c.blockBot,h:c.blockBot-below});
+    gaps.forEach(g=>{nGaps++;dim(dimGroups.gaps,Q(wm,g.y0),Q(wm,g.y1),along,0,n,r(g.h),COL.l,ins);});
+    // ящики — на самом фасаде
     const wd=w0+(w1-w0)*.18;
-    c.drawers.forEach(d=>{nDr++;dim(dimGroups.drawers,Q(wd,d.y0),Q(wd,d.y1),along,0,n,r(d.h),COL.d,{ext:false,size:1,inside:true});});
+    c.drawers.forEach(d=>{nDr++;dim(dimGroups.drawers,Q(wd,d.y0,d.face+S*3),Q(wd,d.y1,d.face+S*3),along,0,n,r(d.h),COL.d,ins);});
   });
   $('#stat').innerHTML=`Найдено секций: <b>${I.columns.length}</b>, промежутков между полками: <b>${nGaps}</b>, ящиков: <b>${nDr}</b>.`;
 }
