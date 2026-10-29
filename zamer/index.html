@@ -169,7 +169,7 @@ button,input,select{font:inherit;color:inherit}
     r.pts = [{ id: 'a', x: 0, y: 4100 }, { id: 'b', x: 3200, y: 4100 }, { id: 'c', x: 3200, y: 0 }, { id: 'd', x: 0, y: 0 }]; r.closed = true;
     function I(type, v, ok) { var it = { id: uid(), type: type, ok: {} }; Object.keys(v).forEach(function (k) { it[k] = v[k]; }); (ok || Object.keys(v)).forEach(function (k) { it.ok[k] = 1; }); return it; }
     r.wd = {
-      a: { len: ['3205', '3200', '3204'], hgt: ['2700', '2702', '2698'], items: [I('window', { off: 900, z: 850, w: 1400, h: 1500, dep: 250 }), I('radiator', { off: 1000, z: 150, w: 1200, h: 500, dep: 100 })] },
+      a: { len: ['3200', '3198', '3203'], hgt: ['2690', '2700', '2700'], items: [I('window', { off: 900, z: 850, w: 1400, h: 1500, dep: 250 }), I('radiator', { off: 1000, z: 150, w: 1200, h: 500, dep: 100 })] },
       b: { len: ['4100', '4096', '4102'], hgt: ['2698', '2700', '2700'], items: [I('box', { off: 0, z: 0, w: 350, h: 2698, dep: 300 }), I('hvs', { off: 700, z: 500 }), I('gvs', { off: 800, z: 500 }), I('drain', { off: 950, z: 400 }), I('socket', { off: 1400, z: 1100, n: 3 }), I('apron', { off: 350, z: 900, w: 1800, h: 600, dep: 0 }), I('niche', { off: 2500, z: 900, w: 700, h: 1200, dep: 390 })] },
       c: { len: ['3200', '3201', ''], hgt: ['2700', '', ''], items: [I('door', { off: 400, z: 0, w: 800, h: 2100 }), I('switch', { off: 1350, z: 900 }), I('panel', { off: 2300, z: 1500, w: 300, h: 400, dep: 120 })] },
       d: { len: ['', '', ''], hgt: ['', '', ''], items: [I('socket', { off: 1800, z: 300, n: 2 }, []), I('ventduct', { off: 3600, z: 2350, w: 200, h: 200, dep: 0 }, ['off', 'z'])] }
@@ -189,7 +189,14 @@ button,input,select{font:inherit;color:inherit}
   function wLen(i) { var p = wPts(i); return hyp([p[0].x, p[0].y], [p[1].x, p[1].y]); }
   function wDir(i) { var p = wPts(i), L = wLen(i) || 1; return [(p[1].x - p[0].x) / L, (p[1].y - p[0].y) / L]; }
   function wOk(i) { return minv(wd(i).len) != null; }
-  function wH(i) { return minv(wd(i).hgt) || R.H; }
+  // фактические размеры: что вписано в развёртке, то и строится (никакого «в расчёт»); пустые места — по соседним значениям
+  function fill3(a, def) { var v = (a || []).map(function (x) { var n = num(x); return n > 0 ? n : null; }); if (v[0] == null && v[1] == null && v[2] == null) return [def, def, def];
+    var m = v[1] != null ? v[1] : v[0] != null && v[2] != null ? (v[0] + v[2]) / 2 : v[0] != null ? v[0] : v[2]; return [v[0] != null ? v[0] : m, m, v[2] != null ? v[2] : m]; }
+  function wTop(i) { return fill3(wd(i).hgt, R.H); }                       // высота слева / по центру / справа
+  function wH(i) { var t = wTop(i); return Math.max(t[0], t[1], t[2]); }    // наибольшая — для масштаба чертежа
+  function topAt(i, u) { var t = wTop(i), L = wLen(i) || 1; return u <= L / 2 ? t[0] + (t[1] - t[0]) * u / (L / 2) : t[1] + (t[2] - t[1]) * (u - L / 2) / (L / 2); }
+  function wLens(i) { return fill3(wd(i).len, wLen(i)); }                  // длина у пола / посередине / под потолком
+  function wRend(i) { var l = wLens(i); return [0, l[1] - l[0], l[2] - l[0]]; }   // сдвиг правого конца относительно пола (завал угла)
   function hasAng(i) { return i < nW() - 1 || (R.closed && nW() >= 3); }
   function angAt(i) { var a = wDir(i), b = wDir((i + 1) % nW()), cr = a[0] * b[1] - a[1] * b[0], dt = a[0] * b[0] + a[1] * b[1]; return 180 + Math.atan2(cr, dt) * 180 / Math.PI; }
   function area() { var s = 0, p = R.pts; for (var i = 0; i < p.length; i++) { var q = p[(i + 1) % p.length]; s += p[i].x * q.y - q.x * p[i].y; } return s / 2; }
@@ -230,7 +237,7 @@ button,input,select{font:inherit;color:inherit}
   function toM() {
     var n = nW(), M = { T: 120, H: R.H, closed: R.closed, walls: [] };
     for (var i = 0; i < n; i++) {
-      M.walls.push({ name: 'Стена ' + (i + 1), len: [wLen(i)], hgt: [wH(i)], angle: hasAng(i) ? angAt(i) : 90, items: items(i).map(function (it) {
+      M.walls.push({ name: 'Стена ' + (i + 1), len: [wLen(i)], hgt: [wH(i)], top: wTop(i), rend: wRend(i), angle: hasAng(i) ? angAt(i) : 90, items: items(i).map(function (it) {
         var k = K(it.type), ty = TY[it.type] || {}, g = { type: it.type, from: 'L', off: it.off, _id: it.id };
         if (k === 'open') { g.z = ty.floor ? 0 : it.z; g.w = [it.w]; g.h = [it.h]; g.depth = it.dep || 0; }
         else if (k === 'recess') { g.z = it.z; g.w0 = it.w; g.h0 = it.h; g.depth = it.dep; }
@@ -247,9 +254,10 @@ button,input,select{font:inherit;color:inherit}
     var d = wDir(0), p0 = R.pts[0], c = d[0], s = d[1];
     g.meshes.forEach(function (m) { m.v = m.v.map(function (v) { return [p0.x + v[0] * c - v[1] * s, p0.y + v[0] * s + v[1] * c, v[2]]; }); });
     var n = nW();
-    function box(m, i, u0, u1, t0, t1, z0, z1) {
+    function box(m, i, u0, u1, t0, t1, z0, z1, z0b, z1b) {   // z0b/z1b — высоты на правом конце (если наклон)
+      if (z0b == null) z0b = z0; if (z1b == null) z1b = z1;
       var P = wPts(i)[0], dd = wDir(i), nm = [dd[1], -dd[0]], o = m.v.length;
-      [z0, z1].forEach(function (z) { [[u0, t0], [u1, t0], [u1, t1], [u0, t1]].forEach(function (q) { m.v.push([P.x + dd[0] * q[0] + nm[0] * q[1], P.y + dd[1] * q[0] + nm[1] * q[1], z]); }); });
+      [[z0, z0b], [z1, z1b]].forEach(function (zz) { [[u0, t0, 0], [u1, t0, 1], [u1, t1, 1], [u0, t1, 0]].forEach(function (q) { m.v.push([P.x + dd[0] * q[0] + nm[0] * q[1], P.y + dd[1] * q[0] + nm[1] * q[1], zz[q[2]]]); }); });
       [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]].forEach(function (f) { m.f.push([f[0] + o, f[1] + o, f[2] + o]); });
     }
     if (R.base.on) {
@@ -260,7 +268,7 @@ button,input,select{font:inherit;color:inherit}
       }
       g.meshes.push(bm);
     }
-    if (R.corn.on) { var cm = { name: 'Baget', c: [246, 244, 238], kind: 'corn', v: [], f: [] }; for (var j = 0; j < n; j++) box(cm, j, 0, wLen(j), 0, 30, wH(j) - R.corn.h, wH(j)); g.meshes.push(cm); }
+    if (R.corn.on) { var cm = { name: 'Baget', c: [246, 244, 238], kind: 'corn', v: [], f: [] }; for (var j = 0; j < n; j++) { var Lj = wLen(j), ta = topAt(j, 0), tm = topAt(j, Lj / 2), tb = topAt(j, Lj); box(cm, j, 0, Lj / 2, 0, 30, ta - R.corn.h, ta, tm - R.corn.h, tm); box(cm, j, Lj / 2, Lj, 0, 30, tm - R.corn.h, tm, tb - R.corn.h, tb); } g.meshes.push(cm); }
     return g;
   }
 
@@ -271,7 +279,7 @@ button,input,select{font:inherit;color:inherit}
       var w = wd(i), lv = vals(w.len).length, hv = vals(w.hgt).length;
       if (lv < 3) out.push({ t: 'Стена ' + (i + 1) + ': длина ' + (lv ? 'не в 3 местах' : 'не введена') + ' (низ, середина, верх)', e: !lv, go: { wall: i, dim: 1 } });
       if (hv < 3) out.push({ t: 'Стена ' + (i + 1) + ': высота ' + (hv ? 'не в 3 местах' : 'не введена') + ' (слева, центр, справа)', e: !hv, go: { wall: i, dim: 1 } });
-      if (lv && Math.abs(wLen(i) - minv(w.len)) > 5) out.push({ t: 'Стена ' + (i + 1) + ': на плане ' + fmt(wLen(i)) + ', по замеру ' + fmt(minv(w.len)) + ' — контур не сходится, проверьте длины и углы', e: 0, go: { wall: i, dim: 1 } });
+      if (lv && Math.abs(wLen(i) - wLens(i)[0]) > 5) out.push({ t: 'Стена ' + (i + 1) + ': на плане ' + fmt(wLen(i)) + ', по замеру ' + fmt(wLens(i)[0]) + ' — контур не сходится, проверьте длины и углы', e: 0, go: { wall: i, dim: 1 } });
       items(i).forEach(function (it) {
         var miss = fields(it).filter(function (f) { return !optional(it, f[0]) && !(it.ok || {})[f[0]] && !(f[0] === 'h' && (DEF[it.type] || {}).full); }).map(function (f) { return f[1].toLowerCase(); });
         if (miss.length) out.push({ t: 'Стена ' + (i + 1) + ', ' + (TY[it.type] || {}).t + ': не введено — ' + miss.join(', '), e: 1, go: { wall: i, item: it.id } });
@@ -340,17 +348,23 @@ button,input,select{font:inherit;color:inherit}
   /* ---------- всплывающие окна ---------- */
   function inp(id, label, v, cls, extra) { return '<div' + (extra ? ' class="' + extra + '"' : '') + '><label for="' + id + '">' + label + '</label><input id="' + id + '" inputmode="decimal" autocomplete="off" value="' + esc(v == null || v === '' ? '' : Math.round(num(v) * 10) / 10) + '"' + (cls ? ' class="' + cls + '"' : '') + ' placeholder="—"></div>'; }
   function head(t, sw) { return '<h2>' + (sw ? '<span class="sw" style="width:14px;height:14px;background:' + sw + '"></span>' : '') + t + '<button class="x" data-a="closePop" aria-label="Закрыть">✕</button></h2>'; }
-  function trio(prefix, arr, labels) { var m = minv(arr); return '<div class="f f3">' + labels.map(function (l, k) { var v = num(arr[k]); return inp(prefix + k, l, arr[k], v != null && v === m && vals(arr).length > 1 ? 'min' : ''); }).join('') + '</div>'; }
+  function trio(prefix, arr, labels) { return '<div class="f f3">' + labels.map(function (l, k) { return inp(prefix + k, l, arr[k], ''); }).join('') + '</div>'; }
+  function dev(w) {   // перепады — для замерщика: сразу видно завал / неровный потолок
+    var l = vals(w.len), h = vals(w.hgt), t = [];
+    if (l.length > 1) t.push('перепад по длине <b>' + fmt(Math.max.apply(null, l) - Math.min.apply(null, l)) + ' мм</b>');
+    if (h.length > 1) t.push('по высоте <b>' + fmt(Math.max.apply(null, h) - Math.min.apply(null, h)) + ' мм</b>');
+    return t.length ? t.join(' · ') : 'Вписанные размеры сразу уходят в 3D';
+  }
   function renderPop() {
     var el = $('#pop'), p = S.pop; el.hidden = !p; layoutVars(); renderFabs(); if (!p) { renderSide(); return; }
     if (NARROW()) renderSide();
     var h = '';
     if (p.t === 'wdims') {
       var i = S.wall, w = wd(i);
-      h = head('Стена ' + (i + 1) + ': размеры') + '<p class="hint">Длину меряем в трёх местах: у пола, посередине высоты, под потолком. Высоту — у левого угла, по центру, у правого. Стена строится по наименьшему (подсвечено).</p>' +
+      h = head('Стена ' + (i + 1) + ': размеры') + '<p class="hint">Длину меряем в трёх местах: у пола, посередине высоты, под потолком. Высоту — у левого угла, по центру, у правого. Стена в 3D строится именно так, как вписано.</p>' +
         '<div class="lbl">Длина, мм</div>' + trio('fL', w.len, ['Низ', 'Середина', 'Верх']) +
         '<div class="lbl">Высота, мм</div>' + trio('fH', w.hgt, ['Слева', 'Центр', 'Справа']) +
-        '<div class="calc">В расчёт: <b>' + fmt(minv(w.len)) + ' × ' + fmt(minv(w.hgt) || R.H) + '</b> мм' + (vals(w.len).length > 1 ? ' · разница по длине ' + fmt(Math.max.apply(null, vals(w.len)) - minv(w.len)) + ' мм' : '') + '</div>' +
+        '<div class="calc">' + dev(w) + '</div>' +
         '<div class="lbl">Фото стены</div><div class="row"><div class="phs">' + (w.photos || []).map(function (s) { return '<img src="' + s + '" alt="">'; }).join('') + '</div><button class="btn s ghost" data-a="photo">📷 Снять</button></div>' +
         '<div class="row mt"><span class="sp"></span><button class="btn p" data-a="closePop">Готово</button></div>';
     } else if (p.t === 'pwall') {
@@ -412,16 +426,16 @@ button,input,select{font:inherit;color:inherit}
       var a = wPts(i), d = wDir(i), nm = [d[1], -d[0]], T = 120;
       var q = [[a[0].x, a[0].y], [a[1].x, a[1].y], [a[1].x - nm[0] * T, a[1].y - nm[1] * T], [a[0].x - nm[0] * T, a[0].y - nm[1] * T]];
       s += '<polygon points="' + q.map(function (z) { return z[0] + ',' + (-z[1]); }).join(' ') + '" fill="' + (i === sw ? '#ff5a1f' : '#3a3631') + '"/>';
-      if (!S.draw && wOk(i)) {   // на плане — только введённые размеры
-        var mx = (a[0].x + a[1].x) / 2 + nm[0] * 30 * k, my = (a[0].y + a[1].y) / 2 + nm[1] * 30 * k, ang = Math.atan2(-d[1], d[0]) * 180 / Math.PI; if (ang > 90 || ang < -90) ang += 180;
-        s += '<g transform="translate(' + mx + ',' + (-my) + ') rotate(' + ang + ')"><text font-size="' + 14 * k + '" text-anchor="middle" dominant-baseline="middle" font-family="Onest,Arial" font-weight="700" fill="#1b1916">' + fmt(minv(wd(i).len)) + '</text></g>';
-      }
       if (!S.draw) {
         var bx = (a[0].x + a[1].x) / 2 - nm[0] * (T + 26 * k), by = (a[0].y + a[1].y) / 2 - nm[1] * (T + 26 * k);
         s += '<g data-wn="' + i + '" style="cursor:pointer"><circle cx="' + bx + '" cy="' + (-by) + '" r="' + 17 * k + '" fill="' + (wOk(i) ? '#bfd630' : '#fff') + '" stroke="#1b1916" stroke-width="' + 2 * k + '"/><text x="' + bx + '" y="' + (-by + 5.5 * k) + '" font-size="' + 15 * k + '" text-anchor="middle" font-weight="700" font-family="Onest,Arial" fill="#111" pointer-events="none">' + (i + 1) + '</text></g>';
       }
     }
-    if (!S.draw) for (var j = 0; j < n; j++) { if (!hasAng(j)) continue; var c = R.pts[(j + 1) % p.length], av = angAt(j); if (Math.abs(av - 90) > .05 && Math.abs(av - 180) > .05) s += '<text x="' + (c.x + 30 * k) + '" y="' + (-c.y - 30 * k) + '" font-size="' + 13 * k + '" fill="#d93025" font-family="Onest,Arial" font-weight="700">' + (Math.round(av * 10) / 10) + '°</text>'; }
+    if (!S.draw) for (var j = 0; j < n; j++) {   // все углы — внутри комнаты по биссектрисе; 90° — серым, остальные — красным
+      if (!hasAng(j)) continue; var c = R.pts[(j + 1) % p.length], av = angAt(j), da = wDir(j), db = wDir((j + 1) % n), sg = av < 180 ? 1 : -1;
+      var bx = (db[0] - da[0]) * sg, by = (db[1] - da[1]) * sg, bl = Math.hypot(bx, by) || 1, rr = 150 + 40 * k, tx = c.x + bx / bl * rr, ty = c.y + by / bl * rr, std = Math.abs(av - 90) < .05 || Math.abs(av - 270) < .05;
+      s += '<text x="' + tx + '" y="' + (-ty) + '" font-size="' + 13 * k + '" text-anchor="middle" dominant-baseline="middle" fill="' + (std ? '#77726a' : '#d93025') + '" font-family="Onest,Arial" font-weight="700" pointer-events="none">' + (Math.round(av * 10) / 10) + '°</text>';
+    }
     p.forEach(function (q, i2) { var on = i2 === spv; s += '<circle cx="' + q.x + '" cy="' + (-q.y) + '" r="' + (on ? 13 : 10) * k + '" fill="' + (on ? '#ff5a1f' : '#fff') + '" stroke="#1b1916" stroke-width="' + 2.5 * k + '"/>'; });
     if (S.draw && S.prev && p.length) { var l = p[p.length - 1]; s += '<line x1="' + l.x + '" y1="' + (-l.y) + '" x2="' + S.prev[0] + '" y2="' + (-S.prev[1]) + '" stroke="#ff5a1f" stroke-width="' + 6 * k + '" stroke-dasharray="' + 12 * k + ' ' + 8 * k + '"/>'; }
     sv.innerHTML = s;
@@ -462,7 +476,8 @@ button,input,select{font:inherit;color:inherit}
       return r + (hor ? '<line x1="' + xa + '" y1="' + (ya - t) + '" x2="' + xa + '" y2="' + (ya + t) + '" stroke="' + c + '" stroke-width="' + 1.6 * k + '"/><line x1="' + xb + '" y1="' + (yb - t) + '" x2="' + xb + '" y2="' + (yb + t) + '" stroke="' + c + '" stroke-width="' + 1.6 * k + '"/>' : '<line x1="' + (xa - t) + '" y1="' + ya + '" x2="' + (xa + t) + '" y2="' + ya + '" stroke="' + c + '" stroke-width="' + 1.6 * k + '"/><line x1="' + (xb - t) + '" y1="' + yb + '" x2="' + (xb + t) + '" y2="' + yb + '" stroke="' + c + '" stroke-width="' + 1.6 * k + '"/>');
     }
     s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + ww + '" height="' + hh + '" fill="#fff"/>';
-    s += '<rect data-wall="1" x="0" y="0" width="' + L + '" height="' + H + '" fill="#f6f3ea" stroke="#3a3631" stroke-width="' + 3 * k + '"/>';
+    var TP = wTop(i), RE = wRend(i), Tm = Math.min(TP[0], TP[1], TP[2]);   // реальная форма: наклонный/ломаный верх, завал правого края
+    s += '<polygon data-wall="1" points="' + [[0, 0], [L + RE[0], 0], [L + RE[1], TP[2] / 2], [L + RE[2], TP[2]], [L / 2, TP[1]], [0, TP[0]]].map(function (q) { return q[0] + ',' + Y(q[1]); }).join(' ') + '" fill="#f6f3ea" stroke="#3a3631" stroke-width="' + 3 * k + '" stroke-linejoin="round"/>';
     if (R.base.on) s += '<rect x="0" y="' + Y(R.base.h) + '" width="' + L + '" height="' + R.base.h + '" fill="#e6e1d6" pointer-events="none"/>';
     if (R.corn.on) s += '<rect x="0" y="0" width="' + L + '" height="' + R.corn.h + '" fill="#ece8df" pointer-events="none"/>';
     var selId = S.pop && S.pop.t === 'item' ? S.pop.id : null;
@@ -475,10 +490,10 @@ button,input,select{font:inherit;color:inherit}
       s += '<text x="' + lx + '" y="' + ly + '" font-size="' + 11 * k + '" text-anchor="middle" font-family="Onest,Arial" font-weight="600" fill="#3a3631" pointer-events="none">' + esc(SHORT[it.type] || '') + (it.n > 1 ? ' ×' + it.n : '') + '</text>';
     });
     // длины на трёх уровнях и высоты в трёх местах; наименьшее — «в расчёт»
-    var ml = minv(w.len), mh = minv(w.hgt), lz = [H * .06, H * .5, H * .94], hu = [L * .05, L * .5, L * .95];
+    var ml = minv(w.len), mh = minv(w.hgt), lz = [Tm * .06, Tm * .5, Tm * .94], hu = [L * .05, L * .5, L * .95], LB = wLens(i)[0];
     // линии размеров идут по стене тонким пунктиром, цифры — за краем чертежа (справа длины на своих уровнях, снизу высоты)
-    w.len.forEach(function (v, kk) { var n0 = num(v), y = Y(lz[kk]); s += '<line x1="0" y1="' + y + '" x2="' + (L + 14 * k) + '" y2="' + y + '" stroke="' + (n0 ? '#b4aea2' : '#ff5a1f') + '" stroke-width="' + 1.3 * k + '" stroke-dasharray="' + 6 * k + ' ' + 5 * k + '" pointer-events="none"/>'; s += chip(L + 62 * k, y, n0 ? fmt(n0) : ['низ', 'серед.', 'верх'][kk] + ' ?', n0 ? (n0 === ml ? 'min' : 'val') : 'miss', 'data-dim="fL' + kk + '"'); });
-    w.hgt.forEach(function (v, kk) { var n0 = num(v), x = hu[kk]; s += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + (H + 12 * k) + '" stroke="' + (n0 ? '#b4aea2' : '#ff5a1f') + '" stroke-width="' + 1.3 * k + '" stroke-dasharray="' + 6 * k + ' ' + 5 * k + '" pointer-events="none"/>'; s += chip(Math.max(36 * k, Math.min(L - 36 * k, x)), H + 26 * k, n0 ? fmt(n0) : ['слева', 'центр', 'справа'][kk] + ' ?', n0 ? (n0 === mh ? 'min' : 'val') : 'miss', 'data-dim="fH' + kk + '"'); });
+    w.len.forEach(function (v, kk) { var n0 = num(v), y = Y(lz[kk]); s += '<line x1="0" y1="' + y + '" x2="' + (L + (n0 ? n0 - LB : 0) + 14 * k) + '" y2="' + y + '" stroke="' + (n0 ? '#b4aea2' : '#ff5a1f') + '" stroke-width="' + 1.3 * k + '" stroke-dasharray="' + 6 * k + ' ' + 5 * k + '" pointer-events="none"/>'; s += chip(L + 62 * k, y, n0 ? fmt(n0) : ['низ', 'серед.', 'верх'][kk] + ' ?', n0 ? 'min' : 'miss', 'data-dim="fL' + kk + '"'); });
+    w.hgt.forEach(function (v, kk) { var n0 = num(v), x = hu[kk]; s += '<line x1="' + x + '" y1="' + Y(n0 || topAt(i, x)) + '" x2="' + x + '" y2="' + (H + 12 * k) + '" stroke="' + (n0 ? '#b4aea2' : '#ff5a1f') + '" stroke-width="' + 1.3 * k + '" stroke-dasharray="' + 6 * k + ' ' + 5 * k + '" pointer-events="none"/>'; s += chip(Math.max(36 * k, Math.min(L - 36 * k, x)), H + 26 * k, n0 ? fmt(n0) : ['слева', 'центр', 'справа'][kk] + ' ?', n0 ? 'min' : 'miss', 'data-dim="fH' + kk + '"'); });
     s += '<text x="' + (L + 62 * k) + '" y="' + (-10 * k) + '" font-size="' + 11 * k + '" text-anchor="middle" font-family="Onest,Arial" fill="#77726a">длина</text><text x="' + (-8 * k) + '" y="' + (H + 30 * k) + '" font-size="' + 11 * k + '" text-anchor="end" font-family="Onest,Arial" fill="#77726a">выс.</text>';
     // выбранный элемент — его размеры
     var it0 = selId ? items(i).find(function (x) { return x.id === selId; }) : null;
@@ -492,7 +507,7 @@ button,input,select{font:inherit;color:inherit}
       if (kk2 !== 'point' && kk2 !== 'pipe') { var hx = r.u1 + 26 * k; s += dl(hx, Y(r.z1), hx, Y(r.z0), '#ff5a1f') + chip(hx, Y(cz), fmt(it0.h), md('h'), 'data-ifld="h"'); }
     }
     s += '<text x="0" y="' + (-40 * k) + '" font-size="' + 15 * k + '" font-weight="700" font-family="Onest,Arial" fill="#1b1916">Стена ' + (i + 1) + ' · развёртка, вид изнутри</text>';
-    s += '<text x="0" y="' + (-22 * k) + '" font-size="' + 12 * k + '" font-family="Onest,Arial" fill="#77726a">слева — угол со стеной ' + ((i - 1 + nW()) % nW() + 1) + ', справа — со стеной ' + ((i + 1) % nW() + 1) + (PHONE() ? '' : '. В расчёт: ' + fmt(ml) + ' × ' + fmt(mh || R.H)) + '</text>';
+    s += '<text x="0" y="' + (-22 * k) + '" font-size="' + 12 * k + '" font-family="Onest,Arial" fill="#77726a">слева — угол со стеной ' + ((i - 1 + nW()) % nW() + 1) + ', справа — со стеной ' + ((i + 1) % nW() + 1) + (PHONE() ? '' : '. ' + dev(w).replace(/<\/?b>/g, '')) + '</text>';
     sv.innerHTML = s;
   }
   function wallPt(cx, cy) { var m = sv.getScreenCTM(); if (!m) return null; var pt = sv.createSVGPoint(); pt.x = cx; pt.y = cy; var r = pt.matrixTransform(m.inverse()); return [r.x, EB.H - r.y]; }
@@ -609,14 +624,18 @@ button,input,select{font:inherit;color:inherit}
     V.walls.forEach(function (w, i) {   // подсветка выбранной стены — только лицевая поверхность (тонкий слой поверх), не вся толщина
       var L = wLen(i), H = wH(i), p = wPts(i)[0], d = wDir(i), nm = [d[1], -d[0]], t = 8;
       function P(u, z) { return [(p.x + d[0] * u + nm[0] * t) * k, z * k, -(p.y + d[1] * u + nm[1] * t) * k]; }
-      var g = new THREE.BufferGeometry(), a = P(0, 0), b = P(L, 0), c = P(L, H), e = P(0, H);
-      g.setAttribute('position', new THREE.Float32BufferAttribute(a.concat(b, c, a, c, e), 3));
+      var g = wallGeo(i, P, L, H);
       w.hl = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xff5a1f, transparent: true, opacity: .22, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
       w.hl.renderOrder = 4; w.hl.visible = false; grp.add(w.hl);
     });
     var key = R.pts.length + '|' + R.closed; if (V.key !== key) { V.key = key; camView(V.view || 'out'); }
     selMark();
     if (!S.noDims) { if (document.fonts && !S.fontsOk) document.fonts.load('600 60px Onest').then(function () { S.fontsOk = 1; build3D(); }); dims(); }
+  }
+  function wallGeo(i, P, L, H) {   // лицо стены реальной формы: верх по трём высотам, правый край — с завалом; веер треугольников от левого нижнего угла
+    var TP = wTop(i), RE = wRend(i), q = [[0, 0], [L + RE[0], 0], [L + RE[1], TP[2] / 2], [L + RE[2], TP[2]], [L / 2, TP[1]], [0, TP[0]]], pos = [], uv = [];
+    for (var j = 1; j < q.length - 1; j++) [q[0], q[j], q[j + 1]].forEach(function (v) { pos.push.apply(pos, P(v[0], v[1])); uv.push(v[0] / L, v[1] / H); });
+    var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); return g;
   }
   function selMark() { if (!V || !V.walls) return; V.walls.forEach(function (w, i) { if (w.hl) w.hl.visible = i === S.sel3; }); }
   function ghost() {   // каждый кадр: стена между камерой и комнатой — прозрачная, её размеры скрыты
@@ -686,10 +705,10 @@ button,input,select{font:inherit;color:inherit}
       taken.push(place[2]); text(t, place[0], place[1], vert, c);
     }
     var INK = '#1b1916', EST = '#e2531b', GRY = '#8c867a';
-    var lz = [100, H / 2, H - 100], hu = [100, L / 2, L - 100];
+    var TP = wTop(i), Tm = Math.min(TP[0], TP[1], TP[2]), LB = wLens(i)[0], lz = [100, Tm / 2, Tm - 100], hu = [100, L / 2, L - 100];
     // длина в 3 местах, высота в 3 местах; невведённые — пунктир и «?»
-    w.len.forEach(function (v, kk) { var n0 = num(v); if (!n0) return; dim(0, lz[kk], L, lz[kk], fmt(n0), n0 === minv(w.len) ? INK : GRY, kk === 1 ? [.12, .88, .5] : [.5, .3, .7]); });
-    w.hgt.forEach(function (v, kk) { var n0 = num(v); if (!n0) return; dim(hu[kk], 0, hu[kk], H, fmt(n0), n0 === minv(w.hgt) ? INK : GRY, [.5, .3, .7]); });
+    w.len.forEach(function (v, kk) { var n0 = num(v); if (!n0) return; dim(0, lz[kk], Math.min(L, L + n0 - LB), lz[kk], fmt(n0), INK, kk === 1 ? [.12, .88, .5] : [.5, .3, .7]); });
+    w.hgt.forEach(function (v, kk) { var n0 = num(v); if (!n0) return; dim(hu[kk], 0, hu[kk], Math.min(H, n0), fmt(n0), INK, [.5, .3, .7]); });
     if (!vals(w.len).length) { line(0, 100, L, 100, EST, true); font(1); text('длина ?', L / 2, 100 + FS * .75, false, EST); }
     if (!vals(w.hgt).length) { line(100, 0, 100, H, EST, true); font(1); text('высота ?', 100 + FS * .75, H / 2, true, EST); }
     // элементы: контур, название, привязки
@@ -715,9 +734,7 @@ button,input,select{font:inherit;color:inherit}
     for (var i = 0; i < nW(); i++) {
       var L = wLen(i), H = wH(i), p = wPts(i)[0], d = wDir(i), nm = [d[1], -d[0]], t = 14;
       function P(u, z) { return [(p.x + d[0] * u + nm[0] * t) * k, z * k, -(p.y + d[1] * u + nm[1] * t) * k]; }
-      var g = new THREE.BufferGeometry(), a = P(0, 0), b = P(L, 0), c = P(L, H), e = P(0, H);
-      g.setAttribute('position', new THREE.Float32BufferAttribute(a.concat(b, c, a, c, e), 3));
-      g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1], 2));
+      var g = wallGeo(i, P, L, H);
       var tx = new THREE.CanvasTexture(wallSheet(i)); tx.anisotropy = V.r.capabilities.getMaxAnisotropy(); tx.colorSpace = THREE.SRGBColorSpace;
       var m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tx, transparent: true, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 }));
       m.renderOrder = 5; V.walls[i].lab.add(m);
@@ -741,7 +758,7 @@ button,input,select{font:inherit;color:inherit}
     if (id === 'fi_purpose' || id === 'fi_note') { var f0 = findItem(S.pop.id); if (f0) { f0.it[id.slice(3)] = t.value; save(); redraw(); } return; }
     if (/^f[LH][012]$/.test(id)) {
       var w = wd(S.wall), arr = id[1] === 'L' ? w.len : w.hgt; arr[+id[2]] = t.value.trim();
-      if (id[1] === 'L') { var m = minv(w.len); if (m) setLen(S.wall, m); }
+      if (id[1] === 'L' && vals(w.len).length) setLen(S.wall, wLens(S.wall)[0]);   // план — по длине у пола, остальное — завал угла
       save(); renderTop(); drawWall(); var keep = id; renderPop(); var el = document.getElementById(keep); if (el && document.activeElement !== el) {} return;
     }
     var v = num(t.value); if (v == null) return;
@@ -795,7 +812,7 @@ button,input,select{font:inherit;color:inherit}
     }
     if (a === 'delpt') { delPoint(S.pop.v); save(); S.pop = null; renderAll(); return; }
     if (a === 'delit') { var f = findItem(S.pop.id); if (f) items(f.wall).splice(items(f.wall).indexOf(f.it), 1); S.pop = null; save(); renderAll(); return; }
-    if (a === 'full' || a === 'tofloor') { var f2 = findItem(S.pop.id), it = f2.it; if (a === 'full') { it.h = wH(f2.wall) - it.z; it.ok.h = 1; } else { it.h = it.h + it.z; it.z = 0; it.ok.z = 1; } save(); renderPop(); drawWall(); return; }
+    if (a === 'full' || a === 'tofloor') { var f2 = findItem(S.pop.id), it = f2.it; if (a === 'full') { it.h = Math.round(topAt(f2.wall, it.off + (it.w || 0) / 2) - it.z); it.ok.h = 1; } else { it.h = it.h + it.z; it.z = 0; it.ok.z = 1; } save(); renderPop(); drawWall(); return; }
     if (a === 'photo') { $('#fPh').click(); return; }
     if (a === 'x3ds' || a === 'x3dscm') { var g = model(); if (!g) return toast('Начертите комнату'); dl((R.name || 'zamer').replace(/[^\wа-яё]+/gi, '_') + (a === 'x3ds' ? '_mm' : '_cm') + '.3ds', Z.to3DS(g, a === 'x3ds' ? 1 : .1)); return; }
     if (a === 'xjson') { dl('zamer.json', JSON.stringify({ app: 'mgs-zamer-room', v: 3, room: R })); return; }
