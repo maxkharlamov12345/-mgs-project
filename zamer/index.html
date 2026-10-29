@@ -30,9 +30,9 @@ button,input,select{font:inherit;color:inherit}
 .tip{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(21,19,17,.9);color:#f4f1ec;border-radius:12px;padding:7px 13px;font-size:14px;pointer-events:none;max-width:90%;text-align:center;z-index:12}
 .tip b{color:var(--acc)}
 .fab{position:absolute;z-index:11;display:flex;gap:6px;flex-wrap:wrap}
-.fab.br{right:calc(max(10px,env(safe-area-inset-right)) + var(--pr));bottom:calc(10px + env(safe-area-inset-bottom));justify-content:flex-end}
+.fab.br{right:calc(max(10px,env(safe-area-inset-right)) + var(--pr));bottom:calc(10px + var(--pb) + env(safe-area-inset-bottom));justify-content:flex-end}
 .fab.tr{right:calc(max(10px,env(safe-area-inset-right)) + var(--pr));top:10px}
-.fab.bl{left:calc(max(10px,env(safe-area-inset-left)) + var(--sl));bottom:calc(10px + env(safe-area-inset-bottom))}
+.fab.bl{left:calc(max(10px,env(safe-area-inset-left)) + var(--sl));bottom:calc(10px + var(--pb) + env(safe-area-inset-bottom))}
 .zm{display:flex;flex-direction:column;gap:4px}
 .zm button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:20px;cursor:pointer}
 .side{position:absolute;left:max(8px,env(safe-area-inset-left));top:8px;bottom:calc(8px + env(safe-area-inset-bottom));width:240px;background:#fff;border-radius:14px;box-shadow:0 4px 18px #0002;overflow:auto;z-index:10;padding:8px}
@@ -85,7 +85,7 @@ button,input,select{font:inherit;color:inherit}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111;color:#fff;padding:9px 15px;border-radius:12px;z-index:90;font-size:14px;max-width:90vw}
 [hidden]{display:none!important}
 @media (max-width:699px){
-  .side{left:0;right:0;top:auto;bottom:0;width:auto;max-height:62%;border-radius:16px 16px 0 0;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  .side{left:0;right:0;top:auto;bottom:0;width:auto;max-height:44%;border-radius:16px 16px 0 0;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
   .pop{left:0;right:0;top:auto;bottom:0;width:auto;max-height:66%;border-radius:16px 16px 0 0;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
   .tb{padding:4px 8px;font-size:13px}
   .nm,.logo span{display:none}
@@ -122,6 +122,7 @@ button,input,select{font:inherit;color:inherit}
   function hyp(a, b) { return Math.hypot(b[0] - a[0], b[1] - a[1]); }
   function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2400); }
   function PHONE() { return window.innerWidth < 700; }
+  function NARROW() { return window.innerWidth - 256 - 370 < 520; }   // меню и окно вместе не помещаются — окно на время заменяет меню
   function vals(a) { return (a || []).map(num).filter(function (x) { return x != null && x > 0; }); }
   function minv(a) { var v = vals(a); return v.length ? Math.min.apply(null, v) : null; }
 
@@ -282,7 +283,7 @@ button,input,select{font:inherit;color:inherit}
 
   /* ---------- раскладка экрана ---------- */
   function layoutVars() {
-    var sl = !PHONE() && S.mode === 'wall' && S.side ? 256 : 0, pr = !PHONE() && S.pop && S.mode === 'wall' ? 370 : 0;
+    var sl = !PHONE() && S.mode === 'wall' && S.side && !(S.pop && NARROW()) ? 256 : 0, pr = !PHONE() && S.pop && S.mode === 'wall' ? 370 : 0;
     document.documentElement.style.setProperty('--sl', sl + 'px'); document.documentElement.style.setProperty('--pr', pr + 'px');
   }
   function renderTop() {
@@ -311,7 +312,7 @@ button,input,select{font:inherit;color:inherit}
     } else if (S.mode === 'wall') {
       var n = nW(), i = S.wall;
       br = '<button class="btn s ghost" data-a="prevw"' + (i > 0 || R.closed ? '' : ' disabled') + '>← Стена ' + ((i - 1 + n) % n + 1) + '</button><button class="btn s ghost" data-a="nextw"' + (i < n - 1 || R.closed ? '' : ' disabled') + '>Стена ' + ((i + 1) % n + 1) + ' →</button>';
-      if (PHONE() || !S.side) bl = '<button class="btn p" data-a="side">＋ Элемент</button>';
+      if (!S.side) bl = '<button class="btn p" data-a="side">＋ Элемент</button>';
       tr = '<button class="btn s ghost" data-a="wdims">Размеры стены</button>';
     } else {
       tr = '<button class="btn s ghost" data-cam="in">Изнутри</button><button class="btn s ghost" data-cam="top">Сверху</button><button class="btn s ghost" data-cam="out">Общий</button>';
@@ -324,7 +325,7 @@ button,input,select{font:inherit;color:inherit}
 
   /* ---------- меню элементов (развёртка) ---------- */
   function renderSide() {
-    var el = $('#side'), show = S.mode === 'wall' && S.side; el.hidden = !show; if (!show) return;
+    var el = $('#side'), show = S.mode === 'wall' && S.side && !(S.pop && NARROW()); el.hidden = !show; if (!show) { phonePb(); return; }
     var h = '<div class="row" style="padding:2px 4px 4px"><b style="font-size:15px">Добавить на стену</b><span class="sp"></span><button class="x" data-a="side" aria-label="Скрыть меню">✕</button></div>';
     CATS.forEach(function (c) {
       var o = S.open[c.k];
@@ -334,7 +335,7 @@ button,input,select{font:inherit;color:inherit}
     });
     h += '<h3>По периметру комнаты</h3><label class="tg"><input type="checkbox" data-tg="base"' + (R.base.on ? ' checked' : '') + '>Плинтус</label><label class="tg"><input type="checkbox" data-tg="corn"' + (R.corn.on ? ' checked' : '') + '>Багет</label>' +
       '<div class="row" style="padding:4px 8px"><button class="btn s ghost" data-a="room">Высоты плинтуса и багета</button></div>';
-    el.innerHTML = h;
+    el.innerHTML = h; phonePb();
   }
 
   /* ---------- всплывающие окна ---------- */
@@ -342,8 +343,8 @@ button,input,select{font:inherit;color:inherit}
   function head(t, sw) { return '<h2>' + (sw ? '<span class="sw" style="width:14px;height:14px;background:' + sw + '"></span>' : '') + t + '<button class="x" data-a="closePop" aria-label="Закрыть">✕</button></h2>'; }
   function trio(prefix, arr, labels) { var m = minv(arr); return '<div class="f f3">' + labels.map(function (l, k) { var v = num(arr[k]); return inp(prefix + k, l, arr[k], v != null && v === m && vals(arr).length > 1 ? 'min' : ''); }).join('') + '</div>'; }
   function renderPop() {
-    var el = $('#pop'), p = S.pop; el.hidden = !p; layoutVars(); renderFabs(); if (!p) { phonePb(); return; }
-    if (PHONE() && S.side) { S.side = false; renderSide(); }
+    var el = $('#pop'), p = S.pop; el.hidden = !p; layoutVars(); renderFabs(); if (!p) { renderSide(); return; }
+    if (NARROW()) renderSide();
     var h = '';
     if (p.t === 'wdims') {
       var i = S.wall, w = wd(i);
@@ -384,8 +385,8 @@ button,input,select{font:inherit;color:inherit}
     if (p.focus) { var fid = p.focus; p.focus = 0; setTimeout(function () { var f = fid === 1 ? el.querySelector('input') : document.getElementById(fid); if (f) { try { f.focus({ preventScroll: true }); f.select(); } catch (er) {} } }, 40); }
   }
   function phonePb() {   // телефон: чертёж сжимается над нижним окном, чтобы его было видно
-    var pb = PHONE() && S.pop && S.mode !== '3d' ? $('#pop').offsetHeight : 0;
-    if (pb !== S.pb) { S.pb = pb; document.documentElement.style.setProperty('--pb', pb + 'px'); if (S.mode === 'wall') drawWall(); }
+    var pb = !PHONE() || S.mode === '3d' ? 0 : S.pop ? $('#pop').offsetHeight : S.mode === 'wall' && S.side ? $('#side').offsetHeight : 0;
+    if (pb !== S.pb) { S.pb = pb; document.documentElement.style.setProperty('--pb', pb + 'px'); if (S.mode === 'wall') drawWall(); else if (S.mode === 'plan') drawPlan(); }
   }
   function openPop(p) { S.pop = p; renderPop(); redraw(); }
 
@@ -583,7 +584,7 @@ button,input,select{font:inherit;color:inherit}
     finishDraw();
   }
   function finishDraw() { S.draw = false; delete R.drawing; save(); S.vb = null; S.pop = null; renderAll(); toast('Контур готов. Касание номера стены — развёртка с размерами'); }
-  function openWall(i) { S.mode = 'wall'; S.wall = i; S.pop = null; S.place = null; if (!PHONE()) S.side = true; renderAll(); if (!wOk(i)) openPop({ t: 'wdims', focus: 'fL0' }); }
+  function openWall(i) { S.mode = 'wall'; S.wall = i; S.pop = null; S.place = null; S.side = true; renderAll(); if (!wOk(i)) openPop({ t: 'wdims', focus: 'fL0' }); }
 
   /* ---------- 3D: показ всех развёрток с размерами ---------- */
   var THREE = null, OC = null, V = null;
@@ -764,10 +765,10 @@ button,input,select{font:inherit;color:inherit}
     var b = e.target.closest('[data-a],[data-cam],[data-ang],[data-place],[data-cat],[data-go]'); if (!b) return;
     var d = b.dataset, a = d.a;
     if (d.cat) { S.open[d.cat] = !S.open[d.cat]; renderSide(); return; }
-    if (d.place) { S.place = S.place === d.place ? null : d.place; if (PHONE()) S.side = false; S.pop = null; layoutVars(); renderPop(); renderSide(); renderFabs(); tip(); drawWall(); return; }
+    if (d.place) { S.place = S.place === d.place ? null : d.place; S.pop = null; layoutVars(); renderPop(); renderSide(); renderFabs(); tip(); drawWall(); return; }
     if (d.cam) { camView(d.cam); return; }
     if (d.ang) { setAng(S.pop.w, +d.ang); save(); renderPop(); redraw(); return; }
-    if (d.go) { var x = issues()[+d.go]; if (!x || !x.go) return; S.mode = 'wall'; S.wall = x.go.wall; S.side = !PHONE(); S.pop = x.go.item ? { t: 'item', id: x.go.item } : { t: 'wdims', focus: 1 }; renderAll(); return; }
+    if (d.go) { var x = issues()[+d.go]; if (!x || !x.go) return; S.mode = 'wall'; S.wall = x.go.wall; S.side = true; S.pop = x.go.item ? { t: 'item', id: x.go.item } : { t: 'wdims', focus: 1 }; renderAll(); return; }
     if (a === 'closePop') { S.pop = null; renderPop(); redraw(); return; }
     if (a === 'toPlan') { S.mode = 'plan'; S.pop = null; S.place = null; renderAll(); return; }
     if (a === 'toWall') { if (!nW()) return; if (S.draw) { S.draw = false; delete R.drawing; save(); } openWall(S.mode === 'wall' ? S.wall : 0); return; }
