@@ -605,7 +605,7 @@ button,input,select{font:inherit;color:inherit}
     V.walls = [];   // для каждой стены — середина и нормаль внутрь: стены, закрывающие вид, становятся прозрачными вместе с подписями
     for (var i = 0; i < nW(); i++) { var a = wPts(i), d = wDir(i); V.walls.push({ mid: new THREE.Vector3((a[0].x + a[1].x) / 2 * k, 0, -(a[0].y + a[1].y) / 2 * k), nrm: new THREE.Vector3(d[1], 0, d[0]), lab: new THREE.Group() }); grp.add(V.walls[i].lab); }
     var key = R.pts.length + '|' + R.closed; if (V.key !== key) { V.key = key; camView(V.view || 'out'); }
-    if (!S.noDims) dims();
+    if (!S.noDims) { if (document.fonts && !S.fontsOk) document.fonts.load('600 60px Onest').then(function () { S.fontsOk = 1; build3D(); }); dims(); }
   }
   function ghost() {   // каждый кадр: стена между камерой и комнатой — прозрачная, её размеры скрыты
     if (!V || !V.walls) return; var cp = V.cam.position, gs = V.walls.map(function (w) { return w.nrm.dot(cp.clone().setY(0).sub(w.mid)) < 0; });
@@ -642,37 +642,72 @@ button,input,select{font:inherit;color:inherit}
     else { cam.position.set(cx + Rr * .55, Rr * 1.05 + 1.4, cz + Rr * 1.25); ctl.target.set(cx, R.H * k * .3, cz); }
     ctl.update();
   }
-  function label(text, fg, bg, sc0) {
-    var c = document.createElement('canvas'); c.width = 384; c.height = 96; var x = c.getContext('2d'); x.font = '700 50px Onest, Arial';
-    var w = Math.min(376, x.measureText(text).width + 34); x.fillStyle = bg; if (x.roundRect) { x.beginPath(); x.roundRect((384 - w) / 2, 12, w, 72, 36); x.fill(); } else x.fillRect((384 - w) / 2, 12, w, 72);
-    x.fillStyle = fg; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 192, 50);
-    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, sizeAttenuation: false })); sp.scale.set(sc0 * 4, sc0, 1); sp.renderOrder = 10; return sp;
+  /* Размеры в 3D — чертёж прямо на поверхности каждой стены (как развёртка): тонкие размерные линии с засечками,
+     текст без рамок, лежит в плоскости стены — не крутится за камерой; подписи раскладываются так, чтобы не наезжали. */
+  function wallSheet(i) {
+    var w = wd(i), L = wLen(i), H = wH(i), ppm = Math.min(.7, 4096 / Math.max(L, H)), cv = document.createElement('canvas');
+    cv.width = Math.ceil(L * ppm); cv.height = Math.ceil(H * ppm);
+    var x = cv.getContext('2d'), FS = Math.max(68, Math.min(95, Math.max(L, H) * .022)), LW = Math.max(4, 2.4 / ppm), taken = [];
+    x.scale(ppm, ppm); x.lineCap = 'round'; x.textBaseline = 'alphabetic';
+    function X(u) { return u; } function Y(z) { return H - z; }
+    function font(b) { x.font = (b ? 600 : 500) + ' ' + FS + 'px Onest, Arial'; }
+    function hits(r) { return r.u0 < -5 || r.u1 > L + 5 || r.z0 < -5 || r.z1 > H + 5 || taken.some(function (t) { return r.u0 < t.u1 && r.u1 > t.u0 && r.z0 < t.z1 && r.z1 > t.z0; }); }
+    function trect(cu, cz, tw, vert) { var a = vert ? FS * 1.15 : tw + 30, b = vert ? tw + 30 : FS * 1.15; return { u0: cu - a / 2, u1: cu + a / 2, z0: cz - b / 2, z1: cz + b / 2 }; }
+    function text(t, cu, cz, vert, c) { x.save(); x.translate(X(cu), Y(cz)); if (vert) x.rotate(-Math.PI / 2); x.fillStyle = c; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, 0, 0); x.restore(); }
+    function tick(u, z) { var s = FS * .32; x.beginPath(); x.moveTo(X(u - s), Y(z - s)); x.lineTo(X(u + s), Y(z + s)); x.stroke(); }
+    function line(u0, z0, u1, z1, c, dash) { x.strokeStyle = c; x.lineWidth = LW; x.setLineDash(dash ? [30, 22] : []); x.beginPath(); x.moveTo(X(u0), Y(z0)); x.lineTo(X(u1), Y(z1)); x.stroke(); x.setLineDash([]); }
+    // размер: линия a→b (горизонтальная или вертикальная) с засечками и числом над линией; подбираем место без наложений
+    function dim(u0, z0, u1, z1, t, c, alongs) {
+      var vert = Math.abs(u1 - u0) < 1, len = vert ? Math.abs(z1 - z0) : Math.abs(u1 - u0); if (len < 5) return;
+      font(1); var tw = x.measureText(t).width, place = null;
+      (alongs || [.5, .3, .7, .15, .85, .05, .95]).some(function (f) {
+        return [1, -1, 2, -2, 3, -3].some(function (side) {   // сначала у самой линии, потом дальше от неё — лишь бы не наложиться
+          var off = (side > 0 ? 1 : -1) * (FS * .75 + (Math.abs(side) - 1) * FS * 1.2);
+          var cu = vert ? u0 + off : u0 + (u1 - u0) * f, cz = vert ? z0 + (z1 - z0) * f : z0 + off, r = trect(cu, cz, tw, vert);
+          if (!hits(r)) { place = [cu, cz, r]; return true; } return false;
+        });
+      });
+      if (!place && tw + 40 > len) { var cu2 = vert ? u0 + FS * .75 : u1 + tw / 2 + 40, cz2 = vert ? z1 + tw / 2 + 40 : z0 + FS * .75; place = [cu2, cz2, trect(cu2, cz2, tw, vert)]; }
+      if (!place) { var cu3 = vert ? u0 + FS * .75 : (u0 + u1) / 2, cz3 = vert ? (z0 + z1) / 2 : z0 + FS * .75; place = [cu3, cz3, trect(cu3, cz3, tw, vert)]; }
+      line(u0, z0, u1, z1, c); x.strokeStyle = c; tick(u0, z0); tick(u1, z1);
+      taken.push(place[2]); text(t, place[0], place[1], vert, c);
+    }
+    var INK = '#1b1916', EST = '#e2531b', GRY = '#8c867a';
+    var lz = [100, H / 2, H - 100], hu = [100, L / 2, L - 100];
+    // длина в 3 местах, высота в 3 местах; невведённые — пунктир и «?»
+    w.len.forEach(function (v, kk) { var n0 = num(v); if (!n0) return; dim(0, lz[kk], L, lz[kk], fmt(n0), n0 === minv(w.len) ? INK : GRY, kk === 1 ? [.12, .88, .5] : [.5, .3, .7]); });
+    w.hgt.forEach(function (v, kk) { var n0 = num(v); if (!n0) return; dim(hu[kk], 0, hu[kk], H, fmt(n0), n0 === minv(w.hgt) ? INK : GRY, [.5, .3, .7]); });
+    if (!vals(w.len).length) { line(0, 100, L, 100, EST, true); font(1); text('длина ?', L / 2, 100 + FS * .75, false, EST); }
+    if (!vals(w.hgt).length) { line(100, 0, 100, H, EST, true); font(1); text('высота ?', 100 + FS * .75, H / 2, true, EST); }
+    // элементы: контур, название, привязки
+    items(i).forEach(function (it) {
+      var r = rect(it, H), kk = K(it.type), okk = it.ok || {}, cx = (r.u0 + r.u1) / 2, cz = (r.z0 + r.z1) / 2;
+      function cl(f) { return okk[f] ? INK : EST; }
+      x.strokeStyle = INK; x.lineWidth = LW; x.strokeRect(X(r.u0), Y(r.z1), r.u1 - r.u0, r.z1 - r.z0);
+      taken.push({ u0: r.u0, u1: r.u1, z0: r.z0, z1: r.z1 });
+      var nm0 = (SHORT[it.type] || '') + (it.n > 1 ? ' ×' + it.n : '') + (it.note ? ' — ' + it.note : '');
+      x.font = '400 ' + FS * .85 + 'px Onest, Arial'; var nw = x.measureText(nm0).width;
+      [[cx, r.z1 + FS * .75], [cx, r.z0 - FS * .75], [r.u1 + nw / 2 + 30, cz], [r.u0 - nw / 2 - 30, cz]].some(function (q) { var rr = trect(q[0], q[1], nw, false); if (hits(rr)) return false; taken.push(rr); x.fillStyle = INK; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(nm0, X(q[0]), Y(q[1])); return true; });
+      var au = kk === 'point' || kk === 'pipe' ? cx : r.u0;
+      dim(0, cz, au, cz, fmt(it.off), cl('off'));
+      if (kk !== 'pipe' && r.z0 > 1) dim(cx, 0, cx, kk === 'point' ? cz : r.z0, fmt(it.z), cl('z'));
+      if (kk !== 'point' && r.u1 - r.u0 > 30) dim(r.u0, r.z1 + FS * .2, r.u1, r.z1 + FS * .2, fmt(it.w), cl('w'));
+      if (kk !== 'point' && kk !== 'pipe') dim(r.u1 + FS * .2, r.z0, r.u1 + FS * .2, r.z1, fmt(it.h), cl('h'));
+    });
+    font(1); x.fillStyle = GRY; x.textAlign = 'center'; x.fillText('Стена ' + (i + 1), X(L / 2), Y(H - FS * 2.1));
+    return cv;
   }
   function dims() {
-    var k = .001, grp = null, sc0 = PHONE() ? .058 : .05;   // подписи — постоянного размера на экране
-    function P3(i, u, t, z) { var p = wPts(i)[0], d = wDir(i), nm = [d[1], -d[0]]; return new THREE.Vector3((p.x + d[0] * u + nm[0] * t) * k, z * k, -(p.y + d[1] * u + nm[1] * t) * k); }
-    function dim(a, c, txt, mode) {
-      var cl = mode === 'cur' ? 0xff5a1f : 0x1b1916, dir = c.clone().sub(a), L = dir.length(); if (L < .01) return;
-      var mid = a.clone().add(c).multiplyScalar(.5), hl = Math.min(.07, L * .3); dir.normalize();
-      grp.add(new THREE.ArrowHelper(dir, mid, L / 2, cl, hl, hl * .6)); grp.add(new THREE.ArrowHelper(dir.clone().negate(), mid, L / 2, cl, hl, hl * .6));
-      var sp = label(txt, mode === 'cur' ? '#fff' : '#111', mode === 'cur' ? '#ff5a1f' : '#bfd630', sc0); sp.position.copy(mid).add(new THREE.Vector3(0, .04, 0)); grp.add(sp);
-    }
-    function name(pos, txt) { var sp = label(txt, '#fff', 'rgba(21,19,17,.85)', sc0 * .9); sp.position.copy(pos); grp.add(sp); }
+    var k = .001;
     for (var i = 0; i < nW(); i++) {
-      grp = V.walls[i].lab;
-      var w = wd(i), L = wLen(i), H = wH(i), ml = minv(w.len);
-      dim(P3(i, 0, 170, 30), P3(i, L, 170, 30), ml ? fmt(ml) : '? ' + fmt(L), ml ? 'ok' : 'cur');
-      dim(P3(i, 90, 170, 0), P3(i, 90, 170, H), minv(w.hgt) ? fmt(minv(w.hgt)) : '?', minv(w.hgt) ? 'ok' : 'cur');
-      name(P3(i, L / 2, 60, H + 120), 'Стена ' + (i + 1));
-      items(i).forEach(function (it) {
-        var r = rect(it, H), kk = K(it.type), okk = it.ok || {}, cx = (r.u0 + r.u1) / 2, cz = (r.z0 + r.z1) / 2;
-        function md(f) { return okk[f] ? 'ok' : 'cur'; }
-        name(P3(i, cx, 90, r.z1 + 110), (SHORT[it.type] || '') + (it.n > 1 ? ' ×' + it.n : '') + (it.note ? ' · ' + it.note.slice(0, 18) : ''));
-        dim(P3(i, 0, 60, cz), P3(i, kk === 'point' || kk === 'pipe' ? cx : r.u0, 60, cz), fmt(it.off), md('off'));
-        if (kk !== 'pipe' && r.z0 > 1) dim(P3(i, cx, 60, 0), P3(i, cx, 60, kk === 'point' ? cz : r.z0), fmt(it.z), md('z'));
-        if (kk !== 'point') dim(P3(i, r.u0, 60, r.z1 + 50), P3(i, r.u1, 60, r.z1 + 50), fmt(it.w), md('w'));
-        if (kk !== 'point' && kk !== 'pipe') dim(P3(i, r.u1 + 50, 60, r.z0), P3(i, r.u1 + 50, 60, r.z1), fmt(it.h), md('h'));
-      });
+      var L = wLen(i), H = wH(i), p = wPts(i)[0], d = wDir(i), nm = [d[1], -d[0]], t = 14;
+      function P(u, z) { return [(p.x + d[0] * u + nm[0] * t) * k, z * k, -(p.y + d[1] * u + nm[1] * t) * k]; }
+      var g = new THREE.BufferGeometry(), a = P(0, 0), b = P(L, 0), c = P(L, H), e = P(0, H);
+      g.setAttribute('position', new THREE.Float32BufferAttribute(a.concat(b, c, a, c, e), 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1], 2));
+      var tx = new THREE.CanvasTexture(wallSheet(i)); tx.anisotropy = V.r.capabilities.getMaxAnisotropy(); tx.colorSpace = THREE.SRGBColorSpace;
+      var m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tx, transparent: true, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 }));
+      m.renderOrder = 5; V.walls[i].lab.add(m);
     }
   }
 
