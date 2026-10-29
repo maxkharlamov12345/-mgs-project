@@ -100,9 +100,9 @@
     return { u0: b0, u1: b0 + w, z0: z0, z1: z0 + h, dep: dep };
   }
 
-  function extAt(ang, T) {               // удлинение стен у угла, чтобы закрыть его снаружи
-    if (!(ang > 0 && ang < 180)) return 0;
-    return Math.min(3 * T, T / Math.tan(ang * Math.PI / 360));
+  function extAt(ang, T) {               // насколько наружная грань стены выходит за угол (стык «на ус»): 90° → +T, 270° → −T
+    if (!(ang > 0 && ang < 360) || Math.abs(ang - 180) < 0.01) return 0;
+    return Math.max(-3 * T, Math.min(3 * T, T / Math.tan(ang * Math.PI / 360)));
   }
 
   /* Главная функция: план + список сеток. */
@@ -135,10 +135,11 @@
     var meshes = res.meshes;
     function mesh(name, col, kind) { var m = { name: name, c: col, kind: kind, v: [], f: [] }; meshes.push(m); return m; }
     var BF = [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]];
-    function lbox(m, wi, u0, u1, t0, t1, z0, z1) {
+    function lbox(m, wi, u0, u1, t0, t1, z0, z1, v0, v1) {   // v0/v1 — края по u на грани t0 (если другие, чем на t1: срез «на ус»)
       var S = res.pts[wi], d = res.dirs[wi], nm = [d[1], -d[0]], o = m.v.length;
+      if (v0 == null) v0 = u0; if (v1 == null) v1 = u1;
       [z0, z1].forEach(function (z) {
-        [[u0, t0], [u1, t0], [u1, t1], [u0, t1]].forEach(function (p) {
+        [[v0, t0], [v1, t0], [u1, t1], [u0, t1]].forEach(function (p) {
           m.v.push([S[0] + d[0] * p[0] + nm[0] * p[1], S[1] + d[1] * p[0] + nm[1] * p[1], z]);
         });
       });
@@ -154,9 +155,9 @@
         if (b.cut) cuts.push([b.u0, b.u1, Math.max(0, b.z0), Math.min(H, b.z1)]);
       });
       var wm = mesh('Stena' + (wi + 1), [228, 225, 216], 'wall');
-      var us = [-e0[wi], L + e1[wi]];
+      var us = [0, L];   // куски по внутренней грани; у крайних наружная грань продлена/укорочена до среза «на ус»
       cuts.forEach(function (c) { us.push(c[0], c[1]); });
-      us = us.filter(function (u) { return u >= -e0[wi] && u <= L + e1[wi]; })
+      us = us.filter(function (u) { return u >= 0 && u <= L; })
              .sort(function (a, b) { return a - b; })
              .filter(function (u, k, a) { return k === 0 || u - a[k - 1] > 0.01; });
       for (var k = 0; k < us.length - 1; k++) {
@@ -171,7 +172,9 @@
             zs = nz;
           }
         });
-        zs.forEach(function (z) { if (z[1] - z[0] > 0.5) lbox(wm, wi, a, b2, -T, 0, z[0], z[1]); });
+        // крайние куски стены: внутренняя грань кончается в углу (0 / L), наружная — на ±e (срез по биссектрисе угла)
+        var va = k === 0 ? -e0[wi] : a, vb = k === us.length - 2 ? L + e1[wi] : b2;
+        zs.forEach(function (z) { if (z[1] - z[0] > 0.5) lbox(wm, wi, a, b2, -T, 0, z[0], z[1], va, vb); });
       }
     });
 

@@ -602,7 +602,7 @@ button,input,select{font:inherit;color:inherit}
       var isW = m.kind === 'wall', wi = isW ? +m.name.replace('Stena', '') - 1 : m.ref ? m.ref.wi : -1, glass = m.kind === 'window' || m.kind === 'balcony';
       var mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: new THREE.Color(rgb(m.c)), roughness: .85, side: THREE.DoubleSide, transparent: true, opacity: glass ? .45 : 1 }));
       mesh.userData = { wall: wi, isWall: isW, op: glass ? .45 : 1 }; grp.add(mesh);
-      if (isW) { var ed = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: 0x8c867a, transparent: true })); ed.userData = { wall: wi, edge: 1 }; grp.add(ed); }
+      // обводку рёбер у стен не рисуем: швы между кусками стены (над окнами/дверями) выглядели разрывами
     });
     V.walls = [];   // для каждой стены — середина и нормаль внутрь: стены, закрывающие вид, становятся прозрачными вместе с подписями
     for (var i = 0; i < nW(); i++) { var a = wPts(i), d = wDir(i); V.walls.push({ mid: new THREE.Vector3((a[0].x + a[1].x) / 2 * k, 0, -(a[0].y + a[1].y) / 2 * k), nrm: new THREE.Vector3(d[1], 0, d[0]), lab: new THREE.Group() }); grp.add(V.walls[i].lab); }
@@ -615,7 +615,6 @@ button,input,select{font:inherit;color:inherit}
     if (!V || !V.walls) return; var cp = V.cam.position, gs = V.walls.map(function (w) { return w.nrm.dot(cp.clone().setY(0).sub(w.mid)) < 0; });
     V.grp.children.forEach(function (o) {
       var wi = o.userData.wall; if (wi == null || wi < 0 || gs[wi] == null) return; var g = gs[wi];
-      if (o.userData.edge) { o.material.opacity = g ? .25 : 1; return; }
       if (o.isMesh) { o.userData.ghost = g; o.material.opacity = g ? (o.userData.isWall ? .1 : .35) : o.userData.op; o.material.depthWrite = !g; }
     });
     V.walls.forEach(function (w, i) { w.lab.visible = !gs[i]; });
