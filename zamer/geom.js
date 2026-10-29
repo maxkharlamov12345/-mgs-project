@@ -100,6 +100,10 @@
     return { u0: b0, u1: b0 + w, z0: z0, z1: z0 + h, dep: dep };
   }
 
+  function interp(P, x) {   // ломаная по точкам [x, y], за краями — как у крайней точки
+    if (x <= P[0][0]) return P[0][1]; for (var i = 1; i < P.length; i++) if (x <= P[i][0]) { var a = P[i - 1], b = P[i]; return b[0] - a[0] < 1e-6 ? b[1] : a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]); }
+    return P[P.length - 1][1];
+  }
   function extAt(ang, T) {               // насколько наружная грань стены выходит за угол (стык «на ус»): 90° → +T, 270° → −T
     if (!(ang > 0 && ang < 360) || Math.abs(ang - 180) < 0.01) return 0;
     return Math.max(-3 * T, Math.min(3 * T, T / Math.tan(ang * Math.PI / 360)));
@@ -110,10 +114,12 @@
     var T = num(M.T) || 150, Hroom = num(M.H) || 2700, n = M.walls.length;
     var closed = n >= 3 && M.closed !== false;
     var W = M.walls.map(function (w) {
-      var L0 = minOf(w.len), tp = (w.top || []).map(num), re = (w.rend || []).map(num), H0 = minOf(w.hgt) || Hroom;
-      tp = [tp[0] || H0, tp[1] || H0, tp[2] || H0];          // фактическая высота стены слева / по центру / справа
-      re = [re[0] || 0, re[1] || 0, re[2] || 0];             // сдвиг правого конца стены у пола / посередине / под потолком (завал угла)
-      return { L: L0, H: Math.max(tp[0], tp[1], tp[2]), top: tp, rend: re, ang: num(w.angle) === null ? 90 : num(w.angle) };
+      var L0 = minOf(w.len), H0 = minOf(w.hgt) || Hroom;
+      // замеры с привязкой к месту: topPts — [u от левого угла, высота]; rendPts — [z от пола, сдвиг правого конца] (завал угла)
+      var tp = (w.topPts || []).filter(function (q) { return num(q[0]) !== null && num(q[1]) > 0; }).map(function (q) { return [num(q[0]), num(q[1])]; }).sort(function (a, b) { return a[0] - b[0]; });
+      var re = (w.rendPts || []).filter(function (q) { return num(q[0]) !== null && num(q[1]) !== null; }).map(function (q) { return [num(q[0]), num(q[1])]; }).sort(function (a, b) { return a[0] - b[0]; });
+      if (!tp.length) tp = [[0, H0]]; if (!re.length) re = [[0, 0]];
+      return { L: L0, H: Math.max.apply(null, tp.map(function (q) { return q[1]; })), top: tp, rend: re, ang: num(w.angle) === null ? 90 : num(w.angle) };
     });
     var ok = n > 0 && W.every(function (w) { return w.L; });
     var res = { ok: ok, closed: closed, T: T, W: W, pts: [], dirs: [], meshes: [], items: [], closure: null };
@@ -161,8 +167,8 @@
 
     M.walls.forEach(function (w, wi) {
       var L = W[wi].L, H = W[wi].H, TP = W[wi].top, RE = W[wi].rend, cuts = [];
-      function topAt(u) { return u <= L / 2 ? TP[0] + (TP[1] - TP[0]) * u / (L / 2) : TP[1] + (TP[2] - TP[1]) * (u - L / 2) / (L / 2); }
-      function xr(z) { var hm = TP[2] / 2; return L + (z <= hm ? RE[0] + (RE[1] - RE[0]) * z / hm : RE[1] + (RE[2] - RE[1]) * Math.min(1, (z - hm) / hm)); }
+      function topAt(u) { return interp(TP, u); }
+      function xr(z) { return L + interp(RE, z); }
       res.walls = res.walls || []; res.walls[wi] = { topAt: topAt, xr: xr };
       (w.items || []).forEach(function (it, ii) {
         var b = itemBox(it, L, H); if (!b) return;
@@ -171,7 +177,8 @@
         if (b.cut) cuts.push([b.u0, b.u1, Math.max(0, b.z0), Math.min(H, b.z1)]);
       });
       var wm = mesh('Stena' + (wi + 1), [228, 225, 216], 'wall');
-      var us = [0, L / 2, L];   // куски по внутренней грани (середина — для высоты по центру); у крайних наружная грань продлена/укорочена до среза «на ус»
+      var us = [0, L];   // куски по внутренней грани; изломы верха — в местах замера высоты
+      TP.forEach(function (q) { if (q[0] > 1 && q[0] < L - 1) us.push(q[0]); });   // у крайних кусков наружная грань продлена/укорочена до среза «на ус»
       cuts.forEach(function (c) { us.push(c[0], c[1]); });
       us = us.filter(function (u) { return u >= 0 && u <= L; })
              .sort(function (a, b) { return a - b; })
@@ -191,9 +198,9 @@
         // крайние куски стены: внутренняя грань кончается в углу (0 / L), наружная — на ±e (срез по биссектрисе угла)
         var va = k === 0 ? -e0[wi] : a, vb = k === us.length - 2 ? L + e1[wi] : b2;
         var last = k === us.length - 2, ta = topAt(a), tb = topAt(b2), pcs = [];
-        zs.forEach(function (z) {   // у последнего куска правый край может быть наклонным — делим его по середине высоты
-          var z0 = z[0], z1 = Math.min(z[1], Math.min(ta, tb)), up = z[1] >= Math.min(ta, tb) - 0.5;
-          if (last && z0 < TP[2] / 2 && (up ? Math.min(ta, tb) : z1) > TP[2] / 2) { pcs.push([z0, TP[2] / 2, false]); z0 = TP[2] / 2; }
+        zs.forEach(function (z) {   // у последнего куска правый край может быть наклонным — делим его в местах замера длины
+          var z0 = z[0], z1 = Math.min(z[1], Math.min(ta, tb)), up = z[1] >= Math.min(ta, tb) - 0.5, zt = up ? Math.min(ta, tb) : z1;
+          if (last) RE.forEach(function (q) { if (q[0] > z0 + 1 && q[0] < zt - 1) { pcs.push([z0, q[0], false]); z0 = q[0]; } });
           pcs.push([z0, z1, up]);
         });
         pcs.forEach(function (q) {
