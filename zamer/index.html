@@ -180,7 +180,7 @@ button,input,select{font:inherit;color:inherit}
   if (!R) R = blank();
   function save() { if (R.sample) return; try { localStorage.setItem(KEY, JSON.stringify(R)); } catch (e) { toast('Не хватает памяти на устройстве (фото?)'); } }
 
-  var S = { mode: R.pts.length >= 2 && !R.drawing ? '3d' : 'plan', draw: R.pts.length === 0 || !!R.drawing, wall: 0, pop: null, place: null, side: !PHONE(), open: {}, vb: null };
+  var S = { sel3: -1, mode: R.pts.length >= 2 && !R.drawing ? '3d' : 'plan', draw: R.pts.length === 0 || !!R.drawing, wall: 0, pop: null, place: null, side: !PHONE(), open: {}, vb: null };
 
   function nW() { return R.pts.length < 2 ? 0 : R.closed ? R.pts.length : R.pts.length - 1; }
   function wPts(i) { var n = R.pts.length; return [R.pts[i], R.pts[(i + 1) % n]]; }
@@ -298,6 +298,7 @@ button,input,select{font:inherit;color:inherit}
     if (S.mode === 'plan' && S.draw) h = R.pts.length ? 'Ведите к следующему углу и отпустите. Два пальца — приблизить и сдвинуть' : 'Коснитесь, где начинается <b>стена 1</b> (с входной дверью), и ведите по часовой. Размеры — потом, в развёртках';
     else if (S.mode === 'plan') h = 'Номер стены — открыть развёртку. Угол — изменить или удалить. Стену можно сдвинуть пальцем';
     if (S.mode === 'wall' && S.place) h = 'Коснитесь стены, где <b>' + esc((TY[S.place] || {}).t.toLowerCase()) + '</b> — точные размеры впишете цифрами';
+    if (S.mode === '3d' && S.sel3 >= 0) h = '<b>Стена ' + (S.sel3 + 1) + '</b> — коснитесь ещё раз, чтобы открыть развёртку';
     $('#tip').hidden = !h; $('#tip').innerHTML = h;
   }
   function renderFabs() {
@@ -314,6 +315,7 @@ button,input,select{font:inherit;color:inherit}
       tr = '<button class="btn s ghost" data-a="wdims">Размеры стены</button>';
     } else {
       tr = '<button class="btn s ghost" data-cam="in">Изнутри</button><button class="btn s ghost" data-cam="top">Сверху</button><button class="btn s ghost" data-cam="out">Общий</button>';
+      if (S.sel3 >= 0) br = '<button class="btn p" data-a="open3">Открыть развёртку стены ' + (S.sel3 + 1) + ' →</button>';
       bl = '<label class="chip"><input type="checkbox" id="cDims"' + (S.noDims ? '' : ' checked') + '> Размеры</label>';
     }
     if (PHONE() && S.pop) br = bl = '';
@@ -605,8 +607,10 @@ button,input,select{font:inherit;color:inherit}
     V.walls = [];   // для каждой стены — середина и нормаль внутрь: стены, закрывающие вид, становятся прозрачными вместе с подписями
     for (var i = 0; i < nW(); i++) { var a = wPts(i), d = wDir(i); V.walls.push({ mid: new THREE.Vector3((a[0].x + a[1].x) / 2 * k, 0, -(a[0].y + a[1].y) / 2 * k), nrm: new THREE.Vector3(d[1], 0, d[0]), lab: new THREE.Group() }); grp.add(V.walls[i].lab); }
     var key = R.pts.length + '|' + R.closed; if (V.key !== key) { V.key = key; camView(V.view || 'out'); }
+    selMark();
     if (!S.noDims) { if (document.fonts && !S.fontsOk) document.fonts.load('600 60px Onest').then(function () { S.fontsOk = 1; build3D(); }); dims(); }
   }
+  function selMark() { if (!V) return; V.grp.children.forEach(function (o) { if (o.isMesh && o.userData.isWall) o.material.emissive.setHex(o.userData.wall === S.sel3 ? 0x8a3a10 : 0); }); }
   function ghost() {   // каждый кадр: стена между камерой и комнатой — прозрачная, её размеры скрыты
     if (!V || !V.walls) return; var cp = V.cam.position, gs = V.walls.map(function (w) { return w.nrm.dot(cp.clone().setY(0).sub(w.mid)) < 0; });
     V.grp.children.forEach(function (o) {
@@ -630,7 +634,9 @@ button,input,select{font:inherit;color:inherit}
       if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 7) return;
       var b = cv.getBoundingClientRect(); rc.setFromCamera(new THREE.Vector2((e.clientX - b.left) / b.width * 2 - 1, -(e.clientY - b.top) / b.height * 2 + 1), cam);
       var hit = rc.intersectObjects(grp.children.filter(function (o) { return o.isMesh && o.userData.wall >= 0 && !o.userData.ghost; }))[0];
-      if (hit) openWall(hit.object.userData.wall);
+      var wi = hit ? hit.object.userData.wall : -1;   // первое касание — выделить стену, второе по ней же — открыть развёртку
+      if (wi >= 0 && wi === S.sel3) { S.sel3 = -1; openWall(wi); return; }
+      S.sel3 = wi; selMark(); tip(); renderFabs();
     });
     (function loop() { requestAnimationFrame(loop); if (S.mode !== '3d') return; ctl.update(); ghost(); r.render(sc, cam); })();
   }
@@ -758,12 +764,13 @@ button,input,select{font:inherit;color:inherit}
     if (a === 'closePop') { S.pop = null; renderPop(); redraw(); return; }
     if (a === 'toPlan') { S.mode = 'plan'; S.pop = null; S.place = null; renderAll(); return; }
     if (a === 'toWall') { if (!nW()) return; if (S.draw) { S.draw = false; delete R.drawing; save(); } openWall(S.mode === 'wall' ? S.wall : 0); return; }
-    if (a === 'to3d') { if (!nW()) return; if (S.draw) { S.draw = false; delete R.drawing; save(); } S.mode = '3d'; S.pop = null; S.place = null; renderAll(); return; }
+    if (a === 'to3d') { if (!nW()) return; if (S.draw) { S.draw = false; delete R.drawing; save(); } S.mode = '3d'; S.sel3 = -1; S.pop = null; S.place = null; renderAll(); return; }
     if (a === 'check') { openPop({ t: 'check' }); return; }
     if (a === 'menu') { openPop({ t: 'menu' }); return; }
     if (a === 'side') { S.side = !S.side; if (S.side && PHONE()) S.pop = null; layoutVars(); renderSide(); renderPop(); renderFabs(); redraw(); return; }
     if (a === 'room') { openPop({ t: 'room' }); return; }
     if (a === 'wdims') { openPop({ t: 'wdims', focus: 1 }); return; }
+    if (a === 'open3') { var w3 = S.sel3; S.sel3 = -1; openWall(w3); return; }
     if (a === 'openWall') { openWall(S.pop.i); return; }
     if (a === 'prevw' || a === 'nextw') { var n = nW(); S.wall = (S.wall + (a === 'nextw' ? 1 : -1) + n) % n; S.pop = null; renderAll(); return; }
     if (a === 'zin' || a === 'zout') { var r0 = sv.getBoundingClientRect(); zoomAt(a === 'zin' ? 1.3 : 1 / 1.3, r0.left + r0.width / 2, r0.top + r0.height / 2); return; }
