@@ -382,7 +382,7 @@ button,input,select{font:inherit;color:inherit}
     var h = '';
     if (p.t === 'wdims') {
       var i = S.wall, w = wd(i);
-      var row = function (k, m) { return '<div data-mi="' + k + ':' + m.id + '"><span>' + (k === 'l' ? '↔ <b>' + fmt(m.v) + '</b> на высоте ' + fmt(m.z) : '↕ <b>' + fmt(m.v) + '</b> в ' + fmt(m.u) + ' от левого угла') + '</span></div>'; };
+      var row = function (k, m) { return '<div data-mi="' + k + ':' + m.id + '"><span>' + (k === 'l' ? '↔ ' : '↕ ') + '<b>' + fmt(m.v) + '</b>' + '</span></div>'; };
       h = head('Стена ' + (i + 1) + ': замеры') + '<p class="hint">Каждый размер стоит там, где его мерили. Стена строится по ним.</p>' +
         '<div class="lbl">Длина, мм</div><div class="issues">' + (w.lm.length ? w.lm.slice().sort(function (a, b) { return a.z - b.z; }).map(function (m) { return row('l', m); }).join('') : '<p class="hint">нет</p>') + '</div>' +
         '<div class="lbl">Высота, мм</div><div class="issues">' + (w.hm.length ? w.hm.slice().sort(function (a, b) { return a.u - b.u; }).map(function (m) { return row('h', m); }).join('') : '<p class="hint">нет</p>') + '</div>' +
@@ -392,8 +392,8 @@ button,input,select{font:inherit;color:inherit}
         '<div class="row mt"><span class="sp"></span><button class="btn p" data-a="closePop">Готово</button></div>';
     } else if (p.t === 'meas') {
       var mm = findMeas(p.k, p.id); if (!mm) { S.pop = null; el.hidden = true; layoutVars(); return; }
-      h = head(p.k === 'l' ? '↔ Длина стены ' + (S.wall + 1) : '↕ Высота стены ' + (S.wall + 1)) + '<p class="hint">' + (p.k === 'l' ? 'Длина от угла до угла на этой высоте.' : 'Высота от пола до потолка в этом месте.') + ' Место можно поправить цифрой.</p><div class="f">' +
-        inp('fMv', p.k === 'l' ? 'Длина, мм' : 'Высота, мм', mm.v, '', 'w2') + inp('fMp', p.k === 'l' ? 'На высоте от пола, мм' : 'От левого угла, мм', p.k === 'l' ? mm.z : mm.u, '', 'w2') + '</div>' +
+      h = head(p.k === 'l' ? '↔ Длина стены ' + (S.wall + 1) : '↕ Высота стены ' + (S.wall + 1)) + '<p class="hint">' + (p.k === 'l' ? 'Длина от угла до угла на этой высоте.' : 'Высота от пола до потолка в этом месте.') + '</p><div class="f">' +
+        inp('fMv', p.k === 'l' ? 'Длина, мм' : 'Высота, мм', mm.v, '', 'w2') + '</div>' +
         '<div class="row mt"><button class="btn s red" data-a="delmeas">Удалить</button><span class="sp"></span><button class="btn s" data-meas="' + p.k + '">＋ Ещё</button><button class="btn p" data-a="closePop">Готово</button></div>';
     } else if (p.t === 'pwall') {
       h = head('Стена ' + (p.i + 1)) + '<p class="hint">Размеры и элементы — в развёртке стены.</p><div class="row"><button class="btn p" data-a="openWall">Открыть развёртку</button></div>' +
@@ -528,8 +528,8 @@ button,input,select{font:inherit;color:inherit}
     w.lm.forEach(function (m) { var on = m.id === selM, y = Y(m.z), x2 = L + (m.v > 0 && LB ? m.v - LB : 0); s += dash(0, y, x2 + 14 * k, y, on ? '#ff5a1f' : '#8c867a', on ? 2.4 : 1.6) + chip(L + 62 * k, y, m.v > 0 ? fmt(m.v) : '?', on ? 'cur' : m.v > 0 ? 'min' : 'miss', 'data-mi="l:' + m.id + '"'); });
     w.hm.forEach(function (m) { var on = m.id === selM, x = m.u; s += dash(x, Y(m.v > 0 ? m.v : topAt(i, x)), x, H + 12 * k, on ? '#ff5a1f' : '#8c867a', on ? 2.4 : 1.6) + chip(Math.max(30 * k, Math.min(L - 30 * k, x)), H + 26 * k, m.v > 0 ? fmt(m.v) : '?', on ? 'cur' : m.v > 0 ? 'min' : 'miss', 'data-mi="h:' + m.id + '"'); });
     if (S.meas && S.mpos != null) {   // пунктир, который бегает за пальцем
-      if (S.meas === 'l') { var yy = Y(S.mpos); s += dash(-20 * k, yy, L + 30 * k, yy, '#ff5a1f', 3) + chip(L + 62 * k, yy, fmt(S.mpos), 'cur'); }
-      else { s += dash(S.mpos, -20 * k, S.mpos, H + 20 * k, '#ff5a1f', 3) + chip(Math.max(30 * k, Math.min(L - 30 * k, S.mpos)), H + 26 * k, fmt(S.mpos), 'cur'); }
+      if (S.meas === 'l') { var yy = Y(S.mpos); s += dash(-20 * k, yy, L + 30 * k, yy, '#ff5a1f', 3); }
+      else { s += dash(S.mpos, -20 * k, S.mpos, H + 20 * k, '#ff5a1f', 3); }
     }
     // выбранный элемент — его размеры
     var it0 = selId ? items(i).find(function (x) { return x.id === selId; }) : null;
