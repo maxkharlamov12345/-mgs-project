@@ -25,7 +25,7 @@ const vis={overall:true,cols:true,gaps:true,drawers:true};
 
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);labelR.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
 addEventListener('resize',resize);resize();
-(function loop(){requestAnimationFrame(loop);controls.update();renderer.render(scene,camera);labelR.render(scene,camera);})();
+(function loop(){requestAnimationFrame(loop);controls.update();if(typeof updateLabels==='function')updateLabels();renderer.render(scene,camera);labelR.render(scene,camera);})();
 
 function status(t){const s=$('#status');if(!s)return;if(!t){s.hidden=true;return;}s.textContent=t;s.hidden=false;}
 
@@ -54,7 +54,7 @@ async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
 
 function setModel(obj,title){
   if(model){scene.remove(model);}
-  Object.values(dimGroups).forEach(g=>scene.remove(g));dimGroups={};selected=null;
+  Object.values(dimGroups).forEach(g=>{scene.remove(g);g.traverse(o=>{if(o.isMesh&&o.material.map){o.material.map.dispose();o.material.dispose();}o.geometry&&o.geometry.dispose();});});dimGroups={};selected=null;
   $('#part').innerHTML='<span class="hint">Нажмите на любую деталь модели, чтобы увидеть её размер.</span>';
   // units: PRO100 OBJ is in metres -> work in mm
   const pre=new THREE.Box3().setFromObject(obj);const sz=pre.getSize(new THREE.Vector3());
@@ -62,8 +62,9 @@ function setModel(obj,title){
   obj.updateMatrixWorld(true);
   model=obj;scene.add(obj);
   info=analyze(obj);
-  buildDims(info);
   fitView('persp');
+  const I=info;
+  (document.fonts&&document.fonts.load?document.fonts.load('600 96px Onest').catch(()=>{}):Promise.resolve()).then(()=>{if(info===I)buildDims(I);});
 }
 
 /* ---------- analysis ---------- */
@@ -183,62 +184,124 @@ function analyze(root){
   return {parts,overall,room,columns,frontAll};
 }
 
-/* ---------- dimension drawing ---------- */
-const COL={w:0xf2f2ee,l:0xbfd630,d:0xffd166,c:0x7fd3ff};
-function dimLine(group,a,b,off,text,cls,color,ext){
-  // a,b: points on the object; off: offset vector (dimension line is a+off .. b+off)
-  const A=a.clone().add(off),B=b.clone().add(off);
-  const pts=[A,B];
-  const dir=B.clone().sub(A).normalize();
-  const tickDir=off.length()>1?off.clone().normalize():new THREE.Vector3().crossVectors(dir,new THREE.Vector3(0,1,0)).normalize();
-  if(tickDir.length()<.5)tickDir.set(1,0,0);
-  const t=18;
-  // serif ticks (45°)
-  const serif=tickDir.clone().add(dir).normalize().multiplyScalar(t);
-  pts.push(A.clone().sub(serif),A.clone().add(serif),B.clone().sub(serif),B.clone().add(serif));
-  if(ext){pts.push(a.clone(),A.clone().add(off.clone().normalize().multiplyScalar(25)),b.clone(),B.clone().add(off.clone().normalize().multiplyScalar(25)));}
-  const geo=new THREE.BufferGeometry().setFromPoints(pts);
-  const mat=new THREE.LineBasicMaterial({color,depthTest:false,transparent:true,opacity:.95});
-  const ls=new THREE.LineSegments(geo,mat);ls.renderOrder=10;group.add(ls);
-  const el=document.createElement('div');el.className='dl '+(cls||'');el.textContent=text;
-  const lab=new CSS2DObject(el);lab.position.copy(A).lerp(B,.5);group.add(lab);
-}
+/* ---------- dimension drawing (оформление как в Базис-Мебельщике) ----------
+   Выносные линии от детали, размерная линия со стрелками, число над линией и вдоль неё.
+   Всё — объекты 3D-сцены: поворачиваются вместе с моделью и прячутся вместе со своей группой. */
+const COL={w:0xf2f2ee,c:0x7fd3ff,l:0xbfd630,d:0xffd166};
+const CSS={[0xf2f2ee]:'#f2f2ee',[0x7fd3ff]:'#7fd3ff',[0xbfd630]:'#bfd630',[0xffd166]:'#ffd166'};
 const V=(x,y,z)=>new THREE.Vector3(x,y,z);
 const r=n=>String(Math.round(n));
-function setAx(v,axis,val){v[axis]=val;return v;}
+var labels=[], TS=40;                       // TS — высота цифр, мм (от размера модели)
+const matCache={};
+function lineMat(color){return matCache['l'+color]||(matCache['l'+color]=new THREE.LineBasicMaterial({color,depthTest:false,transparent:true,opacity:.95}));}
+function fillMat(color){return matCache['f'+color]||(matCache['f'+color]=new THREE.MeshBasicMaterial({color,depthTest:false,transparent:true,opacity:.95,side:THREE.DoubleSide}));}
+function textMesh(text,color,h){
+  const fs=96,pad=18,c=document.createElement('canvas'),x=c.getContext('2d');
+  const font=`600 ${fs}px Onest, "Segoe UI", system-ui, sans-serif`;x.font=font;
+  const w=Math.ceil(x.measureText(text).width)+pad*2;c.width=w;c.height=fs+pad*2;
+  x.font=font;x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
+  x.lineWidth=fs*.22;x.strokeStyle='rgba(15,14,12,.92)';x.strokeText(text,w/2,c.height/2+fs*.04);
+  x.fillStyle=CSS[color]||'#fff';x.fillText(text,w/2,c.height/2+fs*.04);
+  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;
+  const k=h/fs;const m=new THREE.Mesh(new THREE.PlaneGeometry(w*k,c.height*k),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthTest:false}));
+  m.renderOrder=12;m.userData.hw=w*k/2;return m;
+}
+/* p1,p2 — точки на детали; side — куда (в плоскости размера) вынести размерную линию; dist — на сколько;
+   n — нормаль плоскости размера (лицевая сторона); opts.ext — рисовать выносные линии */
+function dim(group,p1,p2,side,dist,n,text,color,opts={}){
+  const h=(opts.size||1)*TS;
+  const u=p2.clone().sub(p1);const len=u.length();if(len<1)return;u.normalize();
+  const sd=side.clone().normalize();
+  const A=p1.clone().addScaledVector(sd,dist),B=p2.clone().addScaledVector(sd,dist);
+  const pts=[A,B];
+  if(opts.ext!==false&&dist>0){const g=Math.min(dist*.25,h*.4),o=h*.45;
+    pts.push(p1.clone().addScaledVector(sd,g),A.clone().addScaledVector(sd,o),p2.clone().addScaledVector(sd,g),B.clone().addScaledVector(sd,o));}
+  // стрелки; на коротком размере — засечки
+  const al=h*.62,aw=h*.2;
+  if(len>al*2.6){
+    const tri=[];const add=(tip,dir)=>{const b=tip.clone().addScaledVector(dir,al);tri.push(tip,b.clone().addScaledVector(sd,aw),b.clone().addScaledVector(sd,-aw));};
+    add(A,u);add(B,u.clone().negate());
+    const g=new THREE.BufferGeometry().setFromPoints(tri);const m=new THREE.Mesh(g,fillMat(color));m.renderOrder=11;group.add(m);
+  }else{const t=sd.clone().add(u).normalize().multiplyScalar(h*.35);pts.push(A.clone().sub(t),A.clone().add(t),B.clone().sub(t),B.clone().add(t));}
+  const ls=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),lineMat(color));ls.renderOrder=10;group.add(ls);
+  const tm=textMesh(text,color,h);group.add(tm);
+  const nn=(n||new THREE.Vector3().crossVectors(u,sd)).clone().normalize();
+  labels.push({m:tm,mid:A.clone().lerp(B,.5),u,n:nn,sd,h,len,out:opts.inside?0:1});
+}
+// каждый кадр: цифры читаются слева направо / снизу вверх, лицом к камере
+const _x=V(),_y=V(),_z=V(),_m=new THREE.Matrix4(),_s=V(),_s2=V();
+function updateLabels(){
+  if(!labels||!labels.length)return;
+  for(const L of labels){
+    if(!L.m.parent||!L.m.parent.visible)continue;
+    _z.copy(L.n);if(_z.dot(_s.copy(camera.position).sub(L.mid))<0)_z.negate();
+    _x.copy(L.u);
+    _s.copy(L.mid).project(camera);_s2.copy(L.mid).add(L.u).project(camera);
+    const dx=_s2.x-_s.x,dy=_s2.y-_s.y;
+    if(Math.abs(dx)>=Math.abs(dy)*.35?dx<0:dy<0)_x.negate();
+    _y.crossVectors(_z,_x).normalize();
+    // цифры — над линией (с внешней стороны размера), если не помещаются — сдвигаем вдоль
+    const sgn=L.out&&_y.dot(L.sd)<0?-1:1;
+    const pos=L.mid.clone().addScaledVector(_y,sgn*L.h*.62);
+    if(L.m.userData.hw*2>L.len-L.h*1.6)pos.addScaledVector(L.u,L.len/2+L.m.userData.hw+L.h*.4);
+    _m.makeBasis(_x,_y,_z);L.m.quaternion.setFromRotationMatrix(_m);L.m.position.copy(pos);
+  }
+}
 
 function buildDims(I){
+  labels=[];
   ['overall','cols','gaps','drawers'].forEach(k=>{const g=new THREE.Group();g.visible=vis[k];dimGroups[k]=g;scene.add(g);});
   const o=I.overall,s=o.getSize(V());
   $('#oW').textContent=r(s.x);$('#oH').textContent=r(s.y);$('#oD').textContent=r(s.z);
-  // overall dims, placed on the front side
+  TS=THREE.MathUtils.clamp(Math.max(s.x,s.y,s.z)*.02,24,80);
+  const step=TS*2.6;
+  const UP=V(0,1,0);
+  // перед / право для общих габаритов
   const fa=I.frontAll;const F=fa.axis,FS=fa.sign;const W=F==='z'?'x':'z';
+  const FD=V();FD[F]=FS;const RD=new THREE.Vector3().crossVectors(UP,FD); // вправо, если смотреть спереди
   const fv=FS>0?o.max[F]:o.min[F];
-  const off=Math.max(120,Math.max(s.x,s.z)*.06);
-  const pF=(w,y)=>{const p=V(0,y,0);p[F]=fv;p[W]=w;return p;};
-  const outF=V();outF[F]=FS*off*.6;
-  dimLine(dimGroups.overall,pF(o.min[W],o.min.y),pF(o.max[W],o.min.y),outF.clone().add(V(0,-off*.6,0)),r(s[W]),'w',COL.w,true);
-  const side=V();side[W]=-off;
-  dimLine(dimGroups.overall,pF(o.min[W],o.min.y),pF(o.min[W],o.max.y),side.clone().add(outF.clone().multiplyScalar(.3)),r(s.y),'w',COL.w,true);
-  const pD1=V(0,o.min.y,0);pD1[W]=o.max[W];pD1[F]=o.min[F];const pD2=pD1.clone();pD2[F]=o.max[F];
-  const sideR=V();sideR[W]=off;
-  dimLine(dimGroups.overall,pD1,pD2,sideR.clone().add(V(0,-off*.6,0)),r(s[F]),'w',COL.w,true);
+  const rightW=RD[W]>0?o.max[W]:o.min[W], leftW=RD[W]>0?o.min[W]:o.max[W];
+  const P=(w,y,f=fv)=>{const p=V(0,y,0);p[F]=f;p[W]=w;return p;};
 
+  // цепочки ширин секций: секции с одним «перёдом» и близким верхом — в один ряд
+  const rows=[];
+  I.columns.forEach(c=>{
+    const key=c.front.axis+c.front.sign;
+    let row=rows.find(rw=>rw.key===key&&Math.abs(rw.top-c.yTop)<150);
+    if(!row){row={key,top:c.yTop,cols:[]};rows.push(row);}
+    row.cols.push(c);row.top=Math.max(row.top,c.yTop);
+  });
+  let topChain=o.max.y;
+  rows.forEach(rw=>{
+    rw.cols.forEach(c=>{
+      const cF=c.front.axis,S=c.front.sign,cW=c.W,f=c.f;
+      const w0=cW==='x'?f.x0:f.z0,w1=cW==='x'?f.x1:f.z1;
+      const cf=S>0?(cF==='x'?f.x1:f.z1):(cF==='x'?f.x0:f.z0);
+      const Q=(w,y)=>{const p=V(0,y,0);p[cF]=cf;p[cW]=w;return p;};
+      const n=V();n[cF]=S;
+      dim(dimGroups.cols,Q(w0,c.yTop),Q(w1,c.yTop),UP,(rw.top-c.yTop)+step,n,r(c.colW),COL.c);
+      topChain=Math.max(topChain,rw.top+step);
+    });
+  });
+
+  // общие: ширина — над цепочками, высота — справа, глубина — справа внизу
+  dim(dimGroups.overall,P(o.min[W],o.max.y),P(o.max[W],o.max.y),UP,(topChain-o.max.y)+step,FD,r(s[W]),COL.w,{size:1.15});
+  dim(dimGroups.overall,P(rightW,o.min.y),P(rightW,o.max.y),RD,step*1.4,FD,r(s.y),COL.w,{size:1.15});
+  const backF=FS>0?o.min[F]:o.max[F];
+  dim(dimGroups.overall,P(rightW,o.min.y,backF),P(rightW,o.min.y,fv),UP.clone().negate(),step*.9,RD,r(s[F]),COL.w,{size:1.15});
+
+  // внутри секций: промежутки между полками и высоты ящиков — на лицевой плоскости секции
   let nGaps=0,nDr=0;
   I.columns.forEach(c=>{
-    const F=c.front.axis,S=c.front.sign,W=c.W;const f=c.f;
-    const w0=W==='x'?f.x0:f.z0,w1=W==='x'?f.x1:f.z1;
-    const fv=S>0?(F==='x'?f.x1:f.z1):(F==='x'?f.x0:f.z0);
-    const P=(w,y)=>{const p=V(0,y,0);p[F]=fv;p[W]=w;return p;};
-    const out=V();out[F]=S*8;
-    // section width above top shelf
-    dimLine(dimGroups.cols,P(w0,c.yTop+70),P(w1,c.yTop+70),out,r(c.colW),'c',COL.c,false);
-    // gaps between shelves, at the middle of the section
+    const cF=c.front.axis,S=c.front.sign,cW=c.W,f=c.f;
+    const w0=cW==='x'?f.x0:f.z0,w1=cW==='x'?f.x1:f.z1;
+    const cf=(S>0?(cF==='x'?f.x1:f.z1):(cF==='x'?f.x0:f.z0))+S*6;
+    const Q=(w,y)=>{const p=V(0,y,0);p[cF]=cf;p[cW]=w;return p;};
+    const n=V();n[cF]=S;const along=V();along[cW]=1;
     const wm=(w0+w1)/2;
-    c.gaps.forEach(g=>{nGaps++;dimLine(dimGroups.gaps,P(wm,g.y0),P(wm,g.y1),out,r(g.h),'',COL.l,false);});
-    // drawers: heights near the left edge of the section
-    const wd=w0+(w1-w0)*.2;
-    c.drawers.forEach(d=>{nDr++;dimLine(dimGroups.drawers,P(wd,d.y0),P(wd,d.y1),out.clone().multiplyScalar(2),r(d.h),'d',COL.d,false);});
+    c.gaps.forEach(g=>{nGaps++;dim(dimGroups.gaps,Q(wm,g.y0),Q(wm,g.y1),along,0,n,r(g.h),COL.l,{ext:false,size:1,inside:true});});
+    const wd=w0+(w1-w0)*.18;
+    c.drawers.forEach(d=>{nDr++;dim(dimGroups.drawers,Q(wd,d.y0),Q(wd,d.y1),along,0,n,r(d.h),COL.d,{ext:false,size:1,inside:true});});
   });
   $('#stat').innerHTML=`Найдено секций: <b>${I.columns.length}</b>, промежутков между полками: <b>${nGaps}</b>, ящиков: <b>${nDr}</b>.`;
 }
