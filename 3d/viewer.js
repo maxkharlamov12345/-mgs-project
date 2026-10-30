@@ -29,7 +29,10 @@ const vis={overall:true,gaps:true,drawers:true,manual:true};
 const AUTO_DIMS=false;
 let manualDims=null;
 
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);labelR.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+// шапка с кнопками закрывает верх экрана — центр кадра смещаем вниз на её половину (модель не уезжает под кнопки)
+function topH(){const t=document.getElementById('top');return t&&!t.hidden?Math.min(t.getBoundingClientRect().height,innerHeight*.4):0;}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);labelR.setSize(w,h);camera.aspect=w/h;
+  const hh=topH();if(hh>0)camera.setViewOffset(w,h,0,-hh/2,w,h);else camera.clearViewOffset();camera.updateProjectionMatrix();}
 addEventListener('resize',resize);resize();
 let _lastT=performance.now();
 (function loop(){requestAnimationFrame(loop);const _now=performance.now(),_dt=Math.min(100,_now-_lastT);_lastT=_now;controls.update();if(typeof updateMovers==='function')updateMovers(_dt);if(typeof updateLabels==='function')updateLabels();renderer.render(scene,camera);labelR.render(scene,camera);})();
@@ -96,7 +99,7 @@ function setModel(obj,title){
   if(model){scene.remove(model);}
   (movers||[]).forEach(m=>scene.remove(m.pivot));movers=[];
   Object.values(dimGroups).forEach(g=>{scene.remove(g);g.traverse(o=>{if(o.isMesh&&o.material.map){o.material.map.dispose();o.material.dispose();}o.geometry&&o.geometry.dispose();});});dimGroups={};selected=null;
-  $('#part').innerHTML='<span class="hint">Нажмите на любую деталь модели, чтобы увидеть её размер.</span>';
+  partInfo(null);
   // units: PRO100 OBJ is in metres -> work in mm
   const pre=new THREE.Box3().setFromObject(obj);const sz=pre.getSize(new THREE.Vector3());
   if(Math.max(sz.x,sz.y,sz.z)<60)obj.scale.setScalar(1000);
@@ -104,7 +107,8 @@ function setModel(obj,title){
   model=obj;scene.add(obj);
   info=analyze(obj);
   buildMovers(info);syncOpenBtn();
-  fitView('persp');
+  setFronts(false,true);applyMode();
+  resize();fitView('persp');
   const I=info;
   (document.fonts&&document.fonts.load?document.fonts.load('600 96px Onest').catch(()=>{}):Promise.resolve()).then(()=>{if(info===I)buildDims(I);});
 }
@@ -330,6 +334,8 @@ function buildManualDims(I){
   return n;
 }
 function setChips(manual){
+  const td=$('#tDims');if(td){td.hidden=!manual;td.setAttribute('aria-pressed',String(vis.manual));}
+  if(!$('#chips'))return;
   document.querySelectorAll('#chips .chip').forEach(c=>{if(c.dataset.k!=='manual')c.hidden=!AUTO_DIMS;});
   let mc=document.querySelector('#chips .chip[data-k="manual"]');
   if(!mc&&manual){mc=document.createElement('button');mc.className='chip'+(vis.manual?' on':'');mc.dataset.k='manual';mc.innerHTML='<i></i>Размеры';
@@ -340,12 +346,12 @@ function setChips(manual){
 function buildDims(I){
   labels=[];
   const o=I.overall,s=o.getSize(V());
-  $('#oW').textContent=r(s.x);$('#oH').textContent=r(s.y);$('#oD').textContent=r(s.z);
+  if($('#oW')){$('#oW').textContent=r(s.x);$('#oH').textContent=r(s.y);$('#oD').textContent=r(s.z);}
   TS=THREE.MathUtils.clamp(Math.max(s.x,s.y,s.z)*.02,24,80);
   if(!AUTO_DIMS){
     const n=manualDims&&manualDims.dims&&manualDims.dims.length?buildManualDims(I):0;
     setChips(n>0);
-    $('#stat').innerHTML=n?`Размеров от менеджера: <b>${n}</b>.`:'Менеджер ещё не проставил размеры.';
+    if($('#stat'))$('#stat').innerHTML=n?`Размеров от менеджера: <b>${n}</b>.`:'Менеджер ещё не проставил размеры.';
     return;
   }
   ['overall','gaps','drawers'].forEach(k=>{const g=new THREE.Group();g.visible=vis[k];dimGroups[k]=g;scene.add(g);});
@@ -388,15 +394,18 @@ function buildDims(I){
     const wd=w0+(w1-w0)*.18;
     c.drawers.forEach(d=>{nDr++;dim(dimGroups.drawers,Q(wd,d.y0,d.face+S*3),Q(wd,d.y1,d.face+S*3),along,0,n,r(d.h),COL.d,ins);});
   });
-  $('#stat').innerHTML=`Найдено секций: <b>${I.columns.length}</b>, промежутков между полками: <b>${nGaps}</b>, ящиков: <b>${nDr}</b>.`;
+  if($('#stat'))$('#stat').innerHTML=`Найдено секций: <b>${I.columns.length}</b>, промежутков между полками: <b>${nGaps}</b>, ящиков: <b>${nDr}</b>.`;
 }
 
 /* ---------- camera ---------- */
 function fitView(v){
   if(!info)return;
   document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.querySelectorAll('#mView [data-v]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));
   const o=info.overall,c=o.getCenter(V()),s=o.getSize(V());
-  const R=s.length()*.5;const vf=THREE.MathUtils.degToRad(camera.fov);const hf=2*Math.atan(Math.tan(vf/2)*camera.aspect);const dist=R/Math.sin(Math.min(vf,hf)/2)*(camera.aspect<1?1.15:.9);
+  const R=s.length()*.5;const vf=THREE.MathUtils.degToRad(camera.fov);const hf=2*Math.atan(Math.tan(vf/2)*camera.aspect);const hh=topH(),H=innerHeight;// центр кадра сдвинут вниз на полшапки (см. resize); модель должна влезть в высоту под шапкой
+  const vfe=2*Math.atan(Math.tan(vf/2)*Math.max(H-hh,H*.5)/H);
+  const dist=R/Math.sin(Math.min(vfe,hf)/2)*(camera.aspect<1?1.15:.9);
   const fa=info.frontAll;const fd=V();fd[fa.axis]=fa.sign;frontDir=fd;
   let dir;
   if(v==='front')dir=fd.clone();
@@ -513,7 +522,10 @@ function updateMovers(dt){
   }
 }
 function setAllOpen(open){movers.forEach(m=>m.goal=open?1:0);syncOpenBtn();}
-function syncOpenBtn(){const b=$('#openAll');if(!b)return;const n=movers.length;b.hidden=!n;
+function syncOpenBtn(){
+  const t=$('#tOpen');if(t){const any=movers.some(m=>m.goal>0);t.hidden=!movers.length;t.setAttribute('aria-pressed',String(any));
+    t.querySelector('span').textContent=any?'Закрыть':'Открыть';t.title=any?'Закрыть все двери и ящики':'Открыть все двери и выдвинуть ящики';}
+  const b=$('#openAll');if(!b)return;const n=movers.length;b.hidden=!n;
   const anyOpen=movers.some(m=>m.goal>0);b.textContent=anyOpen?'Закрыть всё':'Открыть всё';
   const s=$('#openStat');if(s){const c={door:0,drawer:0,lift:0,flap:0};movers.forEach(m=>c[m.type]++);
     s.textContent=n?`Дверей: ${c.door}, ящиков: ${c.drawer}, подъёмных: ${c.lift+c.flap}. Нажмите на фасад, чтобы открыть.`:'Открывающихся фасадов не найдено.';}}
@@ -528,18 +540,78 @@ renderer.domElement.addEventListener('pointerup',e=>{
   ray.setFromCamera(m,camera);
   const hits=ray.intersectObjects([model,...movers.map(m=>m.pivot)],true).filter(h=>h.object.visible);
   if(selected){scene.remove(selected);selected=null;}
-  if(!hits.length){$('#part').innerHTML='<span class="hint">Нажмите на любую деталь модели, чтобы увидеть её размер.</span>';return;}
+  if(!hits.length){partInfo(null);return;}
   const mv=movers.find(m=>m.meshes.has(hits[0].object));if(mv){mv.goal=mv.goal>0?0:1;syncOpenBtn();}
   const p=info.parts.find(p=>p.mesh===hits[0].object);if(!p)return;
   const d=[p.s.x,p.s.y,p.s.z].map(v=>Math.round(v));
   const nm=p.label||'Деталь без названия';
-  $('#part').innerHTML='<div class="nm"></div><div class="sz"></div><div class="hint"></div>';
-  $('#part .nm').textContent=nm;
-  $('#part .sz').textContent=`${d[0]} × ${d[1]} × ${d[2]}`;
-  $('#part .hint').textContent='ширина × высота × глубина, мм';
+  partInfo(nm,`${d[0]} × ${d[1]} × ${d[2]}`);
   selected=new THREE.Box3Helper(mv?new THREE.Box3().setFromObject(p.mesh).expandByScalar(2):p.box.clone().expandByScalar(2),0xbfd630);selected.material.depthTest=false;selected.renderOrder=11;scene.add(selected);
 });
 
+
+/* ---------- панель инструментов (view.html: #tools) ---------- */
+let partTimer=0;
+function partInfo(nm,sz){
+  const t=$('#partInfo');if(!t)return;clearTimeout(partTimer);
+  if(!nm){t.hidden=true;return;}
+  t.innerHTML='<b></b><div class="sz"></div><small>ширина × высота × глубина, мм</small>';
+  t.querySelector('b').textContent=nm;t.querySelector('.sz').textContent=sz;t.hidden=false;
+  partTimer=setTimeout(()=>{t.hidden=true;},5000);
+}
+// режимы показа: оригинал / прозрачный / контуры
+let viewMode='orig';
+const MODE_NAMES={orig:'Оригинал',xray:'Прозрачный',lines:'Контуры'};
+const xrayMat=new Map(),lineMat0=new THREE.LineBasicMaterial({color:0xe9ecef,transparent:true,opacity:.85});
+const ghostMat=new THREE.MeshBasicMaterial({color:0x9aa3ab,transparent:true,opacity:.06,depthWrite:false,side:THREE.DoubleSide});
+function solidParts(){return info?info.parts.filter(p=>p.kind!=='marker'&&p.kind!=='metiz'):[];}
+function applyMode(){
+  for(const p of solidParts()){
+    const m=p.mesh,u=m.userData;
+    if(!u.mat0)u.mat0=m.material;
+    if(u.edges)u.edges.visible=viewMode==='lines';
+    if(viewMode==='orig'){m.material=u.mat0;continue;}
+    if(viewMode==='xray'){
+      const x=(Array.isArray(u.mat0)?u.mat0:[u.mat0]).map(mt=>{if(!mt)return mt;let c=xrayMat.get(mt);
+        if(!c){c=mt.clone();c.transparent=true;c.opacity=Math.min(mt.opacity??1,.28);c.depthWrite=false;c.side=THREE.DoubleSide;xrayMat.set(mt,c);}return c;});
+      m.material=Array.isArray(u.mat0)?x:x[0];continue;
+    }
+    // контуры: рёбра деталей (считаем один раз) + едва заметная заливка
+    if(!u.edges){const g=new THREE.EdgesGeometry(m.geometry,28);u.edges=new THREE.LineSegments(g,lineMat0);u.edges.raycast=()=>{};m.add(u.edges);}
+    u.edges.visible=true;m.material=ghostMat;
+  }
+  const l=$('#tModeL');if(l)l.textContent=MODE_NAMES[viewMode];
+  document.querySelectorAll('#mMode [data-mode]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===viewMode)));
+}
+// без фасадов: прячем фасады/двери (по имени детали) и ручки, чтобы видеть, что внутри
+let frontsHidden=false;
+function setFronts(hide,silent){
+  frontsHidden=!!hide;
+  for(const p of solidParts()){
+    const isFront=(/фасад|двер/i.test(p.label)&&p.kind!=='hw')||/ручк/i.test(p.label);
+    if(isFront)p.mesh.visible=!frontsHidden;
+  }
+  const b=$('#tFronts');if(b){b.setAttribute('aria-pressed',String(frontsHidden));b.querySelector('span').textContent=frontsHidden?'Вернуть фасады':'Без фасадов';}
+  if(!silent)partInfo(null);
+}
+function closeMenus(except){document.querySelectorAll('.menu').forEach(m=>{if(m!==except){m.hidden=true;const b=m.previousElementSibling;if(b)b.setAttribute('aria-expanded','false');}});}
+function bindMenu(btn,menu,onPick){
+  if(!btn||!menu)return;
+  btn.onclick=e=>{e.stopPropagation();const open=menu.hidden;closeMenus(menu);menu.hidden=!open;btn.setAttribute('aria-expanded',String(open));
+    if(open)(menu.querySelector('[aria-checked="true"]')||menu.querySelector('button')).focus();};
+  menu.querySelectorAll('button').forEach(b=>b.onclick=e=>{e.stopPropagation();onPick(b);closeMenus();btn.focus();});
+  menu.addEventListener('keydown',e=>{const items=[...menu.querySelectorAll('button')],i=items.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'){e.preventDefault();items[(i+1)%items.length].focus();}
+    else if(e.key==='ArrowUp'){e.preventDefault();items[(i-1+items.length)%items.length].focus();}
+    else if(e.key==='Escape'){closeMenus();btn.focus();}});
+}
+bindMenu($('#tView'),$('#mView'),b=>fitView(b.dataset.v));
+bindMenu($('#tMode'),$('#mMode'),b=>{viewMode=b.dataset.mode;applyMode();});
+document.addEventListener('click',()=>closeMenus());
+if($('#tFronts'))$('#tFronts').onclick=()=>setFronts(!frontsHidden);
+if($('#tOpen'))$('#tOpen').onclick=()=>setAllOpen(!movers.some(m=>m.goal>0));
+if($('#tDims'))$('#tDims').onclick=()=>{vis.manual=!vis.manual;if(dimGroups.manual)dimGroups.manual.visible=vis.manual;$('#tDims').setAttribute('aria-pressed',String(vis.manual));};
+new ResizeObserver(()=>resize()).observe(document.getElementById('top')||document.body);
 
 export {loadFromMap,loadGlb,status,base,fitView};
 window.__info=()=>info;

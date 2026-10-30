@@ -12,48 +12,34 @@
 <div id="stage"></div>
 <div id="labels"></div>
 
-<header class="top">
+<header class="top" id="top">
   <div class="brand">MGS<b>3D</b></div>
   <div class="crumb" id="crumb"></div>
-  <div class="sp"></div>
-  <div class="views" role="group" aria-label="Вид">
-    <button data-v="persp" class="on">3D</button>
-    <button data-v="front">Спереди</button>
-    <button data-v="top">Сверху</button>
+  <div class="tools" id="tools" role="toolbar" aria-label="Управление просмотром">
+    <div class="dd">
+      <button class="tool" id="tView" aria-haspopup="menu" aria-expanded="false" title="Повернуть модель: 3D, спереди или сверху"><svg viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg><span>Вид</span><i class="car"></i></button>
+      <div class="menu" id="mView" role="menu" hidden>
+        <button role="menuitemradio" data-v="persp" aria-checked="true"><b>3D</b><small>общий вид под углом</small></button>
+        <button role="menuitemradio" data-v="front"><b>Спереди</b><small>фасадом к вам</small></button>
+        <button role="menuitemradio" data-v="top"><b>Сверху</b><small>план</small></button>
+      </div>
+    </div>
+    <div class="dd">
+      <button class="tool" id="tMode" aria-haspopup="menu" aria-expanded="false" title="Как показать модель: как есть, полупрозрачной или одними контурами"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="11" height="11" rx="1.5"/><rect x="9" y="9" width="11" height="11" rx="1.5" stroke-dasharray="2.2 2"/></svg><span id="tModeL">Оригинал</span><i class="car"></i></button>
+      <div class="menu" id="mMode" role="menu" hidden>
+        <button role="menuitemradio" data-mode="orig" aria-checked="true"><b>Оригинал</b><small>цвета и текстуры как в проекте</small></button>
+        <button role="menuitemradio" data-mode="xray"><b>Прозрачный</b><small>видно всё, что внутри</small></button>
+        <button role="menuitemradio" data-mode="lines"><b>Контуры</b><small>только рёбра деталей</small></button>
+      </div>
+    </div>
+    <button class="tool" id="tFronts" aria-pressed="false" title="Убрать фасады и двери, чтобы увидеть, что внутри"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M15 11v2"/><path d="M3 3l18 18" class="x"/></svg><span>Без фасадов</span></button>
+    <button class="tool" id="tOpen" aria-pressed="false" hidden title="Открыть все двери и выдвинуть ящики"><svg viewBox="0 0 24 24"><path d="M4 21V3h9v18"/><path d="M13 3l6 2v14l-6 2"/><path d="M10.5 12h.01"/></svg><span>Открыть</span></button>
+    <button class="tool" id="tDims" aria-pressed="true" hidden title="Показать или скрыть размеры, которые поставил менеджер"><svg viewBox="0 0 24 24"><path d="M3 8v8M21 8v8M3 12h18"/><path d="M6.5 9.5 3.8 12l2.7 2.5M17.5 9.5l2.7 2.5-2.7 2.5"/></svg><span>Размеры</span></button>
   </div>
+  <nav class="tabs" id="tabs" hidden></nav>
 </header>
 
-<nav class="tabs" id="tabs" hidden></nav>
-
-<aside class="panel" id="panel" hidden>
-  <div class="sec">
-    <div class="cap">Габариты, мм</div>
-    <div class="overall">
-      <div><span>ШИРИНА</span><b id="oW">—</b></div>
-      <div><span>ВЫСОТА</span><b id="oH">—</b></div>
-      <div><span>ГЛУБИНА</span><b id="oD">—</b></div>
-    </div>
-  </div>
-  <div class="sec">
-    <div class="cap">Показать размеры</div>
-    <div class="chips" id="chips">
-      <button class="chip on" data-k="overall"><i></i>Общие</button>
-      <button class="chip on" data-k="gaps"><i></i>Между полками</button>
-      <button class="chip on" data-k="drawers"><i></i>Ящики</button>
-    </div>
-    <div class="stat opt" id="stat"></div>
-  </div>
-  <div class="sec">
-    <div class="cap">Двери и ящики</div>
-    <button class="chip on" id="openAll" hidden>Открыть всё</button>
-    <div class="stat opt" id="openStat"></div>
-  </div>
-  <div class="sec opt">
-    <div class="cap">Деталь</div>
-    <div class="part" id="part"></div>
-  </div>
-</aside>
-
+<div class="toast" id="partInfo" hidden></div>
 <div class="empty" id="empty" hidden><div><h1 id="eT"></h1><p id="eP"></p></div></div>
 <div id="drop" hidden></div>
 <div id="status" hidden></div>
@@ -68,14 +54,14 @@ import {sb,configured,publicUrl} from './db.js';
 const $=s=>document.querySelector(s);
 const q=new URLSearchParams(location.search);
 const token=q.get('s');
-function empty(t,p){$('#empty').hidden=false;$('#eT').textContent=t;$('#eP').textContent=p;$('#panel').hidden=true;}
+function empty(t,p){$('#empty').hidden=false;$('#eT').textContent=t;$('#eP').textContent=p;$('#tools').hidden=true;}
 
 async function openItem(it){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.id===it.id));
   const u=new URL(location.href);u.searchParams.set('i',it.id);history.replaceState(null,'',u);
   const files=it.files||[];
   if(!files.some(f=>/\.obj$/i.test(f.name))){empty('Модель ещё не загружена','Для этого изделия пока нет 3D-модели.');return;}
-  $('#empty').hidden=true;$('#panel').hidden=false;
+  $('#empty').hidden=true;$('#tools').hidden=false;
   const map=new Map(files.map(f=>[base(f.name),{url:publicUrl(f.path),gz:!!f.gz,size:f.size}]));
   // лёгкая модель (GLB, её делает сервер после загрузки); если её ещё нет или она не открылась — исходный OBJ
   if(it.glb&&it.glb.path){
@@ -101,7 +87,6 @@ async function openItem(it){
     const k=document.createElement('small');k.textContent=it.kind||'Изделие';b.append(k,document.createTextNode(it.title));
     b.onclick=()=>openItem(it);tabs.append(b);});
   tabs.hidden=items.length<2;
-  $('#panel').classList.toggle('has-tabs',items.length>=2);
   const want=items.find(i=>i.id===q.get('i'))||items[0];
   openItem(want);
 })();
