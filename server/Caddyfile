@@ -1,0 +1,53 @@
+# HTTPS-сертификаты Caddy получает сам (Let's Encrypt), как только домены указывают на сервер.
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	@preflight method OPTIONS
+	header {
+		Access-Control-Allow-Origin "*"
+		Access-Control-Allow-Headers "authorization, x-client-info, apikey, content-type, x-upsert, prefer, range, accept-profile, content-profile, cache-control, x-supabase-api-version"
+		Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
+		Access-Control-Expose-Headers "Content-Range, Range, Content-Length, ETag"
+		Access-Control-Max-Age "86400"
+		-Server
+		defer
+	}
+	handle @preflight {
+		respond 204
+	}
+	handle_path /rest/v1/* {
+		reverse_proxy rest:3000
+	}
+	handle_path /auth/v1/* {
+		reverse_proxy auth:9999
+	}
+	handle_path /storage/v1/* {
+		reverse_proxy storage:5000 {
+			header_up X-Forwarded-Prefix /storage/v1
+		}
+	}
+	handle {
+		respond "MGS API" 200
+	}
+}
+
+# Рабочая версия кабинета и 3D для клиентов (ветка prod)
+{$APP_DOMAIN} {
+	encode zstd gzip
+	handle /assets/* {
+		root * /srv/www/prod
+		file_server
+	}
+	handle {
+		root * /srv/www/prod/3d
+		file_server
+	}
+}
+
+# Тестовая версия: весь репозиторий, ветка main (обновляется каждую минуту)
+{$TEST_DOMAIN} {
+	encode zstd gzip
+	header Cache-Control "no-cache"
+	root * /srv/www/test
+	file_server
+}

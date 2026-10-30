@@ -302,3 +302,15 @@
   затем #32770 «Сохранить» (путь %LOCALAPPDATA%\MGS3D\export\<время>\model.obj). Потом запускается `mgs3d_send.ps1` (PowerShell 5.1 + WinForms, UTF-8 с BOM):
   вход (refresh-токен под DPAPI в %LOCALAPPDATA%\MGS3D\session.dat), выбор/создание проекта, загрузка файлов в Storage, строка в items, открывает ссылку.
   Окно отправки запускать БЕЗ STARTF_USESHOWWINDOW/SW_HIDE и без -WindowStyle Hidden (30.10: Windows прятала первое окно процесса — окно MGS 3D было невидимым, «ползунок грузится и ничего»); хватает CREATE_NO_WINDOW. PowerShell 5.1: функция, возвращающая byte[], разворачивает массив в конвейер — тело запроса уходило числами («bad_json»); возвращать `,([byte[]]...)` и приводить `[byte[]]`. Ответ-массив Api выдаёт ПО ОДНОМУ элементу (foreach), вызывающий собирает `@(Api ...)` — иначе массив в массиве («System.Object[]» вместо названий проектов, 400 при загрузке). Журналы — %LOCALAPPDATA%\MGS3D\logs («Открыть журналы.cmd» в архиве). Лимит Supabase free — 50 МБ на файл: OBJ/MTL больше 256 КБ сжимаются gzip (окно отправки — GZipStream, кабинет — CompressionStream), в Storage путь `….obj.gz`, в files `gz:true`; просмотр распаковывает DecompressionStream (`getText` в viewer.js). Загрузка в окне отправки — HttpClient асинхронно с DoEvents (окно не «Не отвечает»). Проверка плагина — `3d/pro100/src/host.c` (имитация PRO100) под Wine + xvfb.
+
+## Сервер MGS (Timeweb Cloud, СПб, 72.56.34.143) — переезд с Supabase-облака (30.10)
+Supabase-облако из России без VPN не открывается → свой облегчённый Supabase на VPS (1 vCPU / 2 ГБ / 30 ГБ, бэкапы Timeweb).
+Домен mgsmebel.com (REG.RU): A-записи api / 3d / test → 72.56.34.143. Корень mgsmebel.com — позже под сайт с каталогом.
+- Установка: `server/install.sh` (curl … | bash в консоли сервера). Docker из apt (docker.io + docker-compose-v2), зеркало Docker Hub
+  `dockerhub.timeweb.cloud`, swap 2 ГБ, ufw 22/80/443. Код: /opt/mgs (compose, Caddyfile, .env с секретами — только на сервере).
+- Состав (`server/docker-compose.yml`): db (supabase/postgres 17), auth (gotrue), rest (postgrest), storage (file backend, до 200 МБ на файл),
+  caddy (HTTPS сам). БЕЗ Kong/Studio/аналитики/imgproxy — Caddy сам режет префиксы /rest/v1, /auth/v1, /storage/v1 и ставит CORS (header … defer).
+- Сайты: test.mgsmebel.com = весь репозиторий, ветка main; 3d.mgsmebel.com = папка 3d/ ветки prod (+ /assets/ из корня). mgs-sync (systemd-таймер)
+  каждую минуту тянет из GitHub. «Выложить в рабочую» = `git push origin main:prod` (только по слову Макса).
+- Ключи JWT генерятся на сервере; anon-ключ публичный (идёт в 3d/config.js), service_role и пароль базы не покидают сервер.
+  Новый сотрудник: `mgs-add-user` в консоли сервера.
