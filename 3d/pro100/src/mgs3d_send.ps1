@@ -47,6 +47,18 @@ function Api($method, $path, $body = $null, $extra = @{}) {
   $o = ConvertFrom-Json $txt
   if ($o -is [array]) { return ,$o } else { return $o }
 }
+function Why($e) {
+  $ex = $e.Exception; while ($ex.InnerException -and -not $ex.Response) { $ex = $ex.InnerException }
+  $r = $null; try { $r = $e.Exception.Response } catch {}
+  if (-not $r) {
+    return "Нет связи с сервером MGS 3D (supabase.co).`n$($e.Exception.Message)`nЕсли интернет есть, а сайт кабинета открывается только с VPN — включите VPN для всего компьютера, а не только в браузере."
+  }
+  $code = [int]$r.StatusCode; $body = ''
+  try { $sr = New-Object IO.StreamReader($r.GetResponseStream()); $body = $sr.ReadToEnd() } catch {}
+  if ($code -eq 400 -and $body -match 'invalid_credentials|Invalid login') { return 'Неверная почта или пароль. Введите те же, что на сайте кабинета.' }
+  if ($body -match 'email_not_confirmed') { return 'Почта не подтверждена. В Supabase у пользователя должна стоять галочка Auto Confirm.' }
+  "Сервер ответил ошибкой $code.`n" + ($body.Substring(0, [math]::Min(200, $body.Length)))
+}
 function ErrText($e) {
   $t = $e.Exception.Message
   try {
@@ -131,7 +143,7 @@ $tEmail = T 20 116; $pLogin.Controls.Add($tEmail)
 $pLogin.Controls.Add((L 'Пароль' 20 152 420 $null $Muted))
 $tPass = T 20 176; $tPass.UseSystemPasswordChar = $true; $pLogin.Controls.Add($tPass)
 $bLogin = B 'Войти' 20 222 420; $pLogin.Controls.Add($bLogin)
-$lLoginMsg = L '' 20 272 420 $null $Muted; $lLoginMsg.Height = 60; $pLogin.Controls.Add($lLoginMsg)
+$lLoginMsg = L '' 20 272 420 $null $Muted; $lLoginMsg.Height = 150; $pLogin.Controls.Add($lLoginMsg)
 
 # --- отправка ---
 $pMain = Panel
@@ -150,7 +162,7 @@ $gItem.Controls.Add((L 'Изделие' 0 0 270 $null $Muted)); $tItem = T 0 22 
 $gItem.Controls.Add((L 'Тип' 280 0 140 $null $Muted)); $cKind = C 280 22 140; $cKind.Items.AddRange($Kinds); $gItem.Controls.Add($cKind)
 $bSend = B 'Отправить' 20 236 420; $pMain.Controls.Add($bSend)
 $bar = New-Object Windows.Forms.ProgressBar; $bar.Location = New-Object Drawing.Point(20, 286); $bar.Size = New-Object Drawing.Size(420, 8); $bar.Visible = $false; $pMain.Controls.Add($bar)
-$lStatus = L '' 20 300 420 $null $Muted; $lStatus.Height = 60; $pMain.Controls.Add($lStatus)
+$lStatus = L '' 20 300 420 $null $Muted; $lStatus.Height = 120; $pMain.Controls.Add($lStatus)
 $lWho = L '' 20 432 300 $null $Muted; $pMain.Controls.Add($lWho)
 $lnkOut = New-Object Windows.Forms.LinkLabel; $lnkOut.Text = 'Выйти'; $lnkOut.Location = New-Object Drawing.Point(340, 432); $lnkOut.Size = New-Object Drawing.Size(100, 22); $lnkOut.TextAlign = 'TopRight'
 $lnkOut.LinkColor = $Muted; $pMain.Controls.Add($lnkOut)
@@ -192,15 +204,17 @@ function Enter-Main {
   $lInfo.Text = "Файлов: $($Files.Count), $TotalMB МБ"
   $tItem.Text = Guess-Title $Title; $cKind.SelectedItem = Guess-Kind $tItem.Text
   try { Busy $true 'Загружаем проекты…'; Load-Projects; Busy $false }
-  catch { Busy $false; $lStatus.ForeColor = [Drawing.Color]::Salmon; $lStatus.Text = 'Не удалось получить проекты. Проверьте интернет.'; Log ("projects: " + (ErrText $_)) }
+  catch { Busy $false; $lStatus.ForeColor = [Drawing.Color]::Salmon; $lStatus.Text = 'Не удалось получить проекты. ' + (Why $_); Log ("projects: " + (ErrText $_)) }
 }
 
 $lnkNew.Add_LinkClicked({ Set-NewMode (-not $script:NewMode) })
 $lnkOut.Add_LinkClicked({ Remove-Item $SessFile -ErrorAction SilentlyContinue; $script:Token = $null; Show-Panel $pLogin })
 $bLogin.Add_Click({
   $lLoginMsg.ForeColor = $Muted; $lLoginMsg.Text = 'Проверяем…'; $bLogin.Enabled = $false; [Windows.Forms.Application]::DoEvents()
-  try { $script:Token = $null; Use-Auth (Api 'POST' '/auth/v1/token?grant_type=password' @{ email = $tEmail.Text.Trim(); password = $tPass.Text }); $tPass.Text = ''; Enter-Main }
-  catch { $lLoginMsg.ForeColor = [Drawing.Color]::Salmon; $lLoginMsg.Text = 'Неверная почта или пароль, или нет интернета.'; Log ("login: " + (ErrText $_)) }
+  $ok = $false
+  try { $script:Token = $null; Use-Auth (Api 'POST' '/auth/v1/token?grant_type=password' @{ email = $tEmail.Text.Trim(); password = $tPass.Text }); $tPass.Text = ''; $ok = $true }
+  catch { $lLoginMsg.ForeColor = [Drawing.Color]::Salmon; $lLoginMsg.Text = (Why $_); Log ("login: " + (ErrText $_)) }
+  if ($ok) { try { Enter-Main } catch { Log ("main: " + (ErrText $_)); [Windows.Forms.MessageBox]::Show("Ошибка окна: $($_.Exception.Message)", 'MGS 3D') | Out-Null } }
   $bLogin.Enabled = $true
 })
 $tPass.Add_KeyDown({ if ($_.KeyCode -eq 'Enter') { $bLogin.PerformClick() } })
@@ -245,7 +259,7 @@ $bSend.Add_Click({
     $t = ErrText $_; Log "send: $t"
     Busy $false
     $lStatus.ForeColor = [Drawing.Color]::Salmon
-    $lStatus.Text = if ($t -match '401|JWT|expired') { 'Вход устарел — нажмите «Выйти» и войдите снова.' } else { 'Не получилось отправить. Проверьте интернет и нажмите «Отправить» ещё раз.' }
+    $lStatus.Text = if ($t -match '401|JWT|expired') { 'Вход устарел — нажмите «Выйти» и войдите снова.' } else { 'Не получилось отправить. ' + (Why $_) }
   }
 })
 $bOpen.Add_Click({ Start-Process $tLink.Text })
