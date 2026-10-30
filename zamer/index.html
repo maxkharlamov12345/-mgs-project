@@ -221,7 +221,19 @@ button,input,select{font:inherit;color:inherit}
   function items(i) { return wd(i).items; }
   function findItem(id) { for (var i = 0; i < nW(); i++) { var it = items(i).find(function (x) { return x.id === id; }); if (it) return { it: it, wall: i }; } return null; }
 
-  function setLen(i, L) {
+  /* основная стена (R.main = id её начальной точки): стоит ровно и на месте, от неё строится остальное с неровными углами */
+  function mainIdx() { if (!R.main) return -1; for (var q = 0; q < nW(); q++) if (R.pts[q].id === R.main) return q; return -1; }
+  function snapMain() { var m = mainIdx(); if (m < 0) return null; var p = wPts(m); return [m, p[0].x, p[0].y, p[1].x, p[1].y]; }
+  function keepMain(sn) {   // после правки вернуть основную стену на прежнее место (поворот + сдвиг всей комнаты)
+    if (!sn) return; var p = wPts(sn[0]), a0 = Math.atan2(sn[4] - sn[2], sn[3] - sn[1]), a1 = Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x), da = a0 - a1, cs = Math.cos(da), si = Math.sin(da), ox = p[0].x, oy = p[0].y;
+    R.pts.forEach(function (q) { var x = q.x - ox, y = q.y - oy; q.x = sn[1] + x * cs - y * si; q.y = sn[2] + x * si + y * cs; });
+  }
+  function makeMain(i) {   // сделать стену основной: выровнять ровно по ближайшей оси, вся комната поворачивается вместе с ней
+    R.main = R.pts[i].id; var p = wPts(i), a = Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x), t = Math.round(a / (Math.PI / 2)) * Math.PI / 2, da = t - a, cs = Math.cos(da), si = Math.sin(da), ox = p[0].x, oy = p[0].y;
+    R.pts.forEach(function (q) { var x = q.x - ox, y = q.y - oy; q.x = ox + x * cs - y * si; q.y = oy + x * si + y * cs; });
+  }
+  function setLen(i, L) { var sn = snapMain(); setLen0(i, L); keepMain(sn); }
+  function setLen0(i, L) {
     var n = R.pts.length, d = wDir(i), dl = L - wLen(i); if (Math.abs(dl) < .5) return;
     if (R.closed) {   // разницу забирает ближайшая встречная параллельная стена (сначала без замера) — комната остаётся прямой и замкнутой
       var best = -1, any = -1;
@@ -232,10 +244,14 @@ button,input,select{font:inherit;color:inherit}
     for (var k = i + 1; k < n; k++) { R.pts[k].x += d[0] * dl; R.pts[k].y += d[1] * dl; }
   }
   function setAng(i, a) {
-    var n = R.pts.length, c = R.pts[(i + 1) % n], da = (a - angAt(i)) * Math.PI / 180, cs = Math.cos(da), sn = Math.sin(da);
-    // поворачиваем всё, что после угла: в замкнутой комнате — по кругу все точки, кроме угла и предыдущей (разницу забирает дальняя стена)
-    var ids = []; if (R.closed) { var ci = (i + 1) % n; for (var q = 1; q <= n - 2; q++) ids.push((ci + q) % n); } else for (var j0 = i + 2; j0 < n; j0++) ids.push(j0);
+    var n = R.pts.length, c = R.pts[(i + 1) % n], da = (a - angAt(i)) * Math.PI / 180, mi = mainIdx(), snp = snapMain();
+    // поворачиваем всё, что после угла: в замкнутой комнате — по кругу все точки, кроме угла и предыдущей (разницу забирает стена перед углом);
+    // если эта «забирающая» стена — основная, поворачиваем в другую сторону (разницу забирает стена после угла)
+    var ids = [], back = R.closed && mi === (i - 1 + n) % n;
+    if (R.closed) { var ci = (i + 1) % n; for (var q = 1; q <= n - 2; q++) ids.push(back ? (ci - q + n) % n : (ci + q) % n); } else for (var j0 = i + 2; j0 < n; j0++) ids.push(j0);
+    var cs = Math.cos(back ? -da : da), sn = Math.sin(back ? -da : da);
     ids.forEach(function (j) { var x = R.pts[j].x - c.x, y = R.pts[j].y - c.y; R.pts[j].x = c.x + x * cs - y * sn; R.pts[j].y = c.y + x * sn + y * cs; });
+    keepMain(snp);
   }
   function delPoint(v) {   // удалить угол: две стены сливаются, элементы второй переходят на первую
     var n = R.pts.length; if (n <= 2 || (R.closed && n <= 3)) { toast('Меньше нельзя'); return; }
@@ -403,7 +419,9 @@ button,input,select{font:inherit;color:inherit}
       h = head('Размеры по точке') + '<p class="hint">Длина стены на глубине — по введённым углам. В скобках — разница с длиной от угла до угла.</p><div class="issues">' +
         (R.cdims || []).map(function (c) { var g = cdGeo(c); return '<div><span>Стена ' + (c.w + 1) + ': <b>' + (g ? fmt(g.len) : '—') + '</b>' + (g ? ' в ' + fmt(g.dep) + ' мм, h ' + fmt(c.z) : '') + '</span><span class="sp"></span><button class="btn s red" data-a="delcd" data-id="' + c.id + '">✕</button></div>'; }).join('') + '</div>';
     } else if (p.t === 'pwall') {
-      h = head('Стена ' + (p.i + 1)) + '<p class="hint">Размеры и элементы — в развёртке стены.</p><div class="row"><button class="btn p" data-a="openWall">Открыть развёртку</button></div>' +
+      h = head('Стена ' + (p.i + 1) + (mainIdx() === p.i ? ' <span class="pill ok">основная</span>' : '')) + '<p class="hint">Размеры и элементы — в развёртке стены.</p><div class="row"><button class="btn p" data-a="openWall">Открыть развёртку</button>' +
+        (mainIdx() === p.i ? '' : '<button class="btn s d" data-a="mkmain">Сделать основной</button>') + '</div>' +
+        '<p class="hint" style="margin-top:6px">Основная стена стоит ровно и не двигается — остальные строятся от неё по углам.</p>' +
         '<div class="lbl">Изменить контур</div><div class="row"><button class="btn s ghost" data-a="split">Добавить угол здесь</button><button class="btn s ghost" data-a="step">Добавить уступ здесь</button></div><p class="hint" style="margin-top:6px">Уступ — ступенька 300 мм под прямым углом; потом сдвиньте стену пальцем или впишите размеры.</p>';
     } else if (p.t === 'pt') {
       var n2 = nW(), wi = p.w;
@@ -466,9 +484,10 @@ button,input,select{font:inherit;color:inherit}
       var a = wPts(i), d = wDir(i), nm = [d[1], -d[0]], T = 120;
       var q = [[a[0].x, a[0].y], [a[1].x, a[1].y], [a[1].x - nm[0] * T, a[1].y - nm[1] * T], [a[0].x - nm[0] * T, a[0].y - nm[1] * T]];
       s += '<polygon points="' + q.map(function (z) { return z[0] + ',' + (-z[1]); }).join(' ') + '" fill="' + (i === sw ? '#ff5a1f' : '#3a3631') + '"/>';
+      if (i === mainIdx()) s += '<line x1="' + q[0][0] + '" y1="' + (-q[0][1]) + '" x2="' + q[1][0] + '" y2="' + (-q[1][1]) + '" stroke="#bfd630" stroke-width="' + 5 * k + '" pointer-events="none"/>';
       if (!S.draw) {
         var bx = (a[0].x + a[1].x) / 2 - nm[0] * (T + 26 * k), by = (a[0].y + a[1].y) / 2 - nm[1] * (T + 26 * k);
-        s += '<g data-wn="' + i + '" style="cursor:pointer"><circle cx="' + bx + '" cy="' + (-by) + '" r="' + 17 * k + '" fill="' + (wOk(i) ? '#bfd630' : '#fff') + '" stroke="#1b1916" stroke-width="' + 2 * k + '"/><text x="' + bx + '" y="' + (-by + 5.5 * k) + '" font-size="' + 15 * k + '" text-anchor="middle" font-weight="700" font-family="Onest,Arial" fill="#111" pointer-events="none">' + (i + 1) + '</text></g>';
+        s += '<g data-wn="' + i + '" style="cursor:pointer"><circle cx="' + bx + '" cy="' + (-by) + '" r="' + 17 * k + '" fill="' + (wOk(i) ? '#bfd630' : '#fff') + '" stroke="#1b1916" stroke-width="' + 2 * k + '"/><text x="' + bx + '" y="' + (-by + 5.5 * k) + '" font-size="' + 15 * k + '" text-anchor="middle" font-weight="700" font-family="Onest,Arial" fill="#111" pointer-events="none">' + (i + 1) + '</text>' + (i === mainIdx() ? '<text x="' + bx + '" y="' + (-by + 32 * k) + '" font-size="' + 11 * k + '" text-anchor="middle" font-weight="700" font-family="Onest,Arial" fill="#6f7d10" pointer-events="none">основная</text>' : '') + '</g>';
       }
     }
     if (!S.draw) for (var j = 0; j < n; j++) {   // все углы — внутри комнаты по биссектрисе; 90° — серым, остальные — красным
@@ -924,6 +943,7 @@ button,input,select{font:inherit;color:inherit}
     if (a === 'redraw') { if (!S.cRedraw) { S.cRedraw = 1; b.textContent = 'Стереть всё? Нажмите ещё раз'; setTimeout(function () { S.cRedraw = 0; }, 3000); return; } S.cRedraw = 0; R.pts = []; R.closed = false; R.wd = {}; S.draw = true; S.pop = null; S.vb = null; save(); renderAll(); return; }
     if (a === 'sample') { R = sample(); S.draw = false; S.mode = 'plan'; S.pop = null; S.vb = null; if (V) V.key = null; renderAll(); return; }
     if (a === 'newroom') { if (!S.cNew) { S.cNew = 1; b.textContent = 'Стереть этот замер? Ещё раз'; return; } S.cNew = 0; R = blank(); S.draw = true; S.mode = 'plan'; S.pop = null; S.vb = null; save(); renderAll(); return; }
+    if (a === 'mkmain') { makeMain(S.pop.i); save(); S.vb = null; S.pop = null; renderAll(); toast('Стена ' + (mainIdx() + 1) + ' — основная: стоит ровно, остальные строятся от неё'); return; }
     if (a === 'split' || a === 'step') {
       var i = S.pop.i, L = wLen(i), t = Math.max(100, Math.min(L - 100, (S.pop.at || .5) * L));
       if (a === 'split') { var p = wPts(i), dd = wDir(i); R.pts.splice(i + 1, 0, { id: uid(), x: Math.round(p[0].x + dd[0] * t), y: Math.round(p[0].y + dd[1] * t) }); moveItems(i, i + 1, t); wd(i).lm = []; }
