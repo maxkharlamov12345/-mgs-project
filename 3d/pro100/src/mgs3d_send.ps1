@@ -34,13 +34,13 @@ $Kinds = @('Кухня','Шкаф','Гардеробная','Прихожая','
 
 # ---------- сеть ----------
 $script:Token = $null
-function Body($o) { [Text.Encoding]::UTF8.GetBytes(($o | ConvertTo-Json -Depth 6 -Compress)) }
+function Body($o) { $j = $o | ConvertTo-Json -Depth 6 -Compress; return ,([byte[]][Text.Encoding]::UTF8.GetBytes($j)) }
 function Api($method, $path, $body = $null, $extra = @{}) {
   $h = @{ apikey = $Key }
   if ($script:Token) { $h.Authorization = "Bearer $script:Token" }
   foreach ($k in $extra.Keys) { $h[$k] = $extra[$k] }
   $p = @{ Method = $method; Uri = "$Url$path"; Headers = $h; UseBasicParsing = $true }
-  if ($null -ne $body) { $p.Body = (Body $body); $p.ContentType = 'application/json; charset=utf-8' }
+  if ($null -ne $body) { $p.Body = [byte[]](Body $body); $p.ContentType = 'application/json; charset=utf-8' }
   $resp = Invoke-WebRequest @p
   $txt = [Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray())
   if (!$txt) { return $null }
