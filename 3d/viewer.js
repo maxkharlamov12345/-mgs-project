@@ -98,7 +98,7 @@ async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
 function setModel(obj,title){
   if(model){scene.remove(model);}
   (movers||[]).forEach(m=>scene.remove(m.pivot));movers=[];
-  Object.values(dimGroups).forEach(g=>{scene.remove(g);g.traverse(o=>{if(o.isMesh&&o.material.map){o.material.map.dispose();o.material.dispose();}o.geometry&&o.geometry.dispose();});});dimGroups={};selected=null;
+  Object.values(dimGroups).forEach(g=>{scene.remove(g);g.traverse(o=>{if(o.isMesh&&o.material.map){o.material.map.dispose();o.material.dispose();}o.geometry&&o.geometry.dispose();});});dimGroups={};clearSel();
   partInfo(null);
   // units: PRO100 OBJ is in metres -> work in mm
   const pre=new THREE.Box3().setFromObject(obj);const sz=pre.getSize(new THREE.Vector3());
@@ -513,7 +513,7 @@ function buildMovers(I){
     const ms=groupOf(q);
     F.filter(j=>j.type==='join'&&j.to===q).forEach(j=>ms.push(...groupOf(Object.assign(j,{type:'door'}))));
     ms.forEach(m=>pivot.attach(m));
-    movers.push({pivot,axis,angle,move,base:pivot.position.clone(),t:0,goal:0,meshes:new Set(ms),type:q.type});
+    movers.push({pivot,axis,angle,move,base:pivot.position.clone(),t:0,goal:0,meshes:new Set(ms),type:q.type,face:q.f});
   });
   return movers;
 }
@@ -527,7 +527,8 @@ function updateMovers(dt){
     else m.pivot.quaternion.setFromAxisAngle(m.axis,m.angle*k);
   }
 }
-function setAllOpen(open){movers.forEach(m=>m.goal=open?1:0);syncOpenBtn();}
+function clearSel(){if(selected){scene.remove(selected);selected=null;}}
+function setAllOpen(open){movers.forEach(m=>m.goal=open?1:0);clearSel();partInfo(null);syncOpenBtn();}
 function syncOpenBtn(){
   const t=$('#tOpen');if(t){const any=movers.some(m=>m.goal>0);t.hidden=!movers.length;t.setAttribute('aria-pressed',String(any));
     t.querySelector('span').textContent=any?'Закрыть':'Открыть';t.title=any?'Закрыть все двери и ящики':'Открыть все двери и выдвинуть ящики';}
@@ -545,9 +546,9 @@ renderer.domElement.addEventListener('pointerup',e=>{
   const m=V((e.clientX/innerWidth)*2-1,-(e.clientY/innerHeight)*2+1,0);
   ray.setFromCamera(m,camera);
   const hits=ray.intersectObjects([model,...movers.map(m=>m.pivot)],true).filter(h=>h.object.visible);
-  if(selected){scene.remove(selected);selected=null;}
+  clearSel();
   if(!hits.length){partInfo(null);return;}
-  const mv=movers.find(m=>m.meshes.has(hits[0].object));if(mv){mv.goal=mv.goal>0?0:1;syncOpenBtn();}
+  const mv=movers.find(m=>m.meshes.has(hits[0].object));if(mv){mv.goal=mv.goal>0?0:1;syncOpenBtn();return;}
   const p=info.parts.find(p=>p.mesh===hits[0].object);if(!p)return;
   const d=[p.s.x,p.s.y,p.s.z].map(v=>Math.round(v));
   const nm=p.label||'Деталь без названия';
@@ -611,15 +612,19 @@ function setFronts(hide,silent){
   frontsHidden=!!hide;
   const all=solidParts(),isFront=p=>(/фасад|двер/i.test(p.label)&&p.kind!=='hw')||/ручк/i.test(p.label);
   const fr=all.filter(isFront),frBox=fr.filter(p=>p.kind!=='hw').map(p=>p.box.clone().expandByScalar(1));
+  // всё, что ездит вместе с дверью/подъёмником (кромки, ручки, чашки петель), — часть фасада; у ящика — только то, что в толщине фасада
+  const withFace=new Set();
+  for(const m of movers){const fb=m.face.box.clone().expandByScalar(3);
+    for(const p of all)if(m.meshes.has(p.mesh)&&(m.type!=='drawer'||fb.containsBox(p.box)))withFace.add(p);}
   for(const p of all){
-    let hide=isFront(p);
+    let hide=isFront(p)||withFace.has(p);
     // вместе с фасадом — его кромки и то, что сидит внутри фасада (чашки петель, ручки-профили)
     if(!hide&&/кромка/i.test(p.label))hide=!!(p.host&&isFront(p.host));
     if(!hide&&p.kind!=='board'&&!/кромка/i.test(p.label)){const c=p.box.getCenter(new THREE.Vector3());hide=frBox.some(b=>b.containsPoint(c));}
     if(hide)p.mesh.visible=!frontsHidden;
   }
   const b=$('#tFronts');if(b){b.setAttribute('aria-pressed',String(frontsHidden));b.querySelector('span').textContent=frontsHidden?'Вернуть фасады':'Без фасадов';}
-  if(!silent)partInfo(null);
+  clearSel();if(!silent)partInfo(null);
 }
 function closeMenus(except){document.querySelectorAll('.menu').forEach(m=>{if(m!==except){m.hidden=true;const b=m.previousElementSibling;if(b)b.setAttribute('aria-expanded','false');}});}
 function bindMenu(btn,menu,onPick){
