@@ -25,7 +25,8 @@ const vis={overall:true,gaps:true,drawers:true};
 
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);labelR.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
 addEventListener('resize',resize);resize();
-(function loop(){requestAnimationFrame(loop);controls.update();if(typeof updateLabels==='function')updateLabels();renderer.render(scene,camera);labelR.render(scene,camera);})();
+let _lastT=performance.now();
+(function loop(){requestAnimationFrame(loop);const _now=performance.now(),_dt=Math.min(100,_now-_lastT);_lastT=_now;controls.update();if(typeof updateMovers==='function')updateMovers(_dt);if(typeof updateLabels==='function')updateLabels();renderer.render(scene,camera);labelR.render(scene,camera);})();
 
 function status(t){const s=$('#status');if(!s)return;if(!t){s.hidden=true;return;}s.textContent=t;s.hidden=false;}
 
@@ -61,6 +62,7 @@ async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
 
 function setModel(obj,title){
   if(model){scene.remove(model);}
+  (movers||[]).forEach(m=>scene.remove(m.pivot));movers=[];
   Object.values(dimGroups).forEach(g=>{scene.remove(g);g.traverse(o=>{if(o.isMesh&&o.material.map){o.material.map.dispose();o.material.dispose();}o.geometry&&o.geometry.dispose();});});dimGroups={};selected=null;
   $('#part').innerHTML='<span class="hint">Нажмите на любую деталь модели, чтобы увидеть её размер.</span>';
   // units: PRO100 OBJ is in metres -> work in mm
@@ -69,6 +71,7 @@ function setModel(obj,title){
   obj.updateMatrixWorld(true);
   model=obj;scene.add(obj);
   info=analyze(obj);
+  buildMovers(info);syncOpenBtn();
   fitView('persp');
   const I=info;
   (document.fonts&&document.fonts.load?document.fonts.load('600 96px Onest').catch(()=>{}):Promise.resolve()).then(()=>{if(info===I)buildDims(I);});
@@ -323,6 +326,114 @@ document.querySelectorAll('.views button').forEach(b=>b.onclick=()=>fitView(b.da
 /* ---------- toggles ---------- */
 document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{const k=ch.dataset.k;vis[k]=!vis[k];ch.classList.toggle('on',vis[k]);if(dimGroups[k])dimGroups[k].visible=vis[k];});
 
+/* ---------- двери и ящики: распознавание и открывание ----------
+   В OBJ нет «дверей» — только детали. Фасады ищем по имени («Фасад», «Дверь»), сторону петель — по петлям рядом
+   (маленькие сложные детали за фасадом у его края), ящики — по боковинам ящика за фасадом. */
+var movers=[];
+function detectMovers(I){
+  const parts=I.parts.filter(p=>p.kind!=='marker'&&p.kind!=='metiz');
+  const isFace=p=>/фасад|двер/i.test(p.label)&&p.kind!=='hw';
+  const boards=parts.filter(p=>p.kind==='board'&&!isFace(p));
+  const F=[];
+  parts.filter(isFace).forEach(f=>{
+    const s=[f.s.x,f.s.y,f.s.z];const n=['x','y','z'][s.indexOf(Math.min(...s))];if(n==='y')return;
+    const w=n==='x'?'z':'x';const W=f.s[w],H=f.s.y;if(W<150||H<100)return;   // узкие вставки и заглушки не открываем
+    // наружу — туда, где больше места до стены комнаты; без комнаты — где меньше деталей вплотную
+    let out;
+    if(I.room){const a=I.room.max[n]-f.box.max[n],b=f.box.min[n]-I.room.min[n];out=a>=b?1:-1;}
+    else{const cnt=sg=>boards.filter(b=>{const c=b.box.getCenter(V());const d=sg>0?b.box.min[n]-f.box.max[n]:f.box.min[n]-b.box.max[n];
+      return d>-2&&d<120&&c[w]>f.box.min[w]&&c[w]<f.box.max[w]&&c.y>f.box.min.y-50&&c.y<f.box.max.y+50;}).length;out=cnt(1)<cnt(-1)?1:-1;}
+    F.push({f,n,w,W,H,out,front:out>0?f.box.max[n]:f.box.min[n],back:out>0?f.box.min[n]:f.box.max[n],h:[],type:null});
+  });
+  // петли: деталь «Петля…» или маленькая сложная деталь (≤75 мм, ≥1500 треугольников)
+  const hinges=parts.filter(p=>(p.kind==='other'||p.kind==='hw')&&(/петл/i.test(p.label)||(Math.max(p.s.x,p.s.y,p.s.z)<=75&&p.tris>=1500)));
+  hinges.forEach(hg=>{
+    const c=hg.box.getCenter(V());let best=null,bs=1e9;
+    for(const q of F){
+      const perp=(q.back-c[q.n])*q.out;if(perp<-5||perp>80)continue;
+      if(c.y<q.f.box.min.y-30||c.y>q.f.box.max.y+30)continue;
+      const u=c[q.w],a=q.f.box.min[q.w],b=q.f.box.max[q.w];const inside=u>=a&&u<=b;
+      const de=inside?0:Math.min(Math.abs(u-a),Math.abs(u-b));if(de>60)continue;
+      const sc=(inside?0:1000)+de;if(sc<bs){bs=sc;best=q;}
+    }
+    if(best)best.h.push(c);
+  });
+  F.forEach(q=>{
+    if(!q.h.length)return;
+    const e={min:0,max:0,top:0,bottom:0};
+    q.h.forEach(c=>{const a=c[q.w]-q.f.box.min[q.w],b=q.f.box.max[q.w]-c[q.w],t=q.f.box.max.y-c.y,d=c.y-q.f.box.min.y;
+      if(Math.min(a,b)<=Math.min(t,d))e[a<b?'min':'max']++;else e[t<d?'top':'bottom']++;});
+    const k=Object.keys(e).sort((x,y)=>e[y]-e[x])[0];
+    q.type=k==='top'?'lift':k==='bottom'?'flap':'door';q.edge=k;
+  });
+  // ящики: за фасадом боковины ящика ниже фасада
+  F.filter(q=>!q.type).forEach(q=>{
+    let depth=0;
+    boards.forEach(b=>{const sb=[b.s.x,b.s.y,b.s.z];if(['x','y','z'][sb.indexOf(Math.min(...sb))]!==q.w)return;
+      const c=b.box.getCenter(V());const dp=(q.back-c[q.n])*q.out;
+      if(dp>40&&dp<500&&c[q.w]>q.f.box.min[q.w]&&c[q.w]<q.f.box.max[q.w]&&b.box.min.y>=q.f.box.min.y-10&&b.box.max.y<=q.f.box.max.y+10&&b.s.y<q.H*.95&&b.s[q.n]>150)
+        depth=Math.max(depth,b.s[q.n]);});
+    if(depth){q.type='drawer';q.depth=depth;}
+  });
+  // складной подъёмник: фасад без петель вплотную под подъёмным — едет вместе с ним
+  F.filter(q=>!q.type).forEach(q=>{
+    const up=F.find(l=>l.type==='lift'&&l.n===q.n&&Math.abs(l.front-q.front)<5&&Math.abs(l.f.box.min[q.w]-q.f.box.min[q.w])<10&&Math.abs(l.f.box.max[q.w]-q.f.box.max[q.w])<10&&Math.abs(l.f.box.min.y-q.f.box.max.y)<15);
+    if(up){q.type='join';q.to=up;}
+  });
+  return F;
+}
+function buildMovers(I){
+  movers=[];const F=detectMovers(I);
+  const faces=new Set(F.map(q=>q.f));
+  const free=I.parts.filter(p=>p.kind!=='marker'&&!faces.has(p));
+  const used=new Set();
+  const within=(p,q,n0,n1,tw,ty)=>p.box.min[q.w]>=q.f.box.min[q.w]-tw&&p.box.max[q.w]<=q.f.box.max[q.w]+tw&&p.box.min.y>=q.f.box.min.y-ty&&p.box.max.y<=q.f.box.max.y+ty
+    &&Math.min((p.box.min[q.n]-q.front)*q.out,(p.box.max[q.n]-q.front)*q.out)>=n0&&Math.max((p.box.min[q.n]-q.front)*q.out,(p.box.max[q.n]-q.front)*q.out)<=n1;
+  const groupOf=q=>{
+    const ms=[q.f.mesh];
+    const th=Math.abs(q.front-q.back);
+    free.forEach(p=>{if(used.has(p))return;
+      const ok=q.type==='drawer'?within(p,q,-(th+q.depth+15),70,6,12):within(p,q,-(th+3),70,4,4);
+      if(ok){ms.push(p.mesh);used.add(p);}});
+    return ms;
+  };
+  F.filter(q=>q.type&&q.type!=='join').forEach(q=>{
+    const pivot=new THREE.Group();scene.add(pivot);
+    const N=V();N[q.n]=q.out;const Wd=V();Wd[q.w]=1;
+    let axis=null,angle=0,move=null;
+    if(q.type==='drawer'){move=N.clone().multiplyScalar(Math.max(150,q.depth*.8));}
+    else if(q.type==='door'){
+      const p=V(0,0,0);p[q.w]=q.edge==='min'?q.f.box.min[q.w]:q.f.box.max[q.w];p[q.n]=q.front;pivot.position.copy(p);
+      const d=Wd.clone().multiplyScalar(q.edge==='min'?1:-1);axis=V(0,1,0);angle=THREE.MathUtils.degToRad(95)*Math.sign(new THREE.Vector3().crossVectors(d,N).y||1);
+    }else{ // lift / flap
+      const p=V(0,0,0);p.y=q.edge==='top'?q.f.box.max.y:q.f.box.min.y;p[q.n]=q.front;p[q.w]=(q.f.box.min[q.w]+q.f.box.max[q.w])/2;pivot.position.copy(p);
+      const d=V(0,q.edge==='top'?-1:1,0);axis=Wd.clone();angle=THREE.MathUtils.degToRad(q.edge==='top'?100:90)*Math.sign(new THREE.Vector3().crossVectors(d,N).dot(axis)||1);
+    }
+    pivot.updateMatrixWorld(true);
+    const ms=groupOf(q);
+    F.filter(j=>j.type==='join'&&j.to===q).forEach(j=>ms.push(...groupOf(Object.assign(j,{type:'door'}))));
+    ms.forEach(m=>pivot.attach(m));
+    movers.push({pivot,axis,angle,move,base:pivot.position.clone(),t:0,goal:0,meshes:new Set(ms),type:q.type});
+  });
+  return movers;
+}
+function updateMovers(dt){
+  if(!movers||!movers.length)return;
+  for(const m of movers){
+    if(m.t===m.goal)continue;
+    const sp=dt/450;m.t=m.goal>m.t?Math.min(m.goal,m.t+sp):Math.max(m.goal,m.t-sp);
+    const k=m.t<.5?2*m.t*m.t:1-Math.pow(-2*m.t+2,2)/2;
+    if(m.move)m.pivot.position.copy(m.base).addScaledVector(m.move,k);
+    else m.pivot.quaternion.setFromAxisAngle(m.axis,m.angle*k);
+  }
+}
+function setAllOpen(open){movers.forEach(m=>m.goal=open?1:0);syncOpenBtn();}
+function syncOpenBtn(){const b=$('#openAll');if(!b)return;const n=movers.length;b.hidden=!n;
+  const anyOpen=movers.some(m=>m.goal>0);b.textContent=anyOpen?'Закрыть всё':'Открыть всё';
+  const s=$('#openStat');if(s){const c={door:0,drawer:0,lift:0,flap:0};movers.forEach(m=>c[m.type]++);
+    s.textContent=n?`Дверей: ${c.door}, ящиков: ${c.drawer}, подъёмных: ${c.lift+c.flap}. Нажмите на фасад, чтобы открыть.`:'Открывающихся фасадов не найдено.';}}
+if($('#openAll'))$('#openAll').onclick=()=>setAllOpen(!movers.some(m=>m.goal>0));
+
 /* ---------- picking ---------- */
 const ray=new THREE.Raycaster();let downAt=null;
 renderer.domElement.addEventListener('pointerdown',e=>{downAt=[e.clientX,e.clientY];});
@@ -330,9 +441,10 @@ renderer.domElement.addEventListener('pointerup',e=>{
   if(!downAt||Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>5||!model)return;
   const m=V((e.clientX/innerWidth)*2-1,-(e.clientY/innerHeight)*2+1,0);
   ray.setFromCamera(m,camera);
-  const hits=ray.intersectObject(model,true).filter(h=>h.object.visible);
+  const hits=ray.intersectObjects([model,...movers.map(m=>m.pivot)],true).filter(h=>h.object.visible);
   if(selected){scene.remove(selected);selected=null;}
   if(!hits.length){$('#part').innerHTML='<span class="hint">Нажмите на любую деталь модели, чтобы увидеть её размер.</span>';return;}
+  const mv=movers.find(m=>m.meshes.has(hits[0].object));if(mv){mv.goal=mv.goal>0?0:1;syncOpenBtn();}
   const p=info.parts.find(p=>p.mesh===hits[0].object);if(!p)return;
   const d=[p.s.x,p.s.y,p.s.z].map(v=>Math.round(v));
   const nm=p.label||'Деталь без названия';
@@ -340,7 +452,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
   $('#part .nm').textContent=nm;
   $('#part .sz').textContent=`${d[0]} × ${d[1]} × ${d[2]}`;
   $('#part .hint').textContent='ширина × высота × глубина, мм';
-  selected=new THREE.Box3Helper(p.box.clone().expandByScalar(2),0xbfd630);selected.material.depthTest=false;selected.renderOrder=11;scene.add(selected);
+  selected=new THREE.Box3Helper(mv?new THREE.Box3().setFromObject(p.mesh).expandByScalar(2):p.box.clone().expandByScalar(2),0xbfd630);selected.material.depthTest=false;selected.renderOrder=11;scene.add(selected);
 });
 
 
