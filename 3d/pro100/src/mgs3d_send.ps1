@@ -45,7 +45,7 @@ function Api($method, $path, $body = $null, $extra = @{}) {
   $txt = [Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray())
   if (!$txt) { return $null }
   $o = ConvertFrom-Json $txt
-  if ($o -is [array]) { return ,$o } else { return $o }
+  if ($o -is [array]) { foreach ($i in $o) { $i } } else { $o }   # по одному элементу: вызывающий собирает через @()
 }
 function Why($e) {
   $ex = $e.Exception; while ($ex.InnerException -and -not $ex.Response) { $ex = $ex.InnerException }
