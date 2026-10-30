@@ -147,8 +147,14 @@ function analyze(root){
   const boards=parts.filter(p=>p.kind==='board');
   parts.filter(p=>/кромка/i.test(p.label)).forEach(e=>{
     const c=e.box.getCenter(new THREE.Vector3());
-    const host=boards.find(b=>b.box.clone().expandByScalar(3).containsPoint(c));
-    if(host){e.mesh.material=host.mesh.material;}
+    // своя деталь: кромка лежит на её торце и по ширине равна её толщине (иначе кромка фасада «прилипала» к боковине рядом)
+    const es=e.box.getSize(new THREE.Vector3()),ev=[es.x,es.y,es.z];let host=null,best=1e9;
+    for(const b of boards){
+      const bx=b.box.clone().expandByScalar(3);if(!bx.containsPoint(c))continue;
+      const sc=Math.abs(ev[b.thin]-b.th)+b.box.distanceToPoint(c);
+      if(sc<best){best=sc;host=b;}
+    }
+    if(host){e.host=host;e.mesh.material=host.mesh.material;}
     else{(Array.isArray(e.mesh.material)?e.mesh.material:[e.mesh.material]).forEach(m=>{if(m){m.map=null;m.color.set(0x8a7a66);m.needsUpdate=true;}});}
   });
   // room from markers (PRO100 writes axis markers when "add walls" is on)
@@ -603,9 +609,14 @@ function applyMode(){
 let frontsHidden=false;
 function setFronts(hide,silent){
   frontsHidden=!!hide;
-  for(const p of solidParts()){
-    const isFront=(/фасад|двер/i.test(p.label)&&p.kind!=='hw')||/ручк/i.test(p.label);
-    if(isFront)p.mesh.visible=!frontsHidden;
+  const all=solidParts(),isFront=p=>(/фасад|двер/i.test(p.label)&&p.kind!=='hw')||/ручк/i.test(p.label);
+  const fr=all.filter(isFront),frBox=fr.filter(p=>p.kind!=='hw').map(p=>p.box.clone().expandByScalar(1));
+  for(const p of all){
+    let hide=isFront(p);
+    // вместе с фасадом — его кромки и то, что сидит внутри фасада (чашки петель, ручки-профили)
+    if(!hide&&/кромка/i.test(p.label))hide=!!(p.host&&isFront(p.host));
+    if(!hide&&p.kind!=='board'&&!/кромка/i.test(p.label)){const c=p.box.getCenter(new THREE.Vector3());hide=frBox.some(b=>b.containsPoint(c));}
+    if(hide)p.mesh.visible=!frontsHidden;
   }
   const b=$('#tFronts');if(b){b.setAttribute('aria-pressed',String(frontsHidden));b.querySelector('span').textContent=frontsHidden?'Вернуть фасады':'Без фасадов';}
   if(!silent)partInfo(null);
