@@ -56,6 +56,17 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
 .back:hover{color:var(--fg)}
 .login{max-width:380px;margin:12vh auto 0}
 .hint{font-size:12.5px;color:var(--muted)}
+.st{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.st:first-child{border-top:0}
+.st .nm{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.st .nm b{font-size:15px;overflow:hidden;text-overflow:ellipsis}
+.st .nm span{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis}
+.st select{padding:7px 10px;font-size:13px}
+.st.off .nm{opacity:.5}
+.tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 7px;background:#3a1f1c;color:var(--red)}
+.pw{display:flex;gap:8px;align-items:center;flex-basis:100%;flex-wrap:wrap}
+.pw input{flex:1 1 200px}
+.creds{font-family:var(--f-num);font-size:13px;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:12px;white-space:pre-wrap;user-select:all}
 </style>
 </head>
 <body>
@@ -64,6 +75,7 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
     <div class="brand">MGS<b>3D</b></div>
     <div class="sp"></div>
     <div class="who" id="who"></div>
+    <button class="btn ghost small" id="staffBtn" hidden>Сотрудники</button>
     <button class="btn ghost small" id="logout" hidden>Выйти</button>
   </div>
 
@@ -95,6 +107,33 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
     </form>
     <div class="grid" id="projects"></div>
     <div class="msg" id="listMsg"></div>
+  </section>
+
+  <!-- staff (только администратор) -->
+  <section id="vStaff" hidden style="display:flex;flex-direction:column;gap:18px">
+    <button class="back" id="staffBack">← Проекты</button>
+    <div class="bar"><h1>Сотрудники</h1><div class="sp"></div><button class="btn" id="stNewBtn">Добавить сотрудника</button></div>
+    <form class="card" id="stForm" hidden autocomplete="off">
+      <div class="row">
+        <label>Имя<input id="sName" placeholder="Анна Петрова"></label>
+        <label>Почта (для входа)<input id="sEmail" type="email" required placeholder="anna@mgsmebel.com" autocomplete="off"></label>
+      </div>
+      <div class="row">
+        <label>Пароль<input id="sPass" required minlength="8" autocomplete="new-password"></label>
+        <button class="btn ghost" type="button" id="sGen">Придумать</button>
+        <label style="flex:0 1 180px">Роль<select id="sRole"><option value="manager">Менеджер</option><option value="admin">Администратор</option></select></label>
+      </div>
+      <div class="row"><button class="btn" type="submit" id="sSave">Создать</button><button class="btn ghost" type="button" id="sCancel">Отмена</button></div>
+      <div class="msg" id="sMsg"></div>
+    </form>
+    <div class="card" id="stDone" hidden>
+      <h2>Передайте сотруднику</h2>
+      <div class="creds" id="stCreds"></div>
+      <div class="row"><button class="btn small" id="stCopy">Скопировать</button><button class="btn ghost small" id="stDoneOk">Готово</button></div>
+      <div class="hint">Пароль больше нигде не показывается. Забудет — смените его здесь же.</div>
+    </div>
+    <div class="card"><div id="staff"></div><div class="msg" id="stMsg"></div></div>
+    <div class="hint">Администратор добавляет и отключает сотрудников. Отключённый сотрудник не может войти, его проекты остаются.</div>
   </section>
 
   <!-- project page -->
@@ -141,8 +180,9 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
 <script src="lib/supabase.min.js"></script>
 <script type="module">
 import {sb,configured,BUCKET} from './db.js';
+import {SUPABASE_URL} from './config.js';
 const $=s=>document.querySelector(s);
-const views=['vConf','vLogin','vList','vProj'];
+const views=['vConf','vLogin','vList','vProj','vStaff'];
 const show=v=>views.forEach(x=>$('#'+x).hidden=x!==v);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const viewUrl=(tok,item)=>{const u=/(^|\.)mgsmebel\.com$/.test(location.hostname)&&!/^test\./.test(location.hostname)?new URL('https://my.mgsmebel.com/view.html'):new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);if(item)u.searchParams.set('i',item);return u.toString();};
@@ -158,9 +198,10 @@ async function init(){
   afterLogin(session);
 }
 function afterLogin(session){
-  $('#who').textContent=session.user.email;$('#logout').hidden=false;
+  $('#who').textContent=session.user.user_metadata?.name||session.user.email;$('#logout').hidden=false;
+  checkAdmin();
   const pid=new URLSearchParams(location.search).get('p');
-  pid?openProject(pid):loadList();
+  new URLSearchParams(location.search).has('staff')?openStaff():pid?openProject(pid):loadList();
 }
 $('#vLogin').onsubmit=async e=>{
   e.preventDefault();$('#loginMsg').className='msg';$('#loginMsg').textContent='Проверяем…';$('#loginBtn').disabled=true;
@@ -169,7 +210,69 @@ $('#vLogin').onsubmit=async e=>{
   if(error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Неверная почта или пароль.';return;}
   $('#loginMsg').textContent='';afterLogin(data.session);
 };
-$('#logout').onclick=async()=>{await sb.auth.signOut();$('#who').textContent='';$('#logout').hidden=true;show('vLogin');};
+$('#logout').onclick=async()=>{await sb.auth.signOut();$('#who').textContent='';$('#logout').hidden=true;$('#staffBtn').hidden=true;show('vLogin');};
+
+/* ---- staff: управление сотрудниками (сервис /admin/v1 на сервере, только для администратора) ---- */
+async function adm(method,path,body){
+  const {data:{session}}=await sb.auth.getSession();
+  const r=await fetch(SUPABASE_URL+'/admin/v1'+path,{method,headers:{'Authorization':'Bearer '+(session?.access_token||''),'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  let d=null;try{d=await r.json();}catch{}
+  if(!r.ok)throw Object.assign(new Error(d?.error||('Ошибка '+r.status)),{status:r.status});
+  return d;
+}
+async function checkAdmin(){try{await adm('GET','/staff');$('#staffBtn').hidden=false;}catch{$('#staffBtn').hidden=true;}}
+const genPass=()=>{const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';const v=crypto.getRandomValues(new Uint32Array(10));return [...v].map(x=>a[x%a.length]).join('');};
+const appUrl=()=>/(^|\.)mgsmebel\.com$/.test(location.hostname)?'https://app.mgsmebel.com':location.origin+location.pathname;
+$('#staffBtn').onclick=openStaff;$('#staffBack').onclick=loadList;
+$('#stNewBtn').onclick=()=>{$('#stForm').hidden=false;$('#stDone').hidden=true;$('#sPass').value=genPass();$('#sMsg').textContent='';$('#sName').focus();};
+$('#sGen').onclick=()=>{$('#sPass').value=genPass();};
+$('#sCancel').onclick=()=>{$('#stForm').reset();$('#stForm').hidden=true;};
+$('#stDoneOk').onclick=()=>{$('#stDone').hidden=true;$('#stCreds').textContent='';};
+$('#stCopy').onclick=async()=>{try{await navigator.clipboard.writeText($('#stCreds').textContent);$('#stCopy').textContent='Скопировано';setTimeout(()=>$('#stCopy').textContent='Скопировать',2000);}catch{}};
+function showCreds(email,pass,name){
+  $('#stCreds').textContent=`${name?name+', в':'В'}ход в систему MGS:\n${appUrl()}\nПочта: ${email}\nПароль: ${pass}\n\nКнопка для PRO100 — там же, внутри проекта: «Скачать кнопку для PRO100».`;
+  $('#stDone').hidden=false;
+}
+$('#stForm').onsubmit=async e=>{
+  e.preventDefault();const m=$('#sMsg');m.className='msg';m.textContent='Создаём…';$('#sSave').disabled=true;
+  const email=$('#sEmail').value.trim(),pass=$('#sPass').value,name=$('#sName').value.trim();
+  try{await adm('POST','/staff',{email,password:pass,name,role:$('#sRole').value});
+    $('#stForm').reset();$('#stForm').hidden=true;m.textContent='';showCreds(email,pass,name);loadStaff();}
+  catch(err){m.className='msg err';m.textContent=err.message;}
+  $('#sSave').disabled=false;
+};
+async function openStaff(){history.replaceState(null,'',location.pathname+'?staff');show('vStaff');$('#stForm').hidden=true;$('#stDone').hidden=true;loadStaff();}
+async function loadStaff(){
+  const m=$('#stMsg');m.className='msg';m.textContent='Загружаем…';
+  let list;try{list=await adm('GET','/staff');}catch(err){m.className='msg err';m.textContent=err.message;return;}
+  m.textContent='';
+  const {data:{session}}=await sb.auth.getSession();const me=session?.user?.id;
+  const d=t=>t?new Date(t).toLocaleDateString('ru-RU'):'ещё не входил';
+  $('#staff').innerHTML=list.map(u=>`<div class="st${u.disabled?' off':''}" data-id="${u.id}">
+    <div class="nm"><b>${esc(u.name||u.email)}${u.id===me?' <span style="display:inline;color:var(--lime);font-size:12px">· это вы</span>':''}</b><span>${esc(u.name?u.email:'')}${u.name?' · ':''}вход: ${d(u.last_sign_in_at)}</span></div>
+    ${u.disabled?'<span class="tag">Отключён</span>':''}
+    <select data-role ${u.id===me?'disabled':''}><option value="manager"${u.role==='manager'?' selected':''}>Менеджер</option><option value="admin"${u.role==='admin'?' selected':''}>Администратор</option></select>
+    <button class="btn ghost small" data-pw>Сменить пароль</button>
+    ${u.id===me?'':`<button class="btn ${u.disabled?'ghost':'danger'} small" data-off>${u.disabled?'Включить':'Отключить'}</button>`}
+  </div>`).join('');
+  document.querySelectorAll('.st').forEach(row=>{
+    const id=row.dataset.id,u=list.find(x=>x.id===id);
+    const fail=err=>{m.className='msg err';m.textContent=err.message;};
+    row.querySelector('[data-role]').onchange=async e=>{try{await adm('PATCH','/staff/'+id,{role:e.target.value});m.className='msg ok';m.textContent='Роль изменена: '+(u.name||u.email);}catch(err){fail(err);loadStaff();}};
+    const off=row.querySelector('[data-off]');
+    if(off){let armed=false;off.onclick=async()=>{
+      if(!u.disabled&&!armed){armed=true;off.textContent='Точно отключить?';setTimeout(()=>{armed=false;off.textContent='Отключить';},3000);return;}
+      try{await adm('PATCH','/staff/'+id,{disabled:!u.disabled});loadStaff();}catch(err){fail(err);}};}
+    row.querySelector('[data-pw]').onclick=()=>{
+      if(row.querySelector('.pw'))return;
+      const f=document.createElement('div');f.className='pw';
+      f.innerHTML=`<input value="${genPass()}" minlength="8" aria-label="Новый пароль"><button class="btn small">Сохранить</button><button class="btn ghost small">Отмена</button>`;
+      row.append(f);const [inp,save,cancel]=f.children;
+      cancel.onclick=()=>f.remove();
+      save.onclick=async()=>{try{await adm('PATCH','/staff/'+id,{password:inp.value});f.remove();if(id===me){m.className='msg ok';m.textContent='Ваш пароль изменён.';}else showCreds(u.email,inp.value,u.name);}catch(err){fail(err);}};
+    };
+  });
+}
 
 /* ---- list ---- */
 async function loadList(){

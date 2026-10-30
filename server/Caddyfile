@@ -26,6 +26,9 @@
 			header_up X-Forwarded-Prefix /storage/v1
 		}
 	}
+	handle_path /admin/v1/* {
+		reverse_proxy admin:8000
+	}
 	handle {
 		respond "MGS API" 200
 	}

@@ -42,14 +42,8 @@ if [ ! -d /srv/www/prod/.git ]; then
   if git ls-remote --exit-code --heads "$REPO" prod >/dev/null 2>&1; then git clone -q --depth 1 -b prod "$REPO" /srv/www/prod
   else git clone -q --depth 1 -b main "$REPO" /srv/www/prod; fi
 fi
-cat > /usr/local/bin/mgs-sync <<'S'
-#!/usr/bin/env bash
-# каждую минуту подтягивает изменения из GitHub: test ← main, prod ← prod (если ветки prod ещё нет — main)
-sync(){ d=$1; b=$2; git -C "$d" fetch -q --depth 1 origin "$b" 2>/dev/null && git -C "$d" reset -q --hard FETCH_HEAD; }
-sync /srv/www/test main
-if git -C /srv/www/prod ls-remote --exit-code --heads origin prod >/dev/null 2>&1; then sync /srv/www/prod prod; else sync /srv/www/prod main; fi
-S
-chmod +x /usr/local/bin/mgs-sync
+# каждую минуту: код из GitHub + изменения настроек сервера (server/) — см. server/mgs-sync.sh
+install -m 755 /srv/www/test/server/mgs-sync.sh /usr/local/bin/mgs-sync
 cat > /etc/systemd/system/mgs-sync.service <<'S'
 [Unit]
 Description=MGS: обновление сайта из GitHub
@@ -71,6 +65,7 @@ systemctl daemon-reload && systemctl enable --now mgs-sync.timer >/dev/null
 step "4/7 Supabase: файлы и секретные ключи"
 mkdir -p "$BASE" && cd "$BASE"
 cp /srv/www/test/server/docker-compose.yml /srv/www/test/server/Caddyfile "$BASE"/
+rm -rf "$BASE/admin" && cp -r /srv/www/test/server/admin "$BASE/admin"
 if [ ! -d "$BASE/src" ]; then
   git clone -q --depth 1 --filter=blob:none --sparse https://github.com/supabase/supabase.git "$BASE/src"
   git -C "$BASE/src" sparse-checkout set docker/volumes/db

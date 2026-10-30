@@ -114,10 +114,22 @@ services:
     volumes:
       - ./volumes/storage:/var/lib/storage:z
 
+  admin:
+    # управление сотрудниками (server/admin/app.py): https://api…/admin/v1/staff, только для администраторов
+    image: python:3.13-alpine
+    restart: unless-stopped
+    depends_on: [auth]
+    command: ["python", "-u", "/app/app.py"]
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ./admin:/app:ro
+
   caddy:
     image: caddy:2
     restart: unless-stopped
-    depends_on: [auth, rest, storage]
+    depends_on: [auth, rest, storage, admin]
     ports: ["80:80", "443:443", "443:443/udp"]
     environment:
       API_DOMAIN: ${API_DOMAIN}
