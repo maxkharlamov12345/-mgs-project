@@ -263,12 +263,18 @@ $('#addForm').onsubmit=async e=>{
   try{
     for(let i=0;i<picked.length;i++){
       const f=picked[i];const ext=(f.name.match(/\.[a-z0-9]+$/i)||[''])[0].toLowerCase();
-      const path=`${current.id}/${itemId}/f${i}${ext}`;
-      msg.textContent=`Загружаем ${i+1} из ${picked.length}: ${f.name}`;
-      const type=/\.(obj|mtl)$/.test(ext)?'text/plain;charset=utf-8':(f.type||'application/octet-stream');
-      const {error}=await sb.storage.from(BUCKET).upload(path,f,{contentType:type,upsert:true});
+      // OBJ/MTL сжимаем: текст ужимается в 5–8 раз, а в бесплатном Supabase файл не больше 50 МБ
+      let body=f,gz=false;
+      if(/\.(obj|mtl)$/.test(ext)&&f.size>262144&&typeof CompressionStream!=='undefined'){
+        msg.textContent=`Сжимаем ${f.name} (${(f.size/1048576).toFixed(1)} МБ)…`;
+        body=await new Response(f.stream().pipeThrough(new CompressionStream('gzip'))).blob();gz=true;
+      }
+      const path=`${current.id}/${itemId}/f${i}${ext}${gz?'.gz':''}`;
+      msg.textContent=`Загружаем ${i+1} из ${picked.length}: ${f.name} (${(body.size/1048576).toFixed(1)} МБ)`;
+      const type=gz?'application/gzip':/\.(obj|mtl)$/.test(ext)?'text/plain;charset=utf-8':(f.type||'application/octet-stream');
+      const {error}=await sb.storage.from(BUCKET).upload(path,body,{contentType:type,upsert:true});
       if(error)throw error;
-      files.push({name:f.name,path,size:f.size});
+      files.push(gz?{name:f.name,path,size:body.size,gz:true}:{name:f.name,path,size:f.size});
     }
     const {error}=await sb.from('items').insert({id:itemId,project_id:current.id,title:$('#iTitle').value.trim()||'Изделие',kind:$('#iKind').value,files});
     if(error)throw error;

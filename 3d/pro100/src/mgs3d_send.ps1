@@ -4,7 +4,7 @@ param([string]$Dir, [string]$Title = '')
 
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+Add-Type -AssemblyName System.Windows.Forms, System.Drawing, System.Net.Http
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 $Here    = Split-Path -Parent $PSCommandPath
@@ -47,7 +47,36 @@ function Api($method, $path, $body = $null, $extra = @{}) {
   $o = ConvertFrom-Json $txt
   if ($o -is [array]) { foreach ($i in $o) { $i } } else { $o }   # по одному элементу: вызывающий собирает через @()
 }
+# ждать задачу .NET, не замораживая окно
+function Wait-Task($t) { while (-not $t.IsCompleted) { [Windows.Forms.Application]::DoEvents(); Start-Sleep -Milliseconds 40 }; if ($t.IsFaulted) { throw $t.Exception.InnerException } }
+# сжатие текстовых файлов модели (OBJ ужимается в 5–8 раз; лимит Supabase — 50 МБ на файл)
+function Gzip-File($src, $dst) {
+  $in = [IO.File]::OpenRead($src); $out = [IO.File]::Create($dst)
+  $gz = New-Object IO.Compression.GZipStream($out, [IO.Compression.CompressionLevel]::Optimal)
+  try { Wait-Task ($in.CopyToAsync($gz, 1048576)) } finally { $gz.Dispose(); $out.Dispose(); $in.Dispose() }
+}
+$script:Http = New-Object Net.Http.HttpClient; $script:Http.Timeout = [TimeSpan]::FromMinutes(30)
+function Upload-File($file, $path, $ct) {
+  $fs = [IO.File]::OpenRead($file)
+  try {
+    $req = New-Object Net.Http.HttpRequestMessage([Net.Http.HttpMethod]::Post, "$Url/storage/v1/object/models/$path")
+    [void]$req.Headers.TryAddWithoutValidation('apikey', $Key)
+    [void]$req.Headers.TryAddWithoutValidation('Authorization', "Bearer $script:Token")
+    [void]$req.Headers.TryAddWithoutValidation('x-upsert', 'true')
+    $req.Content = New-Object Net.Http.StreamContent($fs)
+    $req.Content.Headers.ContentType = [Net.Http.Headers.MediaTypeHeaderValue]::Parse($ct)
+    $t = $script:Http.SendAsync($req); Wait-Task $t
+    $r = $t.Result
+    if (-not $r.IsSuccessStatusCode) {
+      $b = $r.Content.ReadAsStringAsync().Result
+      if ($b -match 'maximum allowed size|too large|413') { throw "Сервер: файл $([IO.Path]::GetFileName($file)) слишком большой ($([math]::Round((Get-Item $file).Length/1MB,1)) МБ, предел 50 МБ)." }
+      throw "Сервер ответил ошибкой $([int]$r.StatusCode) при загрузке. $b"
+    }
+  } finally { $fs.Dispose() }
+}
+
 function Why($e) {
+  if ($e.Exception.Message -like 'Сервер*') { return $e.Exception.Message }
   $ex = $e.Exception; while ($ex.InnerException -and -not $ex.Response) { $ex = $ex.InnerException }
   $r = $null; try { $r = $e.Exception.Response } catch {}
   if (-not $r) {
@@ -235,16 +264,24 @@ $bSend.Add_Click({
     $itemId = [guid]::NewGuid().ToString()
     $list = New-Object Collections.ArrayList
     $bar.Maximum = $Files.Count; $bar.Value = 0
+    $tmp = Join-Path $env:TEMP ("mgs3d-" + $itemId); New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+    try {
     for ($i = 0; $i -lt $Files.Count; $i++) {
-      $f = $Files[$i]; $ext = $f.Extension.ToLower()
-      $path = "$($proj.id)/$itemId/f$i$ext"
-      $ct = switch -regex ($ext) { '\.(obj|mtl)' { 'text/plain; charset=utf-8' } '\.png' { 'image/png' } '\.jpe?g' { 'image/jpeg' } '\.bmp' { 'image/bmp' } '\.gif' { 'image/gif' } '\.webp' { 'image/webp' } default { 'application/octet-stream' } }
-      $lStatus.Text = "Отправляем $($i + 1) из $($Files.Count): $($f.Name)"; [Windows.Forms.Application]::DoEvents()
-      Invoke-WebRequest -Method Post -Uri "$Url/storage/v1/object/models/$path" -InFile $f.FullName -ContentType $ct -UseBasicParsing `
-        -Headers @{ apikey = $Key; Authorization = "Bearer $script:Token"; 'x-upsert' = 'true' } | Out-Null
-      [void]$list.Add(@{ name = $f.Name; path = $path; size = $f.Length })
+      $f = $Files[$i]; $ext = $f.Extension.ToLower(); $src = $f.FullName; $gz = $false
+      if ($ext -in '.obj', '.mtl' -and $f.Length -gt 256KB) {
+        $lStatus.Text = "Сжимаем $($f.Name) ($([math]::Round($f.Length/1MB,1)) МБ)…"; [Windows.Forms.Application]::DoEvents()
+        $src = Join-Path $tmp ("f$i$ext.gz"); Gzip-File $f.FullName $src; $gz = $true
+      }
+      $path = "$($proj.id)/$itemId/f$i$ext" + $(if ($gz) { '.gz' } else { '' })
+      $ct = if ($gz) { 'application/gzip' } else { switch -regex ($ext) { '\.(obj|mtl)' { 'text/plain; charset=utf-8' } '\.png' { 'image/png' } '\.jpe?g' { 'image/jpeg' } '\.bmp' { 'image/bmp' } '\.gif' { 'image/gif' } '\.webp' { 'image/webp' } default { 'application/octet-stream' } } }
+      $mb = [math]::Round((Get-Item $src).Length / 1MB, 1)
+      $lStatus.Text = "Отправляем $($i + 1) из $($Files.Count): $($f.Name) ($mb МБ)"; [Windows.Forms.Application]::DoEvents()
+      Upload-File $src $path $ct
+      $entry = @{ name = $f.Name; path = $path; size = (Get-Item $src).Length }; if ($gz) { $entry.gz = $true }
+      [void]$list.Add($entry)
       $bar.Value = $i + 1
     }
+    } finally { Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue }
     $lStatus.Text = 'Сохраняем изделие…'; [Windows.Forms.Application]::DoEvents()
     Api 'POST' '/rest/v1/items' @{ id = $itemId; project_id = $proj.id; title = $(if ($tItem.Text.Trim()) { $tItem.Text.Trim() } else { 'Изделие' }); kind = [string]$cKind.SelectedItem; files = $list } | Out-Null
     $link = "$Site/view.html?s=$($proj.share_token)&i=$itemId"

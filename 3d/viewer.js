@@ -31,18 +31,25 @@ function status(t){const s=$('#status');if(!s)return;if(!t){s.hidden=true;return
 
 /* ---------- loading ---------- */
 const base=n=>decodeURIComponent(String(n)).replace(/\\/g,'/').split('/').filter(Boolean).pop().toLowerCase();
+// текст файла; сжатые (gz) — распаковываем в браузере
+async function getText(f){
+  const r=await fetch(f.url);if(!r.ok)throw new Error('Файл модели не загрузился ('+r.status+')');
+  if(!f.gz)return r.text();
+  if(typeof DecompressionStream==='undefined')throw new Error('Браузер слишком старый для этой модели — обновите его.');
+  return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
+}
 async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
   const objKey=[...files.keys()].find(k=>k.endsWith('.obj'));
   if(!objKey){status('В выбранных файлах нет .obj. Сделайте в PRO100 экспорт в OBJ и выберите его.');return;}
   status('Загружаем модель…');
   const mgr=new THREE.LoadingManager();
   mgr.setURLModifier(u=>{const f=files.get(base(u));return f?f.url:u;});
-  const objText=await (await fetch(files.get(objKey).url)).text();
+  const objText=await getText(files.get(objKey));
   const m=objText.match(/^mtllib\s+(.+)$/m);
   let mats=null;
   const mtlKey=m&&files.has(base(m[1].trim()))?base(m[1].trim()):[...files.keys()].find(k=>k.endsWith('.mtl'));
   if(mtlKey){
-    const mtlText=await (await fetch(files.get(mtlKey).url)).text();
+    const mtlText=await getText(files.get(mtlKey));
     const ml=new MTLLoader(mgr);ml.setMaterialOptions({side:THREE.DoubleSide});
     mats=ml.parse(mtlText,'');mats.preload();
   }

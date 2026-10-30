@@ -71,7 +71,7 @@ async function openItem(it){
   const files=it.files||[];
   if(!files.some(f=>/\.obj$/i.test(f.name))){empty('Модель ещё не загружена','Для этого изделия пока нет 3D-модели.');return;}
   $('#empty').hidden=true;$('#panel').hidden=false;
-  const map=new Map(files.map(f=>[base(f.name),{url:publicUrl(f.path)}]));
+  const map=new Map(files.map(f=>[base(f.name),{url:publicUrl(f.path),gz:!!f.gz}]));
   await loadFromMap(map,it.title);
 }
 
