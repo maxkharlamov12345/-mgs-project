@@ -64,4 +64,20 @@ fi
 if [ $convert_changed = 1 ]; then
   if docker compose build convert >> "$LOG" 2>&1 && docker compose up -d convert >> "$LOG" 2>&1; then log "convert пересобран"; else log "ОШИБКА сборки convert"; fi
 fi
+
+# 4) страница состояния https://api…/status (без паролей и ключей) — чтобы проверять сервер без консоли
+mkdir -p /srv/www/status
+{
+  echo "Состояние сервера MGS — $(date '+%F %T %Z')"
+  echo "Код: main $(git -C /srv/www/test rev-parse --short HEAD 2>/dev/null), prod $(git -C /srv/www/prod rev-parse --short HEAD 2>/dev/null)"
+  echo; echo "== Программы =="; docker compose ps --format '{{.Service}}  {{.State}}  {{.Status}}' 2>&1
+  echo; echo "== Лёгкие модели (очередь) =="
+  docker compose exec -T db psql -At -U postgres -d postgres -c "select coalesce(glb_status,'ждёт')||': '||count(*) from items group by 1 order by 1" 2>&1
+  docker compose exec -T db psql -At -U postgres -d postgres -c "select 'ошибка: '||left(glb_error,200) from items where glb_status='error' order by created_at desc limit 5" 2>&1
+  echo; echo "== Миграции =="; docker compose exec -T db psql -At -U postgres -d postgres -c "select name||'  '||to_char(applied_at,'DD.MM HH24:MI') from ops.migrations order by name" 2>&1
+  echo; echo "== Журнал обновлений (последние 25) =="; tail -25 "$LOG" 2>/dev/null
+  echo; echo "== convert (последние 25) =="; docker compose logs --no-color --tail 25 convert 2>&1 | cut -c1-300
+  echo; echo "== admin (последние 10) =="; docker compose logs --no-color --tail 10 admin 2>&1 | cut -c1-300
+  echo; echo "== Память и диск =="; free -m | head -2; df -h / | tail -1
+} > /srv/www/status/status.txt.new 2>&1 && mv /srv/www/status/status.txt.new /srv/www/status/status.txt
 exit 0

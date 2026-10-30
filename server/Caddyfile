@@ -29,6 +29,13 @@
 	handle_path /admin/v1/* {
 		reverse_proxy admin:8000
 	}
+	handle /status {
+		root * /srv/www/status
+		rewrite * /status.txt
+		header Content-Type "text/plain; charset=utf-8"
+		header Cache-Control "no-store"
+		file_server
+	}
 	handle {
 		respond "MGS API" 200
 	}
