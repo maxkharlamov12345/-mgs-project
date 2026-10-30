@@ -305,12 +305,12 @@
 
 ## Сервер MGS (Timeweb Cloud, СПб, 72.56.34.143) — переезд с Supabase-облака (30.10)
 Supabase-облако из России без VPN не открывается → свой облегчённый Supabase на VPS (1 vCPU / 2 ГБ / 30 ГБ, бэкапы Timeweb).
-Домен mgsmebel.com (REG.RU): A-записи api / 3d / test → 72.56.34.143. Корень mgsmebel.com — позже под сайт с каталогом.
+Домен mgsmebel.com (REG.RU): A-записи api / app / my / test → 72.56.34.143 (Макс 30.10: «3d» слишком узко — app = вся система сотрудников (CRM, договоры, проекты, 3D), my = личный кабинет клиента). Корень mgsmebel.com — позже под сайт с каталогом.
 - Установка: `server/install.sh` (curl … | bash в консоли сервера). Docker из apt (docker.io + docker-compose-v2), зеркало Docker Hub
   `dockerhub.timeweb.cloud`, swap 2 ГБ, ufw 22/80/443. Код: /opt/mgs (compose, Caddyfile, .env с секретами — только на сервере).
 - Состав (`server/docker-compose.yml`): db (supabase/postgres 17), auth (gotrue), rest (postgrest), storage (file backend, до 200 МБ на файл),
   caddy (HTTPS сам). БЕЗ Kong/Studio/аналитики/imgproxy — Caddy сам режет префиксы /rest/v1, /auth/v1, /storage/v1 и ставит CORS (header … defer).
-- Сайты: test.mgsmebel.com = весь репозиторий, ветка main; 3d.mgsmebel.com = папка 3d/ ветки prod (+ /assets/ из корня). mgs-sync (systemd-таймер)
+- Сайты: test.mgsmebel.com = весь репозиторий, ветка main; app.mgsmebel.com и my.mgsmebel.com = пока папка 3d/ ветки prod (+ /assets/ из корня; my: / → view.html). mgs-sync (systemd-таймер)
   каждую минуту тянет из GitHub. «Выложить в рабочую» = `git push origin main:prod` (только по слову Макса).
 - Ключи JWT генерятся на сервере; anon-ключ публичный (идёт в 3d/config.js), service_role и пароль базы не покидают сервер.
   Новый сотрудник: `mgs-add-user` в консоли сервера.

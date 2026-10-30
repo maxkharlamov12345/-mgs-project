@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Установка сервера MGS (Ubuntu 24.04): облегчённый Supabase + HTTPS + сайты test/3d.
+# Установка сервера MGS (Ubuntu 24.04): облегчённый Supabase + HTTPS + app (сотрудники), my (клиенты), test.
 # Запуск в консоли сервера (под root):
 #   curl -fsSL https://raw.githubusercontent.com/maxkharlamov12345/-mgs-project/main/server/install.sh | bash
 # Повторный запуск безопасен: секреты и данные не перезаписываются.
@@ -7,7 +7,8 @@ set -euo pipefail
 
 MAIN_DOMAIN=mgsmebel.com
 API_DOMAIN=api.$MAIN_DOMAIN
-APP_DOMAIN=3d.$MAIN_DOMAIN
+APP_DOMAIN=app.$MAIN_DOMAIN
+MY_DOMAIN=my.$MAIN_DOMAIN
 TEST_DOMAIN=test.$MAIN_DOMAIN
 REPO=https://github.com/maxkharlamov12345/-mgs-project.git
 BASE=/opt/mgs
@@ -34,7 +35,7 @@ step "2/7 Брандмауэр (открыты только SSH, HTTP, HTTPS)"
 ufw allow 22/tcp >/dev/null; ufw allow 80/tcp >/dev/null; ufw allow 443/tcp >/dev/null; ufw allow 443/udp >/dev/null
 ufw --force enable >/dev/null
 
-step "3/7 Код сайта: test — ветка main, 3d — ветка prod"
+step "3/7 Код: test — ветка main, app/my — ветка prod"
 mkdir -p /srv/www
 [ -d /srv/www/test/.git ] || git clone -q --depth 1 -b main "$REPO" /srv/www/test
 if [ ! -d /srv/www/prod/.git ]; then
@@ -91,6 +92,7 @@ if [ ! -f .env ]; then
 MAIN_DOMAIN=$MAIN_DOMAIN
 API_DOMAIN=$API_DOMAIN
 APP_DOMAIN=$APP_DOMAIN
+MY_DOMAIN=$MY_DOMAIN
 TEST_DOMAIN=$TEST_DOMAIN
 POSTGRES_PASSWORD=$(openssl rand -hex 24)
 JWT_SECRET=$JWT_SECRET
@@ -144,7 +146,8 @@ chmod +x /usr/local/bin/mgs-add-user
 
 printf '\n\033[1;32m== ГОТОВО ==\033[0m\n'
 echo "API:     https://$API_DOMAIN"
-echo "Кабинет: https://$APP_DOMAIN   (рабочая версия)"
+echo "Сотрудники: https://$APP_DOMAIN   (рабочая версия)"
+echo "Клиенты:    https://$MY_DOMAIN"
 echo "Тест:    https://$TEST_DOMAIN/3d/"
 echo
 echo "Пришлите в чат ТОЛЬКО эту строку (публичный ключ, он и так виден в коде сайта):"

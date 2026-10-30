@@ -31,7 +31,7 @@
 	}
 }
 
-# Рабочая версия кабинета и 3D для клиентов (ветка prod)
+# Система для сотрудников: CRM, проекты, договоры, 3D (ветка prod; пока — кабинет из папки 3d/)
 {$APP_DOMAIN} {
 	encode zstd gzip
 	handle /assets/* {
@@ -40,6 +40,20 @@
 	}
 	handle {
 		root * /srv/www/prod/3d
+		file_server
+	}
+}
+
+# Личный кабинет клиента: проект в 3D, позже договор, статус, чат (ветка prod)
+{$MY_DOMAIN} {
+	encode zstd gzip
+	handle /assets/* {
+		root * /srv/www/prod
+		file_server
+	}
+	handle {
+		root * /srv/www/prod/3d
+		rewrite / /view.html
 		file_server
 	}
 }
