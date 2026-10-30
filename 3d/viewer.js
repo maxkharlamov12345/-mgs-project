@@ -562,23 +562,39 @@ function partInfo(nm,sz){
 // режимы показа: оригинал / прозрачный / контуры
 let viewMode='orig';
 const MODE_NAMES={orig:'Оригинал',xray:'Прозрачный',lines:'Контуры'};
-const xrayMat=new Map(),lineMat0=new THREE.LineBasicMaterial({color:0xe9ecef,transparent:true,opacity:.85});
+const xrayMat=new Map();
+// контуры рёбер — во всех режимах (как в аналоге Макса 31.10: так лучше читается изделие); цвет — под режим
+const EDGE_MAT={
+  orig: new THREE.LineBasicMaterial({color:0x1d1b19,transparent:true,opacity:.55}),
+  xray: new THREE.LineBasicMaterial({color:0x2a2724,transparent:true,opacity:.7,depthWrite:false}),
+  lines:new THREE.LineBasicMaterial({color:0xe9ecef,transparent:true,opacity:.85}),
+};
 const ghostMat=new THREE.MeshBasicMaterial({color:0x9aa3ab,transparent:true,opacity:.06,depthWrite:false,side:THREE.DoubleSide});
 function solidParts(){return info?info.parts.filter(p=>p.kind!=='marker'&&p.kind!=='metiz'):[];}
+function edgesOf(p){
+  const m=p.mesh,u=m.userData;
+  if(u.edges!==undefined)return u.edges;
+  // кромки повторяют рёбра своей детали, сложная фурнитура (петли, опоры — тысячи граней) даёт кашу линий — им контур только в режиме «Контуры»
+  const busy=/кромка/i.test(p.label)||p.tris>400;
+  const g=new THREE.EdgesGeometry(m.geometry,28);
+  const e=new THREE.LineSegments(g,EDGE_MAT.orig);e.raycast=()=>{};e.userData.busy=busy;e.renderOrder=1;m.add(e);
+  // заливка чуть «отодвигается», чтобы линии рёбер не мерцали поверх неё
+  (Array.isArray(m.material)?m.material:[m.material]).forEach(mt=>{if(mt&&!mt.polygonOffset){mt.polygonOffset=true;mt.polygonOffsetFactor=1;mt.polygonOffsetUnits=1;}});
+  return u.edges=e;
+}
 function applyMode(){
   for(const p of solidParts()){
     const m=p.mesh,u=m.userData;
     if(!u.mat0)u.mat0=m.material;
-    if(u.edges)u.edges.visible=viewMode==='lines';
+    const e=edgesOf(p);
+    e.material=EDGE_MAT[viewMode];e.visible=viewMode==='lines'||!e.userData.busy;
     if(viewMode==='orig'){m.material=u.mat0;continue;}
     if(viewMode==='xray'){
       const x=(Array.isArray(u.mat0)?u.mat0:[u.mat0]).map(mt=>{if(!mt)return mt;let c=xrayMat.get(mt);
         if(!c){c=mt.clone();c.transparent=true;c.opacity=Math.min(mt.opacity??1,.28);c.depthWrite=false;c.side=THREE.DoubleSide;xrayMat.set(mt,c);}return c;});
       m.material=Array.isArray(u.mat0)?x:x[0];continue;
     }
-    // контуры: рёбра деталей (считаем один раз) + едва заметная заливка
-    if(!u.edges){const g=new THREE.EdgesGeometry(m.geometry,28);u.edges=new THREE.LineSegments(g,lineMat0);u.edges.raycast=()=>{};m.add(u.edges);}
-    u.edges.visible=true;m.material=ghostMat;
+    m.material=ghostMat;          // контуры: только рёбра + едва заметная заливка
   }
   const l=$('#tModeL');if(l)l.textContent=MODE_NAMES[viewMode];
   document.querySelectorAll('#mMode [data-mode]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===viewMode)));
