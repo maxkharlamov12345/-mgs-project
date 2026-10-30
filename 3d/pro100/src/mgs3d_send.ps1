@@ -27,9 +27,9 @@ function Read-Ini($path) {
   $r
 }
 $Ini  = Read-Ini (Join-Path $Here 'mgs3d.ini')
-$Url  = if ($Ini['service.url']) { $Ini['service.url'].TrimEnd('/') } else { 'https://xqqexhfofruoigpaluzq.supabase.co' }
-$Key  = if ($Ini['service.key']) { $Ini['service.key'] } else { 'sb_publishable_LLvXcr2qQjyc15g7S-y1Ug_5t_MH608' }
-$Site = if ($Ini['service.site']) { $Ini['service.site'].TrimEnd('/') } else { 'https://maxkharlamov12345.github.io/-mgs-project/3d' }
+$Url  = if ($Ini['service.url']) { $Ini['service.url'].TrimEnd('/') } else { 'https://api.mgsmebel.com' }
+$Key  = if ($Ini['service.key']) { $Ini['service.key'] } else { 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzkzMzc1NDI2LCJleHAiOjIxMDg3MzU0MjZ9.exy6cZNIkPj-oxZPuafx1BiBEQO4Hsav4bCQ2Z3mbDs' }
+$Site = if ($Ini['service.site']) { $Ini['service.site'].TrimEnd('/') } else { 'https://my.mgsmebel.com' }
 $Kinds = @('Кухня','Шкаф','Гардеробная','Прихожая','Ванная','Детская','Гостиная','Другое')
 
 # ---------- сеть ----------
@@ -80,7 +80,7 @@ function Why($e) {
   $ex = $e.Exception; while ($ex.InnerException -and -not $ex.Response) { $ex = $ex.InnerException }
   $r = $null; try { $r = $e.Exception.Response } catch {}
   if (-not $r) {
-    return "Нет связи с сервером MGS 3D (supabase.co).`n$($e.Exception.Message)`nЕсли интернет есть, а сайт кабинета открывается только с VPN — включите VPN для всего компьютера, а не только в браузере."
+    return "Нет связи с сервером MGS 3D (api.mgsmebel.com).`n$($e.Exception.Message)`nПроверьте интернет и попробуйте ещё раз."
   }
   $code = [int]$r.StatusCode; $body = ''
   try { $sr = New-Object IO.StreamReader($r.GetResponseStream()); $body = $sr.ReadToEnd() } catch {}

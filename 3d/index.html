@@ -145,7 +145,7 @@ const $=s=>document.querySelector(s);
 const views=['vConf','vLogin','vList','vProj'];
 const show=v=>views.forEach(x=>$('#'+x).hidden=x!==v);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const viewUrl=(tok,item)=>{const u=new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);if(item)u.searchParams.set('i',item);return u.toString();};
+const viewUrl=(tok,item)=>{const u=/(^|\.)mgsmebel\.com$/.test(location.hostname)&&!/^test\./.test(location.hostname)?new URL('https://my.mgsmebel.com/view.html'):new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);if(item)u.searchParams.set('i',item);return u.toString();};
 let current=null, picked=[];
 
 if(!configured){show('vConf');}

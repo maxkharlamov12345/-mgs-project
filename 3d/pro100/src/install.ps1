@@ -41,6 +41,8 @@ $plug = Join-Path (Split-Path $exe) 'plugins'
 New-Item -ItemType Directory -Force -Path $plug | Out-Null
 try { foreach ($f in 'mgs3d.plg','mgs3d_send.ps1') { Copy-Item (Join-Path $Src $f) $plug -Force -ErrorAction Stop } }
 catch { Msg "Не удалось заменить файлы плагина — похоже, PRO100 ещё работает в фоне.`nОткройте Диспетчер задач, снимите задачу PRO100 (или перезагрузите компьютер) и запустите «Установить.cmd» снова." 'Error'; exit }
-if (-not (Test-Path (Join-Path $plug 'mgs3d.ini'))) { Copy-Item (Join-Path $Src 'mgs3d.ini') $plug -Force }
+$iniDst = Join-Path $plug 'mgs3d.ini'
+# старый ini (облако supabase.co) заменяем — сервер переехал на api.mgsmebel.com
+if (-not (Test-Path $iniDst) -or (Select-String -Path $iniDst -Pattern 'supabase\.co' -Quiet)) { Copy-Item (Join-Path $Src 'mgs3d.ini') $plug -Force }
 Get-ChildItem $plug -Filter 'mgs3d*' | Unblock-File -ErrorAction SilentlyContinue
 Msg "Плагин MGS 3D установлен.`n`nPRO100: $exe (версия $ver)`n`nОткройте PRO100 → Экспорт → «Отправить в MGS 3D…»."

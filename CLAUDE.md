@@ -279,7 +279,7 @@
 ## 3D-проекты из PRO100 (`3d/`, тест, не в меню)
 Ссылка для сотрудников: …/-mgs-project/3d/ ; клиент: …/3d/view.html?s=<share_token>[&i=<item id>].
 - Поток: PRO100 7.08 → Файл → Экспорт → OBJ (с текстурами) → менеджер загружает .obj/.mtl/текстуры (или zip) в изделие проекта.
-- База — Supabase (проект xqqexhfofruoigpaluzq, ключ publishable в `3d/config.js` — он публичный, это нормально).
+- База — свой Supabase на сервере MGS (https://api.mgsmebel.com, anon-ключ в `3d/config.js` и `pro100/src/mgs3d.ini` — он публичный, это нормально; облако supabase.co больше не используем — из РФ без VPN не открывалось). Ссылка клиенту из кабинета на app/… — на my.mgsmebel.com/view.html. install.ps1 заменяет старый ini с supabase.co.
   Таблицы `projects` (share_token) и `items` (files jsonb: name оригинала + path в бакете `models`), схема — `3d/setup.sql`.
   Сотрудники — Supabase Auth (почта+пароль, регистрация выключена); клиент без логина — только RPC `shared_project(token)`.
   Файлы в бакете называются `<project>/<item>/f<N>.<ext>` (кириллица в ключах Storage не допускается), исходные имена — в files.
