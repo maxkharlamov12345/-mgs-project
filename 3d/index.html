@@ -17,7 +17,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-ui);
 .bar{display:flex;align-items:center;gap:14px}
 .brand{font-weight:800;letter-spacing:.06em;font-size:16px}.brand b{color:var(--lime)}
 .bar .sp{flex:1}
-.who{color:var(--muted);font-size:13px}
+.who{color:var(--muted);font-size:13px;max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 h1{font-size:26px;margin:0;text-wrap:balance}
 h2{font-size:13px;margin:0;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 .btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:14px;padding:11px 16px;border-radius:10px;background:var(--lime);color:var(--lime-ink);text-align:center}
@@ -61,12 +61,32 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
 .st .nm{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}
 .st .nm b{font-size:15px;overflow:hidden;text-overflow:ellipsis}
 .st .nm span{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis}
-.st select{padding:7px 10px;font-size:13px}
-.st.off .nm{opacity:.5}
+.st.off .nm,.st.off .av{opacity:.45}
+.st .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:46px;height:46px;border-radius:50%;flex:none;background:#262a2d center/cover no-repeat;display:grid;place-items:center;font-weight:700;color:var(--muted);font-size:15px}
 .tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 7px;background:#3a1f1c;color:var(--red)}
+.tag.adm{background:#1f2416;color:var(--lime)}
 .pw{display:flex;gap:8px;align-items:center;flex-basis:100%;flex-wrap:wrap}
 .pw input{flex:1 1 200px}
 .creds{font-family:var(--f-num);font-size:13px;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:12px;white-space:pre-wrap;user-select:all}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;align-self:flex-start;max-width:100%;overflow-x:auto}
+.tabs button{all:unset;cursor:pointer;padding:9px 16px;border-radius:9px;font-weight:700;font-size:14px;color:var(--muted);white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--lime);color:var(--lime-ink)}
+.tabs button:focus-visible{outline:2px solid var(--lime)}
+.ph{all:unset;cursor:pointer;position:relative;flex:none;background:#262a2d center/cover no-repeat;display:grid;place-items:center;color:var(--muted);font-size:12px;font-weight:700;text-align:center;border:1.5px dashed #3c4230;overflow:hidden}
+.ph:focus-visible{outline:2px solid var(--lime)}
+.ph.has{border-style:solid;border-color:var(--line)}
+.ph.round{width:96px;height:96px;border-radius:50%}
+.ph.wide{width:100%;max-width:360px;aspect-ratio:16/9;border-radius:12px}
+.phrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.phrow .hint{max-width:300px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.salon{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.salon .img{aspect-ratio:16/9;background:#262a2d center/cover no-repeat;display:grid;place-items:center;color:var(--muted);font-size:12px}
+.salon .tx{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1}
+.salon .tx b{font-size:16px}
+.salon .tx span{color:var(--muted);font-size:13px}
+.salon .acts{display:flex;gap:8px;padding:0 14px 14px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -75,7 +95,7 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
     <div class="brand">MGS<b>3D</b></div>
     <div class="sp"></div>
     <div class="who" id="who"></div>
-    <button class="btn ghost small" id="staffBtn" hidden>Сотрудники</button>
+    <button class="btn ghost small" id="admBtn" hidden>Управление</button>
     <button class="btn ghost small" id="logout" hidden>Выйти</button>
   </div>
 
@@ -109,31 +129,61 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
     <div class="msg" id="listMsg"></div>
   </section>
 
-  <!-- staff (только администратор) -->
-  <section id="vStaff" hidden style="display:flex;flex-direction:column;gap:18px">
-    <button class="back" id="staffBack">← Проекты</button>
-    <div class="bar"><h1>Сотрудники</h1><div class="sp"></div><button class="btn" id="stNewBtn">Добавить сотрудника</button></div>
-    <form class="card" id="stForm" hidden autocomplete="off">
-      <div class="row">
-        <label>Имя<input id="sName" placeholder="Анна Петрова"></label>
-        <label>Почта (для входа)<input id="sEmail" type="email" required placeholder="anna@mgsmebel.com" autocomplete="off"></label>
+  <!-- управление (только администратор): вкладки — сотрудники, салоны; новые разделы добавлять сюда же -->
+  <section id="vAdmin" hidden style="display:flex;flex-direction:column;gap:18px">
+    <button class="back" id="admBack">← Проекты</button>
+    <h1>Управление</h1>
+    <div class="tabs" role="tablist"><button role="tab" data-tab="staff">Сотрудники</button><button role="tab" data-tab="salons">Салоны</button></div>
+
+    <div id="tabStaff" style="display:flex;flex-direction:column;gap:18px">
+      <div class="bar"><h2>Сотрудники</h2><div class="sp"></div><button class="btn" id="stNewBtn">Добавить сотрудника</button></div>
+      <form class="card" id="stForm" hidden autocomplete="off">
+        <h2 id="stFormTitle">Новый сотрудник</h2>
+        <div class="phrow"><button type="button" class="ph round" id="sPh">Фото</button>
+          <div class="hint">Фото попадёт в коммерческое предложение. Нажмите на круг, чтобы выбрать. <button type="button" class="back" id="sPhDel" hidden>Убрать фото</button></div></div>
+        <div class="row">
+          <label>ФИО<input id="sName" required placeholder="Петрова Анна Сергеевна"></label>
+          <label>Контактный телефон<input id="sPhone" type="tel" inputmode="tel" placeholder="+7 999 123-45-67"></label>
+        </div>
+        <div class="row">
+          <label>Салон<select id="sSalon"></select></label>
+          <label style="flex:0 1 200px">Роль<select id="sRole"><option value="manager">Менеджер</option><option value="admin">Администратор</option></select></label>
+        </div>
+        <div class="row">
+          <label>Почта (для входа)<input id="sEmail" type="email" required placeholder="anna@mgsmebel.com" autocomplete="off"></label>
+          <label id="sPassL">Пароль<input id="sPass" minlength="8" autocomplete="new-password"></label>
+          <button class="btn ghost" type="button" id="sGen">Придумать</button>
+        </div>
+        <div class="row"><button class="btn" type="submit" id="sSave">Создать</button><button class="btn ghost" type="button" id="sCancel">Отмена</button></div>
+        <div class="msg" id="sMsg"></div>
+      </form>
+      <div class="card" id="stDone" hidden>
+        <h2>Передайте сотруднику</h2>
+        <div class="creds" id="stCreds"></div>
+        <div class="row"><button class="btn small" id="stCopy">Скопировать</button><button class="btn ghost small" id="stDoneOk">Готово</button></div>
+        <div class="hint">Пароль больше нигде не показывается. Забудет — смените его здесь же.</div>
       </div>
-      <div class="row">
-        <label>Пароль<input id="sPass" required minlength="8" autocomplete="new-password"></label>
-        <button class="btn ghost" type="button" id="sGen">Придумать</button>
-        <label style="flex:0 1 180px">Роль<select id="sRole"><option value="manager">Менеджер</option><option value="admin">Администратор</option></select></label>
-      </div>
-      <div class="row"><button class="btn" type="submit" id="sSave">Создать</button><button class="btn ghost" type="button" id="sCancel">Отмена</button></div>
-      <div class="msg" id="sMsg"></div>
-    </form>
-    <div class="card" id="stDone" hidden>
-      <h2>Передайте сотруднику</h2>
-      <div class="creds" id="stCreds"></div>
-      <div class="row"><button class="btn small" id="stCopy">Скопировать</button><button class="btn ghost small" id="stDoneOk">Готово</button></div>
-      <div class="hint">Пароль больше нигде не показывается. Забудет — смените его здесь же.</div>
+      <div class="card"><div id="staff"></div><div class="msg" id="stMsg"></div></div>
+      <div class="hint">Отключённый сотрудник не может войти, его проекты остаются.</div>
     </div>
-    <div class="card"><div id="staff"></div><div class="msg" id="stMsg"></div></div>
-    <div class="hint">Администратор добавляет и отключает сотрудников. Отключённый сотрудник не может войти, его проекты остаются.</div>
+
+    <div id="tabSalons" hidden style="display:flex;flex-direction:column;gap:18px">
+      <div class="bar"><h2>Салоны</h2><div class="sp"></div><button class="btn" id="slNewBtn">Добавить салон</button></div>
+      <form class="card" id="slForm" hidden autocomplete="off">
+        <h2 id="slFormTitle">Новый салон</h2>
+        <div class="phrow"><button type="button" class="ph wide" id="lPh">Фото салона</button>
+          <div class="hint">Нажмите, чтобы выбрать фото. <button type="button" class="back" id="lPhDel" hidden>Убрать фото</button></div></div>
+        <div class="row">
+          <label>Название<input id="lName" required placeholder="Пражская"></label>
+          <label style="flex:2 1 300px">Адрес<input id="lAddr" placeholder="Москва, ул. Кировоградская 15, ТЦ «Гранд Юг», 2 этаж"></label>
+        </div>
+        <div class="row"><button class="btn" type="submit" id="lSave">Создать</button><button class="btn ghost" type="button" id="lCancel">Отмена</button></div>
+        <div class="msg" id="lMsg"></div>
+      </form>
+      <div class="sgrid" id="salons"></div>
+      <div class="msg" id="slMsg"></div>
+    </div>
+    <input type="file" id="phIn" accept="image/*" hidden>
   </section>
 
   <!-- project page -->
@@ -182,7 +232,7 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
 import {sb,configured,BUCKET} from './db.js';
 import {SUPABASE_URL} from './config.js';
 const $=s=>document.querySelector(s);
-const views=['vConf','vLogin','vList','vProj','vStaff'];
+const views=['vConf','vLogin','vList','vProj','vAdmin'];
 const show=v=>views.forEach(x=>$('#'+x).hidden=x!==v);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const viewUrl=(tok,item)=>{const u=/(^|\.)mgsmebel\.com$/.test(location.hostname)&&!/^test\./.test(location.hostname)?new URL('https://my.mgsmebel.com/view.html'):new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);if(item)u.searchParams.set('i',item);return u.toString();};
@@ -201,7 +251,8 @@ function afterLogin(session){
   $('#who').textContent=session.user.user_metadata?.name||session.user.email;$('#logout').hidden=false;
   checkAdmin();
   const pid=new URLSearchParams(location.search).get('p');
-  new URLSearchParams(location.search).has('staff')?openStaff():pid?openProject(pid):loadList();
+  const ad=new URLSearchParams(location.search).get('admin');
+  ad?openAdmin(ad):pid?openProject(pid):loadList();
 }
 $('#vLogin').onsubmit=async e=>{
   e.preventDefault();$('#loginMsg').className='msg';$('#loginMsg').textContent='Проверяем…';$('#loginBtn').disabled=true;
@@ -210,55 +261,149 @@ $('#vLogin').onsubmit=async e=>{
   if(error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Неверная почта или пароль.';return;}
   $('#loginMsg').textContent='';afterLogin(data.session);
 };
-$('#logout').onclick=async()=>{await sb.auth.signOut();$('#who').textContent='';$('#logout').hidden=true;$('#staffBtn').hidden=true;show('vLogin');};
+$('#logout').onclick=async()=>{await sb.auth.signOut();$('#who').textContent='';$('#logout').hidden=true;$('#admBtn').hidden=true;show('vLogin');};
 
-/* ---- staff: управление сотрудниками (сервис /admin/v1 на сервере, только для администратора) ---- */
-async function adm(method,path,body){
+/* ---- управление: сервис /admin/v1 на сервере (server/admin/app.py), только для администратора ---- */
+async function adm(method,path,body,raw){
   const {data:{session}}=await sb.auth.getSession();
-  const r=await fetch(SUPABASE_URL+'/admin/v1'+path,{method,headers:{'Authorization':'Bearer '+(session?.access_token||''),'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const h={'Authorization':'Bearer '+(session?.access_token||'')};
+  if(raw)h['Content-Type']=raw.type;else if(body)h['Content-Type']='application/json';
+  const r=await fetch(SUPABASE_URL+'/admin/v1'+path,{method,headers:h,body:raw||(body?JSON.stringify(body):undefined)});
   let d=null;try{d=await r.json();}catch{}
   if(!r.ok)throw Object.assign(new Error(d?.error||('Ошибка '+r.status)),{status:r.status});
   return d;
 }
-async function checkAdmin(){try{await adm('GET','/staff');$('#staffBtn').hidden=false;}catch{$('#staffBtn').hidden=true;}}
+const mediaUrl=p=>p?`${SUPABASE_URL}/storage/v1/object/public/media/${p}`:'';
+async function checkAdmin(){try{await adm('GET','/salons');$('#admBtn').hidden=false;}catch{$('#admBtn').hidden=true;}}
 const genPass=()=>{const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';const v=crypto.getRandomValues(new Uint32Array(10));return [...v].map(x=>a[x%a.length]).join('');};
 const appUrl=()=>/(^|\.)mgsmebel\.com$/.test(location.hostname)?'https://app.mgsmebel.com':location.origin+location.pathname;
-$('#staffBtn').onclick=openStaff;$('#staffBack').onclick=loadList;
-$('#stNewBtn').onclick=()=>{$('#stForm').hidden=false;$('#stDone').hidden=true;$('#sPass').value=genPass();$('#sMsg').textContent='';$('#sName').focus();};
+const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+let SALONS=[],STAFF=[],tab='staff';
+$('#admBtn').onclick=()=>openAdmin('staff');$('#admBack').onclick=loadList;
+document.querySelectorAll('.tabs [data-tab]').forEach(b=>b.onclick=()=>openAdmin(b.dataset.tab));
+async function openAdmin(t){
+  tab=t==='salons'?'salons':'staff';
+  history.replaceState(null,'',location.pathname+'?admin='+tab);show('vAdmin');
+  document.querySelectorAll('.tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+  $('#tabStaff').hidden=tab!=='staff';$('#tabSalons').hidden=tab!=='salons';
+  $('#stForm').hidden=true;$('#stDone').hidden=true;$('#slForm').hidden=true;
+  await loadSalons();if(tab==='staff')loadStaff();
+}
+
+/* фото: выбираем, ужимаем в браузере (сотрудник — квадрат 600, салон — до 1600 по ширине), грузим на сервер */
+function shrink(file,square){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{
+  let sw=img.naturalWidth,sh=img.naturalHeight,sx=0,sy=0,w,h;
+  if(square){const m=Math.min(sw,sh);sx=(sw-m)/2;sy=(sh-m)/2;sw=sh=m;w=h=Math.min(600,m);}
+  else{const k=Math.min(1,1600/sw);w=Math.round(sw*k);h=Math.round(sh*k);}
+  const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,w,h);
+  URL.revokeObjectURL(img.src);c.toBlob(b=>b?res(b):rej(new Error('Не удалось обработать фото')),'image/jpeg',.85);};
+  img.onerror=()=>rej(new Error('Это не фото или формат не поддерживается'));img.src=URL.createObjectURL(file);});}
+function photoPicker(btn,del,square,label){
+  const st={blob:null,path:null,removed:false};
+  const paint=()=>{const url=st.blob?URL.createObjectURL(st.blob):mediaUrl(st.path);
+    btn.style.backgroundImage=url?`url("${url}")`:'';btn.textContent=url?'':label;btn.classList.toggle('has',!!url);del.hidden=!url;};
+  btn.onclick=()=>{const inp=$('#phIn');inp.value='';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;
+    try{st.blob=await shrink(f,square);st.removed=false;paint();}catch(e){alert(e.message);}};inp.click();};
+  del.onclick=()=>{st.blob=null;st.path=null;st.removed=true;paint();};
+  return {set(path){st.blob=null;st.path=path||null;st.removed=false;paint();},
+    async value(kind){if(st.blob){const r=await adm('POST','/photo/'+kind,null,st.blob);return r.path;}return st.removed?null:st.path;},
+    get changed(){return !!st.blob||st.removed;}};
+}
+const sPh=photoPicker($('#sPh'),$('#sPhDel'),true,'Фото');
+const lPh=photoPicker($('#lPh'),$('#lPhDel'),false,'Фото салона');
+
+/* ---- салоны ---- */
+async function loadSalons(){
+  const m=$('#slMsg');
+  try{SALONS=await adm('GET','/salons');}catch(err){m.className='msg err';m.textContent=err.message;return;}
+  m.className='msg';m.textContent=SALONS.length?'':'Салонов пока нет. Нажмите «Добавить салон».';
+  $('#sSalon').innerHTML='<option value="">— не выбран —</option>'+SALONS.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  $('#salons').innerHTML=SALONS.map(s=>`<div class="salon" data-id="${s.id}">
+    <div class="img" style="${s.photo?`background-image:url('${mediaUrl(s.photo)}')`:''}">${s.photo?'':'нет фото'}</div>
+    <div class="tx"><b>${esc(s.name)}</b><span>${esc(s.address||'адрес не указан')}</span></div>
+    <div class="acts"><button class="btn ghost small" data-edit>Изменить</button><button class="btn danger small" data-del>Удалить</button></div></div>`).join('');
+  document.querySelectorAll('.salon').forEach(el=>{const s=SALONS.find(x=>x.id===el.dataset.id);
+    el.querySelector('[data-edit]').onclick=()=>editSalon(s);
+    const d=el.querySelector('[data-del]');let armed=false;
+    d.onclick=async()=>{if(!armed){armed=true;d.textContent='Точно удалить?';setTimeout(()=>{armed=false;d.textContent='Удалить';},3000);return;}
+      try{await adm('DELETE','/salons/'+s.id);loadSalons();}catch(err){m.className='msg err';m.textContent=err.message;}};});
+}
+let editingSalon=null;
+function editSalon(s){
+  editingSalon=s||null;$('#slForm').hidden=false;$('#lMsg').textContent='';
+  $('#slFormTitle').textContent=s?'Салон «'+s.name+'»':'Новый салон';$('#lSave').textContent=s?'Сохранить':'Создать';
+  $('#lName').value=s?.name||'';$('#lAddr').value=s?.address||'';lPh.set(s?.photo);
+  $('#slForm').scrollIntoView({behavior:'smooth',block:'start'});$('#lName').focus({preventScroll:true});
+}
+$('#slNewBtn').onclick=()=>editSalon(null);
+$('#lCancel').onclick=()=>{$('#slForm').hidden=true;};
+$('#slForm').onsubmit=async e=>{
+  e.preventDefault();const m=$('#lMsg');m.className='msg';m.textContent='Сохраняем…';$('#lSave').disabled=true;
+  try{const body={name:$('#lName').value.trim(),address:$('#lAddr').value.trim()};
+    if(!editingSalon||lPh.changed)body.photo=await lPh.value('salon');
+    if(editingSalon)await adm('PATCH','/salons/'+editingSalon.id,body);else await adm('POST','/salons',body);
+    $('#slForm').hidden=true;m.textContent='';loadSalons();}
+  catch(err){m.className='msg err';m.textContent=err.message;}
+  $('#lSave').disabled=false;
+};
+
+/* ---- сотрудники ---- */
+let editingStaff=null;
+function editStaff(u){
+  editingStaff=u||null;$('#stForm').hidden=false;$('#stDone').hidden=true;$('#sMsg').textContent='';
+  $('#stFormTitle').textContent=u?(u.name||u.email):'Новый сотрудник';$('#sSave').textContent=u?'Сохранить':'Создать';
+  $('#sName').value=u?.name||'';$('#sPhone').value=u?.phone||'';$('#sSalon').value=u?.salon_id||'';$('#sRole').value=u?.role||'manager';
+  $('#sEmail').value=u?.email||'';$('#sEmail').disabled=!!u;
+  $('#sPassL').hidden=!!u;$('#sGen').hidden=!!u;$('#sPass').required=!u;$('#sPass').value=u?'':genPass();
+  $('#sRole').disabled=!!u&&u.id===myId;
+  sPh.set(u?.photo);
+  $('#stForm').scrollIntoView({behavior:'smooth',block:'start'});$('#sName').focus({preventScroll:true});
+}
+let myId=null;
+$('#stNewBtn').onclick=()=>editStaff(null);
 $('#sGen').onclick=()=>{$('#sPass').value=genPass();};
-$('#sCancel').onclick=()=>{$('#stForm').reset();$('#stForm').hidden=true;};
+$('#sCancel').onclick=()=>{$('#stForm').hidden=true;};
 $('#stDoneOk').onclick=()=>{$('#stDone').hidden=true;$('#stCreds').textContent='';};
 $('#stCopy').onclick=async()=>{try{await navigator.clipboard.writeText($('#stCreds').textContent);$('#stCopy').textContent='Скопировано';setTimeout(()=>$('#stCopy').textContent='Скопировать',2000);}catch{}};
 function showCreds(email,pass,name){
   $('#stCreds').textContent=`${name?name+', в':'В'}ход в систему MGS:\n${appUrl()}\nПочта: ${email}\nПароль: ${pass}\n\nКнопка для PRO100 — там же, внутри проекта: «Скачать кнопку для PRO100».`;
-  $('#stDone').hidden=false;
+  $('#stDone').hidden=false;$('#stDone').scrollIntoView({behavior:'smooth',block:'start'});
 }
+$('#sPhone').oninput=e=>{let d=e.target.value.replace(/\D/g,'');if(!d)return;if(d[0]==='8')d='7'+d.slice(1);if(d[0]!=='7')d='7'+d;d=d.slice(0,11);
+  const p=[d.slice(1,4),d.slice(4,7),d.slice(7,9),d.slice(9,11)];e.target.value='+7'+(p[0]?' '+p[0]:'')+(p[1]?' '+p[1]:'')+(p[2]?'-'+p[2]:'')+(p[3]?'-'+p[3]:'');};
 $('#stForm').onsubmit=async e=>{
-  e.preventDefault();const m=$('#sMsg');m.className='msg';m.textContent='Создаём…';$('#sSave').disabled=true;
-  const email=$('#sEmail').value.trim(),pass=$('#sPass').value,name=$('#sName').value.trim();
-  try{await adm('POST','/staff',{email,password:pass,name,role:$('#sRole').value});
-    $('#stForm').reset();$('#stForm').hidden=true;m.textContent='';showCreds(email,pass,name);loadStaff();}
+  e.preventDefault();const m=$('#sMsg');m.className='msg';m.textContent='Сохраняем…';$('#sSave').disabled=true;
+  const name=$('#sName').value.trim(),email=$('#sEmail').value.trim(),pass=$('#sPass').value;
+  try{const body={name,phone:$('#sPhone').value.trim(),salon_id:$('#sSalon').value||null};
+    if(!editingStaff||sPh.changed)body.photo=await sPh.value('staff');
+    if(!editingStaff||editingStaff.id!==myId)body.role=$('#sRole').value;
+    if(editingStaff){await adm('PATCH','/staff/'+editingStaff.id,body);$('#stForm').hidden=true;m.textContent='';}
+    else{await adm('POST','/staff',{...body,email,password:pass});$('#stForm').hidden=true;m.textContent='';showCreds(email,pass,name);}
+    loadStaff();}
   catch(err){m.className='msg err';m.textContent=err.message;}
   $('#sSave').disabled=false;
 };
-async function openStaff(){history.replaceState(null,'',location.pathname+'?staff');show('vStaff');$('#stForm').hidden=true;$('#stDone').hidden=true;loadStaff();}
 async function loadStaff(){
   const m=$('#stMsg');m.className='msg';m.textContent='Загружаем…';
-  let list;try{list=await adm('GET','/staff');}catch(err){m.className='msg err';m.textContent=err.message;return;}
+  try{STAFF=await adm('GET','/staff');}catch(err){m.className='msg err';m.textContent=err.message;return;}
   m.textContent='';
-  const {data:{session}}=await sb.auth.getSession();const me=session?.user?.id;
-  const d=t=>t?new Date(t).toLocaleDateString('ru-RU'):'ещё не входил';
-  $('#staff').innerHTML=list.map(u=>`<div class="st${u.disabled?' off':''}" data-id="${u.id}">
-    <div class="nm"><b>${esc(u.name||u.email)}${u.id===me?' <span style="display:inline;color:var(--lime);font-size:12px">· это вы</span>':''}</b><span>${esc(u.name?u.email:'')}${u.name?' · ':''}вход: ${d(u.last_sign_in_at)}</span></div>
-    ${u.disabled?'<span class="tag">Отключён</span>':''}
-    <select data-role ${u.id===me?'disabled':''}><option value="manager"${u.role==='manager'?' selected':''}>Менеджер</option><option value="admin"${u.role==='admin'?' selected':''}>Администратор</option></select>
-    <button class="btn ghost small" data-pw>Сменить пароль</button>
-    ${u.id===me?'':`<button class="btn ${u.disabled?'ghost':'danger'} small" data-off>${u.disabled?'Включить':'Отключить'}</button>`}
+  const {data:{session}}=await sb.auth.getSession();myId=session?.user?.id;
+  const me=STAFF.find(u=>u.id===myId);if(me?.name)$('#who').textContent=me.name;
+  const sal=id=>SALONS.find(s=>s.id===id)?.name;
+  const d=t=>t?'вход '+new Date(t).toLocaleDateString('ru-RU'):'ещё не входил';
+  $('#staff').innerHTML=STAFF.map(u=>`<div class="st${u.disabled?' off':''}" data-id="${u.id}">
+    <div class="av" style="${u.photo?`background-image:url('${mediaUrl(u.photo)}')`:''}">${u.photo?'':esc(initials(u.name||u.email))}</div>
+    <div class="nm"><b>${esc(u.name||u.email)}${u.id===myId?' <span style="display:inline;color:var(--lime);font-size:12px">· это вы</span>':''}</b>
+      <span>${esc([u.phone,sal(u.salon_id)].filter(Boolean).join(' · ')||'телефон и салон не указаны')}</span>
+      <span>${esc(u.email)} · ${d(u.last_sign_in_at)}</span></div>
+    ${u.role==='admin'?'<span class="tag adm">Админ</span>':''}${u.disabled?'<span class="tag">Отключён</span>':''}
+    <div class="acts"><button class="btn ghost small" data-edit>Изменить</button><button class="btn ghost small" data-pw>Пароль</button>
+    ${u.id===myId?'':`<button class="btn ${u.disabled?'ghost':'danger'} small" data-off>${u.disabled?'Включить':'Отключить'}</button>`}</div>
   </div>`).join('');
   document.querySelectorAll('.st').forEach(row=>{
-    const id=row.dataset.id,u=list.find(x=>x.id===id);
+    const id=row.dataset.id,u=STAFF.find(x=>x.id===id);
     const fail=err=>{m.className='msg err';m.textContent=err.message;};
-    row.querySelector('[data-role]').onchange=async e=>{try{await adm('PATCH','/staff/'+id,{role:e.target.value});m.className='msg ok';m.textContent='Роль изменена: '+(u.name||u.email);}catch(err){fail(err);loadStaff();}};
+    row.querySelector('[data-edit]').onclick=()=>editStaff(u);
     const off=row.querySelector('[data-off]');
     if(off){let armed=false;off.onclick=async()=>{
       if(!u.disabled&&!armed){armed=true;off.textContent='Точно отключить?';setTimeout(()=>{armed=false;off.textContent='Отключить';},3000);return;}
@@ -269,7 +414,7 @@ async function loadStaff(){
       f.innerHTML=`<input value="${genPass()}" minlength="8" aria-label="Новый пароль"><button class="btn small">Сохранить</button><button class="btn ghost small">Отмена</button>`;
       row.append(f);const [inp,save,cancel]=f.children;
       cancel.onclick=()=>f.remove();
-      save.onclick=async()=>{try{await adm('PATCH','/staff/'+id,{password:inp.value});f.remove();if(id===me){m.className='msg ok';m.textContent='Ваш пароль изменён.';}else showCreds(u.email,inp.value,u.name);}catch(err){fail(err);}};
+      save.onclick=async()=>{try{await adm('PATCH','/staff/'+id,{password:inp.value});f.remove();if(id===myId){m.className='msg ok';m.textContent='Ваш пароль изменён.';}else showCreds(u.email,inp.value,u.name);}catch(err){fail(err);}};
     };
   });
 }

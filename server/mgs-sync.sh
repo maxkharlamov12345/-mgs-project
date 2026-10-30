@@ -35,6 +35,20 @@ if ! diff -rq "$SRC/admin" "$BASE/admin" >/dev/null 2>&1; then
 fi
 
 cd "$BASE" || exit 0
+# 3) миграции базы: server/migrations/*.sql по порядку, каждая один раз (учёт — таблица ops.migrations)
+psql_(){ docker compose exec -T db psql -q -v ON_ERROR_STOP=1 -U postgres -d postgres "$@"; }
+if ls "$SRC"/migrations/*.sql >/dev/null 2>&1; then
+  psql_ -c "create schema if not exists ops; create table if not exists ops.migrations(name text primary key, applied_at timestamptz default now());" >/dev/null 2>&1
+  done_list=$(psql_ -At -c "select name from ops.migrations" 2>/dev/null) || done_list=__fail__
+  if [ "$done_list" != __fail__ ]; then
+    for f in "$SRC"/migrations/*.sql; do
+      n=$(basename "$f")
+      grep -qxF "$n" <<<"$done_list" && continue
+      if { echo "begin;"; cat "$f"; echo; echo "insert into ops.migrations(name) values ('$n');"; echo "commit;"; } | psql_ >> "$LOG" 2>&1
+      then log "миграция $n применена"; else log "ОШИБКА миграции $n"; break; fi
+    done
+  fi
+fi
 if [ $changed = 1 ]; then
   if docker compose up -d --remove-orphans >> "$LOG" 2>&1; then log "контейнеры обновлены"; else log "ОШИБКА docker compose up"; fi
   docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile >> "$LOG" 2>&1 || true

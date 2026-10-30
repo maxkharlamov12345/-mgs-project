@@ -313,9 +313,12 @@ Supabase-облако из России без VPN не открывается �
 - Сайты: test.mgsmebel.com = весь репозиторий, ветка main; app.mgsmebel.com и my.mgsmebel.com = пока папка 3d/ ветки prod (+ /assets/ из корня; my: / → view.html). mgs-sync (systemd-таймер)
   каждую минуту тянет из GitHub. «Выложить в рабочую» = `git push origin main:prod` (только по слову Макса).
 - Ключи JWT генерятся на сервере; anon-ключ публичный (идёт в 3d/config.js), service_role и пароль базы не покидают сервер.
-  Новый сотрудник: в кабинете кнопка «Сотрудники» (только администратор) — добавить (имя, почта, пароль, роль админ/менеджер),
-  сменить пароль, отключить (ban в GoTrue). Сервис `server/admin/app.py` (Python stdlib, контейнер admin, https://api…/admin/v1/staff):
+  «Управление» в кабинете (кнопка вверху, только администратор; `?admin=staff|salons`) — вкладки, новые админ-разделы добавлять туда же:
+  «Сотрудники» — фото (квадрат 600, для КП), ФИО, телефон, салон, почта, пароль, роль админ/менеджер; изменить, сменить пароль, отключить (ban в GoTrue);
+  «Салоны» — название, адрес, фото (до 1600 px). Таблицы `salons`, `staff_profiles` (читают все вошедшие, пишет только сервис admin),
+  фото — публичный бакет `media` (`staff/…`, `salon/…`), фото ужимаются в браузере. Сервис `server/admin/app.py` (Python stdlib, контейнер admin, https://api…/admin/v1/staff):
   проверяет JWT и роль `app_metadata.mgs_role`, вызывает админ-API GoTrue ключом service_role. Нет ни одного админа — первым
   созданный пользователь становится админом. Запасной путь — `mgs-add-user` в консоли.
 - mgs-sync (`server/mgs-sync.sh`, обновляет сам себя) кроме кода применяет изменения `server/` из main: docker-compose.yml и
-  Caddyfile → `docker compose up -d` + reload Caddy, `admin/` → restart admin. Журнал — /var/log/mgs-sync.log. Консоль для правок сервера не нужна.
+  Caddyfile → `docker compose up -d` + reload Caddy, `admin/` → restart admin, `server/migrations/NNN_*.sql` → в базу по одному разу
+  (учёт в ops.migrations; новые изменения базы — только новым файлом миграции, старые не править). Журнал — /var/log/mgs-sync.log. Консоль для правок сервера не нужна.
