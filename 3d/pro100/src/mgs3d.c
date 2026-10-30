@@ -235,9 +235,8 @@ static HRESULT runExport(void *ctx){
   wchar_t cmd[2048], ps1[MAX_PATH];
   swprintf(ps1,MAX_PATH,L"%ls\\mgs3d_send.ps1",g_dir);
   if(GetFileAttributesW(ps1)==INVALID_FILE_ATTRIBUTES){ say(L"Рядом с плагином нет mgs3d_send.ps1. Переустановите MGS 3D."); return E_FAIL; }
-  swprintf(cmd,2048,L"powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -WindowStyle Hidden -File \"%ls\" -Dir \"%ls\" -Title \"%ls\"",ps1,g_out,title);
+  swprintf(cmd,2048,L"powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File \"%ls\" -Dir \"%ls\" -Title \"%ls\"",ps1,g_out,title);
   STARTUPINFOW si={sizeof si}; PROCESS_INFORMATION pi;
-  si.dwFlags=STARTF_USESHOWWINDOW; si.wShowWindow=SW_HIDE;
   if(CreateProcessW(NULL,cmd,NULL,NULL,FALSE,CREATE_NO_WINDOW,NULL,g_dir,&si,&pi)){
     AllowSetForegroundWindow(pi.dwProcessId);
     CloseHandle(pi.hThread); CloseHandle(pi.hProcess);

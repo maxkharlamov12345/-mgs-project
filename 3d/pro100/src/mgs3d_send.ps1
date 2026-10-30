@@ -257,4 +257,5 @@ $form.Add_Shown({
   if (!$ObjFile) { [Windows.Forms.MessageBox]::Show('PRO100 не сохранил модель. Повторите «Отправить в MGS 3D…».', 'MGS 3D') | Out-Null; $form.Close(); return }
   if (Try-Refresh) { Enter-Main } else { Show-Panel $pLogin; $tEmail.Focus() | Out-Null }
 })
+$form.ShowInTaskbar = $true; $form.WindowState = 'Normal'
 try { [void]$form.ShowDialog() } catch { Log ("form: " + (ErrText $_)); [Windows.Forms.MessageBox]::Show("Ошибка окна отправки:`n$($_.Exception.Message)", 'MGS 3D') | Out-Null }
