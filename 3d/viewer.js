@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import {OrbitControls} from './lib/OrbitControls.js';
 import {OBJLoader} from './lib/OBJLoader.js';
 import {MTLLoader} from './lib/MTLLoader.js';
+import {GLTFLoader} from './lib/GLTFLoader.js';
+import {MeshoptDecoder} from './lib/meshopt_decoder.module.js';
 import {CSS2DRenderer,CSS2DObject} from './lib/CSS2DRenderer.js';
 
 const $=s=>document.querySelector(s);
@@ -37,11 +39,35 @@ function status(t){const s=$('#status');if(!s)return;if(!t){s.hidden=true;return
 /* ---------- loading ---------- */
 const base=n=>decodeURIComponent(String(n)).replace(/\\/g,'/').split('/').filter(Boolean).pop().toLowerCase();
 // текст файла; сжатые (gz) — распаковываем в браузере
-async function getText(f){
+// загрузка с процентами (если сервер сообщил размер)
+async function fetchBody(f,label){
   const r=await fetch(f.url);if(!r.ok)throw new Error('Файл модели не загрузился ('+r.status+')');
+  const total=+r.headers.get('content-length')||f.size||0;
+  if(!label||!r.body||!total)return r;
+  let got=0;const rd=r.body.getReader();
+  const s=new ReadableStream({async pull(c){const {done,value}=await rd.read();if(done){c.close();return;}
+    got+=value.length;status(`${label}… ${Math.min(99,Math.round(got/total*100))}%`);c.enqueue(value);}});
+  return new Response(s);
+}
+async function getText(f,label){
+  const r=await fetchBody(f,label);
   if(!f.gz)return r.text();
   if(typeof DecompressionStream==='undefined')throw new Error('Браузер слишком старый для этой модели — обновите его.');
   return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
+}
+/* лёгкая модель с сервера (GLB: сжатая геометрия, текстуры до 1024 px) — грузится в разы быстрее OBJ */
+async function loadGlb(glb,files,title){
+  status('Загружаем модель…');
+  const buf=await (await fetchBody(glb,'Загружаем модель')).arrayBuffer();
+  status('Открываем модель…');
+  const gl=new GLTFLoader();gl.setMeshoptDecoder(MeshoptDecoder);
+  const g=await new Promise((ok,bad)=>gl.parse(buf,'',ok,bad));
+  const obj=g.scene;
+  obj.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(!m)return;m.side=THREE.DoubleSide;if(m.metalness>0.3)m.metalness=0.1;});});
+  manualDims=null;
+  if(files&&files.has('mgs-dims.json')){try{manualDims=JSON.parse(await getText(files.get('mgs-dims.json')));}catch(e){console.warn('mgs-dims.json',e);}}
+  setModel(obj,title);
+  status('');
 }
 async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
   const objKey=[...files.keys()].find(k=>k.endsWith('.obj'));
@@ -49,7 +75,7 @@ async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
   status('Загружаем модель…');
   const mgr=new THREE.LoadingManager();
   mgr.setURLModifier(u=>{const f=files.get(base(u));return f?f.url:u;});
-  const objText=await getText(files.get(objKey));
+  const objText=await getText(files.get(objKey),'Загружаем модель');
   const m=objText.match(/^mtllib\s+(.+)$/m);
   let mats=null;
   const mtlKey=m&&files.has(base(m[1].trim()))?base(m[1].trim()):[...files.keys()].find(k=>k.endsWith('.mtl'));
@@ -515,5 +541,5 @@ renderer.domElement.addEventListener('pointerup',e=>{
 });
 
 
-export {loadFromMap,status,base,fitView};
+export {loadFromMap,loadGlb,status,base,fitView};
 window.__info=()=>info;

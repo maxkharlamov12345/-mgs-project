@@ -34,6 +34,13 @@ if ! diff -rq "$SRC/admin" "$BASE/admin" >/dev/null 2>&1; then
   admin_changed=1; log "обновлён admin/"
 fi
 
+convert_changed=0
+mkdir -p "$BASE/convert"
+if ! diff -rq "$SRC/convert" "$BASE/convert" >/dev/null 2>&1; then
+  rm -rf "$BASE/convert.new" && cp -r "$SRC/convert" "$BASE/convert.new" && rm -rf "$BASE/convert" && mv "$BASE/convert.new" "$BASE/convert"
+  convert_changed=1; log "обновлён convert/"
+fi
+
 cd "$BASE" || exit 0
 # 3) миграции базы: server/migrations/*.sql по порядку, каждая один раз (учёт — таблица ops.migrations)
 psql_(){ docker compose exec -T db psql -q -v ON_ERROR_STOP=1 -U postgres -d postgres "$@"; }
@@ -54,4 +61,7 @@ if [ $changed = 1 ]; then
   docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile >> "$LOG" 2>&1 || true
 fi
 [ $admin_changed = 1 ] && docker compose restart admin >> "$LOG" 2>&1 || true
+if [ $convert_changed = 1 ]; then
+  if docker compose build convert >> "$LOG" 2>&1 && docker compose up -d convert >> "$LOG" 2>&1; then log "convert пересобран"; else log "ОШИБКА сборки convert"; fi
+fi
 exit 0

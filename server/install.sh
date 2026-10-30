@@ -66,6 +66,7 @@ step "4/7 Supabase: файлы и секретные ключи"
 mkdir -p "$BASE" && cd "$BASE"
 cp /srv/www/test/server/docker-compose.yml /srv/www/test/server/Caddyfile "$BASE"/
 rm -rf "$BASE/admin" && cp -r /srv/www/test/server/admin "$BASE/admin"
+rm -rf "$BASE/convert" && cp -r /srv/www/test/server/convert "$BASE/convert"
 if [ ! -d "$BASE/src" ]; then
   git clone -q --depth 1 --filter=blob:none --sparse https://github.com/supabase/supabase.git "$BASE/src"
   git -C "$BASE/src" sparse-checkout set docker/volumes/db

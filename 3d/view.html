@@ -63,7 +63,7 @@
 </script>
 <script src="lib/supabase.min.js"></script>
 <script type="module">
-import {loadFromMap,status,base} from './viewer.js';
+import {loadFromMap,loadGlb,status,base} from './viewer.js';
 import {sb,configured,publicUrl} from './db.js';
 const $=s=>document.querySelector(s);
 const q=new URLSearchParams(location.search);
@@ -76,7 +76,12 @@ async function openItem(it){
   const files=it.files||[];
   if(!files.some(f=>/\.obj$/i.test(f.name))){empty('Модель ещё не загружена','Для этого изделия пока нет 3D-модели.');return;}
   $('#empty').hidden=true;$('#panel').hidden=false;
-  const map=new Map(files.map(f=>[base(f.name),{url:publicUrl(f.path),gz:!!f.gz}]));
+  const map=new Map(files.map(f=>[base(f.name),{url:publicUrl(f.path),gz:!!f.gz,size:f.size}]));
+  // лёгкая модель (GLB, её делает сервер после загрузки); если её ещё нет или она не открылась — исходный OBJ
+  if(it.glb&&it.glb.path){
+    try{await loadGlb({url:publicUrl(it.glb.path),size:it.glb.size},map,it.title);return;}
+    catch(e){console.warn('GLB не открылся, открываю OBJ',e);}
+  }
   await loadFromMap(map,it.title);
 }
 

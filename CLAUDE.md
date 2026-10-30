@@ -338,6 +338,12 @@ Supabase-облако из России без VPN не открывается �
   фото — публичный бакет `media` (`staff/…`, `salon/…`), фото ужимаются в браузере. Сервис `server/admin/app.py` (Python stdlib, контейнер admin, https://api…/admin/v1/staff):
   проверяет JWT и роль `app_metadata.mgs_role`, вызывает админ-API GoTrue ключом service_role. Нет главного — им становится самый
   первый созданный пользователь. Запасной путь — `mgs-add-user` в консоли.
+- ЛЁГКИЕ МОДЕЛИ (31.10): сервис `server/convert` (Node 22, obj2gltf + gltf-transform: dedup, prune, текстуры ≤1024 WebP, quantize, meshopt)
+  сам берёт изделия с `items.glb_status is null`, качает файлы из Storage, делает GLB → `models/<project>/<item>/model.glb`,
+  пишет `items.glb {path,size}` и `glb_status` (working/ok/error/none). Детали НЕ склеиваются (имена узлов нужны analyze: двери, ящики,
+  кромки). Гардеробная: OBJ 2,9 МБ + текстуры 0,9 МБ → GLB 0,35 МБ, analyze совпадает 1:1. `shared_project` отдаёт glb (миграция 003);
+  view.html грузит GLB (GLTFLoader + meshopt_decoder из `3d/lib`), не вышло — OBJ. Загрузка с процентами (`fetchBody`).
+  Кабинет показывает «готовим лёгкую модель… / для клиента N МБ», при удалении изделия удаляет и GLB.
 - mgs-sync (`server/mgs-sync.sh`, обновляет сам себя) кроме кода применяет изменения `server/` из main: docker-compose.yml и
-  Caddyfile → `docker compose up -d` + reload Caddy, `admin/` → restart admin, `server/migrations/NNN_*.sql` → в базу по одному разу
+  Caddyfile → `docker compose up -d` + reload Caddy, `admin/` → restart admin, `convert/` → build + up, `server/migrations/NNN_*.sql` → в базу по одному разу
   (учёт в ops.migrations; новые изменения базы — только новым файлом миграции, старые не править). Журнал — /var/log/mgs-sync.log. Консоль для правок сервера не нужна.

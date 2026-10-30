@@ -126,6 +126,17 @@ services:
     volumes:
       - ./admin:/app:ro
 
+  convert:
+    # лёгкие модели для сайта (server/convert): OBJ из PRO100 → сжатый GLB, сам берёт новые изделия из базы
+    build: ./convert
+    image: mgs-convert:local
+    restart: unless-stopped
+    depends_on: [rest, storage]
+    environment:
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      NODE_OPTIONS: --max-old-space-size=900
+    mem_limit: 1200m
+
   caddy:
     image: caddy:2
     restart: unless-stopped

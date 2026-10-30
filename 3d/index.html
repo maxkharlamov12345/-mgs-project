@@ -540,20 +540,20 @@ async function loadItems(){
   $('#itemsMsg').className='msg';$('#itemsMsg').textContent=data.length?'':'Пока пусто. Добавьте первое изделие ниже.';
   $('#items').innerHTML=data.map(it=>{
     const sz=(it.files||[]).reduce((a,f)=>a+(f.size||0),0);
-    return `<div class="item"><span class="k">${esc(it.kind||'Изделие')}</span><span class="t">${esc(it.title)}</span><span class="f">${(it.files||[]).length} файл. · ${(sz/1048576).toFixed(1)} МБ</span>
+    return `<div class="item"><span class="k">${esc(it.kind||'Изделие')}</span><span class="t">${esc(it.title)}</span><span class="f">${(it.files||[]).length} файл. · ${(sz/1048576).toFixed(1)} МБ${it.glb_status==='ok'?` · для клиента ${(it.glb.size/1048576).toFixed(1)} МБ`:it.glb_status==='error'?' · лёгкая модель не получилась, клиент увидит исходную':it.glb_status==='none'?'':' · готовим лёгкую модель…'}</span>
       <a class="btn small" target="_blank" rel="noopener" href="${viewUrl(current.share_token,it.id)}">Открыть 3D</a>
       <button class="btn danger small" data-del="${it.id}">Удалить</button></div>`;}).join('');
   document.querySelectorAll('[data-del]').forEach(b=>{let armed=false;b.onclick=async()=>{
     if(!armed){armed=true;b.textContent='Точно удалить?';setTimeout(()=>{armed=false;b.textContent='Удалить';},3000);return;}
     const it=data.find(x=>x.id===b.dataset.del);
-    await sb.storage.from(BUCKET).remove((it.files||[]).map(f=>f.path));
+    await sb.storage.from(BUCKET).remove((it.files||[]).map(f=>f.path).concat(it.glb?.path?[it.glb.path]:[]));
     await sb.from('items').delete().eq('id',it.id);loadItems();}});
 }
 let delArmed=false;
 $('#delProj').onclick=async()=>{
   if(!delArmed){delArmed=true;$('#delMsg').textContent='Нажмите ещё раз, чтобы удалить проект со всеми моделями.';setTimeout(()=>{delArmed=false;$('#delMsg').textContent='';},4000);return;}
-  const {data:its}=await sb.from('items').select('files').eq('project_id',current.id);
-  const paths=(its||[]).flatMap(i=>(i.files||[]).map(f=>f.path));if(paths.length)await sb.storage.from(BUCKET).remove(paths);
+  const {data:its}=await sb.from('items').select('files,glb').eq('project_id',current.id);
+  const paths=(its||[]).flatMap(i=>(i.files||[]).map(f=>f.path).concat(i.glb?.path?[i.glb.path]:[]));if(paths.length)await sb.storage.from(BUCKET).remove(paths);
   await sb.from('projects').delete().eq('id',current.id);delArmed=false;$('#delMsg').textContent='';loadList();
 };
 
