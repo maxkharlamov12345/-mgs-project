@@ -232,6 +232,15 @@ static HRESULT runExport(void *ctx){
   }
   logw(L"model.obj: %lld байт", sz);
 
+  /* размеры, поставленные менеджером (плагин «Размеры MGS», mgsdims.plg), — рядом с моделью для сайта */
+  {
+    HMODULE dm=GetModuleHandleW(L"mgsdims.plg");
+    typedef int (__stdcall *WJ_t)(const wchar_t*);
+    WJ_t wj = dm ? (WJ_t)GetProcAddress(dm,"MgsDimsWriteJson") : NULL;
+    if(wj){ wchar_t jp[MAX_PATH]; swprintf(jp,MAX_PATH,L"%ls\\mgs-dims.json",g_out); logw(L"размеров для сайта: %d", wj(jp)); }
+    else logw(L"плагин размеров не загружен — размеры не передаются");
+  }
+
   wchar_t cmd[2048], ps1[MAX_PATH];
   swprintf(ps1,MAX_PATH,L"%ls\\mgs3d_send.ps1",g_dir);
   if(GetFileAttributesW(ps1)==INVALID_FILE_ATTRIBUTES){ say(L"Рядом с плагином нет mgs3d_send.ps1. Переустановите MGS 3D."); return E_FAIL; }

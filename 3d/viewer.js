@@ -21,7 +21,11 @@ const sun=new THREE.DirectionalLight(0xffffff,1.9);sun.position.set(1,1.6,1.2);s
 const fill=new THREE.DirectionalLight(0xffffff,.9);fill.position.set(-1,.4,-.8);scene.add(fill);
 
 let model=null, dimGroups={}, info=null, frontDir=new THREE.Vector3(0,0,1), selected=null;
-const vis={overall:true,gaps:true,drawers:true};
+const vis={overall:true,gaps:true,drawers:true,manual:true};
+/* Размеры на сайте — только те, что менеджер поставил в PRO100 (плагин «Размеры MGS», файл mgs-dims.json).
+   Автоматические (по геометрии) выключены по решению Макса 30.10; вернуть — AUTO_DIMS=true. */
+const AUTO_DIMS=false;
+let manualDims=null;
 
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);labelR.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
 addEventListener('resize',resize);resize();
@@ -56,6 +60,8 @@ async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
   }
   const ol=new OBJLoader(mgr);if(mats)ol.setMaterials(mats);
   const obj=ol.parse(objText);
+  manualDims=null;
+  if(files.has('mgs-dims.json')){try{manualDims=JSON.parse(await getText(files.get('mgs-dims.json')));}catch(e){console.warn('mgs-dims.json',e);}}
   setModel(obj,title||objKey.replace(/\.obj$/,''));
   status('');
 }
@@ -258,12 +264,65 @@ function updateLabels(){
   }
 }
 
+/* Система координат PRO100 (метры, Z вверх) → модель OBJ (мм). Ищем поворот осей, при котором углы деталей из
+   mgs-dims.json (anchors) совпадают с углами деталей модели; сдвиг — по совпавшим точкам. */
+function pro100ToModel(D,I){
+  const keys=new Set(),K=(x,y,z)=>Math.round(x)+','+Math.round(y)+','+Math.round(z);
+  I.parts.forEach(p=>{if(p.kind==='marker'||p.kind==='metiz')return;const b=p.box;
+    for(let k=0;k<8;k++)keys.add(K(k&1?b.max.x:b.min.x,k&2?b.max.y:b.min.y,k&4?b.max.z:b.min.z));});
+  const A=(D.anchors||[]).concat((D.dims||[]).flatMap(d=>[d.a,d.b]));
+  const perms=[[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];let best=null;
+  for(const pm of perms)for(let sg=0;sg<8;sg++){
+    const sgn=[sg&1?-1:1,sg&2?-1:1,sg&4?-1:1];
+    const f=q=>[sgn[0]*q[pm[0]]*1000,sgn[1]*q[pm[1]]*1000,sgn[2]*q[pm[2]]*1000];
+    // сдвиг: перебираем совмещение первой точки с каждым углом модели нельзя (дорого) — сначала без сдвига,
+    // затем со сдвигом, выровнявшим центры габаритов
+    const offs=[[0,0,0]];
+    if(D.bbox){const c=f(D.bbox.min.map((v,i)=>(v+D.bbox.max[i])/2)),oc=I.overall.getCenter(V());offs.push([oc.x-c[0],oc.y-c[1],oc.z-c[2]]);}
+    for(const o of offs){let n=0;for(const q of A){const t=f(q);if(keys.has(K(t[0]+o[0],t[1]+o[1],t[2]+o[2])))n++;}
+      if(!best||n>best.n)best={n,pm,sgn,o};}
+  }
+  if(!best||!best.n){// не совпало ни одной точки: PRO100 Z вверх → OBJ Y вверх, X как есть
+    best={n:0,pm:[0,2,1],sgn:[1,1,-1],o:[0,0,0]};}
+  const {pm,sgn,o}=best;
+  return {n:best.n,total:A.length,map:q=>V(sgn[0]*q[pm[0]]*1000+o[0],sgn[1]*q[pm[1]]*1000+o[1],sgn[2]*q[pm[2]]*1000+o[2]),
+          axis:i=>{const v=V();const j=pm.indexOf(i);v.setComponent(j,sgn[j]);return v;}};
+}
+function buildManualDims(I){
+  const D=manualDims,g=new THREE.Group();g.visible=vis.manual;dimGroups.manual=g;scene.add(g);
+  const T=pro100ToModel(D,I);
+  console.info('MGS dims: совпало точек',T.n,'из',T.total);
+  let n=0;
+  (D.dims||[]).forEach(d=>{
+    const A=T.map(d.a),D1=T.map(d.d1),D2=T.map(d.d2);
+    const A2=A.clone().add(D2.clone().sub(D1));          // точка на линии детали напротив второй стрелки
+    const off=D1.clone().sub(A),dist=off.length();
+    const side=dist>0.5?off.clone().normalize():T.axis(d.offAxis);
+    const n_=new THREE.Vector3().crossVectors(D2.clone().sub(D1).normalize(),side);
+    dim(g,A,A2,side,dist,n_.lengthSq()>1e-6?n_:null,String(d.text||Math.round(d.value)),COL.w,{size:1.1});n++;
+  });
+  return n;
+}
+function setChips(manual){
+  document.querySelectorAll('#chips .chip').forEach(c=>{if(c.dataset.k!=='manual')c.hidden=!AUTO_DIMS;});
+  let mc=document.querySelector('#chips .chip[data-k="manual"]');
+  if(!mc&&manual){mc=document.createElement('button');mc.className='chip'+(vis.manual?' on':'');mc.dataset.k='manual';mc.innerHTML='<i></i>Размеры';
+    mc.onclick=()=>{vis.manual=!vis.manual;mc.classList.toggle('on',vis.manual);if(dimGroups.manual)dimGroups.manual.visible=vis.manual;};
+    document.querySelector('#chips').prepend(mc);}
+  if(mc)mc.hidden=!manual;
+}
 function buildDims(I){
   labels=[];
-  ['overall','gaps','drawers'].forEach(k=>{const g=new THREE.Group();g.visible=vis[k];dimGroups[k]=g;scene.add(g);});
   const o=I.overall,s=o.getSize(V());
   $('#oW').textContent=r(s.x);$('#oH').textContent=r(s.y);$('#oD').textContent=r(s.z);
   TS=THREE.MathUtils.clamp(Math.max(s.x,s.y,s.z)*.02,24,80);
+  if(!AUTO_DIMS){
+    const n=manualDims&&manualDims.dims&&manualDims.dims.length?buildManualDims(I):0;
+    setChips(n>0);
+    $('#stat').innerHTML=n?`Размеров от менеджера: <b>${n}</b>.`:'Менеджер ещё не проставил размеры.';
+    return;
+  }
+  ['overall','gaps','drawers'].forEach(k=>{const g=new THREE.Group();g.visible=vis[k];dimGroups[k]=g;scene.add(g);});
   const step=TS*2.6;
   const UP=V(0,1,0);
   const fa=I.frontAll;const F=fa.axis,FS=fa.sign;const W=F==='z'?'x':'z';

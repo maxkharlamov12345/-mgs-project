@@ -303,6 +303,20 @@
   вход (refresh-токен под DPAPI в %LOCALAPPDATA%\MGS3D\session.dat), выбор/создание проекта, загрузка файлов в Storage, строка в items, открывает ссылку.
   Окно отправки запускать БЕЗ STARTF_USESHOWWINDOW/SW_HIDE и без -WindowStyle Hidden (30.10: Windows прятала первое окно процесса — окно MGS 3D было невидимым, «ползунок грузится и ничего»); хватает CREATE_NO_WINDOW. PowerShell 5.1: функция, возвращающая byte[], разворачивает массив в конвейер — тело запроса уходило числами («bad_json»); возвращать `,([byte[]]...)` и приводить `[byte[]]`. Ответ-массив Api выдаёт ПО ОДНОМУ элементу (foreach), вызывающий собирает `@(Api ...)` — иначе массив в массиве («System.Object[]» вместо названий проектов, 400 при загрузке). Журналы — %LOCALAPPDATA%\MGS3D\logs («Открыть журналы.cmd» в архиве). Лимит Supabase free — 50 МБ на файл: OBJ/MTL больше 256 КБ сжимаются gzip (окно отправки — GZipStream, кабинет — CompressionStream), в Storage путь `….obj.gz`, в files `gz:true`; просмотр распаковывает DecompressionStream (`getText` в viewer.js). Загрузка в окне отправки — HttpClient асинхронно с DoEvents (окно не «Не отвечает»). Проверка плагина — `3d/pro100/src/host.c` (имитация PRO100) под Wine + xvfb.
 
+- РАЗМЕРЫ ИЗ PRO100 (Макс 30.10: «на сайте размеры не нужны, всё тянем с PRO100»; соревнование с плагином от Codex — у них
+  размеры жили только до закрытия программы). Плагин `mgsdims.plg` (исходник `3d/pro100/src/mgsdims.c`, тест `host_dims.c` под Wine+xvfb —
+  сцена GL, имитация интерфейсов, сценарий мыши, `ALL OK`), пункт «Экспорт → Размеры MGS…» (панель + режим постановки).
+  Как работает: подмена SwapBuffers в IAT PRO100.exe → перед кадром рисуем размеры (матрицы GL_PROJECTION×MODELVIEW, метры);
+  мышь — подкласс окна вида; привязка к углам (0..7) и серединам рёбер (8..19) габаритов деталей/групп, только видимые (проверка глубины),
+  углы групп приоритетнее; размер — по оси с наибольшей разницей, вынос по одной из двух других осей. Хранение — свойство проекта
+  «MGS.Dims» (IProject slot 15 → IPropertyList Get 4 / Set 5) — уходит в .sto; привязка: GUID детали (IEntity 32 → IIdentity 3) + номер точки.
+  Слоты PRO100 7.08 (сборка 11.07.2024, PE TimeDateStamp 0x668fe981, SizeOfImage 0x1535000 — иначе плагин не включается):
+  IApplication 11 → IProject; IProject 7 верхний список, 15 свойства, 16 bbox проекта, 18 строка документа; IEntityList 4 Item / 5 Count;
+  IEntity 13 bbox, 32 identity, 41 вложенные (у группы — детали); IBoundingBox 3..8 min/max (метры); 6 у IProject — ОЧИСТКА, не вызывать.
+  Разбор PRO100.exe: Delphi, интерфейсы P100_TLB (GUID из RTTI), реализации CProjectWrapper/CEntityWrapper/… — по таблицам интерфейсов.
+  Отправка: mgs3d.plg вызывает `MgsDimsWriteJson` (экспорт mgsdims.plg) → `mgs-dims.json` рядом с model.obj (a/b/d1/d2, value, anchors);
+  сайт (`viewer.js`, AUTO_DIMS=false) рисует только их; оси PRO100 (Z вверх) → OBJ подбираются по совпадению углов деталей (anchors).
+
 ## Сервер MGS (Timeweb Cloud, СПб, 72.56.34.143) — переезд с Supabase-облака (30.10)
 Supabase-облако из России без VPN не открывается → свой облегчённый Supabase на VPS (1 vCPU / 2 ГБ / 30 ГБ, бэкапы Timeweb).
 Домен mgsmebel.com (REG.RU): A-записи api / app / my / test → 72.56.34.143 (Макс 30.10: «3d» слишком узко — app = вся система сотрудников (CRM, договоры, проекты, 3D), my = личный кабинет клиента). Корень mgsmebel.com — позже под сайт с каталогом.

@@ -11,6 +11,6 @@ while (Get-Process -Name PRO100 -ErrorAction SilentlyContinue) {
   if ($r -eq 'Yes') { Stop-Process -Name PRO100 -Force; Start-Sleep 1 } elseif ($r -eq 'Cancel') { exit } }
 Get-Process -Name powershell -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $PID -and $_.MainWindowTitle -eq '' } | ForEach-Object { try { if ((Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine -match 'mgs3d_send') { Stop-Process -Id $_.Id -Force } } catch {} }
 $left = @()
-foreach ($f in Get-ChildItem $plug -Filter 'mgs3d*') { try { Remove-Item $f.FullName -Force -ErrorAction Stop } catch { $left += $f.Name } }
+foreach ($f in Get-ChildItem $plug -Filter 'mgs*') { try { Remove-Item $f.FullName -Force -ErrorAction Stop } catch { $left += $f.Name } }
 if ($left.Count) { [Windows.Forms.MessageBox]::Show("Не удалось удалить: $($left -join ', ').`nПерезагрузите компьютер и запустите «Удалить.cmd» ещё раз.", 'MGS 3D') | Out-Null }
 else { [Windows.Forms.MessageBox]::Show('Плагин MGS 3D удалён.', 'MGS 3D') | Out-Null }

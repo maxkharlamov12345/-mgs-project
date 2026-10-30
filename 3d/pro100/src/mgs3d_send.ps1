@@ -115,7 +115,7 @@ function Try-Refresh {
 }
 
 # ---------- что отправляем ----------
-$Exts = '\.(obj|mtl|png|jpe?g|bmp|gif|webp|tga)$'
+$Exts = '\.(obj|mtl|png|jpe?g|bmp|gif|webp|tga|json)$'
 $Files = @(Get-ChildItem -Path $Dir -Recurse -File | Where-Object { $_.Name -match $Exts })
 $seen = @{}; $Files = @($Files | Where-Object { $k = $_.Name.ToLower(); if ($seen[$k]) { $false } else { $seen[$k] = 1; $true } })
 $ObjFile = $Files | Where-Object { $_.Extension -ieq '.obj' } | Select-Object -First 1
@@ -273,7 +273,7 @@ $bSend.Add_Click({
         $src = Join-Path $tmp ("f$i$ext.gz"); Gzip-File $f.FullName $src; $gz = $true
       }
       $path = "$($proj.id)/$itemId/f$i$ext" + $(if ($gz) { '.gz' } else { '' })
-      $ct = if ($gz) { 'application/gzip' } else { switch -regex ($ext) { '\.(obj|mtl)' { 'text/plain; charset=utf-8' } '\.png' { 'image/png' } '\.jpe?g' { 'image/jpeg' } '\.bmp' { 'image/bmp' } '\.gif' { 'image/gif' } '\.webp' { 'image/webp' } default { 'application/octet-stream' } } }
+      $ct = if ($gz) { 'application/gzip' } else { switch -regex ($ext) { '\.(obj|mtl)' { 'text/plain; charset=utf-8' } '\.png' { 'image/png' } '\.jpe?g' { 'image/jpeg' } '\.bmp' { 'image/bmp' } '\.gif' { 'image/gif' } '\.webp' { 'image/webp' } '\.json' { 'application/json' } default { 'application/octet-stream' } } }
       $mb = [math]::Round((Get-Item $src).Length / 1MB, 1)
       $lStatus.Text = "Отправляем $($i + 1) из $($Files.Count): $($f.Name) ($mb МБ)"; [Windows.Forms.Application]::DoEvents()
       Upload-File $src $path $ct
