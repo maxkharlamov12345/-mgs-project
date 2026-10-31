@@ -704,18 +704,14 @@ function realSet(on){
   scene.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true);});
   real.dirty=8;
 }
-/* кадр «Реалистичного». Пока камера крутится — лёгкий кадр (без затенения углов), через 0,15 с после остановки затенение
-   мягко проявляется (0,3 с); тени считаются один раз и пересчитываются, только когда что-то двигается (двери, «Без фасадов»).
+/* кадр «Реалистичного»: затенение углов — всегда, и при вращении (Макс 31.10: «проявление потом» ломало целостность);
+   плавность дают склейка деталей и тень, посчитанная один раз (пересчёт — только когда двигаются двери / «Без фасадов»).
    В покое ничего не рисуется. */
 function realFrame(){
   if(!real||!real.on)return false;
   const now=performance.now(),doors=movers&&movers.some(m=>m.t!==m.goal),moving=doors||now-real.lastMove<150;
   if(doors)real.shadowDirty=1;
-  if(moving){real.ao.enabled=false;real.fade=0;}
-  else if(!real.ao.enabled){real.ao.enabled=true;real.fade=now;}
-  const fading=real.ao.enabled&&real.fade&&now-real.fade<320;
-  if(real.ao.enabled)real.ao.blendIntensity=real.fade?Math.min(1,(now-real.fade)/300):1;
-  if(real.dirty>0||moving||fading||real.shadowDirty>0){
+  if(real.dirty>0||moving||real.shadowDirty>0){
     real.dirty=Math.max(0,real.dirty-1);
     if(real.shadowDirty>0){renderer.shadowMap.needsUpdate=true;real.shadowDirty--;}
     real.composer.render();
