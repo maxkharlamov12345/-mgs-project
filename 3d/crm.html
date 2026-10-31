@@ -220,6 +220,8 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
   <div class="menu" id="menu" role="menu" hidden>
     <div class="who" id="who"></div>
     <a href="index.html" role="menuitem">3D-проекты (кабинет)</a>
+    <button id="demoAdd" role="menuitem" hidden>Добавить тестовых клиентов</button>
+    <button id="demoDel" role="menuitem" hidden>Удалить тестовых клиентов</button>
     <button id="logout" role="menuitem">Выйти</button>
   </div>
 </header>
@@ -728,6 +730,80 @@ $('#fContract').onsubmit=async e=>{
     S.card===CT.id?render():openCard(CT.id);toast('Договор сохранён');
   }catch(err){m.className='msg err';m.textContent=err.message||String(err);}
   finally{$('#ctOk').disabled=false;}
+};
+
+/* ---------- тестовые клиенты (только на тесте): клиенты из макетов, помечены адресом DEMO ---------- */
+const DEMO='Тестовый клиент — можно удалить';
+const isTestHost=/^(test\.|localhost|127\.)/.test(location.hostname);
+if(isTestHost){$('#demoAdd').hidden=false;$('#demoDel').hidden=false;}
+function frontView(kind){ /* картинка «вид спереди» без размеров, как в макетах */
+  const cv=document.createElement('canvas');cv.width=960;cv.height=560;const g=cv.getContext('2d');
+  g.fillStyle='#2f2c28';g.fillRect(0,0,960,560);
+  const R=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};const L=(x1,y1,x2,y2,c,w)=>{g.strokeStyle=c;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();};
+  if(kind==='k'){R(112,64,736,160,'#3a3631');[296,480,664].forEach(x=>L(x,64,x,224,'#262420',8));R(416,224,128,72,'#57534b');
+    R(104,352,752,20,'#8f897e');R(112,372,736,160,'#46423b');[296,480,664].forEach(x=>L(x,372,x,532,'#262420',8));L(112,424,296,424,'#262420',8);
+    [176,360,544,728].forEach(x=>L(x,396,x+56,396,'#8f897e',8));}
+  else if(kind==='h'){R(160,32,240,504,'#46423b');L(280,32,280,536,'#262420',8);R(432,80,224,280,'#3a3631');R(432,416,368,120,'#46423b');L(432,416,800,416,'#8f897e',12);
+    R(688,32,112,360,'#46423b');[256,304].forEach(x=>L(x,256,x,312,'#8f897e',8));}
+  else{R(240,32,480,504,'#46423b');[400,560].forEach(x=>L(x,32,x,536,'#262420',8));R(408,48,144,472,'#5e5a52');[380,424,580].forEach(x=>L(x,256,x,312,'#8f897e',8));}
+  return new Promise(r=>cv.toBlob(r,'image/png'));
+}
+const DEMO_PRE=[
+  ['Лебедева Ольга','Кухня','Румянцево','work',null,null],['Гусев Павел','Гардеробная, прихожая','Пражская','work',null,null],
+  ['Ким Алина','Шкаф-купе','Химки','work',null,'w'],['Семёнов Дмитрий','Гардеробная, зеркала','Пражская','kp',284500,'w'],
+  ['Ниязова Лейла','Ванная','Пражская','kp',96700,null],['Захарова Вера','Кухня, техника','Авиамоторная','zamer',640000,'k'],
+  ['Белов Антон','Кухня','Химки','zamer',300000,'k'],
+  ['Тихонов Олег','Кухня','Химки','lost',410000,null,'Дорого','В другом салоне дешевле на 15%'],
+  ['Фролова Ирина','Гардеробная','Пражская','lost',null,null,'Сроки изготовления','Нужно через 2 недели']];
+const F=(name,stage,kind)=>({kind:'furniture',name,contractor:'МГС',stage,img:kind});
+const A=(contractor,stage,lines)=>({kind:'accessory',contractor,stage,lines:lines.map(([name,qty])=>({name,qty}))});
+const DEMO_POST=[
+  ['Ковалёва Анна','Химки',[F('Кухня угловая',3,'k'),F('Шкаф в прихожую',3,'w'),A('МДМ',2,[['Ручки','14 шт'],['Волшебный уголок','1 шт'],['Бутылочница','1 шт']]),
+    A('Поставщик техники',4,[['Духовой шкаф','1 шт'],['Варочная панель','1 шт'],['Посудомоечная машина','1 шт']])]],
+  ['Абрамян Гор','Авиамоторная',[F('Кухня',3,'k'),F('Прихожая',3,'h'),F('Детская',5,'w'),A('МДМ',3,[['Ручки','22 шт'],['Сушка для посуды','1 шт']])]],
+  ['Морозова Елена','Пражская',[F('Гардеробная',1,'w'),A('МДМ',1,[['Подсветка LED','6 м'],['Штанга','3 шт']])]],
+  ['Орлов Сергей','Авиамоторная',[F('Кухня',4,'k'),A('Поставщик техники',5,[['Холодильник','1 шт'],['Духовой шкаф','1 шт'],['Варочная панель','1 шт'],['Вытяжка','1 шт']])]],
+  ['Петров Илья','Химки',[F('Шкаф-купе',6,'w')]],['Волкова Нина','Пражская',[F('Тумба в ванную',6,'w')]],['Ким Сергей','Химки',[F('Кухня',7,'k')]]];
+const KNAME={k:'кухня',w:'шкаф',h:'прихожая'};
+$('#demoAdd').onclick=async()=>{
+  $('#menu').hidden=true;
+  if(S.clients.some(c=>c.address===DEMO)&&!confirm('Тестовые клиенты уже есть. Добавить ещё раз?'))return;
+  toast('Добавляем тестовых клиентов…');
+  const sal=n=>S.salons.find(x=>x.name.toLowerCase().includes(n.toLowerCase()))?.id;
+  const imgs={};for(const k of ['k','w','h'])imgs[k]=await frontView(k);
+  async function addImg(cid,k){
+    const path=`${cid}/${crypto.randomUUID()}.png`;
+    const up=await sb.storage.from('crm').upload(path,imgs[k],{contentType:'image/png'});if(up.error)throw up.error;
+    const r=await sb.from('client_files').insert({client_id:cid,name:`Вид спереди — ${KNAME[k]}.png`,path,mime:'image/png',size:imgs[k].size}).select().single();if(r.error)throw r.error;
+    return path;
+  }
+  async function addClient(rec){const r=await sb.from('clients').insert({...rec,address:DEMO,phone:'+7 900 000-00-00',...(rec.salon_id?{}:{salon_id:undefined})}).select().single();if(r.error)throw r.error;return r.data;}
+  try{
+    for(const [name,want,salon,stage,kp,img,lr,ln] of DEMO_PRE){
+      const c=await addClient({name,want,kp_sum:kp,stage,salon_id:sal(salon),lost_reason:lr||null,lost_note:ln||null,lost_from:lr?'kp':null});
+      if(img)await addImg(c.id,img);
+    }
+    for(const [name,salon,pos] of DEMO_POST){
+      const c=await addClient({name,want:pos.filter(p=>p.kind==='furniture').map(p=>p.name).join(', '),stage:'contract',contract_at:new Date().toISOString(),salon_id:sal(salon)});
+      const done={};let i=0;
+      for(const p of pos){
+        let preview=null;if(p.img){preview=done[p.img]||(done[p.img]=await addImg(c.id,p.img));}
+        const r=await sb.from('positions').insert({client_id:c.id,kind:p.kind,name:p.kind==='accessory'?'Сопутка':p.name,contractor:p.contractor,stage:p.stage,preview,lines:p.lines||[],sort:i++});
+        if(r.error)throw r.error;
+      }
+    }
+    await loadAll();S.card=null;setUrl();render();toast('Тестовые клиенты добавлены');
+  }catch(e){showErr(e);await loadAll();render();}
+};
+$('#demoDel').onclick=async()=>{
+  $('#menu').hidden=true;
+  const ids=S.clients.filter(c=>c.address===DEMO).map(c=>c.id);
+  if(!ids.length)return toast('Тестовых клиентов нет');
+  if(!confirm(`Удалить тестовых клиентов (${ids.length}) с их файлами и позициями? Настоящие клиенты не пострадают.`))return;
+  const paths=S.files.filter(f=>ids.includes(f.client_id)).map(f=>f.path);
+  if(paths.length)await sb.storage.from('crm').remove(paths);
+  const {error}=await sb.from('clients').delete().in('id',ids);if(error)return showErr(error);
+  await loadAll();S.card=null;setUrl();render();toast('Тестовые клиенты удалены');
 };
 </script>
 </body>
