@@ -15,15 +15,16 @@ const ROOT=path.resolve(__dirname,'../..'),SAMPLE='https://api.mgsmebel.com/stor
     const p=await b.newPage({viewport:{width:900,height:620}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
     await p.goto('http://localhost:8833/3d/_test.html');await p.waitForFunction(()=>window.__done,null,{timeout:120000});
     const check=()=>p.evaluate(()=>{const I=window.__info(),bad=[],sol=I.parts.filter(p=>p.kind!=='marker'&&p.kind!=='metiz');
+      const shown=q=>q.mesh.visible||q.mesh.userData.batched;   // склеенные неподвижные детали рисуются общей сеткой
       const hid=document.querySelector('#tFronts').getAttribute('aria-pressed')==='true';
       const fronts=sol.filter(p=>/фасад|двер/i.test(p.label)&&p.kind!=='hw');
-      if(hid)sol.forEach(q=>{if(!q.mesh.visible)return;
+      if(hid)sol.forEach(q=>{if(!shown(q))return;
         if(fronts.includes(q))bad.push('фасад виден');
-        if(q.host&&!q.host.mesh.visible)bad.push('кромка без своей детали');
+        if(q.host&&!shown(q.host))bad.push('кромка без своей детали');
         if(/ручк/i.test(q.label))bad.push('ручка видна');
         const c=q.box.getCenter(q.box.min.clone());
         if(q.kind!=='board'&&!/кромка/i.test(q.label)&&fronts.some(f=>f.box.clone().expandByScalar(1).containsPoint(c)))bad.push('деталь внутри фасада: '+q.label);});
-      else sol.forEach(q=>{if(!q.mesh.visible)bad.push('скрыто без причины: '+q.label);});
+      else sol.forEach(q=>{if(!shown(q))bad.push('скрыто без причины: '+q.label);});
       if(document.querySelector('#tMode span').textContent==='Оригинал')sol.forEach(q=>{if(q.host&&q.mesh.material!==q.host.mesh.material)bad.push('кромка не в материале своей детали');});
       return [...new Set(bad)];});
     const tap=k=>p.evaluate(k=>document.querySelector(k).click(),k);   // клик через JS — тяжёлый кадр «Реалистичного» в swiftshader не мешает
@@ -38,6 +39,10 @@ const ROOT=path.resolve(__dirname,'../..'),SAMPLE='https://api.mgsmebel.com/stor
     }
     if(hasOpen){if(!await on('#tFronts'))await tap('#tFronts');if(!await on('#tOpen'))await tap('#tOpen');
       await tap('[data-mode=orig]');await p.waitForTimeout(1200);await p.screenshot({path:'/tmp/viewer3d-open-nofronts.png'});}
+    // клик по детали показывает её название (склеенные детали тоже)
+    await tap('[data-mode=orig]');await p.waitForTimeout(500);
+    let pi='';for(const [x,y] of [[560,250],[600,400],[450,330],[300,500],[520,180]]){   // по двери клик только открывает — ищем точку на корпусе
+      await p.mouse.click(x,y);await p.waitForTimeout(400);pi=await p.$eval('#partInfo',e=>e.hidden?'':e.textContent);if(pi)break;}console.log(pi?'✓':'✗','клик по детали:',pi.slice(0,60));if(!pi)fails++;
     if(errs.length){fails++;console.log('✗ ошибки JS:',errs);}
   }finally{await b.close();fs.unlinkSync(glb);fs.unlinkSync(page);}
   console.log(fails?`ПРОВАЛ: ${fails}`:'ВСЁ ОК');process.exit(fails?1:0);

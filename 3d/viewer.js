@@ -6,6 +6,7 @@ import {MTLLoader} from './lib/MTLLoader.js';
 import {GLTFLoader} from './lib/GLTFLoader.js';
 import {MeshoptDecoder} from './lib/meshopt_decoder.module.js';
 import {CSS2DRenderer,CSS2DObject} from './lib/CSS2DRenderer.js';
+import {mergeGeometries} from './lib/BufferGeometryUtils.js';
 
 const $=s=>document.querySelector(s);
 const stage=$('#stage');
@@ -98,7 +99,7 @@ async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
 
 function setModel(obj,title){
   if(model){scene.remove(model);}
-  (movers||[]).forEach(m=>scene.remove(m.pivot));movers=[];
+  (movers||[]).forEach(m=>scene.remove(m.pivot));movers=[];clearBatches();
   Object.values(dimGroups).forEach(g=>{scene.remove(g);g.traverse(o=>{if(o.isMesh&&o.material.map){o.material.map.dispose();o.material.dispose();}o.geometry&&o.geometry.dispose();});});dimGroups={};clearSel();
   partInfo(null);
   // units: PRO100 OBJ is in metres -> work in mm
@@ -107,7 +108,7 @@ function setModel(obj,title){
   obj.updateMatrixWorld(true);
   model=obj;scene.add(obj);
   info=analyze(obj);
-  buildMovers(info);syncOpenBtn();
+  buildMovers(info);syncOpenBtn();buildBatches();
   setFronts(false,true);applyMode();
   resize();fitView('persp');
   const I=info;
@@ -115,7 +116,7 @@ function setModel(obj,title){
 }
 
 /* ---------- analysis ---------- */
-const RX_METIZ=/(саморез|евровинт|конфирмат|шкант|эксцентрик|минификс|шуруп|гвоздь|винт)/i;
+const RX_METIZ=/(саморез|евровинт|конфирмат|шкант|эксцентрик|минификс|шуруп|гвоздь|винт|^зазор|_зазор)/i;
 const RX_HW=/(опора|штанг|флянец|фланец|push|ручк|петл|направля|кромка|подсвет|led)/i;
 function analyze(root){
   const parts=[];
@@ -493,9 +494,13 @@ function buildMovers(I){
   const groupOf=q=>{
     const ms=[q.f.mesh];
     const th=Math.abs(q.front-q.back);
-    free.forEach(p=>{if(used.has(p))return;
+    const isKr=p=>/кромка/i.test(p.label);
+    free.forEach(p=>{if(used.has(p)||isKr(p))return;
       const ok=q.type==='drawer'?within(p,q,-(th+q.depth+15),70,6,12):within(p,q,-(th+3),70,4,4);
       if(ok){ms.push(p.mesh);used.add(p);}});
+    // кромка едет, только если едет её деталь (раньше дверь утаскивала кромки полок и боковин рядом с собой)
+    const inG=new Set(ms);
+    free.forEach(p=>{if(!used.has(p)&&isKr(p)&&p.host&&inG.has(p.host.mesh)){ms.push(p.mesh);used.add(p);}});
     return ms;
   };
   F.filter(q=>q.type&&q.type!=='join').forEach(q=>{
@@ -505,10 +510,10 @@ function buildMovers(I){
     if(q.type==='drawer'){move=N.clone().multiplyScalar(Math.max(150,q.depth*.8));}
     else if(q.type==='door'){
       const p=V(0,0,0);p[q.w]=q.edge==='min'?q.f.box.min[q.w]:q.f.box.max[q.w];p[q.n]=q.front;pivot.position.copy(p);
-      const d=Wd.clone().multiplyScalar(q.edge==='min'?1:-1);axis=V(0,1,0);angle=THREE.MathUtils.degToRad(95)*Math.sign(new THREE.Vector3().crossVectors(d,N).y||1);
+      const d=Wd.clone().multiplyScalar(q.edge==='min'?1:-1);axis=V(0,1,0);angle=THREE.MathUtils.degToRad(90)*Math.sign(new THREE.Vector3().crossVectors(d,N).y||1);
     }else{ // lift / flap
       const p=V(0,0,0);p.y=q.edge==='top'?q.f.box.max.y:q.f.box.min.y;p[q.n]=q.front;p[q.w]=(q.f.box.min[q.w]+q.f.box.max[q.w])/2;pivot.position.copy(p);
-      const d=V(0,q.edge==='top'?-1:1,0);axis=Wd.clone();angle=THREE.MathUtils.degToRad(q.edge==='top'?100:90)*Math.sign(new THREE.Vector3().crossVectors(d,N).dot(axis)||1);
+      const d=V(0,q.edge==='top'?-1:1,0);axis=Wd.clone();angle=THREE.MathUtils.degToRad(90)*Math.sign(new THREE.Vector3().crossVectors(d,N).dot(axis)||1);
     }
     pivot.updateMatrixWorld(true);
     const ms=groupOf(q);
@@ -546,7 +551,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
   if(!downAt||Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>5||!model)return;
   const m=V((e.clientX/innerWidth)*2-1,-(e.clientY/innerHeight)*2+1,0);
   ray.setFromCamera(m,camera);
-  const hits=ray.intersectObjects([model,...movers.map(m=>m.pivot)],true).filter(h=>h.object.visible);
+  const hits=ray.intersectObjects([model,...movers.map(m=>m.pivot)],true).filter(h=>h.object.visible||h.object.userData.batched);
   clearSel();
   if(!hits.length){partInfo(null);return;}
   const mv=movers.find(m=>m.meshes.has(hits[0].object));if(mv){mv.goal=mv.goal>0?0:1;syncOpenBtn();return;}
@@ -572,6 +577,66 @@ let viewMode='orig';
 const MODE_NAMES={orig:'Оригинал',xray:'Прозрачный',lines:'Контуры',real:'Реалистичный'};
 const xrayMat=new Map();
 // контуры рёбер — во всех режимах (как в аналоге Макса 31.10: так лучше читается изделие); цвет — под режим
+/* ---------- склейка неподвижных деталей (скорость) ----------
+   ~700 деталей = ~700 отрисовок на кадр (а в «Реалистичном» ещё тени и затенение — втрое больше). Детали, которые не ездят
+   (не двери/ящики) и не прячутся кнопкой «Без фасадов», склеиваем по материалу в несколько больших сеток, их рёбра — в две
+   сетки линий. Исходные детали остаются (невидимыми) — по ним работает клик «что за деталь». */
+let batches=[],batchEdges=[];
+function clearBatches(){
+  for(const b of batches){scene.remove(b);b.geometry.dispose();}
+  for(const e of batchEdges){scene.remove(e);e.geometry.dispose();}
+  batches=[];batchEdges=[];
+}
+function floatGeo(g,mw){
+  const out=new THREE.BufferGeometry();
+  for(const name of ['position','normal','uv']){
+    const a=g.getAttribute(name);if(!a){if(name==='position')return null;continue;}
+    const n=a.count,k=a.itemSize,arr=new Float32Array(n*k),get=[a.getX,a.getY,a.getZ];
+    for(let i=0;i<n;i++)for(let j=0;j<k;j++)arr[i*k+j]=get[j].call(a,i);
+    out.setAttribute(name,new THREE.BufferAttribute(arr,k));
+  }
+  const n=out.getAttribute('position').count;
+  if(g.index){out.setIndex(new THREE.BufferAttribute(Uint32Array.from(g.index.array),1));}
+  else{const ix=new Uint32Array(n);for(let i=0;i<n;i++)ix[i]=i;out.setIndex(new THREE.BufferAttribute(ix,1));}
+  if(!out.getAttribute('normal'))out.computeVertexNormals();
+  out.applyMatrix4(mw);
+  return out;
+}
+const isMetal=p=>RX_METAL.test(p.label)&&!/фасад|двер/i.test(p.label);
+function buildBatches(){
+  clearBatches();if(!info||!model)return;
+  model.updateMatrixWorld(true);
+  const moving=new Set();movers.forEach(m=>m.meshes.forEach(x=>moving.add(x)));
+  const fs=frontSet(),groups=new Map(),edges={n:[],b:[]};
+  for(const p of solidParts()){
+    const m=p.mesh;
+    if(moving.has(m)||fs.has(p)||Array.isArray(m.material)||!m.material||!m.geometry||m.geometry.groups.length>1)continue;
+    const g=floatGeo(m.geometry,m.matrixWorld);if(!g)continue;
+    const metal=isMetal(p),key=m.material.uuid+'|'+(metal?1:0)+'|'+(g.getAttribute('uv')?1:0);
+    if(!groups.has(key))groups.set(key,{src:m.material,metal,geos:[]});groups.get(key).geos.push(g);
+    const eg=new THREE.EdgesGeometry(m.geometry,28);eg.applyMatrix4(m.matrixWorld);
+    edges[(/кромка/i.test(p.label)||p.tris>400)?'b':'n'].push(eg);
+    m.visible=false;m.userData.batched=true;
+  }
+  for(const G of groups.values()){
+    const geo=G.geos.length>1?mergeGeometries(G.geos,false):G.geos[0];G.geos.forEach(x=>{if(x!==geo)x.dispose();});
+    if(!geo)continue;
+    const src=G.src;if(!src.polygonOffset){src.polygonOffset=true;src.polygonOffsetFactor=1;src.polygonOffsetUnits=1;}
+    const mesh=new THREE.Mesh(geo,src);mesh.userData.src=src;mesh.userData.metal=G.metal;mesh.raycast=()=>{};
+    scene.add(mesh);batches.push(mesh);
+  }
+  for(const k of ['n','b']){
+    if(!edges[k].length)continue;
+    const geo=mergeGeometries(edges[k],false);edges[k].forEach(x=>x.dispose());if(!geo)continue;
+    const e=new THREE.LineSegments(geo,EDGE_MAT.orig);e.raycast=()=>{};e.userData.busy=k==='b';e.renderOrder=1;
+    scene.add(e);batchEdges.push(e);
+  }
+}
+function xrayOf(mt){
+  if(!mt)return mt;let c=xrayMat.get(mt);
+  if(!c){c=mt.clone();c.transparent=true;c.opacity=Math.min(mt.opacity??1,.28);c.depthWrite=false;c.side=THREE.DoubleSide;xrayMat.set(mt,c);}
+  return c;
+}
 const EDGE_MAT={
   orig: new THREE.LineBasicMaterial({color:0x1d1b19,transparent:true,opacity:.55}),
   xray: new THREE.LineBasicMaterial({color:0x2a2724,transparent:true,opacity:.7,depthWrite:false}),
@@ -607,46 +672,61 @@ async function realInit(){
   const ao=new GTAOPass(scene,camera,innerWidth,innerHeight);composer.addPass(ao);
   composer.addPass(new OutputPass());
   // свет «из окна» с мягкой тенью
-  const key=new THREE.DirectionalLight(0xfff4e6,2.0);key.castShadow=true;key.shadow.mapSize.set(phone?1024:2048,phone?1024:2048);
-  key.shadow.radius=6;key.shadow.bias=-.0004;key.shadow.normalBias=1.5;scene.add(key);scene.add(key.target);key.visible=false;
+  // свет сверху-спереди (как потолочный): тени ложатся под полки ровно, а не косыми полосами
+  const key=new THREE.DirectionalLight(0xfff4e6,2.0);key.castShadow=true;const ms=phone?2048:4096;key.shadow.mapSize.set(ms,ms);
+  key.shadow.radius=3;key.shadow.bias=-.0003;key.shadow.normalBias=.6;scene.add(key);scene.add(key.target);key.visible=false;
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.38}));
   floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.visible=false;scene.add(floor);
-  real={env,composer,ao,key,floor,phone,dirty:6,on:false,fitFor:null};
-  controls.addEventListener('change',()=>{if(real)real.dirty=Math.max(real.dirty,2);});
+  real={env,composer,ao,key,floor,phone,dirty:6,on:false,fitFor:null,lastMove:0,fade:0,shadowDirty:2};
+  controls.addEventListener('change',()=>{if(real){real.dirty=Math.max(real.dirty,1);real.lastMove=performance.now();}});
   return real;
 }
 // под текущую модель: тень и пол по её габаритам, радиус затенения в мм
 function realFit(){
   if(!real||!info||real.fitFor===info)return;real.fitFor=info;
   const b=info.overall,c=b.getCenter(V()),sz=b.getSize(V()),R=Math.max(sz.x,sz.y,sz.z);
-  const k=real.key;k.position.set(c.x+R*.35,c.y+R*2.2,c.z+R*.8);k.target.position.copy(c);
-  const sc=k.shadow.camera;sc.left=sc.bottom=-R*1.1;sc.right=sc.top=R*1.1;sc.near=1;sc.far=R*4;sc.updateProjectionMatrix();
+  const k=real.key;k.position.set(c.x+R*.12,c.y+R*2.5,c.z+R*.45);k.target.position.copy(c);k.updateMatrixWorld();k.target.updateMatrixWorld();
+  // камера тени — ровно по габаритам изделия (в осях света) + запас под тень на полу: чем плотнее, тем чётче край тени
+  const sc=k.shadow.camera;sc.position.copy(k.position);sc.lookAt(c);sc.updateMatrixWorld();
+  const inv=sc.matrixWorldInverse,lb=new THREE.Box3();
+  for(const x of [b.min.x,b.max.x])for(const y of [b.min.y-1,b.max.y])for(const z of [b.min.z,b.max.z])lb.expandByPoint(V(x,y,z).applyMatrix4(inv));
+  const pad=R*.08;sc.left=lb.min.x-pad;sc.right=lb.max.x+pad;sc.bottom=lb.min.y-pad;sc.top=lb.max.y+pad;sc.near=Math.max(1,-lb.max.z-R*.5);sc.far=-lb.min.z+R*.5;sc.updateProjectionMatrix();
   real.floor.scale.set(R*4,R*4,1);real.floor.position.set(c.x,b.min.y-.5,c.z);
-  real.ao.updateGtaoMaterial({radius:Math.min(450,Math.max(120,R*.12)),distanceExponent:1,thickness:Math.max(40,R*.04),scale:2.2,samples:real.phone?8:16,distanceFallOff:1,screenSpaceRadius:false});
-  real.ao.updatePdMaterial({lumaPhi:10,depthPhi:2,normalPhi:3,radius:real.phone?6:8,rings:2,samples:real.phone?8:16});
+  real.ao.updateGtaoMaterial({radius:Math.min(160,Math.max(60,R*.045)),distanceExponent:1.2,thickness:Math.max(20,R*.015),scale:1.8,samples:real.phone?8:16,distanceFallOff:1,screenSpaceRadius:false});
+  real.ao.updatePdMaterial({lumaPhi:10,depthPhi:6,normalPhi:3,radius:real.phone?8:12,rings:3,samples:16});
 }
 function realSet(on){
   if(!real)return;real.on=on;realFit();
   scene.environment=on?real.env:null;
   renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;   // ACES/AgX разбеливали дерево (проверено 31.10) — цвета как в проекте
-  renderer.shadowMap.enabled=on;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.needsUpdate=true;
+  renderer.shadowMap.enabled=on;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;real.shadowDirty=2;
   real.key.visible=on;real.floor.visible=on;sun.visible=fill.visible=!on;hemi.intensity=on?.25:2.6;
   scene.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true);});
   real.dirty=8;
 }
-// кадр «Реалистичного»: тяжёлый, поэтому рисуем, только когда что-то меняется (камера, двери, загрузка текстур) + раз в полсекунды
-let realLast=0;
+/* кадр «Реалистичного». Пока камера крутится — лёгкий кадр (без затенения углов), через 0,15 с после остановки затенение
+   мягко проявляется (0,3 с); тени считаются один раз и пересчитываются, только когда что-то двигается (двери, «Без фасадов»).
+   В покое ничего не рисуется. */
 function realFrame(){
   if(!real||!real.on)return false;
-  const now=performance.now(),moving=movers&&movers.some(m=>m.t!==m.goal);
-  if(real.dirty>0||moving||now-realLast>500){real.dirty=Math.max(0,real.dirty-1);realLast=now;renderer.shadowMap.needsUpdate=true;real.composer.render();}
+  const now=performance.now(),doors=movers&&movers.some(m=>m.t!==m.goal),moving=doors||now-real.lastMove<150;
+  if(doors)real.shadowDirty=1;
+  if(moving){real.ao.enabled=false;real.fade=0;}
+  else if(!real.ao.enabled){real.ao.enabled=true;real.fade=now;}
+  const fading=real.ao.enabled&&real.fade&&now-real.fade<320;
+  if(real.ao.enabled)real.ao.blendIntensity=real.fade?Math.min(1,(now-real.fade)/300):1;
+  if(real.dirty>0||moving||fading||real.shadowDirty>0){
+    real.dirty=Math.max(0,real.dirty-1);
+    if(real.shadowDirty>0){renderer.shadowMap.needsUpdate=true;real.shadowDirty--;}
+    real.composer.render();
+  }
   return true;
 }
 // материал PBR по исходному: металл — фурнитура, стекло — полупрозрачное, остальное — плита с лёгким рельефом текстуры
 function realMatOf(src,p){
   if(Array.isArray(src))return src.map(m=>realMatOf(m,p));
   if(!src)return src;
-  const op=src.opacity??1,metal=RX_METAL.test(p.label)&&!/фасад|двер/i.test(p.label),glass=op<.6,tint=!glass&&op<.98;
+  const op=src.opacity??1,metal=isMetal(p),glass=op<.6,tint=!glass&&op<.98;
   const key=src.uuid+(metal?'m':'');let r=realMats.get(key);if(r)return r;
   r=new THREE.MeshStandardMaterial({map:src.map||null,color:src.color?src.color.clone():new THREE.Color(0xffffff),
     transparent:!!src.transparent||glass,opacity:src.opacity??1,side:src.side??THREE.FrontSide,alphaTest:src.alphaTest||0});
@@ -659,42 +739,45 @@ function realMatOf(src,p){
 function applyMode(){
   for(const p of solidParts()){
     const m=p.mesh,u=m.userData;
+    if(u.batched)continue;
     if(!u.mat0)u.mat0=m.material;
     const e=edgesOf(p);
     e.material=EDGE_MAT[viewMode];e.visible=viewMode==='lines'||!e.userData.busy;
     if(viewMode==='real'){e.visible=false;m.material=realMatOf(u.mat0,p);m.castShadow=m.receiveShadow=true;continue;}
     m.castShadow=m.receiveShadow=false;
     if(viewMode==='orig'){m.material=u.mat0;continue;}
-    if(viewMode==='xray'){
-      const x=(Array.isArray(u.mat0)?u.mat0:[u.mat0]).map(mt=>{if(!mt)return mt;let c=xrayMat.get(mt);
-        if(!c){c=mt.clone();c.transparent=true;c.opacity=Math.min(mt.opacity??1,.28);c.depthWrite=false;c.side=THREE.DoubleSide;xrayMat.set(mt,c);}return c;});
-      m.material=Array.isArray(u.mat0)?x:x[0];continue;
-    }
+    if(viewMode==='xray'){const x=(Array.isArray(u.mat0)?u.mat0:[u.mat0]).map(xrayOf);m.material=Array.isArray(u.mat0)?x:x[0];continue;}
     m.material=ghostMat;          // контуры: только рёбра + едва заметная заливка
   }
+  for(const b of batches){const src=b.userData.src;
+    b.material=viewMode==='real'?realMatOf(src,{label:b.userData.metal?'металл':''}):viewMode==='orig'?src:viewMode==='xray'?xrayOf(src):ghostMat;
+    b.castShadow=b.receiveShadow=viewMode==='real';}
+  for(const e of batchEdges){e.material=EDGE_MAT[viewMode]||EDGE_MAT.orig;e.visible=viewMode!=='real'&&(viewMode==='lines'||!e.userData.busy);}
   realSet(viewMode==='real');
   const l=$('#tModeL');if(l)l.textContent=MODE_NAMES[viewMode];
   document.querySelectorAll('#mMode [data-mode]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===viewMode)));
 }
 // без фасадов: прячем фасады/двери (по имени детали) и ручки, чтобы видеть, что внутри
 let frontsHidden=false;
-function setFronts(hide,silent){
-  frontsHidden=!!hide;
+// детали, которые прячет «Без фасадов»: фасады, ручки, всё, что ездит с дверью/подъёмником (у ящика — только в толщине фасада),
+// кромки этих деталей и то, что сидит внутри фасада (чашки петель, ручки-профили)
+function frontSet(){
   const all=solidParts(),isFront=p=>(/фасад|двер/i.test(p.label)&&p.kind!=='hw')||/ручк/i.test(p.label);
   const fr=all.filter(isFront),frBox=fr.filter(p=>p.kind!=='hw').map(p=>p.box.clone().expandByScalar(1));
-  // всё, что ездит вместе с дверью/подъёмником (кромки, ручки, чашки петель), — часть фасада; у ящика — только то, что в толщине фасада
-  const withFace=new Set();
+  const S=new Set(fr);
   for(const m of movers){const fb=m.face.box.clone().expandByScalar(3);
-    for(const p of all)if(m.meshes.has(p.mesh)&&(m.type!=='drawer'||fb.containsBox(p.box)))withFace.add(p);}
+    for(const p of all)if(m.meshes.has(p.mesh)&&(m.type!=='drawer'||fb.containsBox(p.box)))S.add(p);}
   for(const p of all){
-    let hide=isFront(p)||withFace.has(p);
-    // вместе с фасадом — его кромки и то, что сидит внутри фасада (чашки петель, ручки-профили)
-    if(!hide&&/кромка/i.test(p.label))hide=!!(p.host&&isFront(p.host));
-    if(!hide&&p.kind!=='board'&&!/кромка/i.test(p.label)){const c=p.box.getCenter(new THREE.Vector3());hide=frBox.some(b=>b.containsPoint(c));}
-    if(hide)p.mesh.visible=!frontsHidden;
-  }
+    if(S.has(p)||p.kind==='board'||/кромка/i.test(p.label))continue;
+    const c=p.box.getCenter(new THREE.Vector3());if(frBox.some(b=>b.containsPoint(c)))S.add(p);}
+  for(const p of all)if(/кромка/i.test(p.label)&&p.host&&S.has(p.host))S.add(p);
+  return S;
+}
+function setFronts(hide,silent){
+  frontsHidden=!!hide;
+  for(const p of frontSet())p.mesh.visible=!frontsHidden;
   const b=$('#tFronts');if(b){b.setAttribute('aria-pressed',String(frontsHidden));b.querySelector('span').textContent=frontsHidden?'Вернуть фасады':'Без фасадов';}
-  clearSel();if(real)real.dirty=4;if(!silent)partInfo(null);
+  clearSel();if(real){real.dirty=4;real.shadowDirty=2;}if(!silent)partInfo(null);
 }
 function closeMenus(except){document.querySelectorAll('.menu').forEach(m=>{if(m!==except){m.hidden=true;const b=m.previousElementSibling;if(b)b.setAttribute('aria-expanded','false');}});}
 function bindMenu(btn,menu,onPick){
@@ -718,4 +801,4 @@ if($('#tDims'))$('#tDims').onclick=()=>{vis.manual=!vis.manual;if(dimGroups.manu
 new ResizeObserver(()=>resize()).observe(document.getElementById('top')||document.body);
 
 export {loadFromMap,loadGlb,status,base,fitView};
-window.__info=()=>info;
+window.__info=()=>info;window.__stats=()=>({calls:renderer.info.render.calls,tris:renderer.info.render.triangles,batches:batches.length});
