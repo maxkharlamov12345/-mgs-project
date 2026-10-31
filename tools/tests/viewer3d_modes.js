@@ -1,4 +1,4 @@
-// Проверка 3D-просмотра (3d/viewer.js): все сочетания «Без фасадов» × «Открыть» × режим (Оригинал/Прозрачный/Контуры).
+// Проверка 3D-просмотра (3d/viewer.js): все сочетания «Без фасадов» × «Открыть» × режим (Оригинал/Прозрачный/Контуры/Реалистичный).
 // Запуск из корня репозитория:  python3 -m http.server 8833 &   node tools/tests/viewer3d_modes.js [model.glb]
 // Без аргумента качает кухню-образец с сервера. Ищет: видимые фасады/ручки/кромки фасадов при «Без фасадов»,
 // детали внутри фасада, кромки не в материале своей детали, скрытое без причины, ошибки JS. Кадр — /tmp/viewer3d-open-nofronts.png
@@ -26,17 +26,18 @@ const ROOT=path.resolve(__dirname,'../..'),SAMPLE='https://api.mgsmebel.com/stor
       else sol.forEach(q=>{if(!q.mesh.visible)bad.push('скрыто без причины: '+q.label);});
       if(document.querySelector('#tMode span').textContent==='Оригинал')sol.forEach(q=>{if(q.host&&q.mesh.material!==q.host.mesh.material)bad.push('кромка не в материале своей детали');});
       return [...new Set(bad)];});
+    const tap=k=>p.evaluate(k=>document.querySelector(k).click(),k);   // клик через JS — тяжёлый кадр «Реалистичного» в swiftshader не мешает
     const on=async k=>(await p.getAttribute(k,'aria-pressed'))==='true';
     const hasOpen=!(await p.$eval('#tOpen',e=>e.hidden));
-    for(const fr of [false,true])for(const op of hasOpen?[false,true]:[false])for(const m of ['orig','xray','lines']){
-      if(await on('#tFronts')!==fr)await p.click('#tFronts');
-      if(hasOpen&&await on('#tOpen')!==op)await p.click('#tOpen');
-      await p.click('#tMode');await p.click(`[data-mode=${m}]`);await p.waitForTimeout(700);
+    for(const fr of [false,true])for(const op of hasOpen?[false,true]:[false])for(const m of ['orig','xray','lines','real']){
+      if(await on('#tFronts')!==fr)await tap('#tFronts');
+      if(hasOpen&&await on('#tOpen')!==op)await tap('#tOpen');
+      await tap(`[data-mode=${m}]`);await p.waitForTimeout(m==='real'?2500:700);
       const bad=await check();if(bad.length)fails++;
       console.log(bad.length?'✗':'✓',`без фасадов=${fr} открыто=${op} ${m}`,bad.slice(0,5).join('; '));
     }
-    if(hasOpen){if(!await on('#tFronts'))await p.click('#tFronts');if(!await on('#tOpen'))await p.click('#tOpen');
-      await p.click('#tMode');await p.click('[data-mode=orig]');await p.waitForTimeout(1200);await p.screenshot({path:'/tmp/viewer3d-open-nofronts.png'});}
+    if(hasOpen){if(!await on('#tFronts'))await tap('#tFronts');if(!await on('#tOpen'))await tap('#tOpen');
+      await tap('[data-mode=orig]');await p.waitForTimeout(1200);await p.screenshot({path:'/tmp/viewer3d-open-nofronts.png'});}
     if(errs.length){fails++;console.log('✗ ошибки JS:',errs);}
   }finally{await b.close();fs.unlinkSync(glb);fs.unlinkSync(page);}
   console.log(fails?`ПРОВАЛ: ${fails}`:'ВСЁ ОК');process.exit(fails?1:0);
