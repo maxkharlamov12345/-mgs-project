@@ -4,6 +4,11 @@
  *   1) вызывает встроенный экспорт PRO100 в OBJ (плагин с id "export.obj");
  *   2) пока открыты его окна, сам ставит галочки и путь сохранения;
  *   3) после экспорта запускает mgs3d_send.ps1 (окно выбора проекта и отправка в MGS 3D).
+ * АВТООБНОВЛЕНИЕ (31.10): тот же файл работает в двух ролях.
+ *   «Загрузчик» — PRO100\plugins\mgs3d.plg (ставится установщиком, нужны права администратора).
+ *   «Ядро»     — %LOCALAPPDATA%\MGS3D\bin\mgs3d_core.dll (его скачивает окно отправки с сервера, права не нужны).
+ *   При запуске PRO100 загрузчик смотрит bin\version.txt: если там версия новее своей (MGS_BUILD) — подставляет
+ *   скачанное ядро (.new → .dll) и отдаёт PRO100 его объект. Окно отправки (ps1) берётся из bin по тому же правилу.
  * Интерфейсы PRO100 — COM-подобные (IUnknown + методы, HRESULT, соглашение Win64).
  */
 #define WIN32_LEAN_AND_MEAN
@@ -42,6 +47,9 @@ typedef HRESULT (__stdcall *GetObj_t)(void*, void**);
 typedef HRESULT (__stdcall *GetStr_t)(void*, BSTR*);
 typedef HRESULT (__stdcall *Exec_t)(void*, void*);
 
+#ifndef MGS_BUILD
+#define MGS_BUILD 0
+#endif
 #define VT(p) (*(void***)(p))
 static HRESULT xQI(void *p, const GUID *g, void **o){ *o=NULL; return ((QI_t)VT(p)[0])(p,g,o); }
 static void xRelease(void *p){ if(p) ((AR_t)VT(p)[2])(p); }
@@ -50,7 +58,10 @@ static void xRelease(void *p){ if(p) ((AR_t)VT(p)[2])(p); }
 static HINSTANCE g_inst;
 static void *g_app;               /* приложение PRO100 из Init */
 static volatile LONG g_ref = 1, g_busy = 0;
-static wchar_t g_dir[MAX_PATH];   /* папка плагина */
+static wchar_t g_dir[MAX_PATH];   /* папка этого файла */
+static wchar_t g_conf[MAX_PATH];  /* папка установки (PRO100\plugins): mgs3d.ini, исходный mgs3d_send.ps1 */
+static wchar_t g_bin[MAX_PATH];   /* %LOCALAPPDATA%\MGS3D\bin — обновления */
+static int g_isCore;              /* этот файл — скачанное ядро, а не установленный загрузчик */
 static wchar_t g_out[MAX_PATH];   /* папка экспорта */
 static wchar_t g_obj[MAX_PATH];   /* путь model.obj */
 static FILE *g_log;
@@ -73,8 +84,14 @@ static void openLog(void){
 }
 static void say(const wchar_t *msg){ MessageBoxW(GetActiveWindow(), msg, L"MGS 3D", MB_OK|MB_ICONWARNING); }
 static int ini(const wchar_t *key, int def){
-  wchar_t p[MAX_PATH]; swprintf(p,MAX_PATH,L"%ls\\mgs3d.ini",g_dir);
+  wchar_t p[MAX_PATH]; swprintf(p,MAX_PATH,L"%ls\\mgs3d.ini",g_conf);
   return GetPrivateProfileIntW(L"export",key,def,p);
+}
+/* версия скачанного обновления (bin\version.txt), 0 — нет */
+static int binVersion(void){
+  wchar_t p[MAX_PATH]; swprintf(p,MAX_PATH,L"%ls\\version.txt",g_bin);
+  FILE *f=_wfopen(p,L"rb"); if(!f) return 0;
+  char b[32]={0}; fread(b,1,31,f); fclose(f); return atoi(b);
 }
 static int slotOk(void *obj, int slot, ULONG_PTR rva, const wchar_t *name){
   ULONG_PTR base=(ULONG_PTR)GetModuleHandleW(NULL);
@@ -242,11 +259,15 @@ static HRESULT runExport(void *ctx){
   }
 
   wchar_t cmd[2048], ps1[MAX_PATH];
-  swprintf(ps1,MAX_PATH,L"%ls\\mgs3d_send.ps1",g_dir);
+  int bv=binVersion();
+  swprintf(ps1,MAX_PATH,L"%ls\\mgs3d_send.ps1",g_bin);
+  if(!(bv>MGS_BUILD || (g_isCore && bv==MGS_BUILD)) || GetFileAttributesW(ps1)==INVALID_FILE_ATTRIBUTES)
+    swprintf(ps1,MAX_PATH,L"%ls\\mgs3d_send.ps1",g_conf);
+  logw(L"окно отправки: %ls (сборка %d, в bin %d)", ps1, MGS_BUILD, bv);
   if(GetFileAttributesW(ps1)==INVALID_FILE_ATTRIBUTES){ say(L"Рядом с плагином нет mgs3d_send.ps1. Переустановите MGS 3D."); return E_FAIL; }
-  swprintf(cmd,2048,L"powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File \"%ls\" -Dir \"%ls\" -Title \"%ls\"",ps1,g_out,title);
+  swprintf(cmd,2048,L"powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File \"%ls\" -Dir \"%ls\" -Title \"%ls\" -Conf \"%ls\" -Build %d",ps1,g_out,title,g_conf,MGS_BUILD>bv?MGS_BUILD:bv);
   STARTUPINFOW si={sizeof si}; PROCESS_INFORMATION pi;
-  if(CreateProcessW(NULL,cmd,NULL,NULL,FALSE,CREATE_NO_WINDOW,NULL,g_dir,&si,&pi)){
+  if(CreateProcessW(NULL,cmd,NULL,NULL,FALSE,CREATE_NO_WINDOW,NULL,g_conf,&si,&pi)){
     AllowSetForegroundWindow(pi.dwProcessId);
     CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
     logw(L"запущено окно отправки");
@@ -296,7 +317,32 @@ static HRESULT __stdcall pQI(void *s, const GUID *iid, void **out){
 }
 
 /* PRO100 вызывает createObject и получает интерфейс через скрытый выходной параметр */
+__declspec(dllexport) int MgsBuild(void){ return MGS_BUILD; }
+
+typedef void **(*Create_t)(void**);
 __declspec(dllexport) void **createObject(void **out){
+  /* загрузчик: есть скачанное ядро новее себя — отдаём PRO100 его (выключить: [update] enabled=0 в mgs3d.ini) */
+  static int tried=0;
+  if(!g_isCore && !tried){
+    tried=1; openLog();
+    wchar_t ip[MAX_PATH]; swprintf(ip,MAX_PATH,L"%ls\\mgs3d.ini",g_conf);
+    int bv=binVersion();
+    if(GetPrivateProfileIntW(L"update",L"enabled",1,ip) && bv>MGS_BUILD){
+      wchar_t core[MAX_PATH], nw[MAX_PATH];
+      swprintf(core,MAX_PATH,L"%ls\\mgs3d_core.dll",g_bin); swprintf(nw,MAX_PATH,L"%ls\\mgs3d_core.dll.new",g_bin);
+      if(GetFileAttributesW(nw)!=INVALID_FILE_ATTRIBUTES){
+        if(MoveFileExW(nw,core,MOVEFILE_REPLACE_EXISTING)) logw(L"обновление ядра применено");
+        else logw(L"не удалось применить обновление ядра, ошибка %lu", GetLastError());
+      }
+      SetEnvironmentVariableW(L"MGS3D_CONF",g_conf);
+      HMODULE h = GetFileAttributesW(core)!=INVALID_FILE_ATTRIBUTES ? LoadLibraryW(core) : NULL;
+      Create_t f = h ? (Create_t)GetProcAddress(h,"createObject") : NULL;
+      typedef int (*Build_t)(void); Build_t b = h ? (Build_t)GetProcAddress(h,"MgsBuild") : NULL;
+      if(f && b && b()>MGS_BUILD){ logw(L"загрузчик %d → ядро %d из %ls", MGS_BUILD, b(), core); return f(out); }
+      logw(L"ядро в bin не подошло (h=%p) — работаю сам, сборка %d", (void*)h, MGS_BUILD);
+      if(h) FreeLibrary(h);
+    }
+  }
   if(out){ *out=&oBase; InterlockedIncrement(&g_ref); }
   return out;
 }
@@ -307,6 +353,12 @@ BOOL WINAPI DllMain(HINSTANCE h, DWORD why, LPVOID r){
     g_inst=h; DisableThreadLibraryCalls(h);
     GetModuleFileNameW(h,g_dir,MAX_PATH);
     wchar_t *sl=wcsrchr(g_dir,L'\\'); if(sl) *sl=0;
+    wchar_t la[MAX_PATH];
+    /* в DllMain без shell32 (блокировка загрузчика) — папку берём из переменной окружения */
+    if(GetEnvironmentVariableW(L"LOCALAPPDATA",la,MAX_PATH)) swprintf(g_bin,MAX_PATH,L"%ls\\MGS3D\\bin",la);
+    g_isCore = g_bin[0] && !lstrcmpiW(g_dir,g_bin);
+    lstrcpyW(g_conf,g_dir);
+    if(g_isCore && !GetEnvironmentVariableW(L"MGS3D_CONF",g_conf,MAX_PATH)) lstrcpyW(g_conf,g_dir);
   }
   return TRUE;
 }

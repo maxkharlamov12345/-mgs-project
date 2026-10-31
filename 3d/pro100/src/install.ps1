@@ -46,6 +46,8 @@ try {
   elseif (Test-Path (Join-Path $plug 'mgsdims.plg')) { Remove-Item (Join-Path $plug 'mgsdims.plg') -Force -ErrorAction Stop }
 }
 catch { Msg "Не удалось заменить файлы плагина — похоже, PRO100 ещё работает в фоне.`nОткройте Диспетчер задач, снимите задачу PRO100 (или перезагрузите компьютер) и запустите «Установить.cmd» снова." 'Error'; exit }
+# скачанные раньше обновления (%LOCALAPPDATA%\MGS3D\bin) — убираем: свежая установка главнее, дальше обновится сама
+Remove-Item (Join-Path $env:LOCALAPPDATA 'MGS3D\bin') -Recurse -Force -ErrorAction SilentlyContinue
 $iniDst = Join-Path $plug 'mgs3d.ini'
 # старый ini (облако supabase.co) заменяем — сервер переехал на api.mgsmebel.com
 if (-not (Test-Path $iniDst) -or (Select-String -Path $iniDst -Pattern 'supabase\.co' -Quiet)) { Copy-Item (Join-Path $Src 'mgs3d.ini') $plug -Force }

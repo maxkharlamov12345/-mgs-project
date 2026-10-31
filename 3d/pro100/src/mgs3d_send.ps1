@@ -1,6 +1,6 @@
 ﻿# MGS 3D — окно отправки модели из PRO100 в кабинет MGS 3D.
 # Запускается плагином mgs3d.plg после экспорта в OBJ: -Dir <папка экспорта> -Title <заголовок окна PRO100>
-param([string]$Dir, [string]$Title = '')
+param([string]$Dir, [string]$Title = '', [string]$Conf = '', [int]$Build = 0)
 
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -26,11 +26,45 @@ function Read-Ini($path) {
   }
   $r
 }
-$Ini  = Read-Ini (Join-Path $Here 'mgs3d.ini')
+$CfgDir = if ($Conf -and (Test-Path $Conf)) { $Conf } else { $Here }   # настройки — в папке установки (PRO100\plugins), даже если окно запущено из обновления
+$Ini  = Read-Ini (Join-Path $CfgDir 'mgs3d.ini')
 $Url  = if ($Ini['service.url']) { $Ini['service.url'].TrimEnd('/') } else { 'https://api.mgsmebel.com' }
 $Key  = if ($Ini['service.key']) { $Ini['service.key'] } else { 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzkzMzc1NDI2LCJleHAiOjIxMDg3MzU0MjZ9.exy6cZNIkPj-oxZPuafx1BiBEQO4Hsav4bCQ2Z3mbDs' }
 $Site = if ($Ini['service.site']) { $Ini['service.site'].TrimEnd('/') } else { 'https://my.mgsmebel.com' }
 $Kinds = @('Кухня','Шкаф','Гардеробная','Прихожая','Ванная','Детская','Гостиная','Другое')
+
+# ---------- автообновление: свежие плагин и окно отправки с сервера (без прав администратора) ----------
+# manifest.json: { version: N, files: [ {name, sha256, size} ] }. Скачиваем в %LOCALAPPDATA%\MGS3D\bin, проверяем sha256.
+# Окно отправки — со следующего нажатия, плагин (mgs3d_core.dll.new) — со следующего запуска PRO100. Выключить: [update] enabled=0.
+function Update-Self {
+  try {
+    if ($Ini['update.enabled'] -eq '0') { return }
+    $base = if ($Ini['update.url']) { $Ini['update.url'].TrimEnd('/') } else { 'https://app.mgsmebel.com/pro100/update' }
+    $bin = Join-Path $Data 'bin'; New-Item -ItemType Directory -Force -Path $bin | Out-Null
+    $verFile = Join-Path $bin 'version.txt'
+    $cur = 0; if (Test-Path $verFile) { [int]::TryParse((Get-Content $verFile -Raw).Trim(), [ref]$cur) | Out-Null }
+    $have = [Math]::Max($cur, $Build)
+    $hc = New-Object Net.Http.HttpClient; $hc.Timeout = [TimeSpan]::FromSeconds(8)
+    $m = $hc.GetStringAsync("$base/manifest.json?t=" + [DateTime]::UtcNow.Ticks).GetAwaiter().GetResult() | ConvertFrom-Json
+    if ([int]$m.version -le $have) { Log "обновлений нет (у нас $have, на сервере $($m.version))"; return }
+    $hc.Timeout = [TimeSpan]::FromSeconds(60)
+    foreach ($f in $m.files) {
+      if ($f.name -notmatch '^[\w.\-]+$') { throw "плохое имя файла: $($f.name)" }
+      $tmp = Join-Path $bin ($f.name + '.dl')
+      [IO.File]::WriteAllBytes($tmp, $hc.GetByteArrayAsync("$base/$($f.name)?v=$($m.version)").GetAwaiter().GetResult())
+      $h = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower()
+      if ($h -ne ([string]$f.sha256).ToLower()) { Remove-Item $tmp -Force; throw "не сошлась контрольная сумма $($f.name)" }
+    }
+    foreach ($f in $m.files) {
+      $tmp = Join-Path $bin ($f.name + '.dl')
+      $dst = if ($f.name -like '*.dll') { Join-Path $bin ($f.name + '.new') } else { Join-Path $bin $f.name }
+      Move-Item $tmp $dst -Force
+    }
+    Set-Content -Path $verFile -Value $m.version -Encoding ASCII
+    Log "обновление $have → $($m.version) скачано (окно — со следующей отправки, плагин — после перезапуска PRO100)"
+  } catch { Log "проверка обновлений не удалась: $($_.Exception.Message)" }
+}
+Update-Self
 
 # ---------- сеть ----------
 $script:Token = $null

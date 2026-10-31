@@ -326,6 +326,15 @@
   вход (refresh-токен под DPAPI в %LOCALAPPDATA%\MGS3D\session.dat), выбор/создание проекта, загрузка файлов в Storage, строка в items, открывает ссылку.
   Окно отправки запускать БЕЗ STARTF_USESHOWWINDOW/SW_HIDE и без -WindowStyle Hidden (30.10: Windows прятала первое окно процесса — окно MGS 3D было невидимым, «ползунок грузится и ничего»); хватает CREATE_NO_WINDOW. PowerShell 5.1: функция, возвращающая byte[], разворачивает массив в конвейер — тело запроса уходило числами («bad_json»); возвращать `,([byte[]]...)` и приводить `[byte[]]`. Ответ-массив Api выдаёт ПО ОДНОМУ элементу (foreach), вызывающий собирает `@(Api ...)` — иначе массив в массиве («System.Object[]» вместо названий проектов, 400 при загрузке). Журналы — %LOCALAPPDATA%\MGS3D\logs («Открыть журналы.cmd» в архиве). Лимит Supabase free — 50 МБ на файл: OBJ/MTL больше 256 КБ сжимаются gzip (окно отправки — GZipStream, кабинет — CompressionStream), в Storage путь `….obj.gz`, в files `gz:true`; просмотр распаковывает DecompressionStream (`getText` в viewer.js). Загрузка в окне отправки — HttpClient асинхронно с DoEvents (окно не «Не отвечает»). Проверка плагина — `3d/pro100/src/host.c` (имитация PRO100) под Wine + xvfb.
 
+- АВТООБНОВЛЕНИЕ КНОПКИ (Макс 31.10: «чтобы не ставить каждый раз»): `mgs3d.c` — один файл в двух ролях: «загрузчик» PRO100\plugins\mgs3d.plg
+  и «ядро» %LOCALAPPDATA%\MGS3D\bin\mgs3d_core.dll. Номер сборки MGS_BUILD (yyDDDHHMM, UTC). При запуске PRO100 загрузчик: если
+  bin\version.txt > своей сборки — переименовывает mgs3d_core.dll.new → .dll, грузит его (MGS3D_CONF = папка установки — там ini) и отдаёт PRO100
+  его createObject (проверка MgsBuild()>своей). Окно отправки берётся из bin по тому же правилу; ему передаются -Conf и -Build.
+  Окно отправки при запуске (Update-Self, таймаут 8 с) качает `<url>/manifest.json` ({version, files:[{name,sha256,size}]}), файлы — в bin
+  (dll как .new), сверяет sha256, пишет version.txt. url по умолчанию https://app.mgsmebel.com/pro100/update (= 3d/pro100/update ветки prod);
+  тест — `[update] url=https://test.mgsmebel.com/3d/pro100/update` в mgs3d.ini; выключить — `[update] enabled=0`. Установщик чистит bin.
+  СБОРКА: `sh 3d/pro100/build.sh` (mingw) → MGS3D_PRO100.zip + update/ (статичные файлы архива — 3d/pro100/pkg). Менеджеры получат обновление
+  после выкладки в prod. Проверено под Wine (host.c): загрузчик 100 + ядро 200 в bin → «загрузчик 100 → ядро 200», окно из bin; bin старее — работает сам.
 - РАЗМЕРЫ ИЗ PRO100 (Макс 30.10: «на сайте размеры не нужны, всё тянем с PRO100»; соревнование с плагином от Codex — у них
   размеры жили только до закрытия программы). Плагин `mgsdims.plg` (исходник `3d/pro100/src/mgsdims.c`, тест `host_dims.c` под Wine+xvfb —
   сцена GL, имитация интерфейсов, сценарий мыши, `ALL OK`), пункт «Экспорт → Размеры MGS…» (панель + режим постановки).
