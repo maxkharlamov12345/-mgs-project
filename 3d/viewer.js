@@ -14,6 +14,10 @@ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 stage.appendChild(renderer.domElement);
+// видеокарта сбросила 3D (не хватило памяти) — не оставляем пустой экран: перезагружаем в обычном режиме и говорим об этом
+renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();
+  try{if(typeof viewMode!=='undefined'&&viewMode==='real')sessionStorage.setItem('mgs-real-lost','1');}catch(_){}
+  setTimeout(()=>location.reload(),300);});
 const labelR=new CSS2DRenderer({element:$('#labels')});
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(35,1,10,200000);
@@ -661,23 +665,24 @@ var real=null;
 const realMats=new Map();
 const RX_METAL=/(ручк|профил|алюмин|штанг|опора|направля|петл|флипер|flipper|aventos|хром|сталь|металл)/i;
 async function realInit(){
-  const [{RoomEnvironment},{EffectComposer},{RenderPass},{GTAOPass},{OutputPass}]=await Promise.all([
+  const [{RoomEnvironment},{EffectComposer},{RenderPass},{GTAOPass},{OutputPass},{SMAAPass}]=await Promise.all([
     import('./lib/jsm/environments/RoomEnvironment.js'),import('./lib/jsm/postprocessing/EffectComposer.js'),
-    import('./lib/jsm/postprocessing/RenderPass.js'),import('./lib/jsm/postprocessing/GTAOPass.js'),import('./lib/jsm/postprocessing/OutputPass.js')]);
+    import('./lib/jsm/postprocessing/RenderPass.js'),import('./lib/jsm/postprocessing/GTAOPass.js'),import('./lib/jsm/postprocessing/OutputPass.js'),
+    import('./lib/jsm/postprocessing/SMAAPass.js')]);
   const pm=new THREE.PMREMGenerator(renderer);const env=pm.fromScene(new RoomEnvironment(renderer),.04).texture;pm.dispose();
   const phone=matchMedia('(pointer:coarse)').matches&&Math.min(innerWidth,innerHeight)<700;
-  // сглаживание краёв (MSAA): у промежуточной картинки эффектов его нет по умолчанию — края «лесенкой» и рябь при вращении
-  const rt=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:phone?2:4});
-  const composer=new EffectComposer(renderer,rt);
+  // MSAA в эффектах НЕ используем: на Retina Mac съедал сотни МБ видеопамяти — модель пропадала (Макс 31.10). Сглаживание — SMAA в конце.
+  const composer=new EffectComposer(renderer);
   // чёткость: в покое — полная; пока крутят — вдвое ниже по каждой стороне (на Retina это 4× меньше точек), на телефоне не трогаем
   const fullPR=Math.min(devicePixelRatio,phone?1.5:2),lowPR=phone?fullPR:Math.max(1,fullPR*.75);   // ×0,5 давало рябь — ×0,75 со сглаживанием
   composer.setPixelRatio(fullPR);composer.setSize(innerWidth,innerHeight);
   composer.addPass(new RenderPass(scene,camera));
-  // затенение углов — в половинном разрешении: оно мягкое, на вид то же, а работы вчетверо меньше (Retina Mac — ~5 млн точек)
+  // затенение углов на ПК — в половинном разрешении (Retina Mac — ~5 млн точек); на телефоне — полное (в половинном давало рябь)
   const ao=new GTAOPass(scene,camera,innerWidth,innerHeight);
-  ao.setSize=function(w,h){GTAOPass.prototype.setSize.call(this,Math.max(1,Math.ceil(w/2)),Math.max(1,Math.ceil(h/2)));};
+  if(!phone)ao.setSize=function(w,h){GTAOPass.prototype.setSize.call(this,Math.max(1,Math.ceil(w/2)),Math.max(1,Math.ceil(h/2)));};
   composer.addPass(ao);
   composer.addPass(new OutputPass());
+  const smaa=new SMAAPass(innerWidth,innerHeight);composer.addPass(smaa);   // сглаживание краёв — лёгкое, без лишней памяти
   // свет «из окна» с мягкой тенью
   // свет сверху-спереди (как потолочный): тени ложатся под полки ровно, а не косыми полосами
   const key=new THREE.DirectionalLight(0xfff4e6,2.0);key.castShadow=true;const ms=phone?2048:4096;key.shadow.mapSize.set(ms,ms);
@@ -799,6 +804,8 @@ function bindMenu(btn,menu,onPick){
     else if(e.key==='Escape'){closeMenus();btn.focus();}});
 }
 bindMenu($('#tView'),$('#mView'),b=>fitView(b.dataset.v));
+(()=>{let lost=false;try{lost=sessionStorage.getItem('mgs-real-lost')==='1';sessionStorage.removeItem('mgs-real-lost');}catch(_){}
+  if(lost)setTimeout(()=>partInfo('«Реалистичный» не поместился в видеопамять этого устройства','показан обычный режим'),1500);})();
 bindMenu($('#tMode'),$('#mMode'),async b=>{const m=b.dataset.mode;
   if(m==='real'&&!real){status('Готовим реалистичный вид…');try{await realInit();}catch(e){console.error(e);status('');partInfo('Реалистичный вид не поддерживается этим браузером','');return;}status('');}
   viewMode=m;applyMode();});
