@@ -107,6 +107,7 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
     <div class="brand">MGS<b>3D</b></div>
     <div class="sp"></div>
     <div class="who" id="who"></div>
+    <a class="btn ghost small" href="crm.html" id="crmBtn" hidden>Клиенты</a>
     <button class="btn ghost small" id="admBtn" hidden>Управление</button>
     <button class="btn ghost small" id="logout" hidden>Выйти</button>
   </div>
@@ -275,7 +276,7 @@ async function init(){
   afterLogin(session);
 }
 async function afterLogin(session){
-  $('#who').textContent=session.user.user_metadata?.name||session.user.email;$('#logout').hidden=false;
+  $('#who').textContent=session.user.user_metadata?.name||session.user.email;$('#logout').hidden=false;$('#crmBtn').hidden=false;
   await checkAdmin();
   const pid=new URLSearchParams(location.search).get('p');
   const ad=new URLSearchParams(location.search).get('admin');
@@ -288,7 +289,7 @@ $('#vLogin').onsubmit=async e=>{
   if(error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Неверная почта или пароль.';return;}
   $('#loginMsg').textContent='';afterLogin(data.session);
 };
-$('#logout').onclick=async()=>{await sb.auth.signOut();$('#who').textContent='';$('#logout').hidden=true;$('#admBtn').hidden=true;show('vLogin');};
+$('#logout').onclick=async()=>{await sb.auth.signOut();$('#who').textContent='';$('#logout').hidden=true;$('#crmBtn').hidden=true;$('#admBtn').hidden=true;show('vLogin');};
 
 /* ---- управление: сервис /admin/v1 на сервере (server/admin/app.py), только для администратора ---- */
 async function adm(method,path,body,raw){
