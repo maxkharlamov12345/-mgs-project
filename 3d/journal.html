@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGS: тест и рабочая</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;700&display=swap">
+<style>
+/* Сводка как «журнал выкладок»: сверху — что ждёт выкладки, ниже — разделы с таблицей Тест / Рабочая. Фирменные цвета MGS. */
+:root{
+  --bg:#0f0e0c; --panel:#151311; --line:#2a2722; --fg:#f4f1ec; --mute:#a39d93;
+  --lime:#bfd630; --lime-ink:#1a1d05;
+  --ok:#8fd16a; --wait:#f0b44c; --check:#7fb6ff; --work:#c49bff; --off:#7d776e;
+  --f:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html.embed body{padding:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1080px;margin:0 auto;display:grid;gap:36px}
+header{display:grid;gap:10px}
+.brand{font-weight:700;letter-spacing:.06em;font-size:13px;color:var(--mute)}
+.brand b{color:var(--lime)}
+h1{font-weight:300;font-size:clamp(28px,5vw,44px);line-height:1.1;margin:0;text-wrap:balance}
+.meta{color:var(--mute);font-size:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.addr{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.addr div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:4px;min-width:0}
+.addr .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.addr .v{font-weight:500;overflow-wrap:anywhere}
+.addr .v a{color:var(--fg)}
+.addr small{color:var(--mute)}
+h2{font-weight:500;font-size:20px;margin:0 0 12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2 .n{font-size:13px;color:var(--mute);font-weight:400}
+.next{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--lime);border-radius:14px;padding:18px 20px}
+.next ol{margin:0;padding-left:20px;display:grid;gap:8px}
+.next li::marker{color:var(--lime);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12.5px;font-weight:500;white-space:nowrap;
+  border:1px solid currentColor;background:color-mix(in srgb,currentColor 12%,transparent)}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.ok{color:var(--ok)} .wait{color:var(--wait)} .check{color:var(--check)} .work{color:var(--work)} .off{color:var(--off)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{text-align:left;vertical-align:top;padding:12px 14px;border-bottom:1px solid var(--line)}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:500}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:500;width:30%}
+td.c{width:16%}
+td.note{color:var(--mute);font-size:14px}
+footer{color:var(--mute);font-size:13px}
+@media (max-width:640px){
+  table{min-width:0} thead{display:none}
+  tr{display:grid;grid-template-columns:auto auto 1fr;gap:6px 10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  tr:last-child{border-bottom:0}
+  td{padding:0;border:0;width:auto!important}
+  td:first-child{grid-column:1/-1}
+  td.c::before{content:attr(data-l);display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:2px}
+  td.note{grid-column:1/-1}
+}
+</style>
+<script>if(window.top!==window)document.documentElement.classList.add("embed")</script>
+</head><body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">MGS <b>3D</b> · журнал выкладок</div>
+    <h1>Что на тесте, а что уже у менеджеров</h1>
+    <div class="meta"><span>Обновлено 31 октября 2026, 12:40</span><span>Рабочая версия последний раз выкладывалась 30.10</span></div>
+  </header>
+
+  <section class="addr" aria-label="Адреса">
+    <div><span class="k">Тест</span><span class="v"><a href="https://test.mgsmebel.com/3d/">test.mgsmebel.com/3d</a></span><small>Каждая правка появляется здесь за минуту</small></div>
+    <div><span class="k">Рабочая — сотрудники</span><span class="v"><a href="https://app.mgsmebel.com">app.mgsmebel.com</a></span><small>Обновляется только по слову «выкладывай»</small></div>
+    <div><span class="k">Рабочая — клиенты</span><span class="v"><a href="https://my.mgsmebel.com">my.mgsmebel.com</a></span><small>Ссылки на 3D для клиентов</small></div>
+  </section>
+
+  <section class="next">
+    <h2>Дальше по порядку</h2>
+    <ol>
+      <li>Макс смотрит новый «Реалистичный» на Mac и телефоне. Нет ряби — пишет «выкладывай».</li>
+      <li>После выкладки Макс первым ставит кнопку из кабинета и отправляет один проект: проверяем отправку и автообновление на настоящем PRO100.</li>
+      <li>Менеджеры один раз ставят кнопку («Скачать кнопку для PRO100» → «Установить.cmd»). Дальше она обновляется сама.</li>
+      <li>Размеры из PRO100 — доводим в отдельном чате.</li>
+      <li>Потом: фотореализм при остановке, ускорение выгрузки из PRO100 (нужны журналы plugin.log и send.log).</li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="legend" aria-label="Обозначения">
+      <span class="chip ok">Есть</span><span class="chip check">На проверке</span><span class="chip wait">Ждёт выкладки</span>
+      <span class="chip work">В работе</span><span class="chip off">Не в релизе / нет</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Кабинет сотрудников <span class="n">app.mgsmebel.com</span></h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Что</th><th>Тест</th><th>Рабочая</th><th>Заметка</th></tr></thead>
+      <tbody>
+        <tr><td>Проекты, изделия, ссылка клиенту, загрузка OBJ и zip</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip ok">Есть</span></td><td class="note">Работает с 30.10</td></tr>
+        <tr><td>Роли: главный, администратор салонов, менеджер</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">Кто что видит — уже работает на сервере для всех. Фильтры «Салон» и «Менеджер», «Ответственный менеджер» в проекте — только на тесте</td></tr>
+        <tr><td>«Управление»: сотрудники и салоны</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">Фото, ФИО, телефон, салон, роль, пароль; салоны с адресом и фото</td></tr>
+        <tr><td>Лёгкие модели для клиента</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">Сервер уже сжимает модели примерно в 10 раз для всех. Надпись «для клиента N МБ» в кабинете — только на тесте</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>3D-просмотр для клиента <span class="n">my.mgsmebel.com</span></h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Что</th><th>Тест</th><th>Рабочая</th><th>Заметка</th></tr></thead>
+      <tbody>
+        <tr><td>Быстрая загрузка с процентами</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">Сейчас у клиента грузится тяжёлый исходный файл</td></tr>
+        <tr><td>Кнопки сверху: «Вид», режимы, «Без фасадов», «Открыть»</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">В рабочей — старая боковая панель</td></tr>
+        <tr><td>Режимы «Оригинал», «Прозрачный», «Контуры» с контурами рёбер</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note"></td></tr>
+        <tr><td>Режим «Реалистичный»</td><td class="c" data-l="Тест"><span class="chip check">На проверке</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">Пересобран 31.10 без ряби: мягкие тени от потолочного света, без затенения в самых углах</td></tr>
+        <tr><td>«Без фасадов»</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">Прячет фасады вместе с кромками, ручками и петлями</td></tr>
+        <tr><td>Открывание дверей и ящиков</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Старая версия</span></td><td class="note">На тесте: ровно 90°, двери не наезжают, кромки полок больше не уезжают с дверью</td></tr>
+        <tr><td>Плавное вращение (склейка деталей)</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">Примерно в 15 раз меньше работы для видеокарты</td></tr>
+        <tr><td>Автоматические размеры по геометрии</td><td class="c" data-l="Тест"><span class="chip off">Убраны</span></td><td class="c" data-l="Рабочая"><span class="chip ok">Есть</span></td><td class="note">После выкладки пропадут у клиентов — по решению «размеры только из PRO100»</td></tr>
+        <tr><td>Размеры из PRO100</td><td class="c" data-l="Тест"><span class="chip work">В работе</span></td><td class="c" data-l="Рабочая"><span class="chip off">Не в релизе</span></td><td class="note">Много багов, доводим в отдельном чате. На рабочих адресах не показываются, даже если пришли</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Кнопка для PRO100 <span class="n">«Экспорт → Отправить в MGS 3D…»</span></h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Что</th><th>Тест</th><th>Рабочая</th><th>Заметка</th></tr></thead>
+      <tbody>
+        <tr><td>Отправка модели в кабинет</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip ok">Есть</span></td><td class="note">В рабочей — сборка от 30.10</td></tr>
+        <tr><td>Автообновление без переустановки</td><td class="c" data-l="Тест"><span class="chip check">На проверке</span></td><td class="c" data-l="Рабочая"><span class="chip wait">Ждёт выкладки</span></td><td class="note">Проверено на имитации PRO100. Нужна первая отправка из настоящего PRO100</td></tr>
+        <tr><td>Плагин «Размеры MGS»</td><td class="c" data-l="Тест"><span class="chip work">В работе</span></td><td class="c" data-l="Рабочая"><span class="chip off">Не в релизе</span></td><td class="note">Убран из архива для менеджеров. Установщик удалит старый, если он стоит</td></tr>
+        <tr><td>Ускорение выгрузки из PRO100</td><td class="c" data-l="Тест"><span class="chip off">Нет</span></td><td class="c" data-l="Рабочая"><span class="chip off">Нет</span></td><td class="note">Идея есть, ждём журналы с долгой отправки</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Сервер <span class="n">общий для теста и рабочей</span></h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Что</th><th>Тест</th><th>Рабочая</th><th>Заметка</th></tr></thead>
+      <tbody>
+        <tr><td>Свой сервер в СПб, открывается без VPN</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip ok">Есть</span></td><td class="note">Timeweb, бэкапы включены</td></tr>
+        <tr><td>Сервер обновляется сам из GitHub</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip ok">Есть</span></td><td class="note">Изменения базы и сервисов применяются без консоли</td></tr>
+        <tr><td>Страница состояния сервера</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip ok">Есть</span></td><td class="note"><a href="https://api.mgsmebel.com/status" style="color:var(--fg)">api.mgsmebel.com/status</a></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Сайт для клиентов <span class="n">пока весь тестовый</span></h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Что</th><th>Тест</th><th>Рабочая</th><th>Заметка</th></tr></thead>
+      <tbody>
+        <tr><td>Главная: экраны, салоны на карте, заявка на расчёт</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip off">Нет</span></td><td class="note">Отправка заявки ещё не подключена</td></tr>
+        <tr><td>«Наши работы» и страницы проектов</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip off">Нет</span></td><td class="note">Новая версия «Наших работ» ждёт утверждения</td></tr>
+        <tr><td>Квизы «Примерьте мебель», кухня в 3D</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip off">Нет</span></td><td class="note">Не в меню</td></tr>
+        <tr><td>Замер → PRO100</td><td class="c" data-l="Тест"><span class="chip ok">Есть</span></td><td class="c" data-l="Рабочая"><span class="chip off">Нет</span></td><td class="note">Работает, проверено 26.10</td></tr>
+        <tr><td>Тестовые цены, материалы, города</td><td class="c" data-l="Тест"><span class="chip wait">Заменить</span></td><td class="c" data-l="Рабочая"><span class="chip off">—</span></td><td class="note">Перед запуском сайта заменить на настоящие</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer>Обновляет Claude после каждой выкладки и больших изменений. Файл: 3d/journal.html</footer>
+</div>
+</body></html>

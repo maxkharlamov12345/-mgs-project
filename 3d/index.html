@@ -146,7 +146,7 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
   <section id="vAdmin" hidden style="display:flex;flex-direction:column;gap:18px">
     <button class="back" id="admBack">← Проекты</button>
     <h1>Управление</h1>
-    <div class="tabs" role="tablist"><button role="tab" data-tab="staff">Сотрудники</button><button role="tab" data-tab="salons">Салоны</button></div>
+    <div class="tabs" role="tablist"><button role="tab" data-tab="staff">Сотрудники</button><button role="tab" data-tab="salons">Салоны</button><button role="tab" data-tab="journal">Журнал</button></div>
 
     <div id="tabStaff" style="display:flex;flex-direction:column;gap:18px">
       <div class="bar"><h2>Сотрудники</h2><div class="sp"></div><button class="btn" id="stNewBtn">Добавить сотрудника</button></div>
@@ -182,6 +182,11 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
       </div>
       <div class="card"><div id="staff"></div><div class="msg" id="stMsg"></div></div>
       <div class="hint">Отключённый сотрудник не может войти, его проекты остаются.</div>
+    </div>
+
+    <div id="tabJournal" hidden style="display:flex;flex-direction:column;gap:12px">
+      <div class="bar"><h2>Журнал выкладок</h2><div class="sp"></div><a class="btn ghost small" href="journal.html" target="_blank" rel="noopener">Открыть отдельно</a></div>
+      <iframe id="jFrame" title="Журнал выкладок" style="width:100%;border:0;min-height:70vh;background:transparent"></iframe>
     </div>
 
     <div id="tabSalons" hidden style="display:flex;flex-direction:column;gap:18px">
@@ -302,6 +307,7 @@ async function checkAdmin(){
   try{ME=await adm('GET','/me');}catch{ME={role:'manager',admin_salons:[]};}
   $('#admBtn').hidden=!isBoss();
   document.querySelector('.tabs [data-tab="salons"]').hidden=ME.role!=='owner';
+  document.querySelector('.tabs [data-tab="journal"]').hidden=ME.role!=='owner';
 }
 /* справочники для карточек проектов: все профили и салоны (читать может любой вошедший) */
 let PROFS=[],SAL=[];
@@ -318,10 +324,11 @@ let SALONS=[],STAFF=[],tab='staff';
 $('#admBtn').onclick=()=>openAdmin('staff');$('#admBack').onclick=loadList;
 document.querySelectorAll('.tabs [data-tab]').forEach(b=>b.onclick=()=>openAdmin(b.dataset.tab));
 async function openAdmin(t){
-  tab=t==='salons'&&ME.role==='owner'?'salons':'staff';
+  tab=(t==='salons'||t==='journal')&&ME.role==='owner'?t:'staff';
   history.replaceState(null,'',location.pathname+'?admin='+tab);show('vAdmin');
   document.querySelectorAll('.tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
-  $('#tabStaff').hidden=tab!=='staff';$('#tabSalons').hidden=tab!=='salons';
+  $('#tabStaff').hidden=tab!=='staff';$('#tabSalons').hidden=tab!=='salons';$('#tabJournal').hidden=tab!=='journal';
+  if(tab==='journal'){const f=$('#jFrame');f.onload=()=>{try{f.style.height=f.contentDocument.documentElement.scrollHeight+'px';}catch{}};f.src='journal.html?t='+Date.now();return;}
   $('#stForm').hidden=true;$('#stDone').hidden=true;$('#slForm').hidden=true;
   await loadSalons();if(tab==='staff')loadStaff();
 }
