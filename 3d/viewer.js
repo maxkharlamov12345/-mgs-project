@@ -33,15 +33,16 @@ const vis={overall:true,gaps:true,drawers:true,manual:true};
    Автоматические (по геометрии) выключены по решению Макса 30.10; вернуть — AUTO_DIMS=true. */
 const AUTO_DIMS=false;
 let manualDims=null;
+// Размеры из PRO100 пока в тесте (Макс 31.10: «много багов, на релиз не идёт») — на рабочих адресах app./my. не показываем
+const DIMS_ON=!/^(app|my)\./.test(location.hostname);
 
 // шапка с кнопками закрывает верх экрана — центр кадра смещаем вниз на её половину (модель не уезжает под кнопки)
 function topH(){const t=document.getElementById('top');return t&&!t.hidden?Math.min(t.getBoundingClientRect().height,innerHeight*.4):0;}
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);labelR.setSize(w,h);camera.aspect=w/h;
-  const hh=topH();if(hh>0)camera.setViewOffset(w,h,0,-hh/2,w,h);else camera.clearViewOffset();camera.updateProjectionMatrix();
-  if(typeof real!=='undefined'&&real){real.composer.setSize(w,h);real.dirty=6;}}
+  const hh=topH();if(hh>0)camera.setViewOffset(w,h,0,-hh/2,w,h);else camera.clearViewOffset();camera.updateProjectionMatrix();}
 addEventListener('resize',resize);resize();
 let _lastT=performance.now();
-(function loop(){requestAnimationFrame(loop);const _now=performance.now(),_dt=Math.min(100,_now-_lastT);_lastT=_now;controls.update();if(typeof updateMovers==='function')updateMovers(_dt);if(typeof updateLabels==='function')updateLabels();if(typeof realFrame==='function'&&realFrame()){}else renderer.render(scene,camera);labelR.render(scene,camera);})();
+(function loop(){requestAnimationFrame(loop);const _now=performance.now(),_dt=Math.min(100,_now-_lastT);_lastT=_now;controls.update();if(typeof updateMovers==='function')updateMovers(_dt);if(typeof updateLabels==='function')updateLabels();if(typeof realFrame==='function')realFrame();renderer.render(scene,camera);labelR.render(scene,camera);})();
 
 function status(t){const s=$('#status');if(!s)return;if(!t){s.hidden=true;return;}s.textContent=t;s.hidden=false;}
 
@@ -74,7 +75,7 @@ async function loadGlb(glb,files,title){
   const obj=g.scene;
   obj.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(!m)return;m.side=THREE.DoubleSide;if(m.metalness>0.3)m.metalness=0.1;});});
   manualDims=null;
-  if(files&&files.has('mgs-dims.json')){try{manualDims=JSON.parse(await getText(files.get('mgs-dims.json')));}catch(e){console.warn('mgs-dims.json',e);}}
+  if(DIMS_ON&&files&&files.has('mgs-dims.json')){try{manualDims=JSON.parse(await getText(files.get('mgs-dims.json')));}catch(e){console.warn('mgs-dims.json',e);}}
   setModel(obj,title);
   status('');
 }
@@ -96,7 +97,7 @@ async function loadFromMap(files,title){ // files: Map basename -> {url, text?}
   const ol=new OBJLoader(mgr);if(mats)ol.setMaterials(mats);
   const obj=ol.parse(objText);
   manualDims=null;
-  if(files.has('mgs-dims.json')){try{manualDims=JSON.parse(await getText(files.get('mgs-dims.json')));}catch(e){console.warn('mgs-dims.json',e);}}
+  if(DIMS_ON&&files.has('mgs-dims.json')){try{manualDims=JSON.parse(await getText(files.get('mgs-dims.json')));}catch(e){console.warn('mgs-dims.json',e);}}
   setModel(obj,title||objKey.replace(/\.obj$/,''));
   status('');
 }
@@ -616,8 +617,8 @@ function buildBatches(){
     const m=p.mesh;
     if(moving.has(m)||fs.has(p)||Array.isArray(m.material)||!m.material||!m.geometry||m.geometry.groups.length>1)continue;
     const g=floatGeo(m.geometry,m.matrixWorld);if(!g)continue;
-    const metal=isMetal(p),key=m.material.uuid+'|'+(metal?1:0)+'|'+(g.getAttribute('uv')?1:0);
-    if(!groups.has(key))groups.set(key,{src:m.material,metal,geos:[]});groups.get(key).geos.push(g);
+    const metal=isMetal(p),kr=/кромка/i.test(p.label),key=m.material.uuid+'|'+(metal?1:0)+'|'+(kr?1:0)+'|'+(g.getAttribute('uv')?1:0);
+    if(!groups.has(key))groups.set(key,{src:m.material,metal,kr,geos:[]});groups.get(key).geos.push(g);
     const eg=new THREE.EdgesGeometry(m.geometry,28);eg.applyMatrix4(m.matrixWorld);
     edges[(/кромка/i.test(p.label)||p.tris>400)?'b':'n'].push(eg);
     m.visible=false;m.userData.batched=true;
@@ -626,7 +627,7 @@ function buildBatches(){
     const geo=G.geos.length>1?mergeGeometries(G.geos,false):G.geos[0];G.geos.forEach(x=>{if(x!==geo)x.dispose();});
     if(!geo)continue;
     const src=G.src;if(!src.polygonOffset){src.polygonOffset=true;src.polygonOffsetFactor=1;src.polygonOffsetUnits=1;}
-    const mesh=new THREE.Mesh(geo,src);mesh.userData.src=src;mesh.userData.metal=G.metal;mesh.raycast=()=>{};
+    const mesh=new THREE.Mesh(geo,src);mesh.userData.src=src;mesh.userData.metal=G.metal;mesh.userData.kr=G.kr;mesh.raycast=()=>{};
     scene.add(mesh);batches.push(mesh);
   }
   for(const k of ['n','b']){
@@ -659,81 +660,51 @@ function edgesOf(p){
   (Array.isArray(m.material)?m.material:[m.material]).forEach(mt=>{if(mt&&!mt.polygonOffset){mt.polygonOffset=true;mt.polygonOffsetFactor=1;mt.polygonOffsetUnits=1;}});
   return u.edges=e;
 }
-/* ---------- «Реалистичный»: свет комнаты (отражения), затенение углов и стыков (GTAO), мягкая тень на полу,
-   материалы PBR с лёгким рельефом из самой текстуры. Модули грузятся только при первом включении. ---------- */
+/* ---------- «Реалистичный» (пересобран 31.10, Макс: «рябь на кромках и тенях»).
+   Без экранных эффектов (затенение углов GTAO, SMAA, пониженная чёткость) — их «шум» привязан к экрану и рябил при вращении.
+   Теперь: свет комнаты RoomEnvironment (отражения) + один мягкий «потолочный» свет с размытой тенью VSM (без зерна и «лесенки»),
+   тень посчитана ОДИН раз (пересчёт — когда двигаются двери / «Без фасадов»), мягкая тень на полу, обычное сглаживание видеокарты.
+   Кромки в этом режиме не рисуются: их грани совпадают с гранями плит и мерцают (z-fighting). Рельефа из текстуры нет — он искрил. ---------- */
 var real=null;
 const realMats=new Map();
 const RX_METAL=/(ручк|профил|алюмин|штанг|опора|направля|петл|флипер|flipper|aventos|хром|сталь|металл)/i;
+const noDraw=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});   // «невидимый» материал (кромки в «Реалистичном»)
 async function realInit(){
-  const [{RoomEnvironment},{EffectComposer},{RenderPass},{GTAOPass},{OutputPass},{SMAAPass}]=await Promise.all([
-    import('./lib/jsm/environments/RoomEnvironment.js'),import('./lib/jsm/postprocessing/EffectComposer.js'),
-    import('./lib/jsm/postprocessing/RenderPass.js'),import('./lib/jsm/postprocessing/GTAOPass.js'),import('./lib/jsm/postprocessing/OutputPass.js'),
-    import('./lib/jsm/postprocessing/SMAAPass.js')]);
+  const {RoomEnvironment}=await import('./lib/jsm/environments/RoomEnvironment.js');
   const pm=new THREE.PMREMGenerator(renderer);const env=pm.fromScene(new RoomEnvironment(renderer),.04).texture;pm.dispose();
   const phone=matchMedia('(pointer:coarse)').matches&&Math.min(innerWidth,innerHeight)<700;
-  // MSAA в эффектах НЕ используем: на Retina Mac съедал сотни МБ видеопамяти — модель пропадала (Макс 31.10). Сглаживание — SMAA в конце.
-  const composer=new EffectComposer(renderer);
-  // чёткость: в покое — полная; пока крутят — вдвое ниже по каждой стороне (на Retina это 4× меньше точек), на телефоне не трогаем
-  const fullPR=Math.min(devicePixelRatio,phone?1.5:2),lowPR=phone?fullPR:Math.max(1,fullPR*.75);   // ×0,5 давало рябь — ×0,75 со сглаживанием
-  composer.setPixelRatio(fullPR);composer.setSize(innerWidth,innerHeight);
-  composer.addPass(new RenderPass(scene,camera));
-  // затенение углов на ПК — в половинном разрешении (Retina Mac — ~5 млн точек); на телефоне — полное (в половинном давало рябь)
-  const ao=new GTAOPass(scene,camera,innerWidth,innerHeight);
-  if(!phone)ao.setSize=function(w,h){GTAOPass.prototype.setSize.call(this,Math.max(1,Math.ceil(w/2)),Math.max(1,Math.ceil(h/2)));};
-  composer.addPass(ao);
-  composer.addPass(new OutputPass());
-  const smaa=new SMAAPass(innerWidth,innerHeight);composer.addPass(smaa);   // сглаживание краёв — лёгкое, без лишней памяти
-  // свет «из окна» с мягкой тенью
-  // свет сверху-спереди (как потолочный): тени ложатся под полки ровно, а не косыми полосами
-  const key=new THREE.DirectionalLight(0xfff4e6,2.0);key.castShadow=true;const ms=phone?2048:4096;key.shadow.mapSize.set(ms,ms);
-  key.shadow.radius=3;key.shadow.bias=-.0003;key.shadow.normalBias=.6;scene.add(key);scene.add(key.target);key.visible=false;
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.38}));
+  const key=new THREE.DirectionalLight(0xfff4e6,1.7);key.castShadow=true;const ms=phone?1024:2048;key.shadow.mapSize.set(ms,ms);
+  key.shadow.radius=10;key.shadow.blurSamples=16;key.shadow.bias=-.0006;key.shadow.normalBias=0;scene.add(key);scene.add(key.target);key.visible=false;
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.35}));
   floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.visible=false;scene.add(floor);
-  real={env,composer,ao,key,floor,phone,fullPR,lowPR,curPR:fullPR,dirty:6,on:false,fitFor:null,lastMove:0,fade:0,shadowDirty:2};
-  controls.addEventListener('change',()=>{if(real){real.dirty=Math.max(real.dirty,1);real.lastMove=performance.now();}});
+  real={env,key,floor,phone,on:false,fitFor:null,shadowDirty:2};
   return real;
 }
-// под текущую модель: тень и пол по её габаритам, радиус затенения в мм
+// под текущую модель: свет почти сверху (тени ровно под полками), камера тени — по габаритам изделия
 function realFit(){
   if(!real||!info||real.fitFor===info)return;real.fitFor=info;
   const b=info.overall,c=b.getCenter(V()),sz=b.getSize(V()),R=Math.max(sz.x,sz.y,sz.z);
   const k=real.key;k.position.set(c.x+R*.12,c.y+R*2.5,c.z+R*.45);k.target.position.copy(c);k.updateMatrixWorld();k.target.updateMatrixWorld();
-  // камера тени — ровно по габаритам изделия (в осях света) + запас под тень на полу: чем плотнее, тем чётче край тени
   const sc=k.shadow.camera;sc.position.copy(k.position);sc.lookAt(c);sc.updateMatrixWorld();
   const inv=sc.matrixWorldInverse,lb=new THREE.Box3();
   for(const x of [b.min.x,b.max.x])for(const y of [b.min.y-1,b.max.y])for(const z of [b.min.z,b.max.z])lb.expandByPoint(V(x,y,z).applyMatrix4(inv));
   const pad=R*.08;sc.left=lb.min.x-pad;sc.right=lb.max.x+pad;sc.bottom=lb.min.y-pad;sc.top=lb.max.y+pad;sc.near=Math.max(1,-lb.max.z-R*.5);sc.far=-lb.min.z+R*.5;sc.updateProjectionMatrix();
   real.floor.scale.set(R*4,R*4,1);real.floor.position.set(c.x,b.min.y-.5,c.z);
-  real.ao.updateGtaoMaterial({radius:Math.min(160,Math.max(60,R*.045)),distanceExponent:1.2,thickness:Math.max(20,R*.015),scale:1.8,samples:real.phone?8:16,distanceFallOff:1,screenSpaceRadius:false});
-  real.ao.updatePdMaterial({lumaPhi:10,depthPhi:6,normalPhi:3,radius:real.phone?8:12,rings:3,samples:16});
 }
 function realSet(on){
   if(!real)return;real.on=on;realFit();
   scene.environment=on?real.env:null;
   renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;   // ACES/AgX разбеливали дерево (проверено 31.10) — цвета как в проекте
-  renderer.shadowMap.enabled=on;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;real.shadowDirty=2;
-  real.key.visible=on;real.floor.visible=on;sun.visible=fill.visible=!on;hemi.intensity=on?.25:2.6;
+  renderer.shadowMap.enabled=on;renderer.shadowMap.type=THREE.VSMShadowMap;renderer.shadowMap.autoUpdate=false;real.shadowDirty=2;
+  real.key.visible=on;real.floor.visible=on;sun.visible=fill.visible=!on;hemi.intensity=on?.35:2.6;
   scene.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true);});
-  real.dirty=8;
 }
-/* кадр «Реалистичного»: затенение углов — всегда, и при вращении (Макс 31.10: «проявление потом» ломало целостность);
-   плавность дают склейка деталей и тень, посчитанная один раз (пересчёт — только когда двигаются двери / «Без фасадов»).
-   В покое ничего не рисуется. */
+// перед кадром: тень пересчитываем только когда что-то сдвинулось; рисует обычный цикл (как в остальных режимах)
 function realFrame(){
   if(!real||!real.on)return false;
-  const now=performance.now(),doors=movers&&movers.some(m=>m.t!==m.goal),moving=doors||now-real.lastMove<150;
-  if(doors)real.shadowDirty=1;
-  const pr=moving?real.lowPR:real.fullPR;
-  if(pr!==real.curPR){real.curPR=pr;real.composer.setPixelRatio(pr);if(!moving)real.dirty=Math.max(real.dirty,2);}   // остановились — сразу чёткий кадр
-  if(real.dirty>0||moving||real.shadowDirty>0){
-    // не чаще 60 кадров в секунду: экраны 120 Гц (MacBook Pro) иначе рисуют вдвое больше при той же плавности на глаз
-    if(now-(real.lastFrame||0)<15)return true;
-    real.lastFrame=now;
-    real.dirty=Math.max(0,real.dirty-1);
-    if(real.shadowDirty>0){renderer.shadowMap.needsUpdate=true;real.shadowDirty--;}
-    real.composer.render();
-  }
-  return true;
+  if(movers&&movers.some(m=>m.t!==m.goal))real.shadowDirty=1;
+  if(real.shadowDirty>0){renderer.shadowMap.needsUpdate=true;real.shadowDirty--;}
+  return false;
 }
 // материал PBR по исходному: металл — фурнитура, стекло — полупрозрачное, остальное — плита с лёгким рельефом текстуры
 function realMatOf(src,p){
@@ -746,7 +717,7 @@ function realMatOf(src,p){
   if(metal){r.metalness=.85;r.roughness=.32;if(!src.map)r.color.multiplyScalar(.95);}
   else if(glass){r.metalness=0;r.roughness=.08;r.envMapIntensity=1.1;r.depthWrite=false;}
   else if(tint){r.metalness=0;r.roughness=.5;r.envMapIntensity=.35;r.depthWrite=false;}   // полупрозрачная заливка PRO100 — как в проекте, без зеркальных бликов
-  else{r.metalness=0;r.roughness=.62;r.envMapIntensity=.6;if(src.map){r.bumpMap=src.map;r.bumpScale=.9;}}
+  else{r.metalness=0;r.roughness=.62;r.envMapIntensity=.7;}
   realMats.set(key,r);return r;
 }
 function applyMode(){
@@ -756,15 +727,15 @@ function applyMode(){
     if(!u.mat0)u.mat0=m.material;
     const e=edgesOf(p);
     e.material=EDGE_MAT[viewMode];e.visible=viewMode==='lines'||!e.userData.busy;
-    if(viewMode==='real'){e.visible=false;m.material=realMatOf(u.mat0,p);m.castShadow=m.receiveShadow=true;continue;}
+    if(viewMode==='real'){e.visible=false;const kr=/кромка/i.test(p.label);m.material=kr?noDraw:realMatOf(u.mat0,p);m.castShadow=m.receiveShadow=!kr;continue;}
     m.castShadow=m.receiveShadow=false;
     if(viewMode==='orig'){m.material=u.mat0;continue;}
     if(viewMode==='xray'){const x=(Array.isArray(u.mat0)?u.mat0:[u.mat0]).map(xrayOf);m.material=Array.isArray(u.mat0)?x:x[0];continue;}
     m.material=ghostMat;          // контуры: только рёбра + едва заметная заливка
   }
   for(const b of batches){const src=b.userData.src;
-    b.material=viewMode==='real'?realMatOf(src,{label:b.userData.metal?'металл':''}):viewMode==='orig'?src:viewMode==='xray'?xrayOf(src):ghostMat;
-    b.castShadow=b.receiveShadow=viewMode==='real';}
+    b.material=viewMode==='real'?(b.userData.kr?noDraw:realMatOf(src,{label:b.userData.metal?'металл':''})):viewMode==='orig'?src:viewMode==='xray'?xrayOf(src):ghostMat;
+    b.castShadow=b.receiveShadow=viewMode==='real'&&!b.userData.kr;}
   for(const e of batchEdges){e.material=EDGE_MAT[viewMode]||EDGE_MAT.orig;e.visible=viewMode!=='real'&&(viewMode==='lines'||!e.userData.busy);}
   realSet(viewMode==='real');
   const l=$('#tModeL');if(l)l.textContent=MODE_NAMES[viewMode];
@@ -790,7 +761,7 @@ function setFronts(hide,silent){
   frontsHidden=!!hide;
   for(const p of frontSet())p.mesh.visible=!frontsHidden;
   const b=$('#tFronts');if(b){b.setAttribute('aria-pressed',String(frontsHidden));b.querySelector('span').textContent=frontsHidden?'Вернуть фасады':'Без фасадов';}
-  clearSel();if(real){real.dirty=4;real.shadowDirty=2;}if(!silent)partInfo(null);
+  clearSel();if(real)real.shadowDirty=2;if(!silent)partInfo(null);
 }
 function closeMenus(except){document.querySelectorAll('.menu').forEach(m=>{if(m!==except){m.hidden=true;const b=m.previousElementSibling;if(b)b.setAttribute('aria-expanded','false');}});}
 function bindMenu(btn,menu,onPick){

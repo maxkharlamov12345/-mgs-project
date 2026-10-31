@@ -39,10 +39,16 @@ if (Get-Process -Name PRO100 -ErrorAction SilentlyContinue) { Msg 'Закрой�
 
 $plug = Join-Path (Split-Path $exe) 'plugins'
 New-Item -ItemType Directory -Force -Path $plug | Out-Null
-try { foreach ($f in 'mgs3d.plg','mgsdims.plg','mgs3d_send.ps1') { Copy-Item (Join-Path $Src $f) $plug -Force -ErrorAction Stop } }
+$withDims = Test-Path (Join-Path $Src 'mgsdims.plg')   # плагин размеров кладём, только если он есть в архиве (в рабочей версии его нет)
+try {
+  foreach ($f in 'mgs3d.plg','mgs3d_send.ps1') { Copy-Item (Join-Path $Src $f) $plug -Force -ErrorAction Stop }
+  if ($withDims) { Copy-Item (Join-Path $Src 'mgsdims.plg') $plug -Force -ErrorAction Stop }
+  elseif (Test-Path (Join-Path $plug 'mgsdims.plg')) { Remove-Item (Join-Path $plug 'mgsdims.plg') -Force -ErrorAction Stop }
+}
 catch { Msg "Не удалось заменить файлы плагина — похоже, PRO100 ещё работает в фоне.`nОткройте Диспетчер задач, снимите задачу PRO100 (или перезагрузите компьютер) и запустите «Установить.cmd» снова." 'Error'; exit }
 $iniDst = Join-Path $plug 'mgs3d.ini'
 # старый ini (облако supabase.co) заменяем — сервер переехал на api.mgsmebel.com
 if (-not (Test-Path $iniDst) -or (Select-String -Path $iniDst -Pattern 'supabase\.co' -Quiet)) { Copy-Item (Join-Path $Src 'mgs3d.ini') $plug -Force }
 Get-ChildItem $plug -Filter 'mgs*' | Unblock-File -ErrorAction SilentlyContinue
-Msg "Плагин MGS 3D установлен.`n`nPRO100: $exe (версия $ver)`n`nОткройте PRO100:`n• Экспорт → «Размеры MGS…» — поставить размеры для клиента;`n• Экспорт → «Отправить в MGS 3D…» — модель и размеры уходят на сайт."
+if ($withDims) { Msg "Плагин MGS 3D установлен.`n`nPRO100: $exe (версия $ver)`n`nОткройте PRO100:`n• Экспорт → «Размеры MGS…» — поставить размеры для клиента;`n• Экспорт → «Отправить в MGS 3D…» — модель и размеры уходят на сайт." }
+else { Msg "Плагин MGS 3D установлен.`n`nPRO100: $exe (версия $ver)`n`nОткройте PRO100 → Экспорт → «Отправить в MGS 3D…» — модель уходит на сайт, клиенту — ссылка." }
