@@ -669,7 +669,10 @@ async function realInit(){
   const composer=new EffectComposer(renderer);
   composer.setPixelRatio(Math.min(devicePixelRatio,phone?1.5:2));composer.setSize(innerWidth,innerHeight);
   composer.addPass(new RenderPass(scene,camera));
-  const ao=new GTAOPass(scene,camera,innerWidth,innerHeight);composer.addPass(ao);
+  // затенение углов — в половинном разрешении: оно мягкое, на вид то же, а работы вчетверо меньше (Retina Mac — ~5 млн точек)
+  const ao=new GTAOPass(scene,camera,innerWidth,innerHeight);
+  ao.setSize=function(w,h){GTAOPass.prototype.setSize.call(this,Math.max(1,Math.ceil(w/2)),Math.max(1,Math.ceil(h/2)));};
+  composer.addPass(ao);
   composer.addPass(new OutputPass());
   // свет «из окна» с мягкой тенью
   // свет сверху-спереди (как потолочный): тени ложатся под полки ровно, а не косыми полосами
@@ -712,6 +715,9 @@ function realFrame(){
   const now=performance.now(),doors=movers&&movers.some(m=>m.t!==m.goal),moving=doors||now-real.lastMove<150;
   if(doors)real.shadowDirty=1;
   if(real.dirty>0||moving||real.shadowDirty>0){
+    // не чаще 60 кадров в секунду: экраны 120 Гц (MacBook Pro) иначе рисуют вдвое больше при той же плавности на глаз
+    if(now-(real.lastFrame||0)<15)return true;
+    real.lastFrame=now;
     real.dirty=Math.max(0,real.dirty-1);
     if(real.shadowDirty>0){renderer.shadowMap.needsUpdate=true;real.shadowDirty--;}
     real.composer.render();
