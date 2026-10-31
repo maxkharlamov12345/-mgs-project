@@ -667,7 +667,9 @@ async function realInit(){
   const pm=new THREE.PMREMGenerator(renderer);const env=pm.fromScene(new RoomEnvironment(renderer),.04).texture;pm.dispose();
   const phone=matchMedia('(pointer:coarse)').matches&&Math.min(innerWidth,innerHeight)<700;
   const composer=new EffectComposer(renderer);
-  composer.setPixelRatio(Math.min(devicePixelRatio,phone?1.5:2));composer.setSize(innerWidth,innerHeight);
+  // чёткость: в покое — полная; пока крутят — вдвое ниже по каждой стороне (на Retina это 4× меньше точек), на телефоне не трогаем
+  const fullPR=Math.min(devicePixelRatio,phone?1.5:2),lowPR=phone?fullPR:Math.max(.75,fullPR*.5);
+  composer.setPixelRatio(fullPR);composer.setSize(innerWidth,innerHeight);
   composer.addPass(new RenderPass(scene,camera));
   // затенение углов — в половинном разрешении: оно мягкое, на вид то же, а работы вчетверо меньше (Retina Mac — ~5 млн точек)
   const ao=new GTAOPass(scene,camera,innerWidth,innerHeight);
@@ -680,7 +682,7 @@ async function realInit(){
   key.shadow.radius=3;key.shadow.bias=-.0003;key.shadow.normalBias=.6;scene.add(key);scene.add(key.target);key.visible=false;
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.ShadowMaterial({opacity:.38}));
   floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.visible=false;scene.add(floor);
-  real={env,composer,ao,key,floor,phone,dirty:6,on:false,fitFor:null,lastMove:0,fade:0,shadowDirty:2};
+  real={env,composer,ao,key,floor,phone,fullPR,lowPR,curPR:fullPR,dirty:6,on:false,fitFor:null,lastMove:0,fade:0,shadowDirty:2};
   controls.addEventListener('change',()=>{if(real){real.dirty=Math.max(real.dirty,1);real.lastMove=performance.now();}});
   return real;
 }
@@ -714,6 +716,8 @@ function realFrame(){
   if(!real||!real.on)return false;
   const now=performance.now(),doors=movers&&movers.some(m=>m.t!==m.goal),moving=doors||now-real.lastMove<150;
   if(doors)real.shadowDirty=1;
+  const pr=moving?real.lowPR:real.fullPR;
+  if(pr!==real.curPR){real.curPR=pr;real.composer.setPixelRatio(pr);if(!moving)real.dirty=Math.max(real.dirty,2);}   // остановились — сразу чёткий кадр
   if(real.dirty>0||moving||real.shadowDirty>0){
     // не чаще 60 кадров в секунду: экраны 120 Гц (MacBook Pro) иначе рисуют вдвое больше при той же плавности на глаз
     if(now-(real.lastFrame||0)<15)return true;
