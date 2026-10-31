@@ -92,8 +92,23 @@ h3{margin:0;font-size:16px;font-weight:600}
 .empty{color:var(--ink3);font-size:13px;padding:12px 8px}
 
 /* список после договора */
-.list{border-radius:18px;background:var(--surface);padding:6px;overflow-x:auto}
-.list-in{min-width:760px;display:flex;flex-direction:column;gap:2px}
+.list{overflow-x:auto}
+.list.flat{border-radius:18px;background:var(--surface);padding:6px}
+.ccard{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:start;padding:14px;border-radius:18px;background:var(--surface);transition:background-color .15s}
+.ccard:hover{background:#201e1a}
+.ccard .cn{display:flex;flex-direction:column;gap:4px;padding:6px 4px;min-width:0}
+.ccard .cn b{font-size:16px;font-weight:600}
+.ccard .cn span{color:var(--ink3);font-size:13px}
+.plist{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pline{display:grid;grid-template-columns:64px minmax(0,1.5fr) minmax(0,1fr) 140px minmax(0,.9fr);align-items:center;gap:14px;padding:6px 14px 6px 6px;border-radius:12px;background:var(--surface2);min-height:56px}
+.pline.acc{background:var(--acc);box-shadow:inset 0 0 0 1px var(--acc-ring)}
+.pline .th{width:64px;height:44px;border-radius:9px;background:var(--raised) center/cover no-repeat;display:grid;place-items:center}
+.pline.acc .th{background:rgba(191,214,48,.14);color:#dcef9f;font-size:10.5px;font-weight:600}
+.pline .pn{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pline .pn small{display:block;font-weight:400;color:var(--ink3);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pline .pc{color:var(--ink2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pline .ps{color:var(--ink);font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-in{min-width:820px;display:flex;flex-direction:column;gap:10px}
 .crow{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;padding:14px 16px;border-radius:12px}
 .crow:hover{background:var(--surface2)}
 .crow .cn{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -287,7 +302,7 @@ const showErr=e=>{const m=$('#err');m.hidden=!e;m.textContent=e?('Ошибка: 
 
 const PRE=[['work','Взят в работу'],['kp','КП отправлено'],['zamer','Замер']];
 const PRE_ALL=[...PRE,['contract','Договор']];
-const POST=['Оформлен','Отправлен в производство','Согласован и запущен','Доставка','Монтаж','Рекламация','Закрыт'];
+const POST=['Оформлен','Отправлен','Запущен','Доставка','Монтаж','Рекламация','Закрыт'];
 const REASONS=['Дорого','Сроки изготовления','Нет нужного материала','Выбрал другую фабрику','Отложил покупку','Не выходит на связь','Свой ответ'];
 const DEF_CONTRACTOR='МГС';
 
@@ -395,7 +410,7 @@ function renderPre(){
   root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{S.preTab=b.dataset.tab;render();});
   const body=$('#preBody');
   if(S.preTab==='lost'){
-    body.innerHTML=lost.length?`<div class="list"><div class="list-in" style="min-width:0">${lost.map(c=>`<div class="lrow">
+    body.innerHTML=lost.length?`<div class="list flat"><div class="list-in" style="min-width:0;gap:2px">${lost.map(c=>`<div class="lrow">
       <div><b>${esc(c.name)}</b><div class="x"><span class="num">${c.num}</span> · ${esc(salonName(c.salon_id))}</div></div>
       <div class="r">${esc(c.lost_reason||'')}</div><div class="x">${esc(c.lost_note||'')}</div>
       <div style="display:flex;gap:6px"><button class="pill solid" data-open="${c.id}">Открыть</button><button class="pill solid" data-back="${c.id}">Вернуть в работу</button></div></div>`).join('')}</div></div>`
@@ -497,9 +512,13 @@ function renderPost(){
   if(S.postMode==='list'){
     const rows=shown.map(c=>{let ps=S.positions.filter(p=>p.client_id===c.id);if(S.postStage)ps=ps.filter(p=>p.stage===S.postStage);
       if(S.postStage&&!ps.length)return '';
-      return `<button class="crow" data-open="${c.id}"><div class="cn"><b>${esc(c.name)}</b><span><span class="num">${c.num}</span> · ${esc(salonName(c.salon_id))}</span></div>
-        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">${ps.map(p=>`<div class="prow"><span class="pn">${esc(posTitle(p))}</span><span class="pc">${esc(p.contractor)}</span>${rail(p.stage)}<span class="ps">${POST[p.stage-1]}</span></div>`).join('')||'<span class="msg">Позиций нет</span>'}</div></button>`;}).join('');
+      return `<button class="ccard" data-open="${c.id}"><div class="cn"><b>${esc(c.name)}</b><span><span class="num">${c.num}</span> · ${esc(salonName(c.salon_id))}</span></div>
+        <div class="plist">${ps.map(p=>p.kind==='accessory'
+          ?`<div class="pline acc"><span class="th">Сопутка</span><span class="pn">${esc(p.contractor||'Контрагент')}<small>${esc((p.lines||[]).map(l=>l.name).filter(Boolean).join(', '))}</small></span><span class="pc"></span>${rail(p.stage)}<span class="ps">${POST[p.stage-1]}</span></div>`
+          :`<div class="pline"><span class="th" ${p.preview?`data-img="${esc(p.preview)}"`:''}></span><span class="pn">${esc(p.name)}</span><span class="pc">${esc(p.contractor)}</span>${rail(p.stage)}<span class="ps">${POST[p.stage-1]}</span></div>`).join('')||'<span class="msg">Позиций нет</span>'}</div></button>`;}).join('');
     body.innerHTML=`<div class="list"><div class="list-in">${rows||'<div class="empty">Нет позиций на этом этапе.</div>'}</div></div>`;
+    const ims=[...body.querySelectorAll('[data-img]')];
+    signed(ims.map(e=>e.dataset.img)).then(()=>ims.forEach(e=>e.style.backgroundImage=`url("${surl(e.dataset.img)}")`));
     body.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openCard(b.dataset.open));
     return;
   }
