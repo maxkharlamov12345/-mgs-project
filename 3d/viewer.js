@@ -666,9 +666,11 @@ async function realInit(){
     import('./lib/jsm/postprocessing/RenderPass.js'),import('./lib/jsm/postprocessing/GTAOPass.js'),import('./lib/jsm/postprocessing/OutputPass.js')]);
   const pm=new THREE.PMREMGenerator(renderer);const env=pm.fromScene(new RoomEnvironment(renderer),.04).texture;pm.dispose();
   const phone=matchMedia('(pointer:coarse)').matches&&Math.min(innerWidth,innerHeight)<700;
-  const composer=new EffectComposer(renderer);
+  // сглаживание краёв (MSAA): у промежуточной картинки эффектов его нет по умолчанию — края «лесенкой» и рябь при вращении
+  const rt=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:phone?2:4});
+  const composer=new EffectComposer(renderer,rt);
   // чёткость: в покое — полная; пока крутят — вдвое ниже по каждой стороне (на Retina это 4× меньше точек), на телефоне не трогаем
-  const fullPR=Math.min(devicePixelRatio,phone?1.5:2),lowPR=phone?fullPR:Math.max(.75,fullPR*.5);
+  const fullPR=Math.min(devicePixelRatio,phone?1.5:2),lowPR=phone?fullPR:Math.max(1,fullPR*.75);   // ×0,5 давало рябь — ×0,75 со сглаживанием
   composer.setPixelRatio(fullPR);composer.setSize(innerWidth,innerHeight);
   composer.addPass(new RenderPass(scene,camera));
   // затенение углов — в половинном разрешении: оно мягкое, на вид то же, а работы вчетверо меньше (Retina Mac — ~5 млн точек)
