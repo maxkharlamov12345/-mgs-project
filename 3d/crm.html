@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MGS — клиенты</title>
+<link rel="stylesheet" href="mail.css">
 <style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2122,U+2212}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+20A0-20CF}</style>
 <style>
 /* Дизайн «Шоурум» (тёплый чёрный, таблетки, крупные касания) + функционал «Пульт» (поиск, плотные списки, фильтры).
@@ -283,6 +284,12 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
   <div class="acts"><button class="pill solid big" type="button" data-close>Закрыть</button><button class="pill solid big" type="button" id="psOpen">Карточка клиента</button></div>
 </div></dialog>
 
+<dialog id="dPick" style="max-width:min(820px,calc(100vw - 24px))"><div class="dlg">
+  <div style="display:flex;align-items:center;gap:12px"><h2>Файлы из карточки</h2><span class="msg" id="pkN"></span></div>
+  <div class="pickgrid" id="pkGrid"></div>
+  <div class="acts"><button class="pill solid big" type="button" data-close>Отмена</button><button class="pill big" type="button" id="pkOk" style="background:var(--ink);color:var(--bg);font-weight:600">Вложить</button></div>
+</div></dialog>
+
 <input type="file" id="fileIn" multiple hidden>
 <div class="toast" id="toast" hidden></div>
 
@@ -290,6 +297,7 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
 <script type="module">
 import {sb,configured} from './db.js';
 import {SUPABASE_URL} from './config.js';
+import * as M from './mail.js';
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -337,6 +345,7 @@ $('#loginForm').onsubmit=async e=>{
 async function start(session){
   S.uid=session.user.id;$('#vLogin').hidden=true;$('#vApp').hidden=false;
   try{const r=await fetch(SUPABASE_URL+'/admin/v1/me',{headers:{Authorization:'Bearer '+session.access_token}});if(r.ok)S.me=await r.json();}catch{}
+  if(S.me.role==='factory'){location.replace('factory.html');return;}
   const [a,b]=await Promise.all([sb.from('staff_profiles').select('user_id,name,photo,salon_id,role'),sb.from('salons').select('id,name').order('sort')]);
   S.profs=a.data||[];S.salons=b.data||[];
   const me=prof(S.uid);const av=$('#avBtn');
@@ -365,6 +374,7 @@ async function loadAll(){
   const e=c.error||p.error||pr.error||f.error;
   if(e){showErr(e.message?.includes('clients')||e.code==='42P01'?'таблицы CRM ещё не созданы на сервере — подождите минуту и обновите страницу':e);}
   S.clients=c.data||[];S.positions=p.data||[];S.projects=pr.data||[];S.files=f.data||[];
+  await loadUnread();
   $('#nPre').textContent=S.clients.filter(x=>x.stage!=='contract'&&x.stage!=='lost').length||'';
   $('#nPost').textContent=S.clients.filter(x=>x.stage==='contract').length||'';
 }
@@ -540,7 +550,7 @@ function posCard(p){
     <div class="lines">${(p.lines||[]).map(l=>`<div><span>${esc(l.name)}</span><span>${esc(l.qty)}</span></div>`).join('')}</div></div></div>`;
   return `<div role="button" tabindex="0" class="card-btn ${p.stage===7?'closed':''}" draggable="true" data-pos="${p.id}">
     <div class="prev ${p.preview?'':'none'}" ${p.preview?`data-img="${esc(p.preview)}"`:''}>${p.preview?'':'Нет превью'}</div>
-    <div class="cb">${t1}<div class="nm">${esc(p.name||'Позиция')}</div><div class="mt">${esc(p.contractor)}</div></div></div>`;
+    <div class="cb">${t1}<div class="nm">${esc(p.name||'Позиция')}${S.unread[p.id]?` <span class="ubadge" title="Непрочитанные письма фабрики">${S.unread[p.id]}</span>`:''}</div><div class="mt">${esc(p.contractor)}${p.sent_at?` · ${esc(M.FSTAGES[p.fstage??0])}`:''}</div></div></div>`;
 }
 async function savePos(id,patch){
   const {data,error}=await sb.from('positions').update(patch).eq('id',id).select().single();
@@ -585,6 +595,7 @@ async function renderCard(){
       ${post?`<section class="panel"><div class="panel-h"><h3>Позиции договора <span class="msg num">${ps.length}</span></h3></div>
         ${ps.map(p=>`<div class="posline ${p.kind==='accessory'?'acc':''}"><div class="h"><b>${p.kind==='accessory'?'Сопутка · '+esc(p.contractor):esc(p.name)}</b><span>${p.kind==='accessory'?'':esc(p.contractor)}</span></div>
           ${p.kind==='accessory'?`<div class="lines">${(p.lines||[]).map(l=>`<div><span>${esc(l.name)}</span><span>${esc(l.qty)}</span></div>`).join('')}</div>`:''}
+          ${p.sent_at?`<div class="msg">Фабрика: <span style="color:var(--ink)">${esc(M.FSTAGES[p.fstage??0])}</span>${p.f_num?` · № <span class="num" style="color:var(--ink)">${esc(p.f_num)}</span>`:''}${p.f_price!=null?` · предварительно <span class="num" style="color:var(--ink)">${money(p.f_price)}</span>`:''}${p.f_ready?` · готовность <span class="num" style="color:var(--ink)">${M.dmy(p.f_ready)}</span>`:''}${p.deadline?` · дедлайн <span class="num" style="color:var(--ink)">${M.dmy(p.deadline)}</span>`:''}${S.unread[p.id]?` <span class="ubadge">${S.unread[p.id]}</span>`:''}</div>`:''}
           ${rail(p.stage)}<select class="in" data-pos="${p.id}" aria-label="Этап позиции">${POST.map((l,i)=>`<option value="${i+1}" ${p.stage===i+1?'selected':''}>${i+1}. ${l}</option>`).join('')}</select></div>`).join('')||'<div class="empty">Позиций нет.</div>'}</section>`:''}
       <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="pill solid" id="pjLink">Привязать</button><button class="pill solid" id="pjNew">+ Новый 3D-проект</button></div></div>
@@ -598,6 +609,7 @@ async function renderCard(){
         ${fl.length?`<div class="fgrid">${fl.map(f=>`<div class="file"><a href="#" data-file="${esc(f.path)}" ${isImg(f.mime)?`data-img="${esc(f.path)}"`:''}>${isImg(f.mime)?'':esc((f.name.split('.').pop()||'').toUpperCase())}</a>
           <div class="fn" title="${esc(f.name)}">${esc(f.name)}</div><button class="del" data-del="${f.id}" aria-label="Удалить ${esc(f.name)}">×</button></div>`).join('')}</div>`:''}
         <div class="msg" id="fMsg"></div></section>
+      ${chatHtml(c)}
     </div><div class="cside">
       <section class="panel"><div class="panel-h"><h3>Данные клиента</h3><button class="pill solid" id="cEdit">Изменить</button></div>
         <div class="kv" id="kv"><span>Телефон</span><div>${esc(c.phone)||'—'}</div><span>Адрес</span><div>${esc(c.address)||'—'}</div>
@@ -647,7 +659,118 @@ async function renderCard(){
   const d=$('#fDrop');
   d.ondragover=e=>{e.preventDefault();d.classList.add('on');};d.ondragleave=()=>d.classList.remove('on');
   d.ondrop=e=>{e.preventDefault();d.classList.remove('on');upload(c.id,[...e.dataTransfer.files]);};
+  wireChat(c);
 }
+/* ---------- переписка с фабрикой (по мебельной позиции; общий модуль mail.js) ---------- */
+S.unread={};S.chatPos=null;S.drafts={};S.chat=null;
+async function loadUnread(){const {data,error}=await sb.rpc('dealer_unread');S.unread=error?{}:(data||{});}
+const furnOf=c=>S.positions.filter(p=>p.client_id===c.id&&p.kind==='furniture');
+function chatHtml(c){
+  const fp=furnOf(c);if(c.stage!=='contract'||!fp.length)return '';
+  if(!fp.some(p=>p.id===S.chatPos))S.chatPos=fp[0].id;
+  const tabs=fp.length>1?`<div class="group" role="group" aria-label="Позиция">${fp.map(p=>`<button class="pill ${p.id===S.chatPos?'on':''}" data-cp="${p.id}">${esc(p.name||'Позиция')}${S.unread[p.id]?` <span class="ubadge">${S.unread[p.id]}</span>`:''}</button>`).join('')}</div>`
+    :`<span class="msg">${esc(fp[0].name||'Позиция')} · ${esc(fp[0].contractor)}</span>`;
+  return `<section class="panel" id="chat"><div class="panel-h"><h3>Переписка с фабрикой</h3>${tabs}</div>
+    <div id="mList" class="mlist"><div class="msg">Загружаем переписку…</div></div><div id="mComp"></div></section>`;
+}
+function wireChat(c){
+  if(!$('#chat'))return;
+  document.querySelectorAll('#chat [data-cp]').forEach(b=>b.onclick=()=>{S.chatPos=b.dataset.cp;render();});
+  loadChat(S.chatPos);
+}
+async function loadChat(pid,quiet){
+  const {data,error}=await sb.rpc('mail_list',{pid});
+  if(S.chatPos!==pid||!$('#mList'))return;
+  if(error){$('#mList').innerHTML=`<div class="msg err">Переписка недоступна: ${esc(M.errText(error))}</div>`;return;}
+  const old=S.chat&&S.chat.pid===pid?S.chat:null;
+  S.chat={pid,...data};
+  const p=S.positions.find(x=>x.id===pid);const np=data.pos||{};
+  const changed=p&&['sent_at','fstage','f_num','f_price','f_ready','stage','deadline'].some(k=>String(p[k]??'')!==String(np[k]??''));
+  if(p)['sent_at','fstage','fstage_at','f_num','f_price','f_ready','stage','deadline','company'].forEach(k=>p[k]=np[k]);
+  const had=S.unread[pid];S.unread[pid]=0;
+  if(quiet&&changed)return render();
+  if(!quiet||!old||old.mails.length!==data.mails.length)paintMails();
+  if(!quiet||!$('#mComp').firstChild)paintComposer();
+  if(had&&!quiet)document.querySelectorAll(`[data-cp="${pid}"] .ubadge`).forEach(e=>e.remove());
+}
+function paintMails(){
+  const box=$('#mList');if(!box||!S.chat)return;
+  const {mails,pos}=S.chat;const c=S.clients.find(x=>x.id===S.card);
+  const ap=M.approveId(mails,pos);
+  const toDealer=(prof(c?.manager_id)?.name||'менеджер')+', дилер';
+  box.innerHTML=mails.length?mails.map(m=>M.mailHtml(m,'dealer',{toDealer,toFactory:'фабрика',approve:m.id===ap})).join('')
+    :`<div class="mempty">Переписки ещё нет. Первое письмо отправит позицию на фабрику: этап станет «Отправлен», у фабрики заказ появится в «Новых».</div>`;
+  M.wireMails(sb,box,mails);
+  const a=box.querySelector('[data-approve]');if(a)a.onclick=approve;
+}
+const defCompany=()=>{try{return localStorage.getItem('mgs-company')||M.COMPANIES[0];}catch{return M.COMPANIES[0];}};
+function paintComposer(){
+  const box=$('#mComp');if(!box||!S.chat)return;
+  const pid=S.chat.pid,first=!S.chat.pos?.sent_at;
+  const d=S.drafts[pid]||(S.drafts[pid]={body:'',files:[],deadline:'',company:defCompany()});
+  box.innerHTML=`<div class="mcomp"><div class="mhd">${first?'Первое письмо · кому: фабрика. Отправит позицию на фабрику.':'Ответить · кому: фабрика'}</div>
+    ${first?`<div class="frow"><label class="f">Компания дилера<select class="in" id="mCo">${M.COMPANIES.map(x=>`<option ${d.company===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>
+      <label class="f">Дедлайн<input class="in" type="date" id="mDl" value="${esc(d.deadline)}"></label></div>`:''}
+    <label class="f" style="gap:0"><span class="msg" style="position:absolute;left:-9999px">Текст письма</span><textarea class="in" id="mBody" rows="3" placeholder="${first?'Добрый день! Направляем позицию в производство. Материалы во вложении.':'Текст письма'}">${esc(d.body)}</textarea></label>
+    <div id="mFiles">${M.draftFilesHtml(d.files)}</div>
+    <div class="mbar"><button class="pill solid" type="button" id="mCard">Из карточки</button><button class="pill solid" type="button" id="mPc">С компьютера</button><button class="pill solid" type="button" id="mLink">Ссылка</button>
+      <button class="pill send" type="button" id="mSend">${first?'Отправить на фабрику':'Отправить'}</button></div>
+    <div class="msg" id="mMsg"></div></div>`;
+  const paintFiles=()=>{$('#mFiles').innerHTML=M.draftFilesHtml(d.files);$('#mFiles').querySelectorAll('[data-dx]').forEach(b=>b.onclick=()=>{d.files.splice(+b.dataset.dx,1);paintFiles();});};
+  paintFiles();
+  $('#mBody').oninput=e=>d.body=e.target.value;
+  $('#mCo')&&($('#mCo').onchange=e=>d.company=e.target.value);
+  $('#mDl')&&($('#mDl').oninput=e=>d.deadline=e.target.value);
+  $('#mLink').onclick=()=>{const l=M.askLink();if(l){d.files.push(l);paintFiles();}};
+  $('#mPc').onclick=()=>{const i=$('#fileIn');i.value='';i.onchange=async()=>{const m=$('#mMsg');m.className='msg';
+    try{const up=await M.uploadMailFiles(sb,pid,[...i.files],(k,n)=>m.textContent=`Загружаем ${k+1} из ${n}…`);d.files.push(...up);m.textContent='';paintFiles();}
+    catch(err){m.className='msg err';m.textContent=err.message;}};i.click();};
+  $('#mCard').onclick=()=>openPick(d,paintFiles);
+  $('#mSend').onclick=sendMail;
+}
+async function openPick(d,done){
+  const c=S.clients.find(x=>x.id===S.card);const fl=S.files.filter(f=>f.client_id===c.id);
+  if(!fl.length)return toast('В карточке пока нет файлов');
+  await signed(fl.filter(f=>isImg(f.mime)).map(f=>f.path));
+  const sel=new Set(d.files.filter(f=>f.path).map(f=>f.path));
+  const paint=()=>{$('#pkGrid').innerHTML=fl.map(f=>`<button type="button" class="pick ${sel.has(f.path)?'on':''}" data-pk="${esc(f.path)}" aria-pressed="${sel.has(f.path)}">
+      <span class="ph" style="${isImg(f.mime)?`background-image:url('${surl(f.path)}')`:''}">${isImg(f.mime)?'':esc((f.name.split('.').pop()||'').toUpperCase())}<span class="ck">${sel.has(f.path)?'✓':''}</span></span><span>${esc(f.name)}</span></button>`).join('');
+    $('#pkN').textContent=`выбрано ${sel.size}`;$('#pkOk').textContent=sel.size?`Вложить ${sel.size}`:'Вложить';
+    $('#pkGrid').querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{const p=b.dataset.pk;sel.has(p)?sel.delete(p):sel.add(p);paint();});};
+  paint();
+  $('#pkOk').onclick=()=>{const own=new Set(fl.map(f=>f.path));
+    d.files=d.files.filter(f=>!f.path||!own.has(f.path)||sel.has(f.path));
+    fl.forEach(f=>{if(sel.has(f.path)&&!d.files.some(x=>x.path===f.path))d.files.push({name:f.name,path:f.path,mime:f.mime||'',size:f.size||0});});
+    $('#dPick').close();done();};
+  $('#dPick').showModal();
+}
+async function sendMail(){
+  const pid=S.chat.pid,d=S.drafts[pid],first=!S.chat.pos?.sent_at,m=$('#mMsg');m.className='msg';
+  if(first&&!d.deadline){m.className='msg err';m.textContent='Укажите дедлайн.';return;}
+  if(!d.body.trim()&&!d.files.length){m.className='msg err';m.textContent='Напишите текст или приложите файл.';return;}
+  const c=S.clients.find(x=>x.id===S.card);const p=S.positions.find(x=>x.id===pid);
+  $('#mSend').disabled=true;m.textContent='Отправляем…';
+  const {error}=await sb.rpc('mail_send',{pid,p_subject:first?`${p?.name||'Позиция'} · ${c?.name||''}`:'',p_body:d.body.trim(),p_files:d.files,
+    p_deadline:first?d.deadline:null,p_company:first?d.company:null});
+  $('#mSend')&&($('#mSend').disabled=false);
+  if(error){m.className='msg err';m.textContent=M.errText(error);return;}
+  if(first){try{localStorage.setItem('mgs-company',d.company);}catch{}}
+  S.drafts[pid]={body:'',files:[],deadline:'',company:d.company};
+  if(first){await loadAll();render();toast('Позиция отправлена на фабрику');}
+  else{await loadChat(pid);toast('Письмо отправлено');}
+}
+async function approve(){
+  if(!confirm('Согласовать проект? Фабрике уйдёт письмо «Согласовано».'))return;
+  const {error}=await sb.rpc('mail_approve',{pid:S.chat.pid,p_body:''});
+  if(error)return toast(M.errText(error));
+  await loadChat(S.chat.pid);toast('Согласовано');
+}
+setInterval(async()=>{
+  if(document.hidden||!S.uid)return;
+  if(S.card&&S.chat&&$('#mList')&&S.chat.pid===S.chatPos&&!$('#dPick').open)return loadChat(S.chatPos,true);
+  if(!S.card){const before=JSON.stringify(S.unread);await loadUnread();if(JSON.stringify(S.unread)!==before&&S.view==='post')render();}
+},20000);
+
 const shareUrl=tok=>{const u=/(^|\.)mgsmebel\.com$/.test(location.hostname)&&!/^test\./.test(location.hostname)?new URL('https://my.mgsmebel.com/view.html'):new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);return u.toString();};
 
 /* фото ужимаем (длинная сторона ≤ 2000), остальное — как есть */

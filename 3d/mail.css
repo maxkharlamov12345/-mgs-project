@@ -1,0 +1,48 @@
+/* Переписка «как почта» (crm.html, factory.html). Действия — письма с белой меткой и рамкой. */
+.mlist{display:flex;flex-direction:column;gap:10px}
+.mail{border-radius:16px;background:#1d1b18;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.mail.act{background:#2a2723;box-shadow:inset 0 0 0 1px rgba(244,241,236,.16)}
+.mh{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:center}
+.mav{width:38px;height:38px;border-radius:50%;background:#3a3631;color:#f4f1ec;font-size:12px;font-weight:600;display:grid;place-items:center}
+.mail.mine .mav{background:#46423b}
+.mwho{min-width:0}.mwho b{font-weight:600}.mwho>span{color:var(--ink3)}
+.mto{color:var(--ink3);font-size:12.5px}
+.mwhen{color:var(--ink3);font-size:12.5px;white-space:nowrap}
+.mb{padding-left:48px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.mline{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.mtag{height:24px;padding:0 10px;border-radius:999px;background:#f4f1ec;color:#141210;font-size:12px;font-weight:700;display:inline-flex;align-items:center}
+.msubj{font-weight:600}
+.mtext{white-space:pre-wrap;line-height:1.5;color:#e7e3dc;overflow-wrap:anywhere}
+.mrows{display:flex;flex-wrap:wrap;gap:6px 28px}
+.mrows div{display:flex;flex-direction:column;gap:2px}
+.mrows span{color:var(--ink3);font-size:12px}
+.mrows b{font-weight:500;font-size:15px}
+.mrows s{color:var(--ink3);font-size:12px;margin-left:8px;font-weight:400}
+.mfiles{display:flex;flex-wrap:wrap;gap:8px}
+.mfile{width:104px;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink2);font-size:11.5px}
+.mth{height:72px;border-radius:10px;background:#2f2c28 center/cover no-repeat;display:grid;place-items:center;color:var(--ink3);font-size:10.5px;font-weight:600;letter-spacing:.04em}
+.mfn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mappr{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-top:4px}
+.mcomp{border-radius:16px;background:#2b2824;padding:12px;display:flex;flex-direction:column;gap:10px}
+.mcomp .mhd{color:var(--ink3);font-size:13px}
+.mcomp textarea.in{min-height:84px;background:#1d1b18}
+.mcomp select.in,.mcomp input.in{background:#1d1b18}
+.mbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.mbar .pill{height:40px}
+.mbar .send{margin-left:auto;background:var(--ink);color:var(--bg);font-weight:600;height:44px;padding:0 20px}
+.mbar .send.lime{background:var(--lime);color:var(--on-lime)}
+.dfiles{display:flex;flex-wrap:wrap;gap:6px}
+.dfile{height:32px;padding:0 4px 0 12px;border-radius:10px;background:#1d1b18;display:inline-flex;align-items:center;gap:6px;font-size:13px;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dfile i{font-style:normal;color:var(--ink3)}
+.dfile button{all:unset;cursor:pointer;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:var(--ink3)}
+.dfile button:hover{color:var(--red,#ff8a7a)}
+.mempty{color:var(--ink3);line-height:1.5;padding:4px 2px}
+.ubadge{min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;border-radius:999px;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;max-height:60vh;overflow:auto;padding:2px}
+.pick{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--ink2);min-width:0}
+.pick .ph{position:relative;height:120px;border-radius:14px;background:#2f2c28 center/cover no-repeat;display:grid;place-items:center;color:var(--ink3);font-weight:600}
+.pick .ck{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 2px #f4f1ec;background:rgba(19,18,16,.5);display:grid;place-items:center;color:#141210}
+.pick.on .ph{box-shadow:0 0 0 3px #f4f1ec}
+.pick.on .ck{background:#f4f1ec}
+.pick span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:700px){.mb{padding-left:0}.mbar .send{margin-left:0;flex:1 1 100%}}

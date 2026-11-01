@@ -8,7 +8,8 @@
   owner   — главный аккаунт: всё;
   admin   — администратор салонов (staff_profiles.admin_salons): видит проекты своих салонов,
             добавляет и отключает менеджеров своих салонов;
-  manager — менеджер: только свои проекты.
+  manager — менеджер: только свои проекты;
+  factory — менеджер фабрики: видит только заказы, отправленные на фабрику (кабинет factory.html), создаёт только главный.
 Главного ещё нет — им становится самый первый созданный сотрудник.
 """
 import base64, hashlib, hmac, json, os, re, time, uuid, urllib.parse, urllib.request, urllib.error
@@ -20,7 +21,7 @@ STORAGE = os.environ.get('STORAGE_URL', 'http://storage:5000')
 MEDIA = 'media'
 SECRET = os.environ['JWT_SECRET'].encode()
 SERVICE = os.environ['SERVICE_ROLE_KEY']
-ROLES = ('owner', 'admin', 'manager')
+ROLES = ('owner', 'admin', 'manager', 'factory')
 BAN = '876000h'  # «навсегда» (100 лет)
 
 
@@ -285,8 +286,10 @@ def staff_create(h, me):
     d = h.body()
     email = txt(d.get('email')).lower()
     pw = str(d.get('password', ''))
-    role = d.get('role') if d.get('role') in ('admin', 'manager') else 'manager'
+    role = d.get('role') if d.get('role') in ('admin', 'manager', 'factory') else 'manager'
     salon = d.get('salon_id') or None
+    if role == 'factory':
+        salon = None
     if not me.owner:
         role = 'manager'
         if salon not in me.salons:
@@ -324,7 +327,7 @@ def staff_update(h, me, uid):
     upd, row = {}, {'user_id': uid}
     # роль и «салоны под управлением» — только главный и не себе
     if 'role' in d and d['role'] != role_of(target):
-        if not me.owner or self_edit or d['role'] not in ('admin', 'manager') or role_of(target) == 'owner':
+        if not me.owner or self_edit or d['role'] not in ('admin', 'manager', 'factory') or role_of(target) == 'owner':
             raise ApiError(403, 'Роль может менять только главный аккаунт')
         upd['app_metadata'] = {'mgs_role': d['role']}
         row['role'] = d['role']

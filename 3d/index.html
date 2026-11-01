@@ -161,7 +161,7 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
         </div>
         <div class="row">
           <label>Салон<select id="sSalon"></select></label>
-          <label style="flex:0 1 200px" id="sRoleL">Роль<select id="sRole"><option value="manager">Менеджер</option><option value="admin">Администратор</option><option value="owner" disabled>Главный</option></select></label>
+          <label style="flex:0 1 200px" id="sRoleL">Роль<select id="sRole"><option value="manager">Менеджер</option><option value="admin">Администратор</option><option value="factory">Фабрика (менеджер фабрики)</option><option value="owner" disabled>Главный</option></select></label>
         </div>
         <div id="sAdmSalons" hidden style="display:flex;flex-direction:column;gap:8px">
           <h2>Салоны под управлением</h2><div class="chk" id="sAdmChk"></div>
@@ -278,6 +278,7 @@ async function init(){
 async function afterLogin(session){
   $('#who').textContent=session.user.user_metadata?.name||session.user.email;$('#logout').hidden=false;$('#crmBtn').hidden=false;
   await checkAdmin();
+  if(ME.role==='factory'){location.replace('factory.html');return;}
   const pid=new URLSearchParams(location.search).get('p');
   const ad=new URLSearchParams(location.search).get('admin');
   ad?openAdmin(ad):pid?openProject(pid):loadList();
@@ -410,15 +411,19 @@ function editStaff(u){
   $('#stForm').scrollIntoView({behavior:'smooth',block:'start'});$('#sName').focus({preventScroll:true});
 }
 let myId=null;
-function syncAdmBlock(){$('#sAdmSalons').hidden=!(ME.role==='owner'&&$('#sRole').value==='admin');}
+function syncAdmBlock(){$('#sAdmSalons').hidden=!(ME.role==='owner'&&$('#sRole').value==='admin');
+  const fab=$('#sRole').value==='factory';$('#sSalon').closest('label').hidden=fab;if(fab)$('#sSalon').value='';}
 $('#sRole').onchange=syncAdmBlock;
 $('#stNewBtn').onclick=()=>editStaff(null);
 $('#sGen').onclick=()=>{$('#sPass').value=genPass();};
 $('#sCancel').onclick=()=>{$('#stForm').hidden=true;};
 $('#stDoneOk').onclick=()=>{$('#stDone').hidden=true;$('#stCreds').textContent='';};
 $('#stCopy').onclick=async()=>{try{await navigator.clipboard.writeText($('#stCreds').textContent);$('#stCopy').textContent='Скопировано';setTimeout(()=>$('#stCopy').textContent='Скопировать',2000);}catch{}};
-function showCreds(email,pass,name){
-  $('#stCreds').textContent=`${name?name+', в':'В'}ход в систему MGS:\n${appUrl()}\nПочта: ${email}\nПароль: ${pass}\n\nКнопка для PRO100 — там же, внутри проекта: «Скачать кнопку для PRO100».`;
+const factoryUrl=()=>/^test\./.test(location.hostname)||!/(^|\.)mgsmebel\.com$/.test(location.hostname)?new URL('factory.html',location.href).toString():'https://fab.mgsmebel.com';
+function showCreds(email,pass,name,role){
+  $('#stCreds').textContent=role==='factory'
+    ?`${name?name+', в':'В'}ход в кабинет фабрики MGS:\n${factoryUrl()}\nПочта: ${email}\nПароль: ${pass}`
+    :`${name?name+', в':'В'}ход в систему MGS:\n${appUrl()}\nПочта: ${email}\nПароль: ${pass}\n\nКнопка для PRO100 — там же, внутри проекта: «Скачать кнопку для PRO100».`;
   $('#stDone').hidden=false;$('#stDone').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('#sPhone').oninput=e=>{let d=e.target.value.replace(/\D/g,'');if(!d)return;if(d[0]==='8')d='7'+d.slice(1);if(d[0]!=='7')d='7'+d;d=d.slice(0,11);
@@ -431,7 +436,7 @@ $('#stForm').onsubmit=async e=>{
     if(ME.role==='owner'&&!$('#sRole').disabled){body.role=$('#sRole').value;body.admin_salons=body.role==='admin'?[...document.querySelectorAll('#sAdmChk input:checked')].map(c=>c.value):[];}
     if($('#sSalon').disabled)delete body.salon_id;
     if(editingStaff){await adm('PATCH','/staff/'+editingStaff.id,body);$('#stForm').hidden=true;m.textContent='';}
-    else{await adm('POST','/staff',{...body,email,password:pass});$('#stForm').hidden=true;m.textContent='';showCreds(email,pass,name);}
+    else{await adm('POST','/staff',{...body,email,password:pass});$('#stForm').hidden=true;m.textContent='';showCreds(email,pass,name,body.role);}
     loadStaff();}
   catch(err){m.className='msg err';m.textContent=err.message;}
   $('#sSave').disabled=false;
@@ -449,7 +454,7 @@ async function loadStaff(){
     <div class="nm"><b>${esc(u.name||u.email)}${u.id===myId?' <span style="display:inline;color:var(--lime);font-size:12px">· это вы</span>':''}</b>
       <span>${esc([u.phone,sal(u.salon_id)].filter(Boolean).join(' · ')||'телефон и салон не указаны')}</span>
       <span>${esc(u.email)} · ${d(u.last_sign_in_at)}</span></div>
-    ${u.role==='owner'?'<span class="tag own">Главный</span>':u.role==='admin'?`<span class="tag adm" title="${esc((u.admin_salons||[]).map(id=>sal(id)).filter(Boolean).join(', '))}">Админ${u.admin_salons?.length?' · '+esc((u.admin_salons||[]).map(id=>sal(id)).filter(Boolean).join(', ')):''}</span>`:''}${u.disabled?'<span class="tag">Отключён</span>':''}
+    ${u.role==='owner'?'<span class="tag own">Главный</span>':u.role==='factory'?'<span class="tag adm">Фабрика</span>':u.role==='admin'?`<span class="tag adm" title="${esc((u.admin_salons||[]).map(id=>sal(id)).filter(Boolean).join(', '))}">Админ${u.admin_salons?.length?' · '+esc((u.admin_salons||[]).map(id=>sal(id)).filter(Boolean).join(', ')):''}</span>`:''}${u.disabled?'<span class="tag">Отключён</span>':''}
     <div class="acts"><button class="btn ghost small" data-edit>Изменить</button><button class="btn ghost small" data-pw>Пароль</button>
     ${u.id===myId?'':`<button class="btn ${u.disabled?'ghost':'danger'} small" data-off>${u.disabled?'Включить':'Отключить'}</button>`}</div>
   </div>`).join('');

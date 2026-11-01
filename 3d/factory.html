@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MGS — кабинет фабрики</title>
+<link rel="stylesheet" href="mail.css">
+<style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2122,U+2212}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+20A0-20CF}</style>
+<style>
+/* Кабинет фабрики: стиль «Шоурум» как в CRM. Стороны — «дилер» и «фабрика». Лайм — главная кнопка и текущий шаг. */
+:root{--bg:#0f0e0c;--surface:#1a1815;--surface2:#23211d;--raised:#2b2824;--inset:#0a0908;--ink:#f4f1ec;--ink2:#cfcac0;--ink3:#a39e94;
+  --lime:#bfd630;--on-lime:#141a03;--done:#6e6a62;--todo:#33302b;--line:rgba(244,241,236,.08);--red:#ff8a7a;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Onest,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.pill{all:unset;box-sizing:border-box;cursor:pointer;height:40px;padding:0 16px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:500;color:var(--ink2);white-space:nowrap;transition:transform .12s cubic-bezier(.23,1,.32,1),background-color .15s}
+.pill:active{transform:scale(.97)}
+.pill:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.ocard:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.pill.on{background:var(--ink);color:var(--bg);font-weight:600}
+.pill.solid{background:var(--raised);color:var(--ink)}
+.pill.solid:hover{background:#34302b}
+.pill.lime{background:var(--lime);color:var(--on-lime);font-weight:600;height:48px;padding:0 24px;font-size:15px}
+.pill.lime:hover{background:#cce447}
+.pill.big{height:48px}
+.pill[disabled]{opacity:.5;pointer-events:none}
+.group{display:flex;flex-wrap:wrap;gap:2px;padding:4px;border-radius:999px;background:var(--surface)}
+.group .pill{height:38px}
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:calc(16px + env(safe-area-inset-top,0px)) max(32px,env(safe-area-inset-right)) 8px max(32px,env(safe-area-inset-left))}
+.logo{font-weight:800;font-size:19px;letter-spacing:.02em}.logo b{color:var(--lime)}.logo i{font-style:normal;font-weight:500;font-size:14px;color:var(--ink3);margin-left:6px;letter-spacing:0}
+.me{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--ink3);font-size:13px}
+.avatar{all:unset;cursor:pointer;width:44px;height:44px;border-radius:50%;background:var(--raised);color:var(--ink2);font-weight:600;font-size:13px;display:grid;place-items:center}
+.menu{position:absolute;right:max(32px,env(safe-area-inset-right));top:72px;z-index:30;min-width:200px;background:var(--surface2);border-radius:16px;padding:6px;box-shadow:0 0 0 1px var(--line),0 12px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.menu button{all:unset;cursor:pointer;padding:11px 12px;border-radius:10px}.menu button:hover{background:var(--raised)}
+main{padding:8px max(32px,env(safe-area-inset-right)) 48px max(32px,env(safe-area-inset-left))}
+h1{margin:0;font-size:36px;font-weight:700;letter-spacing:-.035em;line-height:1.08;text-wrap:balance}
+h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em}
+h3{margin:0;font-size:17px;font-weight:600}
+.sub{margin-top:6px;color:var(--ink3)}
+.msg{color:var(--ink3);font-size:13px}.msg.err{color:var(--red)}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin:12px 0 18px}
+.chip{height:26px;padding:0 10px;border-radius:999px;background:#2f2c28;color:#e4e0d8;font-size:12px;font-weight:600;display:inline-flex;align-items:center;white-space:nowrap}
+.chip.b{background:#3a3329}
+.cnt{flex:none;min-width:24px;height:24px;padding:0 7px;border-radius:999px;background:var(--raised);color:var(--ink2);font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+/* доска */
+.board-wrap{overflow-x:auto;padding-bottom:8px;margin:0 calc(-1*max(32px,env(safe-area-inset-left)));padding-inline:max(32px,env(safe-area-inset-left))}
+.board{display:grid;grid-template-columns:repeat(5,minmax(248px,1fr));gap:12px;min-width:1300px;align-items:start}
+.col{border-radius:22px;background:#171614;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:160px}
+.colh{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px 8px 4px;min-height:40px;font-weight:600;line-height:1.3}
+.ocard{all:unset;box-sizing:border-box;cursor:pointer;border-radius:16px;background:#1f1d1a;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0;transition:background-color .15s,transform .12s}
+.ocard:hover{background:#24221e}.ocard:active{transform:scale(.985)}
+.ocard.done{opacity:.75}
+.r1{display:flex;align-items:center;gap:8px;min-width:0}
+.r1 .num{color:var(--ink3);font-size:12px;white-space:nowrap}
+.r1 .ubadge{margin-left:auto}
+.nm{font-weight:600;font-size:16px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.cl{color:var(--ink2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mg{display:flex;align-items:center;gap:6px;color:var(--ink3);font-size:12px;min-width:0}.mg span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.tiles div{border-radius:10px;background:#262420;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tiles span{color:var(--ink3);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tiles b{font-weight:600;font-size:13px;white-space:nowrap}
+.empty{color:var(--ink3);font-size:13px;padding:8px}
+/* заказ */
+.back{all:unset;cursor:pointer;height:40px;padding:0 16px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;background:var(--surface);color:var(--ink2);font-weight:500}
+.ogrid{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;margin-top:20px}
+.omain{flex:999 1 620px;min-width:0;display:flex;flex-direction:column;gap:20px}
+.oside{flex:1 1 320px;max-width:440px;display:flex;flex-direction:column;gap:16px}
+.panel{border-radius:20px;background:var(--surface);padding:20px;display:flex;flex-direction:column;gap:14px}
+.rail4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.rail4 div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.rail4 i{height:6px;border-radius:3px;background:var(--todo)}
+.rail4 span{font-size:13px;color:var(--ink3)}
+.rail4 .d i{background:var(--done)}.rail4 .d span{color:var(--ink2)}
+.rail4 .c i{background:var(--lime)}.rail4 .c span{color:var(--lime);font-weight:600}
+.f3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+label.f{display:flex;flex-direction:column;gap:6px;color:var(--ink2);font-size:13px;min-width:0}
+input.in,select.in,textarea.in{border:0;border-radius:14px;padding:12px 14px;background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink);outline:none;min-width:0;width:100%}
+input.in{height:48px}
+textarea.in{resize:vertical;min-height:84px}
+input.in[readonly]{opacity:.7}
+.stepbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.stepbar .go{margin-left:auto}
+.done-tag{margin-left:auto;height:48px;padding:0 22px;border-radius:999px;background:rgba(191,214,48,.14);color:var(--lime);font-weight:600;display:inline-flex;align-items:center}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px 12px;font-size:14px}
+.kv span{color:var(--ink3)}
+.contacts{display:flex;flex-wrap:wrap;gap:8px}
+.contacts a{height:40px;padding:0 16px;border-radius:999px;background:var(--raised);color:var(--ink);text-decoration:none;display:inline-flex;align-items:center}
+/* сообщения */
+.inbox{max-width:1080px;border-radius:20px;background:var(--surface);padding:10px;display:flex;flex-direction:column;gap:4px}
+.irow{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 14px;border-radius:14px}
+.irow:hover{background:#24221e}
+.irow.un{background:#22201c}
+.irow .l1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.irow .l2{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:4px}
+.irow .l3{color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}
+.irow .t{display:flex;flex-direction:column;align-items:flex-end;gap:10px;color:var(--ink3);font-size:12.5px;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ink)}
+.login{max-width:380px;margin:14vh auto 0;padding:0 16px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-weight:600;padding:12px 18px;border-radius:999px;z-index:60;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+@media (max-width:700px){
+  header.top{padding-inline:16px}.menu{right:16px}main{padding-inline:16px}.board-wrap{margin-inline:-16px;padding-inline:16px}
+  h1{font-size:28px}.me span{display:none}.f3{grid-template-columns:1fr}.rail4 span{font-size:11.5px}
+  .stepbar .go{margin-left:0;flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="vLogin" class="login" hidden>
+  <form class="panel" id="loginForm">
+    <div class="logo">MGS<b>.</b><i>Фабрика</i></div>
+    <h2>Вход в кабинет фабрики</h2>
+    <label class="f">Почта<input class="in" id="email" type="email" autocomplete="username" required></label>
+    <label class="f">Пароль<input class="in" id="pass" type="password" autocomplete="current-password" required></label>
+    <button class="pill lime" type="submit" id="loginBtn">Войти</button>
+    <div class="msg" id="loginMsg"></div>
+  </form>
+</div>
+<div id="vDenied" class="login" hidden>
+  <div class="panel"><div class="logo">MGS<b>.</b><i>Фабрика</i></div><h2>Кабинет для фабрики</h2>
+    <div class="msg">Вы вошли как сотрудник дилера. Заказы и переписка с фабрикой — в CRM, в карточке клиента.</div>
+    <a class="pill solid big" href="crm.html">Открыть CRM</a><button class="pill" id="denyOut">Выйти</button></div>
+</div>
+
+<div id="vApp" hidden>
+<header class="top">
+  <div class="logo">MGS<b>.</b><i>Фабрика</i></div>
+  <nav class="group" aria-label="Разделы">
+    <button class="pill" data-v="board">Доска</button>
+    <button class="pill" data-v="inbox">Сообщения <span class="ubadge" id="nUn" hidden></span></button>
+  </nav>
+  <div class="me"><span id="who"></span><button class="avatar" id="avBtn" aria-haspopup="menu" aria-label="Профиль"></button></div>
+  <div class="menu" id="menu" role="menu" hidden><button id="logout" role="menuitem">Выйти</button></div>
+</header>
+<main>
+  <div class="msg err" id="err" hidden></div>
+  <section id="vBoard" hidden></section>
+  <section id="vInbox" hidden></section>
+  <section id="vOrder" hidden></section>
+</main>
+</div>
+<input type="file" id="fileIn" multiple hidden>
+<div class="toast" id="toast" hidden></div>
+
+<script src="lib/supabase.min.js"></script>
+<script type="module">
+import {sb,configured} from './db.js';
+import {SUPABASE_URL} from './config.js';
+import * as M from './mail.js';
+const {esc,money}=M;
+const $=s=>document.querySelector(s);
+const toast=t=>{const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>e.hidden=true,2400);};
+const showErr=e=>{const m=$('#err');m.hidden=!e;m.textContent=e?('Ошибка: '+M.errText(e)):'';};
+const STEP_BTN=['Завести заказ','Передать технологу','Отправить на согласование','Передать в производство'];
+const STEP_RAIL=['Завести заказ','Передать технологу','На согласование дилеру','Передать в производство'];
+const STEP_MAIL=['Заказ заведён','Передан технологу','На согласование','В производстве'];
+const coClass=c=>/^ИП/.test(c||'')?'chip b':'chip';
+const coShort=c=>String(c||'').replace(/^ООО\s*«?/,'').replace(/»$/,'').replace(/^ИП\s+(\S+).*/,'ИП $1')||'Дилер';
+
+const S={uid:null,view:'board',orders:[],inbox:[],co:'',onlyUn:false,order:null,draft:{},approval:{body:'',files:[]}};
+
+/* ---------- вход ---------- */
+if(!configured)document.body.innerHTML='<p style="padding:40px">База не настроена.</p>';else init();
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  sb.auth.onAuthStateChange((_e,s)=>{if(!s){$('#vApp').hidden=true;$('#vLogin').hidden=false;}});
+  if(!session){$('#vLogin').hidden=false;return;}
+  start(session);
+}
+$('#loginForm').onsubmit=async e=>{
+  e.preventDefault();$('#loginMsg').className='msg';$('#loginMsg').textContent='Проверяем…';$('#loginBtn').disabled=true;
+  const {data,error}=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});
+  $('#loginBtn').disabled=false;
+  if(error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Неверная почта или пароль.';return;}
+  $('#loginMsg').textContent='';start(data.session);
+};
+async function start(session){
+  S.uid=session.user.id;$('#vLogin').hidden=true;
+  const {data:role}=await sb.rpc('my_role');
+  if(role!=='factory'){$('#vDenied').hidden=false;return;}
+  $('#vApp').hidden=false;
+  const {data:me}=await sb.from('staff_profiles').select('name').eq('user_id',S.uid).maybeSingle();
+  const nm=me?.name||session.user.email;$('#who').textContent=nm+' · менеджер фабрики';$('#avBtn').textContent=M.initials(nm);
+  const p=new URLSearchParams(location.search);
+  S.view=p.get('v')==='inbox'?'inbox':'board';
+  await loadOrders();
+  p.get('o')?openOrder(p.get('o'),true):render();
+}
+const logout=async()=>{await sb.auth.signOut();location.reload();};
+$('#logout').onclick=logout;$('#denyOut').onclick=logout;
+$('#avBtn').onclick=e=>{e.stopPropagation();$('#menu').hidden=!$('#menu').hidden;};
+document.addEventListener('click',e=>{if(!$('#menu').hidden&&!e.target.closest('#menu'))$('#menu').hidden=true;});
+document.querySelectorAll('nav [data-v]').forEach(b=>b.onclick=async()=>{S.view=b.dataset.v;S.order=null;setUrl(true);if(S.view==='inbox')await loadInbox();render();});
+function setUrl(push){
+  const u=new URL(location.href);u.search='';
+  if(S.view==='inbox')u.searchParams.set('v','inbox');
+  if(S.order)u.searchParams.set('o',S.order.pid);
+  const st={v:S.view,o:S.order?.pid||null};push?history.pushState(st,'',u):history.replaceState(st,'',u);
+}
+addEventListener('popstate',async e=>{S.view=e.state?.v||'board';const o=e.state?.o;if(o)return openOrder(o,true);S.order=null;if(S.view==='inbox')await loadInbox();render();});
+
+async function loadOrders(){
+  const {data,error}=await sb.rpc('factory_orders');
+  if(error)return showErr(error.code==='PGRST202'?'кабинет фабрики ещё не включён на сервере — подождите минуту и обновите страницу':error);
+  showErr(null);S.orders=data||[];paintUnread();
+}
+async function loadInbox(){const {data,error}=await sb.rpc('factory_inbox');if(error)return showErr(error);S.inbox=data||[];}
+function paintUnread(){const n=S.orders.reduce((a,o)=>a+(+o.unread||0),0);const b=$('#nUn');b.hidden=!n;b.textContent=n;}
+
+function render(){
+  document.querySelectorAll('nav [data-v]').forEach(b=>b.classList.toggle('on',!S.order&&b.dataset.v===S.view));
+  $('#vBoard').hidden=!!S.order||S.view!=='board';$('#vInbox').hidden=!!S.order||S.view!=='inbox';$('#vOrder').hidden=!S.order;
+  if(S.order)return renderOrder();
+  S.view==='inbox'?renderInbox():renderBoard();
+}
+function coFilter(list,key){
+  const cos=[...new Set([...M.COMPANIES,...list.map(x=>x.company).filter(Boolean)])];
+  return `<div class="group" role="group" aria-label="Компания дилера"><button class="pill ${!S.co?'on':''}" data-co="">Все</button>${cos.map(c=>`<button class="pill ${S.co===c?'on':''}" data-co="${esc(c)}">${esc(c)}</button>`).join('')}</div>`;
+}
+function bindCo(root){root.querySelectorAll('[data-co]').forEach(b=>b.onclick=()=>{S.co=b.dataset.co;render();});}
+
+/* ---------- доска ---------- */
+function renderBoard(){
+  const root=$('#vBoard');const list=S.orders.filter(o=>!S.co||o.company===S.co);
+  root.innerHTML=`<div class="head"><div><h1>Заказы от дилера</h1><div class="sub">${list.length} ${M.plural(list.length,'заказ','заказа','заказов')}</div></div></div>
+    <div style="margin-bottom:18px">${coFilter(S.orders)}</div>
+    <div class="board-wrap"><div class="board">${M.FSTAGES.map((l,k)=>{const col=list.filter(o=>(o.fstage??0)===k);
+      return `<div class="col"><div class="colh"><span>${l}</span><span class="cnt">${col.length}</span></div>${col.map(card).join('')||'<div class="empty">Пусто</div>'}</div>`;}).join('')}</div></div>`;
+  bindCo(root);
+  root.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>openOrder(b.dataset.o));
+}
+function card(o){
+  const t=M.stageTile(o);
+  return `<button class="ocard ${o.fstage===4?'done':''}" data-o="${o.id}">
+    <span class="r1"><span class="${coClass(o.company)}">${esc(coShort(o.company))}</span><span class="num">№ ${o.client_num}</span>${o.unread?`<span class="ubadge" aria-label="Непрочитанных писем: ${o.unread}">${o.unread}</span>`:''}</span>
+    <span><span class="nm">${esc(o.name||'Позиция')}</span><span class="cl" style="display:block">${esc(o.client_name)}</span></span>
+    <span class="mg"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>${esc([o.manager?.name,o.salon].filter(Boolean).join(' · ')||'Менеджер дилера')}</span></span>
+    <span class="tiles"><div><span>${t.label}</span><b>${esc(t.value)}</b></div><div><span>Дедлайн</span><b class="num">${M.dm(o.deadline)||'—'}</b></div></span></button>`;
+}
+
+/* ---------- сообщения (реестр писем дилера) ---------- */
+function renderInbox(){
+  const root=$('#vInbox');
+  const list=S.inbox.filter(m=>(!S.co||m.company===S.co)&&(!S.onlyUn||m.unread));
+  root.innerHTML=`<div class="head"><div><h1>Сообщения</h1><div class="sub">Письма дилера по всем заказам</div></div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">${coFilter(S.inbox)}
+      <div class="group" role="group" aria-label="Фильтр"><button class="pill ${!S.onlyUn?'on':''}" data-un="0">Все</button><button class="pill ${S.onlyUn?'on':''}" data-un="1">Непрочитанные</button></div></div>
+    ${list.length?`<div class="inbox">${list.map(m=>`<button class="irow ${m.unread?'un':''}" data-o="${m.position_id}">
+      <span class="mav">${esc(M.initials(m.author))}</span>
+      <span style="min-width:0"><span class="l1"><span class="${coClass(m.company)}">${esc(coShort(m.company))}</span><span class="num msg">№ ${m.client_num}</span><b>${esc(m.name)}</b><span class="msg">${esc(m.client_name)}</span></span>
+        <span class="l2">${M.LABELS[m.label]?`<span class="mtag">${M.LABELS[m.label]}</span>`:''}<span style="font-weight:${m.unread?700:500}">${esc(m.subject||'Письмо')}</span></span>
+        <span class="l3" style="display:block"><span style="color:var(--ink2)">${esc(m.author)} · дилер${m.body||m.files?':':''}</span> ${esc(m.body||(m.files?`вложения: ${m.files}`:''))}</span></span>
+      <span class="t"><span class="num">${M.when(m.created_at)}</span>${m.unread?'<span class="dot" aria-label="Не прочитано"></span>':''}</span></button>`).join('')}</div>`
+      :'<div class="empty">Писем нет.</div>'}`;
+  bindCo(root);
+  root.querySelectorAll('[data-un]').forEach(b=>b.onclick=()=>{S.onlyUn=b.dataset.un==='1';render();});
+  root.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>openOrder(b.dataset.o));
+}
+
+/* ---------- заказ ---------- */
+async function openOrder(pid,noPush){
+  const {data,error}=await sb.rpc('mail_list',{pid});
+  if(error){showErr(error);S.order=null;render();return;}
+  S.order={pid,...data};S.draft={body:'',files:[]};S.approval={body:'',files:[]};
+  const o=S.orders.find(x=>x.id===pid);if(o)o.unread=0;paintUnread();
+  setUrl(!noPush);render();window.scrollTo(0,0);
+}
+function renderOrder(){
+  const {pos:p,mails}=S.order;const root=$('#vOrder');const k=p.fstage??0;
+  const t=M.stageTile(p);
+  root.innerHTML=`<button class="back" id="oBack"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>${S.view==='inbox'?'Сообщения':'Доска'}</button>
+    <div style="margin-top:20px;display:flex;align-items:center;gap:10px"><span class="${coClass(p.company)}">${esc(coShort(p.company))}</span><span class="num msg" style="font-size:14px">№ ${p.client_num}</span></div>
+    <h1 style="margin-top:10px">${esc(p.name||'Позиция')}</h1><div class="sub" style="font-size:16px;color:var(--ink2)">${esc(p.client_name)}</div>
+    <div class="ogrid"><div class="omain">
+      <section class="panel" id="steps"></section>
+      <section class="panel"><div style="display:flex;align-items:baseline;gap:10px"><h3>Переписка с дилером</h3><span class="msg">${mails.length} ${M.plural(mails.length,'письмо','письма','писем')}</span></div>
+        <div class="mlist" id="mList"></div><div id="mComp"></div></section>
+    </div><aside class="oside"><section class="panel"><h3>Заказ</h3>
+      <div class="tiles"><div><span>${t.label}</span><b>${esc(t.value)}</b></div><div><span>Дедлайн</span><b class="num">${M.dmy(p.deadline)||'—'}</b></div></div>
+      <div class="kv"><span>Оформлен</span><b class="num" style="font-weight:500">${M.dmy(p.contract_at)}</b><span>Компания</span><div>${esc(p.company||'—')}</div>
+        <span>Салон</span><div>${esc(p.salon||'—')}</div><span>Менеджер</span><div>${esc(p.manager?.name||'—')}</div></div>
+      <div class="contacts">${p.manager?.phone?`<a href="tel:${esc(p.manager.phone.replace(/[^\d+]/g,''))}">${esc(p.manager.phone)}</a>`:''}${p.manager?.email?`<a href="mailto:${esc(p.manager.email)}">${esc(p.manager.email)}</a>`:''}</div>
+    </section></aside></div>`;
+  $('#oBack').onclick=async()=>{S.order=null;setUrl(true);await (S.view==='inbox'?loadInbox():loadOrders());render();};
+  paintSteps();paintMails();paintComposer();
+}
+function paintSteps(){
+  const p=S.order.pos,k=p.fstage??0,box=$('#steps');
+  const approved=(()=>{let ok=false;for(const m of S.order.mails){if(m.label==='approval')ok=false;if(m.label==='approved')ok=true;}return ok;})();
+  const a=S.approval;
+  box.innerHTML=`<div><h3>Этапы фабрики</h3><div class="msg" style="margin-top:2px">Заполняет менеджер фабрики. Каждый шаг уходит дилеру письмом.</div></div>
+    <div class="rail4">${STEP_RAIL.map((l,i)=>`<div class="${i<k?'d':i===k?'c':''}"><i></i><span>${i+1}. ${l}</span></div>`).join('')}</div>
+    <div class="f3"><label class="f">№ заказа фабрики<input class="in num" id="sNum" value="${esc(p.f_num||'')}" placeholder="Например, Ф-2611" ${k>=4?'readonly':''}></label>
+      <label class="f">Предварительная стоимость<input class="in num" id="sPrice" inputmode="numeric" value="${p.f_price!=null?esc(money(p.f_price)):''}" placeholder="0 ₽" ${k>=4?'readonly':''}></label>
+      <label class="f">Предварительная дата готовности<input class="in" type="date" id="sReady" value="${esc(p.f_ready||'')}" ${k>=4?'readonly':''}></label></div>
+    ${k===2?`<div class="mcomp"><div class="mhd">Письмо на согласование · кому: ${esc(p.manager?.name||'дилер')}, дилер</div>
+      <textarea class="in" id="aBody" rows="3" placeholder="Комментарий к проекту">${esc(a.body)}</textarea><div id="aFiles"></div>
+      <div class="mbar"><button class="pill solid" type="button" id="aPc">С компьютера</button><button class="pill solid" type="button" id="aLink">Ссылка на Базис</button></div></div>`:''}
+    ${k===3?`<div class="msg" style="color:${approved?'var(--lime)':'var(--ink2)'}">${approved?'Дилер согласовал проект — можно передавать в производство.':'Ждём согласования дилера. Правки придут письмом.'}</div>`:''}
+    <div class="stepbar">${k>0?`<button class="pill solid big" id="sBack"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>Назад: ${esc(M.FSTAGES[k-1])}</button>`:''}
+      <span class="msg">${k<4?`Дилеру придёт письмо «${STEP_MAIL[k]}»`:''}</span>
+      ${k<4?`<button class="pill lime go" id="sGo">${STEP_BTN[k]}</button>`:'<span class="done-tag">В производстве ✓</span>'}</div>
+    <div class="msg" id="sMsg"></div>`;
+  if(k===2){
+    const pf=()=>{$('#aFiles').innerHTML=M.draftFilesHtml(a.files);$('#aFiles').querySelectorAll('[data-dx]').forEach(b=>b.onclick=()=>{a.files.splice(+b.dataset.dx,1);pf();});};pf();
+    $('#aBody').oninput=e=>a.body=e.target.value;
+    $('#aLink').onclick=()=>{const l=M.askLink();if(l){a.files.push(l);pf();}};
+    $('#aPc').onclick=()=>pickUpload(a.files,pf,$('#sMsg'));
+  }
+  $('#sBack')&&($('#sBack').onclick=()=>step(-1));
+  $('#sGo')&&($('#sGo').onclick=()=>step(1));
+}
+async function step(dir){
+  const p=S.order.pos,k=p.fstage??0,m=$('#sMsg');m.className='msg';
+  if(dir<0&&!confirm(`Вернуть заказ на шаг «${M.FSTAGES[k-1]}»? Дилер получит письмо.`))return;
+  const num=$('#sNum').value.trim(),pr=$('#sPrice').value.replace(/[^\d.,]/g,'').replace(',','.'),ready=$('#sReady').value||null;
+  if(dir>0&&k===0&&(!num||!pr)){m.className='msg err';m.textContent='Укажите № заказа фабрики и предварительную стоимость.';return;}
+  if(dir>0&&k===2&&!S.approval.body.trim()&&!S.approval.files.length){m.className='msg err';m.textContent='Приложите проект (PDF, ссылку на Базис) или напишите комментарий.';return;}
+  m.textContent='Сохраняем…';document.querySelectorAll('#steps .pill').forEach(b=>b.disabled=true);
+  const {error}=await sb.rpc('factory_step',{pid:S.order.pid,dir,p_num:dir>0?num||null:null,p_price:dir>0&&pr?+pr:null,p_ready:dir>0?ready:null,
+    p_body:dir>0&&k===2?S.approval.body.trim():'',p_files:dir>0&&k===2?S.approval.files:[]});
+  if(error){document.querySelectorAll('#steps .pill').forEach(b=>b.disabled=false);m.className='msg err';m.textContent=M.errText(error);return;}
+  if(dir>0&&k===2)S.approval={body:'',files:[]};
+  await reloadOrder();toast(dir>0?`Дилеру ушло письмо «${STEP_MAIL[k]}»`:'Шаг возвращён, дилер получил письмо');
+}
+async function reloadOrder(){
+  const {data,error}=await sb.rpc('mail_list',{pid:S.order.pid});if(error)return showErr(error);
+  S.order={pid:S.order.pid,...data};renderOrder();loadOrders();
+}
+function paintMails(){
+  const box=$('#mList');const {mails,pos}=S.order;
+  box.innerHTML=mails.map(m=>M.mailHtml(m,'factory',{toDealer:(pos.manager?.name||'менеджер')+', дилер',toFactory:'фабрика'})).join('')||'<div class="mempty">Писем нет.</div>';
+  M.wireMails(sb,box,mails);
+}
+function paintComposer(){
+  const d=S.draft,box=$('#mComp'),p=S.order.pos;
+  box.innerHTML=`<div class="mcomp"><div class="mhd">Ответить · кому: ${esc(p.manager?.name||'менеджер')}, дилер</div>
+    <textarea class="in" id="mBody" rows="3" placeholder="Текст письма">${esc(d.body)}</textarea><div id="mFiles"></div>
+    <div class="mbar"><button class="pill solid" type="button" id="mPc">С компьютера</button><button class="pill solid" type="button" id="mLink">Ссылка</button>
+      <button class="pill send" type="button" id="mSend">Отправить</button></div><div class="msg" id="mMsg"></div></div>`;
+  const pf=()=>{$('#mFiles').innerHTML=M.draftFilesHtml(d.files);$('#mFiles').querySelectorAll('[data-dx]').forEach(b=>b.onclick=()=>{d.files.splice(+b.dataset.dx,1);pf();});};pf();
+  $('#mBody').oninput=e=>d.body=e.target.value;
+  $('#mLink').onclick=()=>{const l=M.askLink();if(l){d.files.push(l);pf();}};
+  $('#mPc').onclick=()=>pickUpload(d.files,pf,$('#mMsg'));
+  $('#mSend').onclick=async()=>{const m=$('#mMsg');m.className='msg';
+    if(!d.body.trim()&&!d.files.length){m.className='msg err';m.textContent='Напишите текст или приложите файл.';return;}
+    $('#mSend').disabled=true;m.textContent='Отправляем…';
+    const {error}=await sb.rpc('mail_send',{pid:S.order.pid,p_subject:'',p_body:d.body.trim(),p_files:d.files});
+    $('#mSend').disabled=false;
+    if(error){m.className='msg err';m.textContent=M.errText(error);return;}
+    S.draft={body:'',files:[]};await reloadOrder();toast('Письмо отправлено');};
+}
+function pickUpload(list,done,m){
+  const i=$('#fileIn');i.value='';i.onchange=async()=>{m.className='msg';
+    try{const up=await M.uploadMailFiles(sb,S.order.pid,[...i.files],(k,n)=>m.textContent=`Загружаем ${k+1} из ${n}…`);list.push(...up);m.textContent='';done();}
+    catch(err){m.className='msg err';m.textContent=err.message;}};i.click();
+}
+
+/* обновление раз в 20 секунд */
+setInterval(async()=>{
+  if(document.hidden||!S.uid||$('#vApp').hidden)return;
+  if(S.order){
+    const {data}=await sb.rpc('mail_list',{pid:S.order.pid});if(!data||!S.order)return;
+    const was=S.order;const typing=document.activeElement&&/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if(data.mails.length!==was.mails.length||data.pos.fstage!==was.pos.fstage){
+      S.order={pid:was.pid,...data};
+      if(typing){paintMails();}else renderOrder();
+    }
+    return loadOrders();
+  }
+  await loadOrders();
+  if(S.view==='inbox')await loadInbox();
+  render();
+},20000);
+</script>
+</body>
+</html>
