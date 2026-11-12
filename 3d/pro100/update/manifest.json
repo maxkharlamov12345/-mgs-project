@@ -1,15 +1,15 @@
 {
- "version": 263161228,
+ "version": 263161302,
  "files": [
   {
    "name": "mgs3d_core.dll",
-   "sha256": "c16427977ab52f69fae630221c63fce674b82344a6e50c332e15b07d53362f32",
+   "sha256": "b7d72e9374593a5433112a525919cfe56337341d45ff90fbf5f0af9b7aaf215b",
    "size": 51712
   },
   {
    "name": "mgs3d_send.ps1",
-   "sha256": "9d846431b6c43ebaeedcbbc4a4777f2b48a7cb029acf29d6bd1e1c51603dfd6e",
-   "size": 25348
+   "sha256": "679c3b3d8942cff14cebd8d7ae9569df89ac4869392ffc9c67ef89c704a4eda5",
+   "size": 25894
   }
  ]
 }

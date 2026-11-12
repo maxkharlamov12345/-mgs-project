@@ -119,18 +119,23 @@ function Why($e) {
   if (-not $r) {
     return "Нет связи с сервером MGS 3D (api.mgsmebel.com).`n$($e.Exception.Message)`nПроверьте интернет и попробуйте ещё раз."
   }
-  $code = [int]$r.StatusCode; $body = ''
-  try { $sr = New-Object IO.StreamReader($r.GetResponseStream()); $body = $sr.ReadToEnd() } catch {}
-  if ($code -eq 400 -and $body -match 'invalid_credentials|Invalid login') { return 'Неверная почта или пароль. Введите те же, что на сайте кабинета.' }
+  $code = [int]$r.StatusCode; $body = Resp-Body $e
+  if ($code -eq 400 -and $body -match 'invalid_credentials|Invalid login') { return 'Неверная почта или пароль. Введите те же, что на сайте кабинета (app.mgsmebel.com). Проверьте раскладку клавиатуры.' }
   if ($body -match 'email_not_confirmed') { return 'Почта не подтверждена. В Supabase у пользователя должна стоять галочка Auto Confirm.' }
-  "Сервер ответил ошибкой $code.`n" + ($body.Substring(0, [math]::Min(200, $body.Length)))
+  if ($body -match 'user_banned') { return 'Сотрудник отключён. Включите его в «Управление → Сотрудники».' }
+  "Сервер ответил ошибкой $code.`n" + ($body.Substring(0, [math]::Min(300, $body.Length)))
+}
+# PowerShell 5.1 сам вычитывает тело ответа с ошибкой в ErrorDetails — поток после этого пустой (12.11: окно писало голое «400»)
+function Resp-Body($e) {
+  $b = ''
+  try { if ($e.ErrorDetails -and $e.ErrorDetails.Message) { $b = [string]$e.ErrorDetails.Message } } catch {}
+  if (!$b) { try { $r = $e.Exception.Response; if ($r) { $s = New-Object IO.StreamReader($r.GetResponseStream()); $b = $s.ReadToEnd() } } catch {} }
+  $b
 }
 function ErrText($e) {
   $t = $e.Exception.Message
-  try {
-    $r = $e.Exception.Response
-    if ($r) { $s = New-Object IO.StreamReader($r.GetResponseStream()); $t = "$t`n$($s.ReadToEnd())" }
-  } catch {}
+  $b = Resp-Body $e
+  if ($b) { $t = "$t`n$b" }
   $t
 }
 
