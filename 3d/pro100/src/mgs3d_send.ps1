@@ -1,5 +1,5 @@
 ﻿# MGS 3D — окно отправки модели из PRO100 в CRM MGS (Макс 12.11: менеджер выбирает КЛИЕНТА из CRM, а не проект).
-# 3D-проект = изделие: та же модель (то же название изделия) — новой версией в свой проект, другое изделие — новый проект; «+ Новый клиент» заводит карточку в «Взят в работу».
+# 3D-проект = изделие: у клиента выбирается его изделие (загрузка его заменяет) или «+ Новое изделие»; «+ Новый клиент» заводит карточку в «Взят в работу».
 # Запускается плагином mgs3d.plg после экспорта в OBJ: -Dir <папка экспорта> -Title <заголовок окна PRO100>
 param([string]$Dir, [string]$Title = '', [string]$Conf = '', [int]$Build = 0)
 
@@ -65,7 +65,19 @@ function Update-Self {
       Move-Item $tmp $dst -Force
     }
     Set-Content -Path $verFile -Value $m.version -Encoding ASCII
-    Log "обновление $have → $($m.version) скачано (окно — со следующей отправки, плагин — после перезапуска PRO100)"
+    Log "обновление $have → $($m.version) скачано (окно перезапускается новым, плагин — после перезапуска PRO100)"
+    # Макс 12.11: «PRO100 сама не обновилась — после отправки всё тот же функционал»: раньше новое окно включалось только со
+    # СЛЕДУЮЩЕЙ отправки. Теперь сразу перезапускаемся из bin новым окном с теми же параметрами (без SW_HIDE — см. CLAUDE.md).
+    $new = Join-Path $bin 'mgs3d_send.ps1'
+    if (Test-Path $new) {
+      $q = { param($v) '"' + ([string]$v -replace '"', "'") + '"' }
+      $si = New-Object Diagnostics.ProcessStartInfo 'powershell.exe'
+      $si.Arguments = "-NoProfile -ExecutionPolicy Bypass -STA -File $(& $q $new) -Dir $(& $q $Dir) -Title $(& $q $Title) -Conf $(& $q $CfgDir) -Build $([int]$m.version)"
+      $si.UseShellExecute = $false; $si.CreateNoWindow = $true; $si.WorkingDirectory = $CfgDir
+      [void][Diagnostics.Process]::Start($si)
+      Log "перезапуск новым окном $($m.version)"
+      exit
+    }
   } catch { Log "проверка обновлений не удалась: $($_.Exception.Message)" }
 }
 Update-Self
@@ -222,10 +234,14 @@ $gNew = New-Object Windows.Forms.Panel; $gNew.Location = New-Object Drawing.Poin
 $gNew.Controls.Add((L 'Имя клиента' 0 0 420 $null $Muted)); $tCN = T 0 22; $gNew.Controls.Add($tCN)
 $gNew.Controls.Add((L 'Телефон клиента' 0 56 420 $null $Muted)); $tCP = T 0 78; $gNew.Controls.Add($tCP)
 $gNew.Controls.Add((L 'Откуда о нас узнали' 0 112 420 $null $Muted)); $cSrc = C 0 134; $cSrc.Items.AddRange($Sources); $gNew.Controls.Add($cSrc)
-# изделие = 3D-проект в CRM (его название — на плитке у превью); типа больше нет
-$gItem = New-Object Windows.Forms.Panel; $gItem.Location = New-Object Drawing.Point(20, 146); $gItem.Size = New-Object Drawing.Size(420, 60); $pMain.Controls.Add($gItem)
-$gItem.Controls.Add((L 'Изделие' 0 0 420 $null $Muted)); $tItem = T 0 22; $gItem.Controls.Add($tItem)
-$bSend = B 'Отправить' 20 216 420; $pMain.Controls.Add($bSend)
+# изделие = 3D-проект в CRM (его название — на плитке у превью); типа нет.
+# Макс 12.11: у действующего клиента — выпадающий список ЕГО изделий: выбранное ЗАМЕНЯЕТСЯ этой загрузкой; «+ Новое изделие» — новое (название текстом).
+$gItem = New-Object Windows.Forms.Panel; $gItem.Location = New-Object Drawing.Point(20, 146); $gItem.Size = New-Object Drawing.Size(420, 100); $pMain.Controls.Add($gItem)
+$gItem.Controls.Add((L 'Изделие' 0 0 420 $null $Muted))
+$cProj = C 0 22; $cProj.MaxDropDownItems = 16; $gItem.Controls.Add($cProj)
+$tItem = T 0 22; $gItem.Controls.Add($tItem)
+$lItemNote = L '' 0 54 420 $null $Muted; $gItem.Controls.Add($lItemNote)
+$bSend = B 'Отправить' 20 246 420; $pMain.Controls.Add($bSend)
 $bar = New-Object Windows.Forms.ProgressBar; $bar.Location = New-Object Drawing.Point(20, 266); $bar.Size = New-Object Drawing.Size(420, 8); $bar.Visible = $false; $pMain.Controls.Add($bar)
 $lStatus = L '' 20 280 420 $null $Muted; $lStatus.Height = 100; $pMain.Controls.Add($lStatus)
 $lWho = L '' 20 522 300 $null $Muted; $pMain.Controls.Add($lWho)
@@ -255,23 +271,49 @@ function Load-Clients {
   foreach ($c in $script:Clients) { $cClient.Items.Add((@("№$($c.num)", $c.name, $c.address) | Where-Object { $_ }) -join ' · ') | Out-Null }
   $last = if (Test-Path $LastFile) { (Get-Content $LastFile -Encoding UTF8 | Select-Object -First 1) } else { '' }
   $i = [array]::FindIndex([object[]]$script:Clients, [Predicate[object]]{ param($c) $c.id -eq $last })
-  if ($cClient.Items.Count) { $cClient.SelectedIndex = [math]::Max(0, $i) }
+  if ($cClient.Items.Count) { $cClient.SelectedIndex = [math]::Max(0, $i); Load-Projects }
   if (!$cClient.Items.Count) { Set-NewMode $true }
 }
-# 3D-проект = изделие (Макс 12.11): у клиента ищем проект с таким же названием изделия (повторная выгрузка — новая версия в нём);
-# нет — новый проект с названием изделия (оно и стоит на плитке в CRM). Ссылка для клиента — у проекта.
-function Get-ClientProject($cl, $title) {
-  $all = @(Api 'GET' "/rest/v1/projects?select=id,title,share_token&client_id=eq.$($cl.id)&order=created_at.desc")
-  foreach ($p in $all) { if ("$($p.title)".Trim().ToLower() -eq "$title".Trim().ToLower()) { return $p } }
-  $n = @(Api 'POST' '/rest/v1/projects' @{ title = $title; client = $cl.name; client_id = $cl.id } @{ Prefer = 'return=representation' })
-  $n[0]
+# изделия (3D-проекты) выбранного клиента: свежие сверху; название — у свежей выгрузки (старые проекты назывались именем клиента)
+$script:Projects = @()
+$NEW_ITEM = '+ Новое изделие'
+function Proj-Title($p) { $it = @($p.items | Sort-Object { [string]$_.created_at } -Descending)[0]; if ($it -and $it.title) { [string]$it.title } else { [string]$p.title } }
+function Load-Projects {
+  $cProj.Items.Clear(); $script:Projects = @()
+  if ($script:NewMode -or $cClient.SelectedIndex -lt 0) { Layout-Item; return }
+  $cl = $script:Clients[$cClient.SelectedIndex]
+  try { $script:Projects = @(Api 'GET' "/rest/v1/projects?select=id,title,share_token,created_at,items(id,title,created_at,files,glb)&client_id=eq.$($cl.id)&order=created_at.desc") }
+  catch { Log ("projects: " + (ErrText $_)); $script:Projects = @() }
+  foreach ($p in $script:Projects) {
+    $it = @($p.items | Sort-Object { [string]$_.created_at } -Descending)[0]
+    $when = if ($it) { ([datetime]$it.created_at).ToLocalTime().ToString('dd.MM HH:mm') } else { '' }
+    $cProj.Items.Add((@((Proj-Title $p), $when) | Where-Object { $_ }) -join ' · ') | Out-Null
+  }
+  $cProj.Items.Add($NEW_ITEM) | Out-Null
+  # подсказка: изделие с тем же названием, что в PRO100, — иначе «новое»
+  $guess = (Guess-Title $Title).Trim().ToLower(); $pick = $script:Projects.Count
+  for ($k = 0; $k -lt $script:Projects.Count; $k++) { if ((Proj-Title $script:Projects[$k]).Trim().ToLower() -eq $guess) { $pick = $k; break } }
+  $cProj.SelectedIndex = $pick
+  Layout-Item
+}
+function Replacing { (-not $script:NewMode) -and $cProj.SelectedIndex -ge 0 -and $cProj.SelectedIndex -lt $script:Projects.Count }
+# что видно в блоке «Изделие»: список изделий (у действующего клиента) и/или поле названия (новое изделие)
+function Layout-Item {
+  $list = -not $script:NewMode; $cProj.Visible = $list
+  $typing = -not (Replacing)
+  $tItem.Visible = $typing; $tItem.Top = if ($list) { 58 } else { 22 }
+  $lItemNote.Top = if ($list -and $typing) { 88 } else { 54 }
+  $lItemNote.Text = if (Replacing) { 'Модель заменит это изделие у клиента (ссылка для клиента та же).' } else { '' }
+  $h = 54 + $(if ($list -and $typing) { 36 } else { 0 }) + $(if ($lItemNote.Text) { 24 } else { 0 })
+  $gItem.Height = $h + 4
+  $y = $gItem.Top + $gItem.Height + 8; $bSend.Top = $y; $bar.Top = $y + 50; $lStatus.Top = $y + 64
 }
 $script:NewMode = $false
 function Set-NewMode($on) {
   $script:NewMode = $on; $gNew.Visible = $on; $cClient.Visible = -not $on
   $lnkNew.Text = if ($on) { 'Выбрать из списка' } else { '+ Новый клиент' }
-  $y = if ($on) { 286 } else { 146 }; $gItem.Top = $y; $bSend.Top = $y + 70; $bar.Top = $y + 120; $lStatus.Top = $y + 134
-  if ($on) { $tCN.Focus() | Out-Null }
+  $gItem.Top = if ($on) { 286 } else { 146 }
+  if ($on) { $tItem.Text = Guess-Title $Title; Layout-Item; $tCN.Focus() | Out-Null } else { Load-Projects }
 }
 function Enter-Main {
   Show-Panel $pMain
@@ -283,6 +325,8 @@ function Enter-Main {
 }
 
 $lnkNew.Add_LinkClicked({ Set-NewMode (-not $script:NewMode) })
+$cClient.Add_SelectionChangeCommitted({ Load-Projects })
+$cProj.Add_SelectedIndexChanged({ if ($cProj.SelectedItem -eq $NEW_ITEM -and !$tItem.Text.Trim()) { $tItem.Text = Guess-Title $Title }; Layout-Item })
 $lnkOut.Add_LinkClicked({ Remove-Item $SessFile -ErrorAction SilentlyContinue; $script:Token = $null; Show-Panel $pLogin })
 $bLogin.Add_Click({
   $lLoginMsg.ForeColor = $Muted; $lLoginMsg.Text = 'Проверяем…'; $bLogin.Enabled = $false; [Windows.Forms.Application]::DoEvents()
@@ -297,7 +341,8 @@ $tPass.Add_KeyDown({ if ($_.KeyCode -eq 'Enter') { $bLogin.PerformClick() } })
 $bSend.Add_Click({
   try {
     if (!$ObjFile) { throw 'В папке экспорта нет model.obj' }
-    $itemTitle = $tItem.Text.Trim()
+    $old = $null
+    if (Replacing) { $old = $script:Projects[$cProj.SelectedIndex]; $itemTitle = Proj-Title $old } else { $itemTitle = $tItem.Text.Trim() }
     $miss = @()
     if ($script:NewMode -and !$tCN.Text.Trim()) { $miss += 'имя клиента' }
     if ($script:NewMode -and !$tCP.Text.Trim()) { $miss += 'телефон клиента' }
@@ -313,7 +358,8 @@ $bSend.Add_Click({
     }
     Set-Content $LastFile $cl.id -Encoding UTF8
     $script:ClientId = $cl.id
-    $proj = Get-ClientProject $cl $itemTitle
+    if ($old) { $proj = $old }
+    else { $proj = @(Api 'POST' '/rest/v1/projects' @{ title = $itemTitle; client = $cl.name; client_id = $cl.id } @{ Prefer = 'return=representation' })[0] }
     $itemId = [guid]::NewGuid().ToString()
     $list = New-Object Collections.ArrayList
     $bar.Maximum = $Files.Count; $bar.Value = 0
@@ -337,11 +383,22 @@ $bSend.Add_Click({
     } finally { Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue }
     $lStatus.Text = 'Сохраняем изделие…'; [Windows.Forms.Application]::DoEvents()
     Api 'POST' '/rest/v1/items' @{ id = $itemId; project_id = $proj.id; title = $itemTitle; files = $list } | Out-Null
+    # заменяем: прежние выгрузки этого изделия удаляем (запись и файлы) — только после того, как новая сохранилась
+    if ($old -and @($old.items).Count) {
+      $lStatus.Text = 'Убираем прежнюю модель…'; [Windows.Forms.Application]::DoEvents()
+      try {
+        $paths = @(); foreach ($it in @($old.items)) { foreach ($f in @($it.files)) { if ($f.path) { $paths += [string]$f.path } }; if ($it.glb -and $it.glb.path) { $paths += [string]$it.glb.path } }
+        $ids = (@($old.items) | ForEach-Object { $_.id }) -join ','
+        Api 'DELETE' "/rest/v1/items?id=in.($ids)" | Out-Null
+        if ($paths.Count) { Api 'DELETE' '/storage/v1/object/models' @{ prefixes = $paths } | Out-Null }
+        Log "заменено: $($old.id), удалено выгрузок $(@($old.items).Count), файлов $($paths.Count)"
+      } catch { Log ("замена (старое не удалилось): " + (ErrText $_)) }
+    }
     $link = "$Site/view.html?s=$($proj.share_token)&i=$itemId"
     Log "готово: $link"
     Busy $false
     $tLink.Text = $link
-    $lDone.Text = "«$itemTitle» добавлено в карточку клиента «$($cl.name)» (№$($cl.num))."
+    $lDone.Text = if ($old) { "«$itemTitle» у клиента «$($cl.name)» (№$($cl.num)) заменено новой моделью." } else { "«$itemTitle» добавлено в карточку клиента «$($cl.name)» (№$($cl.num))." }
     Show-Panel $pDone
     Start-Process $link
     try { Remove-Item -Recurse -Force $Dir } catch {}
