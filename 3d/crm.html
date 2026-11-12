@@ -237,7 +237,8 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
   <button class="avatar" id="avBtn" aria-haspopup="menu" aria-label="Профиль"></button>
   <div class="menu" id="menu" role="menu" hidden>
     <div class="who" id="who"></div>
-    <a href="index.html" role="menuitem">3D-проекты (кабинет)</a>
+    <a href="index.html?admin=staff" id="admLink" role="menuitem" hidden>Управление</a>
+    <a href="pro100/MGS3D_PRO100.zip" download role="menuitem">Кнопка для PRO100</a>
     <button id="demoAdd" role="menuitem" hidden>Добавить тестовых клиентов</button>
     <button id="demoDel" role="menuitem" hidden>Удалить тестовых клиентов</button>
     <button id="logout" role="menuitem">Выйти</button>
@@ -378,6 +379,7 @@ async function start(session){
   S.uid=session.user.id;$('#vLogin').hidden=true;$('#vApp').hidden=false;
   try{const r=await fetch(SUPABASE_URL+'/admin/v1/me',{headers:{Authorization:'Bearer '+session.access_token}});if(r.ok)S.me=await r.json();}catch{}
   if(S.me.role==='factory'){location.replace('factory.html');return;}
+  $('#admLink').hidden=!isBoss();
   const [a,b]=await Promise.all([sb.from('staff_profiles').select('user_id,name,photo,salon_id,role'),sb.from('salons').select('*').order('sort')]);
   S.profs=a.data||[];S.salons=b.data||[];
   const me=prof(S.uid);const av=$('#avBtn');
@@ -638,7 +640,7 @@ async function renderCard(){
         ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev">${(p.items||[]).length} издел${plural((p.items||[]).length,'ие','ия','ий')}</div>
           <div class="tx"><b>${esc(p.title)}</b><div>${new Date(p.created_at).toLocaleDateString('ru-RU')}</div></div>
           <div class="acts"><a class="pill" style="background:var(--ink);color:var(--bg);font-weight:600" href="index.html?p=${p.id}">Открыть</a><button class="pill solid" data-share="${esc(p.share_token)}">Ссылка клиенту</button></div></div>`).join('')}</div>`
-          :'<div class="empty" style="padding:0">3D-проектов пока нет. Создайте новый или привяжите существующий из кабинета.</div>'}
+          :'<div class="empty" style="padding:0">3D-проектов пока нет. Отправьте изделие из PRO100, создайте новый проект или привяжите существующий.</div>'}
         <div id="pjPick" hidden></div></section>
       <section class="panel"><div class="panel-h"><h3>Файлы <span class="msg num">${fl.length}</span></h3><button class="pill solid" id="fAdd">+ Загрузить</button></div>
         <div class="drop" id="fDrop">Перетащите сюда фото, PDF, КП — или нажмите «Загрузить»</div>
