@@ -222,8 +222,8 @@ input:disabled,select:disabled{opacity:.6}
 <script src="lib/supabase.min.js"></script>
 <script type="module" src="as.js"></script>
 <script type="module">
-import {sb,configured} from './db.js';
-import {SUPABASE_URL} from './config.js';
+import {sb,configured} from './db.js?v=20261112c';
+import {SUPABASE_URL} from './config.js?v=20261112c';
 const $=s=>document.querySelector(s);
 /* экраны: вход/нет базы — отдельно; внутри приложения — проект или управление */
 const show=v=>{['vConf','vLogin'].forEach(x=>$('#'+x).hidden=x!==v);$('#vApp').hidden=v==='vConf'||v==='vLogin';

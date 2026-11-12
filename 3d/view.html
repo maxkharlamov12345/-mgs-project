@@ -51,7 +51,7 @@
 <script src="lib/supabase.min.js"></script>
 <script type="module">
 import {loadFromMap,loadGlb,status,base,snapshot} from './viewer.js?v=20261112b';   // ?v= — браузеры держали в кэше старый viewer.js/viewer.css (Макс 12.11: «модель не загрузилась»); менять при правке viewer.*
-import {sb,configured,publicUrl} from './db.js?v=20261112b';
+import {sb,configured,publicUrl} from './db.js?v=20261112c';
 const $=s=>document.querySelector(s);
 const q=new URLSearchParams(location.search);
 const token=q.get('s');

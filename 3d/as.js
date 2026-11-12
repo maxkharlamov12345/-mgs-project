@@ -3,8 +3,8 @@
    Подключается одной строкой на страницах кабинета, CRM и фабрики: <script type="module" src="as.js"></script>.
    Сервер: POST /admin/v1/impersonate/<id> (только главный) → token_hash → sb.auth.verifyOtp.
    Сессия главного на время режима хранится в localStorage 'mgs-as' (как и обычная сессия — в этом браузере). */
-import {sb} from './db.js';
-import {SUPABASE_URL,SUPABASE_KEY} from './config.js';
+import {sb} from './db.js?v=20261112c';
+import {SUPABASE_URL,SUPABASE_KEY} from './config.js?v=20261112c';
 
 const KEY='mgs-as';
 const ROLE={owner:'главный',admin:'админ салонов',manager:'менеджер',factory:'фабрика'};
