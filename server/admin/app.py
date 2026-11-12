@@ -426,11 +426,31 @@ def photo_upload(h, me, kind):
     return 200, {'path': put_photo(kind, data, ctype)}
 
 
+# ---------- «Войти как» (Макс 12.11: главный проверяет систему глазами менеджера / админа / фабрики) ----------
+def impersonate(h, me, uid):
+    """Только главный. Одноразовый вход под сотрудником без его пароля: GoTrue generate_link (magiclink) → token_hash,
+    браузер главного меняет его на сессию сотрудника (verifyOtp). Пароль и сессии сотрудника не трогаются."""
+    if uid == me.id:
+        raise ApiError(400, 'Это вы')
+    st, u = gotrue('GET', f'/admin/users/{uid}')
+    if st != 200 or not u.get('email'):
+        raise ApiError(404, 'Сотрудник не найден')
+    if is_disabled(u):
+        raise ApiError(400, 'Сотрудник отключён — включите его, чтобы войти от его имени')
+    st, d = gotrue('POST', '/admin/generate_link', {'type': 'magiclink', 'email': u['email']})
+    tok = (d or {}).get('hashed_token') or ((d or {}).get('properties') or {}).get('hashed_token') if isinstance(d, dict) else None
+    if st >= 300 or not tok:
+        raise ApiError(502, f'Сервис входа не выдал вход ({st})')
+    print(f'IMPERSONATE {me.u.get("email")} -> {u["email"]}', flush=True)
+    prof = profiles().get(uid) or {}
+    return 200, {'token_hash': tok, 'type': 'magiclink', 'user': public(u, prof)}
+
+
 # путь, обработчик, кто может: 'any' — любой сотрудник, 'staff' — главный и администраторы, 'owner' — только главный
 ROUTES = {
     'GET': [(r'/me', me_info, 'any'), (r'/staff', staff_list, 'staff'), (r'/salons', salons_list, 'staff')],
     'POST': [(r'/staff', staff_create, 'staff'), (r'/salons', salon_create, 'owner'),
-             (r'/photo/(staff|salon)', photo_upload, 'staff')],
+             (r'/photo/(staff|salon)', photo_upload, 'staff'), (r'/impersonate/' + UUID, impersonate, 'owner')],
     'PATCH': [(r'/staff/' + UUID, staff_update, 'any'), (r'/salons/' + UUID, salon_update, 'owner')],
     'DELETE': [(r'/salons/' + UUID, salon_delete, 'owner')],
 }
