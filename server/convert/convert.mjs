@@ -5,7 +5,7 @@
 import obj2gltf from 'obj2gltf';
 import {NodeIO, Logger} from '@gltf-transform/core';
 import {ALL_EXTENSIONS} from '@gltf-transform/extensions';
-import {dedup, prune, quantize, meshopt, textureCompress} from '@gltf-transform/functions';
+import {dedup, prune, weld, quantize, meshopt, textureCompress} from '@gltf-transform/functions';
 import {MeshoptEncoder, MeshoptDecoder} from 'meshoptimizer';
 import sharp from 'sharp';
 import fs from 'node:fs/promises';
@@ -40,6 +40,9 @@ export async function convert(dir, objFile, log = () => {}) {
   await doc.transform(
     dedup(),
     prune({keepLeaves: true}),
+    // одинаковые вершины — одна (obj2gltf пишет вершину на каждый угол грани): кухня 4,4 → 2,0 МБ, по сети 2,1 → 0,6 МБ;
+    // форма не меняется, просмотр распознаёт детали так же (проверено 12.11)
+    weld(),
     textureCompress({encoder: sharp, targetFormat: 'webp', resize: [1024, 1024], quality: 82}),
     quantize({quantizePosition: 16, quantizeNormal: 10, quantizeTexcoord: 14}),
     meshopt({encoder: MeshoptEncoder, level: 'medium'})
