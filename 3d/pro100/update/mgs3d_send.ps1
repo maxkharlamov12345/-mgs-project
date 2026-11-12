@@ -400,7 +400,8 @@ $bSend.Add_Click({
     $tLink.Text = $link
     $lDone.Text = if ($old) { "«$itemTitle» у клиента «$($cl.name)» (№$($cl.num)) заменено новой моделью." } else { "«$itemTitle» добавлено в карточку клиента «$($cl.name)» (№$($cl.num))." }
     Show-Panel $pDone
-    Start-Process $link
+    # Макс 12.11: ничего не открывать само — менеджер сам выбирает: «Открыть в 3D», «Скопировать ссылку», «Открыть карточку в CRM», «Закрыть»
+    $form.Activate()
     try { Remove-Item -Recurse -Force $Dir } catch {}
   } catch {
     $t = ErrText $_; Log "send: $t"
