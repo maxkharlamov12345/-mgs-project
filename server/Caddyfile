@@ -1,7 +1,18 @@
 # HTTPS-сертификаты Caddy получает сам (Let's Encrypt), как только домены указывают на сервер.
 
 {$API_DOMAIN} {
-	encode zstd gzip
+	# сжатие: стандартные текстовые типы + лёгкие модели GLB (meshopt-данные ужимаются ещё вдвое: кухня 4,4 → ~2 МБ по сети, 12.11)
+	encode zstd gzip {
+		match {
+			header Content-Type text/*
+			header Content-Type application/json*
+			header Content-Type application/javascript*
+			header Content-Type application/xml*
+			header Content-Type image/svg+xml*
+			header Content-Type model/gltf-binary*
+			header Content-Type model/obj*
+		}
+	}
 	@preflight method OPTIONS
 	header {
 		Access-Control-Allow-Origin "*"

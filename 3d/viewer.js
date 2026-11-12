@@ -586,11 +586,11 @@ const xrayMat=new Map();
    ~700 деталей = ~700 отрисовок на кадр (а в «Реалистичном» ещё тени и затенение — втрое больше). Детали, которые не ездят
    (не двери/ящики) и не прячутся кнопкой «Без фасадов», склеиваем по материалу в несколько больших сеток, их рёбра — в две
    сетки линий. Исходные детали остаются (невидимыми) — по ним работает клик «что за деталь». */
-let batches=[],batchEdges=[];
+let batches=[],batchEdges=[],edgesReady=false;
 function clearBatches(){
   for(const b of batches){scene.remove(b);b.geometry.dispose();}
   for(const e of batchEdges){scene.remove(e);e.geometry.dispose();}
-  batches=[];batchEdges=[];
+  batches=[];batchEdges=[];edgesReady=false;busyList=[];
 }
 function floatGeo(g,mw){
   const out=new THREE.BufferGeometry();
@@ -612,15 +612,14 @@ function buildBatches(){
   clearBatches();if(!info||!model)return;
   model.updateMatrixWorld(true);
   const moving=new Set();movers.forEach(m=>m.meshes.forEach(x=>moving.add(x)));
-  const fs=frontSet(),groups=new Map(),edges={n:[],b:[]};
+  const fs=frontSet(),groups=new Map(),edges=[];
   for(const p of solidParts()){
     const m=p.mesh;
     if(moving.has(m)||fs.has(p)||Array.isArray(m.material)||!m.material||!m.geometry||m.geometry.groups.length>1)continue;
     const g=floatGeo(m.geometry,m.matrixWorld);if(!g)continue;
     const metal=isMetal(p),kr=/кромка/i.test(p.label),key=m.material.uuid+'|'+(metal?1:0)+'|'+(kr?1:0)+'|'+(g.getAttribute('uv')?1:0);
     if(!groups.has(key))groups.set(key,{src:m.material,metal,kr,geos:[]});groups.get(key).geos.push(g);
-    const eg=new THREE.EdgesGeometry(m.geometry,28);eg.applyMatrix4(m.matrixWorld);
-    edges[(/кромка/i.test(p.label)||p.tris>400)?'b':'n'].push(eg);
+    edges.push(p);
     m.visible=false;m.userData.batched=true;
   }
   for(const G of groups.values()){
@@ -630,13 +629,27 @@ function buildBatches(){
     const mesh=new THREE.Mesh(geo,src);mesh.userData.src=src;mesh.userData.metal=G.metal;mesh.userData.kr=G.kr;mesh.raycast=()=>{};
     scene.add(mesh);batches.push(mesh);
   }
-  for(const k of ['n','b']){
-    if(!edges[k].length)continue;
-    const geo=mergeGeometries(edges[k],false);edges[k].forEach(x=>x.dispose());if(!geo)continue;
-    const e=new THREE.LineSegments(geo,EDGE_MAT.orig);e.raycast=()=>{};e.userData.busy=k==='b';e.renderOrder=1;
-    scene.add(e);batchEdges.push(e);
-  }
+  buildEdges(edges);
 }
+/* Рёбра (тонкие контуры). Макс 12.11: «должно открываться быстро». Почти всё время (~0,9 с из 1 с на кухне) уходило на рёбра
+   кромок и сложной фурнитуры (петли, ручки — тысячи граней, половина геометрии), а видны они только в «Контурах» —
+   теперь их считаем, только когда «Контуры» включат (busyEdges). Рёбра обычных деталей — сразу (~25 мс). */
+const busyPart=p=>/кромка/i.test(p.label)||p.tris>400;
+let busyList=[];
+function edgeLines(list,busy){
+  const gs=list.map(p=>{const eg=new THREE.EdgesGeometry(p.mesh.geometry,28);eg.applyMatrix4(p.mesh.matrixWorld);return eg;});
+  if(!gs.length)return;const geo=mergeGeometries(gs,false);gs.forEach(x=>x.dispose());if(!geo)return;
+  const e=new THREE.LineSegments(geo,EDGE_MAT.orig);e.raycast=()=>{};e.userData.busy=busy;e.renderOrder=1;
+  scene.add(e);batchEdges.push(e);
+}
+function buildEdges(list){
+  busyList=list.filter(busyPart);edgeLines(list.filter(p=>!busyPart(p)),false);edgesReady=true;
+}
+function busyEdges(){
+  if(!busyList)return;const l=busyList;busyList=null;edgeLines(l,true);
+  for(const p of solidParts())if(!p.mesh.userData.batched)edgesOf(p);
+}
+
 function xrayOf(mt){
   if(!mt)return mt;let c=xrayMat.get(mt);
   if(!c){c=mt.clone();c.transparent=true;c.opacity=Math.min(mt.opacity??1,.28);c.depthWrite=false;c.side=THREE.DoubleSide;xrayMat.set(mt,c);}
@@ -725,9 +738,9 @@ function applyMode(){
     const m=p.mesh,u=m.userData;
     if(u.batched)continue;
     if(!u.mat0)u.mat0=m.material;
-    const e=edgesOf(p);
-    e.material=EDGE_MAT[viewMode];e.visible=viewMode==='lines'||!e.userData.busy;
-    if(viewMode==='real'){e.visible=false;const kr=/кромка/i.test(p.label);m.material=kr?noDraw:realMatOf(u.mat0,p);m.castShadow=m.receiveShadow=!kr;continue;}
+    const e=u.edges||(edgesReady&&(viewMode==='lines'||!busyPart(p)))?edgesOf(p):null;   // пока рёбра не посчитаны (первые доли секунды) — без них
+    if(e){e.material=EDGE_MAT[viewMode];e.visible=viewMode==='lines'||!e.userData.busy;}
+    if(viewMode==='real'){if(e)e.visible=false;const kr=/кромка/i.test(p.label);m.material=kr?noDraw:realMatOf(u.mat0,p);m.castShadow=m.receiveShadow=!kr;continue;}
     m.castShadow=m.receiveShadow=false;
     if(viewMode==='orig'){m.material=u.mat0;continue;}
     if(viewMode==='xray'){const x=(Array.isArray(u.mat0)?u.mat0:[u.mat0]).map(xrayOf);m.material=Array.isArray(u.mat0)?x:x[0];continue;}
@@ -779,7 +792,7 @@ bindMenu($('#tView'),$('#mView'),b=>fitView(b.dataset.v));
   if(lost)setTimeout(()=>partInfo('«Реалистичный» не поместился в видеопамять этого устройства','показан обычный режим'),1500);})();
 bindMenu($('#tMode'),$('#mMode'),async b=>{const m=b.dataset.mode;
   if(m==='real'&&!real){status('Готовим реалистичный вид…');try{await realInit();}catch(e){console.error(e);status('');partInfo('Реалистичный вид не поддерживается этим браузером','');return;}status('');}
-  viewMode=m;applyMode();});
+  viewMode=m;if(m==='lines'&&edgesReady)busyEdges();applyMode();});
 document.addEventListener('click',()=>closeMenus());
 if($('#tFronts'))$('#tFronts').onclick=()=>setFronts(!frontsHidden);
 if($('#tOpen'))$('#tOpen').onclick=()=>setAllOpen(!movers.some(m=>m.goal>0));
