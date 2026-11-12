@@ -152,7 +152,9 @@ h3{margin:0;font-size:16px;font-weight:600}
 .pcard .del{all:unset;cursor:pointer;position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(10,9,8,.75);color:var(--ink2);display:grid;place-items:center}
 .pcard .del:hover{color:var(--red)}
 .pcard .del:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
-.pcard .prev{height:140px;background-color:var(--raised)}
+.pcard .prev{height:140px;background:var(--raised) center/contain no-repeat;position:relative;place-items:end start;padding:8px;box-sizing:border-box}
+.pcard .prev .cnt{padding:4px 10px;border-radius:999px;background:rgba(10,9,8,.6);color:var(--ink2);font-size:12px}
+.pcard .prev.shooting::after{content:'Снимок 3D…';position:absolute;inset:auto 8px 8px auto;color:var(--ink3);font-size:12px}
 .pcard .tx{padding:0 6px}
 .pcard .tx b{font-weight:600}
 .pcard .tx div{color:var(--ink3);font-size:13px}
@@ -302,7 +304,7 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
 <script src="lib/supabase.min.js"></script>
 <script type="module" src="as.js"></script>
 <script type="module">
-import {sb,configured,BUCKET} from './db.js';
+import {sb,configured,BUCKET,publicUrl} from './db.js';
 import {SUPABASE_URL} from './config.js';
 import * as M from './mail.js';
 
@@ -406,7 +408,7 @@ async function loadAll(){
   const [c,p,pr,f]=await Promise.all([
     sb.from('clients').select('*').order('created_at',{ascending:false}),
     sb.from('positions').select('*').order('sort').order('created_at'),
-    sb.from('projects').select('id,title,client_id,share_token,created_at,items(id)').not('client_id','is',null),
+    sb.from('projects').select('id,title,client_id,share_token,created_at,preview,items(id,created_at,glb_status)').not('client_id','is',null),
     sb.from('client_files').select('*').order('created_at')]);
   const e=c.error||p.error||pr.error||f.error;
   if(e){showErr(e.message?.includes('clients')||e.code==='42P01'?'таблицы CRM ещё не созданы на сервере — подождите минуту и обновите страницу':e);}
@@ -639,7 +641,7 @@ async function renderCard(){
           ${rail(p)}${(()=>{const k=colOf(p),ok=canCols(p);return ok.size?`<select class="in" data-pos="${p.id}" aria-label="Этап позиции">${POST.map((l,i)=>i===k||ok.has(i)?`<option value="${i}" ${i===k?'selected':''}>${i+1}. ${l}</option>`:'').join('')}</select>`
             :`<div class="msg">Этап: <span style="color:var(--ink)">${POST[k]}</span>${p.kind==='furniture'&&p.sent_at?' — ведёт фабрика':''}</div>`;})()}</div>`).join('')||'<div class="empty">Позиций нет.</div>'}</section>`:''}
       <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3></div>
-        ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev">${(p.items||[]).length} издел${plural((p.items||[]).length,'ие','ия','ий')}</div>
+        ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev" data-pjprev="${p.id}" ${p.preview?`style="background-image:url('${esc(publicUrl(p.preview))}')"`:''}><span class="cnt">${(p.items||[]).length} издел${plural((p.items||[]).length,'ие','ия','ий')}</span></div>
           <button class="del" data-pjdel="${p.id}" aria-label="Удалить 3D-проект ${esc(p.title)}" title="Удалить 3D-проект"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>
           <div class="tx"><b>${esc(p.title)}</b><div>${new Date(p.created_at).toLocaleDateString('ru-RU')}</div></div>
           <div class="acts"><a class="pill" style="background:var(--ink);color:var(--bg);font-weight:600" href="${esc(shareUrl(p.share_token))}" target="_blank" rel="noopener">Открыть</a><button class="pill solid" data-share="${esc(p.share_token)}">Ссылка клиенту</button></div></div>`).join('')}</div>`
@@ -681,6 +683,7 @@ async function renderCard(){
     S.card=null;setUrl();render();toast('Клиент удалён');};
   /* 3D */
   root.querySelectorAll('[data-pjdel]').forEach(b=>b.onclick=()=>deleteProject(b.dataset.pjdel));
+  queueShots(pj);
   root.querySelectorAll('[data-share]').forEach(b=>b.onclick=async()=>{const u=shareUrl(b.dataset.share);try{await navigator.clipboard.writeText(u);toast('Ссылка скопирована');}catch{prompt('Ссылка для клиента',u);}});
   /* файлы */
   const els=[...root.querySelectorAll('[data-img]')];
@@ -819,11 +822,53 @@ async function deleteProject(id){
   if(!confirm(`Удалить 3D-проект «${p.title}»${n?` и ${n} издел${plural(n,'ие','ия','ий')}`:''}? Ссылка у клиента перестанет открываться. Отменить нельзя.`))return;
   const {data:its,error:e1}=await sb.from('items').select('files,glb').eq('project_id',id);
   if(e1)return showErr(e1);
-  const paths=(its||[]).flatMap(i=>(i.files||[]).map(f=>f.path).concat(i.glb?.path?[i.glb.path]:[])).filter(Boolean);
+  const paths=(its||[]).flatMap(i=>(i.files||[]).map(f=>f.path).concat(i.glb?.path?[i.glb.path]:[])).concat(p.preview?[p.preview]:[]).filter(Boolean);
   if(paths.length){const {error}=await sb.storage.from(BUCKET).remove(paths);if(error)return showErr(error);}
   const {error}=await sb.from('projects').delete().eq('id',id);
   if(error)return showErr(error);
   S.projects=S.projects.filter(x=>x.id!==id);render();toast('3D-проект удалён');
+}
+/* Превью 3D-проекта (Макс 12.11: «в превью проекта ставить фото из режима 3D»). Снимок делает этот же браузер:
+   view.html?shot=1 в невидимом окне открывает лёгкую модель свежего изделия, рисует общий вид и отдаёт картинку (webp, прозрачный фон);
+   кладём её в бакет models (<project>/<item>/preview-….webp) и в projects.preview. Снимаем, когда у проекта нет снимка свежего изделия
+   и его лёгкая модель готова (иначе — при следующем открытии карточки). По одному проекту за раз. */
+const shotTried=new Set();let shotBusy=false;const shotQ=[];
+function queueShots(pj){
+  for(const p of pj){
+    const its=(p.items||[]).slice().sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));const it=its[0];
+    if(!it||it.glb_status!=='ok'||(p.preview||'').includes(it.id)||shotTried.has(p.id+it.id))continue;
+    shotTried.add(p.id+it.id);shotQ.push([p,it]);
+  }
+  pumpShots();
+}
+async function pumpShots(){
+  if(shotBusy)return;const job=shotQ.shift();if(!job)return;shotBusy=true;
+  const [p,it]=job;const el=()=>document.querySelector(`[data-pjprev="${p.id}"]`);el()?.classList.add('shooting');
+  try{
+    const blob=await shoot(p.share_token,it.id);
+    if(blob){
+      const old=p.preview;
+      const path=`${p.id}/${it.id}/preview-${Date.now().toString(36)}.${blob.type==='image/webp'?'webp':'png'}`;
+      const {error:e1}=await sb.storage.from(BUCKET).upload(path,blob,{contentType:blob.type,upsert:true});if(e1)throw e1;
+      const {error:e2}=await sb.from('projects').update({preview:path}).eq('id',p.id);if(e2)throw e2;
+      p.preview=path;if(old&&old!==path)sb.storage.from(BUCKET).remove([old]);
+      const e=el();if(e)e.style.backgroundImage=`url("${publicUrl(path)}")`;
+    }
+  }catch(e){console.warn('снимок 3D не получился',e);}
+  el()?.classList.remove('shooting');shotBusy=false;pumpShots();
+}
+function shoot(tok,itemId){
+  return new Promise(res=>{
+    const f=document.createElement('iframe');
+    f.src=`view.html?s=${encodeURIComponent(tok)}&i=${encodeURIComponent(itemId)}&shot=1`;
+    f.setAttribute('aria-hidden','true');f.tabIndex=-1;
+    // окно должно быть «видимым» для браузера (иначе 3D не рисуется), но человеку его не видно
+    f.style.cssText='position:fixed;left:0;top:0;width:720px;height:400px;border:0;opacity:0;pointer-events:none;z-index:-1';
+    const done=b=>{removeEventListener('message',on);clearTimeout(t);f.remove();res(b);};
+    const on=e=>{if(e.source!==f.contentWindow||!e.data||!e.data.mgsShot)return;if(e.data.err)console.warn('снимок 3D:',e.data.err);done(e.data.blob||null);};
+    const t=setTimeout(()=>done(null),90000);
+    addEventListener('message',on);document.body.append(f);
+  });
 }
 const shareUrl=tok=>{const u=/(^|\.)mgsmebel\.com$/.test(location.hostname)&&!/^test\./.test(location.hostname)?new URL('https://my.mgsmebel.com/view.html'):new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);return u.toString();};
 

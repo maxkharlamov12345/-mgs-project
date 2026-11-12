@@ -799,5 +799,18 @@ if($('#tOpen'))$('#tOpen').onclick=()=>setAllOpen(!movers.some(m=>m.goal>0));
 if($('#tDims'))$('#tDims').onclick=()=>{vis.manual=!vis.manual;if(dimGroups.manual)dimGroups.manual.visible=vis.manual;$('#tDims').setAttribute('aria-pressed',String(vis.manual));};
 new ResizeObserver(()=>resize()).observe(document.getElementById('top')||document.body);
 
-export {loadFromMap,loadGlb,status,base,fitView};
+/* Снимок 3D для превью проекта в карточке клиента CRM (Макс 12.11: «в превью ставить фото из режима 3D»):
+   общий вид, как при открытии, без шапки и размеров, фон прозрачный (ложится на фон плитки). CRM открывает view.html?shot=1 в невидимом окне. */
+function snapshot(w=720,h=400,type='image/webp'){
+  if(!info)return Promise.resolve(null);
+  const t=document.getElementById('top');if(t)t.hidden=true;
+  Object.values(dimGroups).forEach(g=>g.visible=false);
+  renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.clearViewOffset();camera.updateProjectionMatrix();
+  fitView('persp');
+  // в кадр — сама модель с небольшим запасом (fitView рассчитан на экран с шапкой и запасом по кругу)
+  camera.position.lerp(controls.target,.03);controls.update();
+  renderer.render(scene,camera);
+  return new Promise(r=>renderer.domElement.toBlob(b=>r(b),type,.86));
+}
+export {loadFromMap,loadGlb,status,base,fitView,snapshot};
 window.__info=()=>info;window.__stats=()=>({calls:renderer.info.render.calls,tris:renderer.info.render.triangles,batches:batches.length});

@@ -50,12 +50,17 @@
 </script>
 <script src="lib/supabase.min.js"></script>
 <script type="module">
-import {loadFromMap,loadGlb,status,base} from './viewer.js';
+import {loadFromMap,loadGlb,status,base,snapshot} from './viewer.js';
 import {sb,configured,publicUrl} from './db.js';
 const $=s=>document.querySelector(s);
 const q=new URLSearchParams(location.search);
 const token=q.get('s');
-function empty(t,p){$('#empty').hidden=false;$('#eT').textContent=t;$('#eP').textContent=p;$('#tools').hidden=true;}
+// ?shot=1 — CRM делает снимок для превью проекта: без шапки, без ожидания, картинка уходит родительскому окну (своему сайту)
+const SHOT=q.get('shot')==='1'&&window.parent!==window;
+let shotSent=false;
+const shotDone=(blob,err)=>{if(shotSent)return;shotSent=true;try{window.parent.postMessage({mgsShot:1,s:token,i:q.get('i'),blob,err:err||null},location.origin);}catch(e){}};
+if(SHOT){document.getElementById('top').hidden=true;document.body.style.background='transparent';}
+function empty(t,p){if(SHOT){shotDone(null,t);return;}$('#empty').hidden=false;$('#eT').textContent=t;$('#eP').textContent=p;$('#tools').hidden=true;}
 
 let openJob=null;
 async function openItem(it){
@@ -69,7 +74,7 @@ async function openItem(it){
   // лёгкая модель (GLB) появляется на сервере через несколько секунд после отправки из PRO100 (сразу после отправки
   // окно открывает эту ссылку). Пока сервер её делает — ждём (до 90 с), а не грузим исходный OBJ: он в разы тяжелее и дольше
   // открывается (Макс 12.11: «очень долгое открытие»). Ошибка / нет ответа / время вышло — открываем OBJ, как раньше.
-  if(!(it.glb&&it.glb.path)&&(it.glb_status===null||it.glb_status==='working')){
+  if(!SHOT&&!(it.glb&&it.glb.path)&&(it.glb_status===null||it.glb_status==='working')){
     const job=it.id,t0=Date.now();
     while(Date.now()-t0<90000){
       status(`Готовим модель для быстрого просмотра… ${Math.round((Date.now()-t0)/1000)} с`);
@@ -107,7 +112,8 @@ async function openItem(it){
     b.onclick=()=>openItem(it);tabs.append(b);});
   tabs.hidden=items.length<2;
   const want=items.find(i=>i.id===q.get('i'))||items[0];
-  openItem(want);
+  if(!SHOT){openItem(want);return;}
+  try{await openItem(want);shotDone(await snapshot());}catch(e){shotDone(null,String(e&&e.message||e));}
 })();
 </script>
 </body>
