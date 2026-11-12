@@ -200,6 +200,11 @@ input,select{font:inherit;color:var(--fg);background:var(--card2);border:1px sol
           <label>Название<input id="lName" required placeholder="Пражская"></label>
           <label style="flex:2 1 300px">Адрес<input id="lAddr" placeholder="Москва, ул. Кировоградская 15, ТЦ «Гранд Юг», 2 этаж"></label>
         </div>
+        <div class="row">
+          <label style="flex:1 1 300px">Компания дилера<input id="lCo" list="lCoList" placeholder="ООО «Мебельный Завод»" autocomplete="off"></label>
+          <datalist id="lCoList"></datalist>
+          <div class="hint" style="flex:2 1 300px;align-self:end">ООО или ИП, от которого салон работает с фабрикой. Подставляется в заказы фабрике, когда менеджер отправляет позицию.</div>
+        </div>
         <div class="row"><button class="btn" type="submit" id="lSave">Создать</button><button class="btn ghost" type="button" id="lCancel">Отмена</button></div>
         <div class="msg" id="lMsg"></div>
       </form>
@@ -367,7 +372,7 @@ async function loadSalons(){
   $('#sAdmChk').innerHTML=SALONS.map(s=>`<label><input type="checkbox" value="${s.id}">${esc(s.name)}</label>`).join('')||'<span class="hint">Сначала добавьте салоны.</span>';
   $('#salons').innerHTML=SALONS.map(s=>`<div class="salon" data-id="${s.id}">
     <div class="img" style="${s.photo?`background-image:url('${mediaUrl(s.photo)}')`:''}">${s.photo?'':'нет фото'}</div>
-    <div class="tx"><b>${esc(s.name)}</b><span>${esc(s.address||'адрес не указан')}</span></div>
+    <div class="tx"><b>${esc(s.name)}</b><span>${esc(s.address||'адрес не указан')}</span><span>${s.company?esc(s.company):'<span style="color:#e0a35a">компания дилера не указана</span>'}</span></div>
     <div class="acts"><button class="btn ghost small" data-edit>Изменить</button><button class="btn danger small" data-del>Удалить</button></div></div>`).join('');
   document.querySelectorAll('.salon').forEach(el=>{const s=SALONS.find(x=>x.id===el.dataset.id);
     el.querySelector('[data-edit]').onclick=()=>editSalon(s);
@@ -379,14 +384,15 @@ let editingSalon=null;
 function editSalon(s){
   editingSalon=s||null;$('#slForm').hidden=false;$('#lMsg').textContent='';
   $('#slFormTitle').textContent=s?'Салон «'+s.name+'»':'Новый салон';$('#lSave').textContent=s?'Сохранить':'Создать';
-  $('#lName').value=s?.name||'';$('#lAddr').value=s?.address||'';lPh.set(s?.photo);
+  $('#lName').value=s?.name||'';$('#lAddr').value=s?.address||'';$('#lCo').value=s?.company||'';lPh.set(s?.photo);
+  $('#lCoList').innerHTML=[...new Set(['ООО «Мебельный Завод»','ИП Михайлов Г. А.',...SALONS.map(x=>x.company).filter(Boolean)])].map(x=>`<option value="${esc(x)}">`).join('');
   $('#slForm').scrollIntoView({behavior:'smooth',block:'start'});$('#lName').focus({preventScroll:true});
 }
 $('#slNewBtn').onclick=()=>editSalon(null);
 $('#lCancel').onclick=()=>{$('#slForm').hidden=true;};
 $('#slForm').onsubmit=async e=>{
   e.preventDefault();const m=$('#lMsg');m.className='msg';m.textContent='Сохраняем…';$('#lSave').disabled=true;
-  try{const body={name:$('#lName').value.trim(),address:$('#lAddr').value.trim()};
+  try{const body={name:$('#lName').value.trim(),address:$('#lAddr').value.trim(),company:$('#lCo').value.trim()};
     if(!editingSalon||lPh.changed)body.photo=await lPh.value('salon');
     if(editingSalon)await adm('PATCH','/salons/'+editingSalon.id,body);else await adm('POST','/salons',body);
     $('#slForm').hidden=true;m.textContent='';loadSalons();}

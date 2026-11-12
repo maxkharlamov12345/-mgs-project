@@ -62,6 +62,7 @@ h3{margin:0;font-size:16px;font-weight:600}
 .board{display:grid;gap:14px;align-items:start}
 .col{display:flex;flex-direction:column;gap:10px;min-height:140px;border-radius:20px;padding:2px;transition:background-color .15s}
 .col.drag{background:rgba(191,214,48,.06)}
+.col.nodrop{background:rgba(255,255,255,.02);cursor:not-allowed}
 .col-h{display:flex;align-items:center;gap:8px;padding:0 6px;min-height:30px}
 .col-h b{font-size:15px;font-weight:600}
 .cnt{min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:var(--raised);color:var(--ink2);font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
@@ -199,6 +200,7 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
 .stages7{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
 .stages7 .pill{background:var(--surface2);justify-content:flex-start}
 .stages7 .pill.on{background:var(--lime);color:var(--on-lime)}
+.stages7 .pill[aria-disabled="true"]{opacity:.38;cursor:default}
 .login{max-width:380px;margin:14vh auto 0;padding:0 16px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-weight:600;padding:12px 18px;border-radius:999px;z-index:60;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 @media (max-width:700px){
@@ -280,7 +282,7 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
 <dialog id="dPos"><div class="dlg">
   <div><div class="sub" id="psWho" style="margin:0 0 4px"></div><h2 id="psName"></h2><div class="sub" id="psSub"></div></div>
   <div id="psLines"></div>
-  <div><div class="msg" style="margin-bottom:8px">Этап позиции</div><div class="stages7" id="psStages"></div></div>
+  <div><div class="msg" style="margin-bottom:8px">Этап позиции</div><div class="stages7" id="psStages"></div><div class="msg" id="psHint" style="margin-top:8px"></div></div>
   <div class="acts"><button class="pill solid big" type="button" data-close>Закрыть</button><button class="pill solid big" type="button" id="psOpen">Карточка клиента</button></div>
 </div></dialog>
 
@@ -310,7 +312,36 @@ const showErr=e=>{const m=$('#err');m.hidden=!e;m.textContent=e?('Ошибка: 
 
 const PRE=[['work','Взят в работу'],['kp','КП отправлено'],['zamer','Замер']];
 const PRE_ALL=[...PRE,['contract','Договор']];
-const POST=['Оформлен','Отправлен','Запущен','Доставка','Монтаж','Рекламация','Закрыт'];
+/* Колонки позиций у дилера (Макс 12.11): путь как у фабрики. В базе: stage 1..7 (1 оформлен, 2 отправлен, 3 в производстве,
+   4 доставка, 5 монтаж, 6 рекламация, 7 закрыт) + шаг фабрики fstage 0..4 у отправленной мебели. Колонка считается из них.
+   Колонки 1–5 (Отправлен…В производстве) у мебели двигает фабрика (письма), дилер — только Оформлен и с «В производстве» дальше. */
+const POST=['Оформлен','Отправлен','Заказ заведён','У технолога','На согласовании','В производстве','Доставка','Монтаж','Рекламация','Закрыт'];
+const LAST=POST.length-1;
+const colOf=p=>{const s=p.stage||1;if(s===1)return 0;if(s>=3)return s+2;
+  return p.kind==='furniture'&&p.sent_at?Math.min(1+(p.fstage??0),5):1;};
+const stageOf=k=>k===0?1:k<=4?2:k-2;
+/* куда дилер может перевести позицию сам: Set колонок (текущая не входит) */
+function canCols(p){
+  const all=[...POST.keys()];let ok;
+  if(p.kind==='accessory')ok=all.filter(k=>k<2||k>4);              // у сопутки нет этапов фабрики
+  else if(p.sent_at)ok=(p.fstage??0)>=4?all.filter(k=>k>=5):[];     // ушла на фабрику: до производства ведёт фабрика
+  else ok=(p.stage||1)>=3?[0,...all.filter(k=>k>=5)]:[0];           // не отправлена: в «Отправлен» — только письмом
+  return new Set(ok.filter(k=>k!==colOf(p)));
+}
+function whyNot(p,k){
+  if(p.kind==='accessory')return 'У сопутки нет этапов фабрики';
+  if(!p.sent_at)return k===1?'Отправьте заказ фабрике первым письмом в карточке клиента':'Сначала отправьте заказ фабрике письмом в карточке клиента';
+  if((p.fstage??0)<4)return 'Этапы до «В производстве» ведёт фабрика';
+  return 'После производства позицию нельзя вернуть назад';
+}
+/* перевести позицию в колонку k (доска, окно этапа, карточка) */
+async function movePos(p,k){
+  if(k===colOf(p))return;
+  if(!canCols(p).has(k)){toast(whyNot(p,k));
+    if(p.kind==='furniture'&&!p.sent_at&&k===1){S.chatPos=p.id;openCard(p.client_id);setTimeout(()=>$('#chat')?.scrollIntoView({behavior:'smooth'}),60);}
+    return;}
+  await savePos(p.id,{stage:stageOf(k)});
+}
 const REASONS=['Дорого','Сроки изготовления','Нет нужного материала','Выбрал другую фабрику','Отложил покупку','Не выходит на связь','Свой ответ'];
 const DEF_CONTRACTOR='МГС';
 
@@ -346,7 +377,7 @@ async function start(session){
   S.uid=session.user.id;$('#vLogin').hidden=true;$('#vApp').hidden=false;
   try{const r=await fetch(SUPABASE_URL+'/admin/v1/me',{headers:{Authorization:'Bearer '+session.access_token}});if(r.ok)S.me=await r.json();}catch{}
   if(S.me.role==='factory'){location.replace('factory.html');return;}
-  const [a,b]=await Promise.all([sb.from('staff_profiles').select('user_id,name,photo,salon_id,role'),sb.from('salons').select('id,name').order('sort')]);
+  const [a,b]=await Promise.all([sb.from('staff_profiles').select('user_id,name,photo,salon_id,role'),sb.from('salons').select('*').order('sort')]);
   S.profs=a.data||[];S.salons=b.data||[];
   const me=prof(S.uid);const av=$('#avBtn');
   if(me?.photo){av.style.backgroundImage=`url("${mediaUrl(me.photo)}")`;av.textContent='';}else av.textContent=initials(me?.name||session.user.email);
@@ -466,16 +497,16 @@ async function wirePreCards(root){
 }
 
 /* перетаскивание (мышь); на телефоне этап меняется в карточке */
-function dnd(root,itemSel,onDrop,targetSel){
+function dnd(root,itemSel,onDrop,targetSel,canDrop){
   let id=null;
   root.querySelectorAll(itemSel).forEach(el=>{
     el.addEventListener('dragstart',e=>{id=el.dataset.client||el.dataset.pos;el.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);});
-    el.addEventListener('dragend',()=>{el.classList.remove('dragging');root.querySelectorAll('.drag').forEach(x=>x.classList.remove('drag'));});
+    el.addEventListener('dragend',()=>{el.classList.remove('dragging');root.querySelectorAll('.drag,.nodrop').forEach(x=>x.classList.remove('drag','nodrop'));});
   });
   root.querySelectorAll(targetSel).forEach(t=>{
-    t.addEventListener('dragover',e=>{if(!id)return;e.preventDefault();t.classList.add('drag');});
-    t.addEventListener('dragleave',e=>{if(!t.contains(e.relatedTarget))t.classList.remove('drag');});
-    t.addEventListener('drop',e=>{e.preventDefault();t.classList.remove('drag');const x=id;id=null;if(x)onDrop(x,t);});
+    t.addEventListener('dragover',e=>{if(!id)return;e.preventDefault();t.classList.add(!canDrop||canDrop(id,t)?'drag':'nodrop');});
+    t.addEventListener('dragleave',e=>{if(!t.contains(e.relatedTarget))t.classList.remove('drag','nodrop');});
+    t.addEventListener('drop',e=>{e.preventDefault();t.classList.remove('drag','nodrop');const x=id;id=null;if(x)onDrop(x,t);});
   });
 }
 
@@ -511,7 +542,7 @@ function renderPost(){
     <div class="chips" style="margin-bottom:10px;align-items:center"><span class="msg" style="margin-right:4px">Клиент:</span>
       <button class="pill ${!S.postClient?'on':''}" data-cl="">Все</button>${cl.map(c=>`<button class="pill ${S.postClient===c.id?'on':''}" data-cl="${c.id}">${esc(c.name.split(/\s+/)[0])}</button>`).join('')}</div>
     ${S.postMode==='list'?`<div class="chips" style="margin-bottom:18px"><button class="pill ${!S.postStage?'on':''}" data-st="0">Все <span class="n">${pos.length}</span></button>
-      ${POST.map((l,i)=>{const n=pos.filter(p=>p.stage===i+1).length;return n?`<button class="pill ${S.postStage===i+1?'on':''}" data-st="${i+1}">${l} <span class="n">${n}</span></button>`:'';}).join('')}</div>`:'<div style="height:8px"></div>'}
+      ${POST.map((l,i)=>{const n=pos.filter(p=>colOf(p)===i).length;return n?`<button class="pill ${S.postStage===i+1?'on':''}" data-st="${i+1}">${l} <span class="n">${n}</span></button>`:'';}).join('')}</div>`:'<div style="height:8px"></div>'}
     <div id="postBody"></div>`;
   bindScope(root);
   root.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.postMode=b.dataset.mode;render();});
@@ -520,37 +551,38 @@ function renderPost(){
   const body=$('#postBody');
   if(!cl.length){body.innerHTML='<div class="empty">Пока нет клиентов с договором. Перетащите клиента в «Договор» на доске «До договора».</div>';return;}
   if(S.postMode==='list'){
-    const rows=shown.map(c=>{let ps=S.positions.filter(p=>p.client_id===c.id);if(S.postStage)ps=ps.filter(p=>p.stage===S.postStage);
+    const rows=shown.map(c=>{let ps=S.positions.filter(p=>p.client_id===c.id);if(S.postStage)ps=ps.filter(p=>colOf(p)===S.postStage-1);
       if(S.postStage&&!ps.length)return '';
       return `<button class="ccard" data-open="${c.id}"><div class="cn"><b>${esc(c.name)}</b><span><span class="num">${c.num}</span> · ${esc(salonName(c.salon_id))}</span></div>
         <div class="plist">${ps.map(p=>p.kind==='accessory'
-          ?`<div class="pline acc"><span class="th">Сопутка</span><span class="pn">${esc(p.contractor||'Контрагент')}<small>${esc((p.lines||[]).map(l=>l.name).filter(Boolean).join(', '))}</small></span><span class="pc"></span>${rail(p.stage)}<span class="ps">${POST[p.stage-1]}</span></div>`
-          :`<div class="pline"><span class="th" ${p.preview?`data-img="${esc(p.preview)}"`:''}></span><span class="pn">${esc(p.name)}</span><span class="pc">${esc(p.contractor)}</span>${rail(p.stage)}<span class="ps">${POST[p.stage-1]}</span></div>`).join('')||'<span class="msg">Позиций нет</span>'}</div></button>`;}).join('');
+          ?`<div class="pline acc"><span class="th">Сопутка</span><span class="pn">${esc(p.contractor||'Контрагент')}<small>${esc((p.lines||[]).map(l=>l.name).filter(Boolean).join(', '))}</small></span><span class="pc"></span>${rail(p)}<span class="ps">${POST[colOf(p)]}</span></div>`
+          :`<div class="pline"><span class="th" ${p.preview?`data-img="${esc(p.preview)}"`:''}></span><span class="pn">${esc(p.name)}</span><span class="pc">${esc(p.contractor)}</span>${rail(p)}<span class="ps">${POST[colOf(p)]}</span></div>`).join('')||'<span class="msg">Позиций нет</span>'}</div></button>`;}).join('');
     body.innerHTML=`<div class="list"><div class="list-in">${rows||'<div class="empty">Нет позиций на этом этапе.</div>'}</div></div>`;
     const ims=[...body.querySelectorAll('[data-img]')];
     signed(ims.map(e=>e.dataset.img)).then(()=>ims.forEach(e=>e.style.backgroundImage=`url("${surl(e.dataset.img)}")`));
     body.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openCard(b.dataset.open));
     return;
   }
-  body.innerHTML=`<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(7,minmax(236px,1fr));min-width:1760px">
-    ${POST.map((l,i)=>{const list=pos.filter(p=>p.stage===i+1);return `<div class="col" data-stage="${i+1}"><div class="col-h"><b>${l}</b><span class="cnt">${list.length}</span></div>${list.map(posCard).join('')}</div>`;}).join('')}
+  body.innerHTML=`<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(${POST.length},minmax(220px,1fr));min-width:${POST.length*234}px">
+    ${POST.map((l,i)=>{const list=pos.filter(p=>colOf(p)===i);return `<div class="col ${i>=1&&i<=5?'fcol':''}" data-col="${i}"><div class="col-h"><b>${l}</b><span class="cnt">${list.length}</span></div>${list.map(posCard).join('')}</div>`;}).join('')}
   </div></div>`;
   body.querySelectorAll('.card-btn[data-pos]').forEach(b=>b.onclick=()=>openPos(b.dataset.pos));
-  dnd(body,'.card-btn[data-pos]',async(id,t)=>{const st=+t.dataset.stage;const p=S.positions.find(x=>x.id===id);if(p&&p.stage!==st)await savePos(id,{stage:st});},'.col[data-stage]');
+  dnd(body,'.card-btn[data-pos]',async(id,t)=>{const p=S.positions.find(x=>x.id===id);if(p)await movePos(p,+t.dataset.col);},'.col[data-col]',
+    (id,t)=>{const p=S.positions.find(x=>x.id===id);return !!p&&canCols(p).has(+t.dataset.col);});
   const els=[...body.querySelectorAll('[data-img]')];
   signed(els.map(e=>e.dataset.img)).then(()=>els.forEach(e=>e.style.backgroundImage=`url("${surl(e.dataset.img)}")`));
 }
 const posTitle=p=>p.kind==='accessory'?'Сопутка: '+(p.lines||[]).map(l=>l.name).filter(Boolean).join(', ').toLowerCase():p.name;
-const rail=st=>`<span class="rail">${POST.map((_,i)=>`<span class="${i+1<st?'d':i+1===st?'c':''}"></span>`).join('')}</span>`;
+const rail=p=>{const k=colOf(p);return `<span class="rail" title="${esc(POST[k])}">${POST.map((_,i)=>`<span class="${i<k?'d':i===k?'c':''}"></span>`).join('')}</span>`;};
 function posCard(p){
   const c=S.clients.find(x=>x.id===p.client_id);
   const t1=`<div class="t1"><span>${esc(c?.name)}</span><span class="num">${c?.num??''}</span></div>`;
-  if(p.kind==='accessory')return `<div role="button" tabindex="0" class="card-btn acc ${p.stage===7?'closed':''}" draggable="true" data-pos="${p.id}"><div class="cb" style="padding:0">${t1}
+  if(p.kind==='accessory')return `<div role="button" tabindex="0" class="card-btn acc ${colOf(p)===LAST?'closed':''}" draggable="true" data-pos="${p.id}"><div class="cb" style="padding:0">${t1}
     <div style="display:flex;align-items:center;gap:8px;margin-top:2px"><span class="acc-tag">Сопутка</span><span class="nm">${esc(p.contractor||'Контрагент')}</span></div>
     <div class="lines">${(p.lines||[]).map(l=>`<div><span>${esc(l.name)}</span><span>${esc(l.qty)}</span></div>`).join('')}</div></div></div>`;
-  return `<div role="button" tabindex="0" class="card-btn ${p.stage===7?'closed':''}" draggable="true" data-pos="${p.id}">
+  return `<div role="button" tabindex="0" class="card-btn ${colOf(p)===LAST?'closed':''}" draggable="true" data-pos="${p.id}">
     <div class="prev ${p.preview?'':'none'}" ${p.preview?`data-img="${esc(p.preview)}"`:''}>${p.preview?'':'Нет превью'}</div>
-    <div class="cb">${t1}<div class="nm">${esc(p.name||'Позиция')}${S.unread[p.id]?` <span class="ubadge" title="Непрочитанные письма фабрики">${S.unread[p.id]}</span>`:''}</div><div class="mt">${esc(p.contractor)}${p.sent_at?` · ${esc(M.FSTAGES[p.fstage??0])}`:''}</div></div></div>`;
+    <div class="cb">${t1}<div class="nm">${esc(p.name||'Позиция')}${S.unread[p.id]?` <span class="ubadge" title="Непрочитанные письма фабрики">${S.unread[p.id]}</span>`:''}</div><div class="mt">${esc(p.contractor)}${p.sent_at&&p.f_num?` · № фабрики <span class="num">${esc(p.f_num)}</span>`:''}</div></div></div>`;
 }
 async function savePos(id,patch){
   const {data,error}=await sb.from('positions').update(patch).eq('id',id).select().single();
@@ -563,8 +595,10 @@ function openPos(id){
   $('#psName').textContent=p.kind==='accessory'?'Сопутка · '+(p.contractor||''):p.name;
   $('#psSub').textContent=p.kind==='accessory'?'':p.contractor;
   $('#psLines').innerHTML=p.kind==='accessory'?`<div class="lines">${(p.lines||[]).map(l=>`<div><span>${esc(l.name)}</span><span>${esc(l.qty)}</span></div>`).join('')}</div>`:'';
-  const paint=()=>{$('#psStages').innerHTML=POST.map((l,i)=>`<button class="pill ${p.stage===i+1?'on':''}" data-s="${i+1}"><span class="num" style="opacity:.6">${i+1}</span> ${l}</button>`).join('');
-    $('#psStages').querySelectorAll('[data-s]').forEach(b=>b.onclick=async()=>{await savePos(p.id,{stage:+b.dataset.s});paint();});};
+  const paint=()=>{const k=colOf(p),ok=canCols(p);
+    $('#psStages').innerHTML=POST.map((l,i)=>`<button class="pill ${k===i?'on':''}" data-s="${i}" ${i===k||ok.has(i)?'':'aria-disabled="true"'} title="${i===k||ok.has(i)?'':esc(whyNot(p,i))}"><span class="num" style="opacity:.6">${i+1}</span> ${l}</button>`).join('');
+    $('#psHint').textContent=p.kind==='furniture'&&(!p.sent_at||(p.fstage??0)<4)?(p.sent_at?'Этапы до «В производстве» ведёт фабрика — по её письмам.':'В «Отправлен» позиция перейдёт сама, когда вы отправите заказ фабрике первым письмом в карточке клиента.'):'';
+    $('#psStages').querySelectorAll('[data-s]').forEach(b=>b.onclick=async()=>{const i=+b.dataset.s;if(!canCols(p).has(i)&&i!==k&&p.kind==='furniture'&&!p.sent_at&&i===1)$('#dPos').close();await movePos(p,i);paint();});};
   paint();$('#psOpen').onclick=()=>{$('#dPos').close();openCard(c.id);};
   $('#dPos').showModal();
 }
@@ -596,7 +630,8 @@ async function renderCard(){
         ${ps.map(p=>`<div class="posline ${p.kind==='accessory'?'acc':''}"><div class="h"><b>${p.kind==='accessory'?'Сопутка · '+esc(p.contractor):esc(p.name)}</b><span>${p.kind==='accessory'?'':esc(p.contractor)}</span></div>
           ${p.kind==='accessory'?`<div class="lines">${(p.lines||[]).map(l=>`<div><span>${esc(l.name)}</span><span>${esc(l.qty)}</span></div>`).join('')}</div>`:''}
           ${p.sent_at?`<div class="msg">Фабрика: <span style="color:var(--ink)">${esc(M.FSTAGES[p.fstage??0])}</span>${p.f_num?` · № <span class="num" style="color:var(--ink)">${esc(p.f_num)}</span>`:''}${p.f_price!=null?` · предварительно <span class="num" style="color:var(--ink)">${money(p.f_price)}</span>`:''}${p.f_ready?` · готовность <span class="num" style="color:var(--ink)">${M.dmy(p.f_ready)}</span>`:''}${p.deadline?` · дедлайн <span class="num" style="color:var(--ink)">${M.dmy(p.deadline)}</span>`:''}${S.unread[p.id]?` <span class="ubadge">${S.unread[p.id]}</span>`:''}</div>`:''}
-          ${rail(p.stage)}<select class="in" data-pos="${p.id}" aria-label="Этап позиции">${POST.map((l,i)=>`<option value="${i+1}" ${p.stage===i+1?'selected':''}>${i+1}. ${l}</option>`).join('')}</select></div>`).join('')||'<div class="empty">Позиций нет.</div>'}</section>`:''}
+          ${rail(p)}${(()=>{const k=colOf(p),ok=canCols(p);return ok.size?`<select class="in" data-pos="${p.id}" aria-label="Этап позиции">${POST.map((l,i)=>i===k||ok.has(i)?`<option value="${i}" ${i===k?'selected':''}>${i+1}. ${l}</option>`:'').join('')}</select>`
+            :`<div class="msg">Этап: <span style="color:var(--ink)">${POST[k]}</span>${p.kind==='furniture'&&p.sent_at?' — ведёт фабрика':''}</div>`;})()}</div>`).join('')||'<div class="empty">Позиций нет.</div>'}</section>`:''}
       <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="pill solid" id="pjLink">Привязать</button><button class="pill solid" id="pjNew">+ Новый 3D-проект</button></div></div>
         ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev">${(p.items||[]).length} издел${plural((p.items||[]).length,'ие','ия','ий')}</div>
@@ -629,7 +664,7 @@ async function renderCard(){
   $('#cContract')&&($('#cContract').onclick=()=>openContract(c.id));
   $('#cEditPos')&&($('#cEditPos').onclick=()=>openContract(c.id));
   $('#cReturn')&&($('#cReturn').onclick=()=>saveClient(c.id,{stage:c.lost_from&&c.lost_from!=='lost'?c.lost_from:'work',lost_reason:null,lost_note:null,lost_from:null}));
-  root.querySelectorAll('select[data-pos]').forEach(s=>s.onchange=()=>savePos(s.dataset.pos,{stage:+s.value}));
+  root.querySelectorAll('select[data-pos]').forEach(s=>s.onchange=()=>{const p=S.positions.find(x=>x.id===s.dataset.pos);if(p)movePos(p,+s.value);});
   $('#cEdit').onclick=()=>{$('#kv').hidden=true;$('#cForm').hidden=false;$('#cEdit').hidden=true;};
   $('#cCancel').onclick=()=>{$('#kv').hidden=false;$('#cForm').hidden=true;$('#cEdit').hidden=false;};
   $('#cForm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);const k=String(fd.get('kp_sum')).replace(/[^\d.,]/g,'').replace(',','.');
@@ -703,23 +738,26 @@ function paintMails(){
   M.wireMails(sb,box,mails);
   const a=box.querySelector('[data-approve]');if(a)a.onclick=approve;
 }
-const defCompany=()=>{try{return localStorage.getItem('mgs-company')||M.COMPANIES[0];}catch{return M.COMPANIES[0];}};
+/* компания дилера — из салона клиента (Макс 12.11; задаётся в кабинете: Управление → Салоны) */
+const companyOf=c=>(S.salons.find(s=>s.id===c?.salon_id)?.company||'').trim();
+const noCompany=c=>!c?.salon_id?'У клиента не указан салон — компанию дилера взять неоткуда. Назначьте менеджеру салон в кабинете: Управление → Сотрудники.'
+  :`У салона «${salonName(c.salon_id)}» не указана компания дилера. ${S.me.role==='owner'?'<a href="index.html?admin=salons" style="color:var(--lime)">Указать в «Управление → Салоны»</a>':'Попросите главного указать её в «Управление → Салоны».'}`;
 function paintComposer(){
   const box=$('#mComp');if(!box||!S.chat)return;
   const pid=S.chat.pid,first=!S.chat.pos?.sent_at;
-  const d=S.drafts[pid]||(S.drafts[pid]={body:'',files:[],deadline:'',company:defCompany()});
+  const d=S.drafts[pid]||(S.drafts[pid]={body:'',files:[],deadline:''});
+  const cl=S.clients.find(x=>x.id===S.card),co=companyOf(cl);
   box.innerHTML=`<div class="mcomp"><div class="mhd">${first?'Первое письмо · кому: фабрика. Отправит позицию на фабрику.':'Ответить · кому: фабрика'}</div>
-    ${first?`<div class="frow"><label class="f">Компания дилера<select class="in" id="mCo">${M.COMPANIES.map(x=>`<option ${d.company===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>
+    ${first?`<div class="frow"><div class="f">Компания дилера<div class="in" id="mCo" style="display:flex;align-items:center;${co?'':'color:var(--ink3)'}" title="${co?esc('Из салона «'+salonName(cl?.salon_id)+'»'):''}">${co?esc(co):'не указана'}</div></div>
       <label class="f">Дедлайн<input class="in" type="date" id="mDl" value="${esc(d.deadline)}"></label></div>`:''}
     <label class="f" style="gap:0"><span class="msg" style="position:absolute;left:-9999px">Текст письма</span><textarea class="in" id="mBody" rows="3" placeholder="${first?'Добрый день! Направляем позицию в производство. Материалы во вложении.':'Текст письма'}">${esc(d.body)}</textarea></label>
     <div id="mFiles">${M.draftFilesHtml(d.files)}</div>
     <div class="mbar"><button class="pill solid" type="button" id="mCard">Из карточки</button><button class="pill solid" type="button" id="mPc">С компьютера</button><button class="pill solid" type="button" id="mLink">Ссылка</button>
       <button class="pill send" type="button" id="mSend">${first?'Отправить на фабрику':'Отправить'}</button></div>
-    <div class="msg" id="mMsg"></div></div>`;
+    <div class="msg ${first&&!co?'err':''}" id="mMsg">${first&&!co?noCompany(cl):''}</div></div>`;
   const paintFiles=()=>{$('#mFiles').innerHTML=M.draftFilesHtml(d.files);$('#mFiles').querySelectorAll('[data-dx]').forEach(b=>b.onclick=()=>{d.files.splice(+b.dataset.dx,1);paintFiles();});};
   paintFiles();
   $('#mBody').oninput=e=>d.body=e.target.value;
-  $('#mCo')&&($('#mCo').onchange=e=>d.company=e.target.value);
   $('#mDl')&&($('#mDl').oninput=e=>d.deadline=e.target.value);
   $('#mLink').onclick=()=>{const l=M.askLink();if(l){d.files.push(l);paintFiles();}};
   $('#mPc').onclick=()=>{const i=$('#fileIn');i.value='';i.onchange=async()=>{const m=$('#mMsg');m.className='msg';
@@ -746,16 +784,16 @@ async function openPick(d,done){
 }
 async function sendMail(){
   const pid=S.chat.pid,d=S.drafts[pid],first=!S.chat.pos?.sent_at,m=$('#mMsg');m.className='msg';
+  const c=S.clients.find(x=>x.id===S.card);const p=S.positions.find(x=>x.id===pid);const co=companyOf(c);
+  if(first&&!co){m.className='msg err';m.innerHTML=noCompany(c);return;}
   if(first&&!d.deadline){m.className='msg err';m.textContent='Укажите дедлайн.';return;}
   if(!d.body.trim()&&!d.files.length){m.className='msg err';m.textContent='Напишите текст или приложите файл.';return;}
-  const c=S.clients.find(x=>x.id===S.card);const p=S.positions.find(x=>x.id===pid);
   $('#mSend').disabled=true;m.textContent='Отправляем…';
   const {error}=await sb.rpc('mail_send',{pid,p_subject:first?`${p?.name||'Позиция'} · ${c?.name||''}`:'',p_body:d.body.trim(),p_files:d.files,
-    p_deadline:first?d.deadline:null,p_company:first?d.company:null});
+    p_deadline:first?d.deadline:null,p_company:first?co:null});
   $('#mSend')&&($('#mSend').disabled=false);
   if(error){m.className='msg err';m.textContent=M.errText(error);return;}
-  if(first){try{localStorage.setItem('mgs-company',d.company);}catch{}}
-  S.drafts[pid]={body:'',files:[],deadline:'',company:d.company};
+  S.drafts[pid]={body:'',files:[],deadline:''};
   if(first){await loadAll();render();toast('Позиция отправлена на фабрику');}
   else{await loadChat(pid);toast('Письмо отправлено');}
 }
@@ -768,7 +806,11 @@ async function approve(){
 setInterval(async()=>{
   if(document.hidden||!S.uid)return;
   if(S.card&&S.chat&&$('#mList')&&S.chat.pid===S.chatPos&&!$('#dPick').open)return loadChat(S.chatPos,true);
-  if(!S.card){const before=JSON.stringify(S.unread);await loadUnread();if(JSON.stringify(S.unread)!==before&&S.view==='post')render();}
+  if(!S.card){const before=JSON.stringify(S.unread);await loadUnread();let moved=false;
+    if(S.view==='post'&&!document.querySelector('dialog[open]')&&!document.querySelector('.card-btn.dragging')){   // шаги фабрики двигают карточки доски
+      const {data}=await sb.from('positions').select('id,stage,sent_at,fstage,fstage_at,f_num,f_price,f_ready,deadline,company');
+      (data||[]).forEach(n=>{const p=S.positions.find(x=>x.id===n.id);if(p&&(p.stage!==n.stage||p.fstage!==n.fstage||p.sent_at!==n.sent_at||p.f_num!==n.f_num)){Object.assign(p,n);moved=true;}});}
+    if((moved||JSON.stringify(S.unread)!==before)&&S.view==='post')render();}
 },20000);
 
 const shareUrl=tok=>{const u=/(^|\.)mgsmebel\.com$/.test(location.hostname)&&!/^test\./.test(location.hostname)?new URL('https://my.mgsmebel.com/view.html'):new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);return u.toString();};

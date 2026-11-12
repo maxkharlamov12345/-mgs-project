@@ -379,6 +379,8 @@ def salon_fields(d, need):
             raise ApiError(400, 'Укажите название салона')
     if 'address' in d or need:
         row['address'] = txt(d.get('address'), 300)
+    if 'company' in d or need:  # компания дилера (ООО / ИП) — идёт в заказы фабрике
+        row['company'] = txt(d.get('company'), 160)
     if 'photo' in d:
         row['photo'] = d['photo'] or None
     if 'sort' in d:
