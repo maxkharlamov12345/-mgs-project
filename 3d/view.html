@@ -57,14 +57,32 @@ const q=new URLSearchParams(location.search);
 const token=q.get('s');
 function empty(t,p){$('#empty').hidden=false;$('#eT').textContent=t;$('#eP').textContent=p;$('#tools').hidden=true;}
 
+let openJob=null;
 async function openItem(it){
+  openJob=it.id;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.id===it.id));
   const u=new URL(location.href);u.searchParams.set('i',it.id);history.replaceState(null,'',u);
   const files=it.files||[];
   if(!files.some(f=>/\.obj$/i.test(f.name))){empty('Модель ещё не загружена','Для этого изделия пока нет 3D-модели.');return;}
   $('#empty').hidden=true;$('#tools').hidden=false;
   const map=new Map(files.map(f=>[base(f.name),{url:publicUrl(f.path),gz:!!f.gz,size:f.size}]));
-  // лёгкая модель (GLB, её делает сервер после загрузки); если её ещё нет или она не открылась — исходный OBJ
+  // лёгкая модель (GLB) появляется на сервере через несколько секунд после отправки из PRO100 (сразу после отправки
+  // окно открывает эту ссылку). Пока сервер её делает — ждём (до 90 с), а не грузим исходный OBJ: он в разы тяжелее и дольше
+  // открывается (Макс 12.11: «очень долгое открытие»). Ошибка / нет ответа / время вышло — открываем OBJ, как раньше.
+  if(!(it.glb&&it.glb.path)&&(it.glb_status===null||it.glb_status==='working')){
+    const job=it.id,t0=Date.now();
+    while(Date.now()-t0<90000){
+      status(`Готовим модель для быстрого просмотра… ${Math.round((Date.now()-t0)/1000)} с`);
+      await new Promise(r=>setTimeout(r,2500));
+      if(openJob!==job)return;
+      const {data}=await sb.rpc('shared_project',{t:token});
+      const f=data&&(data.items||[]).find(x=>x.id===it.id);
+      if(!f||f.glb_status==='error'||f.glb_status==='none')break;
+      if(f.glb&&f.glb.path){Object.assign(it,f);break;}
+    }
+    if(openJob!==job)return;
+    status('');
+  }
   if(it.glb&&it.glb.path){
     try{await loadGlb({url:publicUrl(it.glb.path),size:it.glb.size},map,it.title);return;}
     catch(e){console.warn('GLB не открылся, открываю OBJ',e);}
