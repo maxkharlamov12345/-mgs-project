@@ -801,7 +801,7 @@ new ResizeObserver(()=>resize()).observe(document.getElementById('top')||documen
 
 /* Снимок 3D для превью проекта в карточке клиента CRM (Макс 12.11: «в превью ставить фото из режима 3D»):
    общий вид, как при открытии, без шапки и размеров, фон прозрачный (ложится на фон плитки). CRM открывает view.html?shot=1 в невидимом окне. */
-function snapshot(w=720,h=400,type='image/webp'){
+function snapshot(w=480,h=264,bg='#2b2824'){
   if(!info)return Promise.resolve(null);
   const t=document.getElementById('top');if(t)t.hidden=true;
   Object.values(dimGroups).forEach(g=>g.visible=false);
@@ -810,7 +810,11 @@ function snapshot(w=720,h=400,type='image/webp'){
   // в кадр — сама модель с небольшим запасом (fitView рассчитан на экран с шапкой и запасом по кругу)
   camera.position.lerp(controls.target,.03);controls.update();
   renderer.render(scene,camera);
-  return new Promise(r=>renderer.domElement.toBlob(b=>r(b),type,.86));
+  // Макс 12.11: «превью тяжёлые, грузятся не сразу» — маленький снимок на сплошном фоне плитки CRM (--raised), WebP ~10 КБ;
+  // Safari не умеет WebP в toBlob (отдавал PNG ~200 КБ) — там JPEG
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  x.fillStyle=bg;x.fillRect(0,0,w,h);x.drawImage(renderer.domElement,0,0,w,h);
+  return new Promise(r=>c.toBlob(b=>{if(b&&b.type==='image/webp')r(b);else c.toBlob(j=>r(j),'image/jpeg',.72);},'image/webp',.7));
 }
 export {loadFromMap,loadGlb,status,base,fitView,snapshot};
 window.__info=()=>info;window.__stats=()=>({calls:renderer.info.render.calls,tris:renderer.info.render.triangles,batches:batches.length});

@@ -152,8 +152,7 @@ h3{margin:0;font-size:16px;font-weight:600}
 .pcard .del{all:unset;cursor:pointer;position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(10,9,8,.75);color:var(--ink2);display:grid;place-items:center}
 .pcard .del:hover{color:var(--red)}
 .pcard .del:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
-.pcard .prev{height:140px;background:var(--raised) center/contain no-repeat;position:relative;place-items:end start;padding:8px;box-sizing:border-box}
-.pcard .prev .cnt{padding:4px 10px;border-radius:999px;background:rgba(10,9,8,.6);color:var(--ink2);font-size:12px}
+.pcard .prev{height:140px;background:var(--raised) center/contain no-repeat;position:relative}
 .pcard .prev.shooting::after{content:'Снимок 3D…';position:absolute;inset:auto 8px 8px auto;color:var(--ink3);font-size:12px}
 .pcard .tx{padding:0 6px}
 .pcard .tx b{font-weight:600}
@@ -641,9 +640,9 @@ async function renderCard(){
           ${rail(p)}${(()=>{const k=colOf(p),ok=canCols(p);return ok.size?`<select class="in" data-pos="${p.id}" aria-label="Этап позиции">${POST.map((l,i)=>i===k||ok.has(i)?`<option value="${i}" ${i===k?'selected':''}>${i+1}. ${l}</option>`:'').join('')}</select>`
             :`<div class="msg">Этап: <span style="color:var(--ink)">${POST[k]}</span>${p.kind==='furniture'&&p.sent_at?' — ведёт фабрика':''}</div>`;})()}</div>`).join('')||'<div class="empty">Позиций нет.</div>'}</section>`:''}
       <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3></div>
-        ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev" data-pjprev="${p.id}" ${p.preview?`style="background-image:url('${esc(publicUrl(p.preview))}')"`:''}><span class="cnt">${(p.items||[]).length} издел${plural((p.items||[]).length,'ие','ия','ий')}</span></div>
+        ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev" data-pjprev="${p.id}" ${p.preview?`style="background-image:url('${esc(publicUrl(p.preview))}')"`:''}></div>
           <button class="del" data-pjdel="${p.id}" aria-label="Удалить 3D-проект ${esc(p.title)}" title="Удалить 3D-проект"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>
-          <div class="tx"><b>${esc(p.title)}</b><div>${new Date(p.created_at).toLocaleDateString('ru-RU')}</div></div>
+          <div class="tx"><b>${esc(p.title)}</b><div>${pjSent(p)}</div></div>
           <div class="acts"><a class="pill" style="background:var(--ink);color:var(--bg);font-weight:600" href="${esc(shareUrl(p.share_token))}" target="_blank" rel="noopener">Открыть</a><button class="pill solid" data-share="${esc(p.share_token)}">Ссылка клиенту</button></div></div>`).join('')}</div>`
           :'<div class="empty" style="padding:0">3D пока нет. В PRO100: Экспорт → «Отправить в MGS 3D…» и выберите этого клиента.</div>'}</section>
       <section class="panel"><div class="panel-h"><h3>Файлы <span class="msg num">${fl.length}</span></h3><button class="pill solid" id="fAdd">+ Загрузить</button></div>
@@ -830,13 +829,18 @@ async function deleteProject(id){
 }
 /* Превью 3D-проекта (Макс 12.11: «в превью проекта ставить фото из режима 3D»). Снимок делает этот же браузер:
    view.html?shot=1 в невидимом окне открывает лёгкую модель свежего изделия, рисует общий вид и отдаёт картинку (webp, прозрачный фон);
-   кладём её в бакет models (<project>/<item>/preview-….webp) и в projects.preview. Снимаем, когда у проекта нет снимка свежего изделия
+   кладём её в бакет models (<project>/<item>/preview-v2-….webp, где нет WebP — jpg) и в projects.preview. Снимаем, когда у проекта нет снимка свежего изделия
    и его лёгкая модель готова (иначе — при следующем открытии карточки). По одному проекту за раз. */
+// когда модель выгружена из PRO100: время свежего изделия проекта (Макс 12.11: «рядом с превью — дата и время выгрузки»)
+const lastItem=p=>(p.items||[]).slice().sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))[0];
+function pjSent(p){const it=lastItem(p),d=new Date((it||p).created_at);
+  return (it?'Выгружено из PRO100 ':'Создан ')+d.toLocaleDateString('ru-RU')+', '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+const SHOT_V='-v2-';   // версия снимков: старые (большие, PNG из Safari) переснимаются
 const shotTried=new Set();let shotBusy=false;const shotQ=[];
 function queueShots(pj){
   for(const p of pj){
-    const its=(p.items||[]).slice().sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));const it=its[0];
-    if(!it||it.glb_status!=='ok'||(p.preview||'').includes(it.id)||shotTried.has(p.id+it.id))continue;
+    const it=lastItem(p),pv=p.preview||'';
+    if(!it||it.glb_status!=='ok'||(pv.includes(it.id)&&pv.includes(SHOT_V))||shotTried.has(p.id+it.id))continue;
     shotTried.add(p.id+it.id);shotQ.push([p,it]);
   }
   pumpShots();
@@ -848,7 +852,7 @@ async function pumpShots(){
     const blob=await shoot(p.share_token,it.id);
     if(blob){
       const old=p.preview;
-      const path=`${p.id}/${it.id}/preview-${Date.now().toString(36)}.${blob.type==='image/webp'?'webp':'png'}`;
+      const path=`${p.id}/${it.id}/preview${SHOT_V}${Date.now().toString(36)}.${blob.type==='image/webp'?'webp':'jpg'}`;
       const {error:e1}=await sb.storage.from(BUCKET).upload(path,blob,{contentType:blob.type,upsert:true});if(e1)throw e1;
       const {error:e2}=await sb.from('projects').update({preview:path}).eq('id',p.id);if(e2)throw e2;
       p.preview=path;if(old&&old!==path)sb.storage.from(BUCKET).remove([old]);
