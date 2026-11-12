@@ -638,14 +638,12 @@ async function renderCard(){
           ${p.sent_at?`<div class="msg">Фабрика: <span style="color:var(--ink)">${esc(M.FSTAGES[p.fstage??0])}</span>${p.f_num?` · № <span class="num" style="color:var(--ink)">${esc(p.f_num)}</span>`:''}${p.f_price!=null?` · предварительно <span class="num" style="color:var(--ink)">${money(p.f_price)}</span>`:''}${p.f_ready?` · готовность <span class="num" style="color:var(--ink)">${M.dmy(p.f_ready)}</span>`:''}${p.deadline?` · дедлайн <span class="num" style="color:var(--ink)">${M.dmy(p.deadline)}</span>`:''}${S.unread[p.id]?` <span class="ubadge">${S.unread[p.id]}</span>`:''}</div>`:''}
           ${rail(p)}${(()=>{const k=colOf(p),ok=canCols(p);return ok.size?`<select class="in" data-pos="${p.id}" aria-label="Этап позиции">${POST.map((l,i)=>i===k||ok.has(i)?`<option value="${i}" ${i===k?'selected':''}>${i+1}. ${l}</option>`:'').join('')}</select>`
             :`<div class="msg">Этап: <span style="color:var(--ink)">${POST[k]}</span>${p.kind==='furniture'&&p.sent_at?' — ведёт фабрика':''}</div>`;})()}</div>`).join('')||'<div class="empty">Позиций нет.</div>'}</section>`:''}
-      <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="pill solid" id="pjLink">Привязать</button><button class="pill solid" id="pjNew">+ Новый 3D-проект</button></div></div>
+      <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3></div>
         ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev">${(p.items||[]).length} издел${plural((p.items||[]).length,'ие','ия','ий')}</div>
           <button class="del" data-pjdel="${p.id}" aria-label="Удалить 3D-проект ${esc(p.title)}" title="Удалить 3D-проект"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>
           <div class="tx"><b>${esc(p.title)}</b><div>${new Date(p.created_at).toLocaleDateString('ru-RU')}</div></div>
           <div class="acts"><a class="pill" style="background:var(--ink);color:var(--bg);font-weight:600" href="${esc(shareUrl(p.share_token))}" target="_blank" rel="noopener">Открыть</a><button class="pill solid" data-share="${esc(p.share_token)}">Ссылка клиенту</button></div></div>`).join('')}</div>`
-          :'<div class="empty" style="padding:0">3D-проектов пока нет. Отправьте изделие из PRO100, создайте новый проект или привяжите существующий.</div>'}
-        <div id="pjPick" hidden></div></section>
+          :'<div class="empty" style="padding:0">3D пока нет. В PRO100: Экспорт → «Отправить в MGS 3D…» и выберите этого клиента.</div>'}</section>
       <section class="panel"><div class="panel-h"><h3>Файлы <span class="msg num">${fl.length}</span></h3><button class="pill solid" id="fAdd">+ Загрузить</button></div>
         <div class="drop" id="fDrop">Перетащите сюда фото, PDF, КП — или нажмите «Загрузить»</div>
         ${fl.length?`<div class="fgrid">${fl.map(f=>`<div class="file"><a href="#" data-file="${esc(f.path)}" ${isImg(f.mime)?`data-img="${esc(f.path)}"`:''}>${isImg(f.mime)?'':esc((f.name.split('.').pop()||'').toUpperCase())}</a>
@@ -682,13 +680,6 @@ async function renderCard(){
     S.clients=S.clients.filter(x=>x.id!==c.id);S.files=S.files.filter(f=>f.client_id!==c.id);S.positions=S.positions.filter(p=>p.client_id!==c.id);
     S.card=null;setUrl();render();toast('Клиент удалён');};
   /* 3D */
-  $('#pjNew').onclick=async()=>{const {data,error}=await sb.from('projects').insert({title:c.name+(c.want?' — '+c.want:''),client:c.name,address:c.address,client_id:c.id}).select('id').single();
-    if(error)return showErr(error);await loadAll();render();toast('3D-проект создан — выберите его в PRO100 при отправке');};
-  $('#pjLink').onclick=async()=>{const box=$('#pjPick');if(!box.hidden){box.hidden=true;return;}
-    const {data}=await sb.from('projects').select('id,title,created_at').is('client_id',null).order('created_at',{ascending:false}).limit(100);
-    box.hidden=false;box.innerHTML=(data||[]).length?`<div class="frow"><select class="in" id="pjSel">${data.map(p=>`<option value="${p.id}">${esc(p.title)} · ${new Date(p.created_at).toLocaleDateString('ru-RU')}</option>`).join('')}</select>
-      <button class="pill lime" id="pjDo" style="flex:0 0 auto">Привязать</button></div>`:'<div class="msg">Свободных 3D-проектов нет — все уже привязаны к клиентам.</div>';
-    $('#pjDo')&&($('#pjDo').onclick=async()=>{const pid=$('#pjSel').value;const {error}=await sb.from('projects').update({client_id:c.id}).eq('id',pid);if(error)return showErr(error);await loadAll();render();toast('3D-проект привязан');});};
   root.querySelectorAll('[data-pjdel]').forEach(b=>b.onclick=()=>deleteProject(b.dataset.pjdel));
   root.querySelectorAll('[data-share]').forEach(b=>b.onclick=async()=>{const u=shareUrl(b.dataset.share);try{await navigator.clipboard.writeText(u);toast('Ссылка скопирована');}catch{prompt('Ссылка для клиента',u);}});
   /* файлы */

@@ -1,4 +1,5 @@
-﻿# MGS 3D — окно отправки модели из PRO100 в кабинет MGS 3D.
+﻿# MGS 3D — окно отправки модели из PRO100 в CRM MGS (Макс 12.11: менеджер выбирает КЛИЕНТА из CRM, а не проект).
+# 3D ложится в последний 3D-проект клиента (нет — создаётся); «+ Новый клиент» заводит карточку в «Взят в работу».
 # Запускается плагином mgs3d.plg после экспорта в OBJ: -Dir <папка экспорта> -Title <заголовок окна PRO100>
 param([string]$Dir, [string]$Title = '', [string]$Conf = '', [int]$Build = 0)
 
@@ -31,6 +32,8 @@ $Ini  = Read-Ini (Join-Path $CfgDir 'mgs3d.ini')
 $Url  = if ($Ini['service.url']) { $Ini['service.url'].TrimEnd('/') } else { 'https://api.mgsmebel.com' }
 $Key  = if ($Ini['service.key']) { $Ini['service.key'] } else { 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzkzMzc1NDI2LCJleHAiOjIxMDg3MzU0MjZ9.exy6cZNIkPj-oxZPuafx1BiBEQO4Hsav4bCQ2Z3mbDs' }
 $Site = if ($Ini['service.site']) { $Ini['service.site'].TrimEnd('/') } else { 'https://my.mgsmebel.com' }
+# CRM: рабочая — app.mgsmebel.com/crm.html, тестовая — test.mgsmebel.com/3d/crm.html (если обновления берутся с теста)
+$App  = if ($Ini['service.app']) { $Ini['service.app'].TrimEnd('/') } elseif ("$($Ini['update.url'])" -like '*test.mgsmebel.com*') { 'https://test.mgsmebel.com/3d' } else { 'https://app.mgsmebel.com' }
 $Kinds = @('Кухня','Шкаф','Гардеробная','Прихожая','Ванная','Детская','Гостиная','Другое')
 
 # ---------- автообновление: свежие плагин и окно отправки с сервера (без прав администратора) ----------
@@ -212,14 +215,14 @@ $lLoginMsg = L '' 20 272 420 $null $Muted; $lLoginMsg.Height = 150; $pLogin.Cont
 $pMain = Panel
 $lHead = L 'Отправить модель' 20 16 420 $FH; $pMain.Controls.Add($lHead)
 $lInfo = L '' 20 48 420 $null $Muted; $pMain.Controls.Add($lInfo)
-$pMain.Controls.Add((L 'Проект' 20 82 300 $null $Muted))
-$lnkNew = New-Object Windows.Forms.LinkLabel; $lnkNew.Text = '+ Новый проект'; $lnkNew.Location = New-Object Drawing.Point(320, 82); $lnkNew.Size = New-Object Drawing.Size(120, 22)
+$pMain.Controls.Add((L 'Клиент' 20 82 300 $null $Muted))
+$lnkNew = New-Object Windows.Forms.LinkLabel; $lnkNew.Text = '+ Новый клиент'; $lnkNew.Location = New-Object Drawing.Point(320, 82); $lnkNew.Size = New-Object Drawing.Size(120, 22)
 $lnkNew.TextAlign = 'TopRight'; $lnkNew.LinkColor = $Lime; $lnkNew.ActiveLinkColor = $Lime; $pMain.Controls.Add($lnkNew)
-$cProj = C 20 106; $pMain.Controls.Add($cProj)
+$cClient = C 20 106; $cClient.MaxDropDownItems = 16; $pMain.Controls.Add($cClient)
 $gNew = New-Object Windows.Forms.Panel; $gNew.Location = New-Object Drawing.Point(20, 140); $gNew.Size = New-Object Drawing.Size(420, 120); $gNew.Visible = $false; $pMain.Controls.Add($gNew)
-$gNew.Controls.Add((L 'Название проекта' 0 0 420 $null $Muted)); $tPT = T 0 22; $gNew.Controls.Add($tPT)
-$gNew.Controls.Add((L 'Клиент' 0 56 205 $null $Muted)); $tPC = T 0 78 205; $gNew.Controls.Add($tPC)
-$gNew.Controls.Add((L 'Адрес' 215 56 205 $null $Muted)); $tPA = T 215 78 205; $gNew.Controls.Add($tPA)
+$gNew.Controls.Add((L 'Имя клиента' 0 0 420 $null $Muted)); $tCN = T 0 22; $gNew.Controls.Add($tCN)
+$gNew.Controls.Add((L 'Телефон' 0 56 205 $null $Muted)); $tCP = T 0 78 205; $gNew.Controls.Add($tCP)
+$gNew.Controls.Add((L 'Адрес объекта' 215 56 205 $null $Muted)); $tCA = T 215 78 205; $gNew.Controls.Add($tCA)
 $gItem = New-Object Windows.Forms.Panel; $gItem.Location = New-Object Drawing.Point(20, 146); $gItem.Size = New-Object Drawing.Size(420, 70); $pMain.Controls.Add($gItem)
 $gItem.Controls.Add((L 'Изделие' 0 0 270 $null $Muted)); $tItem = T 0 22 270; $gItem.Controls.Add($tItem)
 $gItem.Controls.Add((L 'Тип' 280 0 140 $null $Muted)); $cKind = C 280 22 140; $cKind.Items.AddRange($Kinds); $gItem.Controls.Add($cKind)
@@ -238,36 +241,45 @@ $pDone.Controls.Add((L 'Ссылка для клиента' 20 104 420 $null $Mu
 $tLink = T 20 128; $tLink.ReadOnly = $true; $pDone.Controls.Add($tLink)
 $bOpen = B 'Открыть в 3D' 20 172 205; $pDone.Controls.Add($bOpen)
 $bCopy = B 'Скопировать ссылку' 235 172 205 $false; $pDone.Controls.Add($bCopy)
-$bClose = B 'Закрыть' 20 222 420 $false; $pDone.Controls.Add($bClose)
+$bCrm = B 'Открыть карточку в CRM' 20 222 420 $false; $pDone.Controls.Add($bCrm)
+$bClose = B 'Закрыть' 20 272 420 $false; $pDone.Controls.Add($bClose)
 
 function Show-Panel($p) { foreach ($x in @($pLogin, $pMain, $pDone)) { $x.Visible = ($x -eq $p) } }
 function Busy($on, $text = '') { $form.UseWaitCursor = $on; $bSend.Enabled = -not $on; $bar.Visible = $on; $lStatus.ForeColor = $Muted; $lStatus.Text = $text; [Windows.Forms.Application]::DoEvents() }
 
-$LastFile = Join-Path $Data 'last-project.txt'
-$script:Projects = @()
-function Load-Projects {
-  $script:Projects = @(Api 'GET' '/rest/v1/projects?select=id,title,client,address,share_token&order=created_at.desc')
-  $cProj.Items.Clear()
-  foreach ($p in $script:Projects) { $cProj.Items.Add((@($p.title, $p.client, $p.address) | Where-Object { $_ }) -join ' · ') | Out-Null }
+$LastFile = Join-Path $Data 'last-client.txt'
+$script:Clients = @()
+# клиенты CRM, которых видит менеджер (кроме потерянных): свежие сверху
+function Load-Clients {
+  $script:Clients = @(Api 'GET' '/rest/v1/clients?select=id,num,name,phone,address,stage&stage=neq.lost&order=updated_at.desc')
+  $cClient.Items.Clear()
+  foreach ($c in $script:Clients) { $cClient.Items.Add((@("№$($c.num)", $c.name, $c.address) | Where-Object { $_ }) -join ' · ') | Out-Null }
   $last = if (Test-Path $LastFile) { (Get-Content $LastFile -Encoding UTF8 | Select-Object -First 1) } else { '' }
-  $i = [array]::FindIndex([object[]]$script:Projects, [Predicate[object]]{ param($p) $p.id -eq $last })
-  if ($cProj.Items.Count) { $cProj.SelectedIndex = [math]::Max(0, $i) }
-  if (!$cProj.Items.Count) { Set-NewMode $true }
+  $i = [array]::FindIndex([object[]]$script:Clients, [Predicate[object]]{ param($c) $c.id -eq $last })
+  if ($cClient.Items.Count) { $cClient.SelectedIndex = [math]::Max(0, $i) }
+  if (!$cClient.Items.Count) { Set-NewMode $true }
+}
+# 3D-проект клиента: последний; нет — создаём (ссылка для клиента — у проекта)
+function Get-ClientProject($cl) {
+  $p = @(Api 'GET' "/rest/v1/projects?select=id,title,share_token&client_id=eq.$($cl.id)&order=created_at.desc&limit=1")
+  if ($p.Count) { return $p[0] }
+  $n = @(Api 'POST' '/rest/v1/projects' @{ title = $cl.name; client = $cl.name; address = $(if ($cl.address) { $cl.address } else { $null }); client_id = $cl.id } @{ Prefer = 'return=representation' })
+  $n[0]
 }
 $script:NewMode = $false
 function Set-NewMode($on) {
-  $script:NewMode = $on; $gNew.Visible = $on; $cProj.Enabled = -not $on
-  $lnkNew.Text = if ($on) { 'Выбрать из списка' } else { '+ Новый проект' }
+  $script:NewMode = $on; $gNew.Visible = $on; $cClient.Enabled = -not $on
+  $lnkNew.Text = if ($on) { 'Выбрать из списка' } else { '+ Новый клиент' }
   $y = if ($on) { 270 } else { 146 }; $gItem.Top = $y; $bSend.Top = $y + 90; $bar.Top = $y + 140; $lStatus.Top = $y + 154
-  if ($on) { $tPT.Focus() | Out-Null }
+  if ($on) { $tCN.Focus() | Out-Null }
 }
 function Enter-Main {
   Show-Panel $pMain
   $lWho.Text = "Вы вошли: $script:Email"
   $lInfo.Text = "Файлов: $($Files.Count), $TotalMB МБ"
   $tItem.Text = Guess-Title $Title; $cKind.SelectedItem = Guess-Kind $tItem.Text
-  try { Busy $true 'Загружаем проекты…'; Load-Projects; Busy $false }
-  catch { Busy $false; $lStatus.ForeColor = [Drawing.Color]::Salmon; $lStatus.Text = 'Не удалось получить проекты. ' + (Why $_); Log ("projects: " + (ErrText $_)) }
+  try { Busy $true 'Загружаем клиентов…'; Load-Clients; Busy $false }
+  catch { Busy $false; $lStatus.ForeColor = [Drawing.Color]::Salmon; $lStatus.Text = 'Не удалось получить клиентов. ' + (Why $_); Log ("clients: " + (ErrText $_)) }
 }
 
 $lnkNew.Add_LinkClicked({ Set-NewMode (-not $script:NewMode) })
@@ -287,14 +299,15 @@ $bSend.Add_Click({
     if (!$ObjFile) { throw 'В папке экспорта нет model.obj' }
     Busy $true 'Готовим…'
     if ($script:NewMode) {
-      if (!$tPT.Text.Trim()) { Busy $false; $lStatus.Text = 'Введите название проекта.'; return }
-      $p = Api 'POST' '/rest/v1/projects' @{ title = $tPT.Text.Trim(); client = $(if ($tPC.Text.Trim()) { $tPC.Text.Trim() } else { $null }); address = $(if ($tPA.Text.Trim()) { $tPA.Text.Trim() } else { $null }) } @{ Prefer = 'return=representation' }
-      $proj = @($p)[0]
+      if (!$tCN.Text.Trim()) { Busy $false; $lStatus.Text = 'Введите имя клиента.'; return }
+      $cl = @(Api 'POST' '/rest/v1/clients' @{ name = $tCN.Text.Trim(); phone = $tCP.Text.Trim(); address = $tCA.Text.Trim(); want = $tItem.Text.Trim() } @{ Prefer = 'return=representation' })[0]
     } else {
-      if ($cProj.SelectedIndex -lt 0) { Busy $false; $lStatus.Text = 'Выберите проект.'; return }
-      $proj = $script:Projects[$cProj.SelectedIndex]
+      if ($cClient.SelectedIndex -lt 0) { Busy $false; $lStatus.Text = 'Выберите клиента.'; return }
+      $cl = $script:Clients[$cClient.SelectedIndex]
     }
-    Set-Content $LastFile $proj.id -Encoding UTF8
+    Set-Content $LastFile $cl.id -Encoding UTF8
+    $script:ClientId = $cl.id
+    $proj = Get-ClientProject $cl
     $itemId = [guid]::NewGuid().ToString()
     $list = New-Object Collections.ArrayList
     $bar.Maximum = $Files.Count; $bar.Value = 0
@@ -322,7 +335,7 @@ $bSend.Add_Click({
     Log "готово: $link"
     Busy $false
     $tLink.Text = $link
-    $lDone.Text = "«$($tItem.Text.Trim())» добавлено в проект «$($proj.title)»."
+    $lDone.Text = "«$($tItem.Text.Trim())» добавлено в карточку клиента «$($cl.name)» (№$($cl.num))."
     Show-Panel $pDone
     Start-Process $link
     try { Remove-Item -Recurse -Force $Dir } catch {}
@@ -334,6 +347,7 @@ $bSend.Add_Click({
   }
 })
 $bOpen.Add_Click({ Start-Process $tLink.Text })
+$bCrm.Add_Click({ Start-Process "$App/crm.html?c=$($script:ClientId)" })
 $bCopy.Add_Click({ [Windows.Forms.Clipboard]::SetText($tLink.Text); $bCopy.Text = 'Скопировано' })
 $bClose.Add_Click({ $form.Close() })
 
