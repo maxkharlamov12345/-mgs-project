@@ -55,6 +55,9 @@
 # Система для сотрудников: CRM, проекты, договоры, 3D (ветка prod; пока — кабинет из папки 3d/)
 {$APP_DOMAIN} {
 	encode zstd gzip
+	# браузер перепроверяет файлы при каждом открытии (304 по ETag): без этого Chrome держал старые viewer.js/viewer.css
+	# из кэша после выкладки, и новая страница просмотра не открывала модель (Макс 12.11)
+	header Cache-Control "no-cache"
 	handle /assets/* {
 		root * /srv/www/prod
 		file_server
@@ -68,6 +71,9 @@
 # Личный кабинет клиента: проект в 3D, позже договор, статус, чат (ветка prod)
 {$MY_DOMAIN} {
 	encode zstd gzip
+	# браузер перепроверяет файлы при каждом открытии (304 по ETag): без этого Chrome держал старые viewer.js/viewer.css
+	# из кэша после выкладки, и новая страница просмотра не открывала модель (Макс 12.11)
+	header Cache-Control "no-cache"
 	handle /assets/* {
 		root * /srv/www/prod
 		file_server
