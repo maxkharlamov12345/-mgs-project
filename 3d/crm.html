@@ -262,6 +262,7 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
   <div class="frow"><label class="f">Телефон<input class="in" id="nPhone" type="tel" inputmode="tel" placeholder="+7 999 123-45-67"></label>
     <label class="f">Адрес объекта<input class="in" id="nAddr" placeholder="ул. Бутаково 4, кв. 12"></label></div>
   <label class="f">Что хочет<input class="in" id="nWant" placeholder="Кухня, шкаф в прихожую"></label>
+  <label class="f">Откуда о нас узнали<select class="in" id="nSrc"></select></label>
   <div class="acts"><button class="pill solid big" type="button" data-close>Отмена</button><button class="pill lime" type="submit">Создать</button></div>
   <div class="msg" id="nMsg"></div>
 </form></dialog>
@@ -407,7 +408,7 @@ async function loadAll(){
   const [c,p,pr,f]=await Promise.all([
     sb.from('clients').select('*').order('created_at',{ascending:false}),
     sb.from('positions').select('*').order('sort').order('created_at'),
-    sb.from('projects').select('id,title,client_id,share_token,created_at,preview,items(id,created_at,glb_status)').not('client_id','is',null),
+    sb.from('projects').select('id,title,client_id,share_token,created_at,preview,items(id,title,created_at,glb_status)').not('client_id','is',null),
     sb.from('client_files').select('*').order('created_at')]);
   const e=c.error||p.error||pr.error||f.error;
   if(e){showErr(e.message?.includes('clients')||e.code==='42P01'?'таблицы CRM ещё не созданы на сервере — подождите минуту и обновите страницу':e);}
@@ -527,10 +528,10 @@ async function saveClient(id,patch){
 }
 
 /* новый клиент */
-$('#newBtn').onclick=()=>{$('#fNew').reset();$('#nMsg').textContent='';$('#dNew').showModal();};
+$('#newBtn').onclick=()=>{$('#fNew').reset();$('#nSrc').innerHTML=srcOpts('');$('#nMsg').textContent='';$('#dNew').showModal();};
 $('#fNew').onsubmit=async e=>{
   e.preventDefault();$('#nMsg').textContent='Создаём…';
-  const {data,error}=await sb.from('clients').insert({name:$('#nName').value.trim(),phone:$('#nPhone').value.trim(),address:$('#nAddr').value.trim(),want:$('#nWant').value.trim()}).select().single();
+  const {data,error}=await sb.from('clients').insert({name:$('#nName').value.trim(),phone:$('#nPhone').value.trim(),address:$('#nAddr').value.trim(),want:$('#nWant').value.trim(),source:$('#nSrc').value||null}).select().single();
   if(error){$('#nMsg').className='msg err';$('#nMsg').textContent=error.message;return;}
   $('#dNew').close();S.clients.unshift(data);S.view='pre';S.preTab='work';openCard(data.id);
 };
@@ -642,7 +643,7 @@ async function renderCard(){
       <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3></div>
         ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev" data-pjprev="${p.id}" ${p.preview?`style="background-image:url('${esc(publicUrl(p.preview))}')"`:''}></div>
           <button class="del" data-pjdel="${p.id}" aria-label="Удалить 3D-проект ${esc(p.title)}" title="Удалить 3D-проект"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>
-          <div class="tx"><b>${esc(p.title)}</b><div>${pjSent(p)}</div></div>
+          <div class="tx"><b>${esc(lastItem(p)?.title||p.title)}</b><div>${pjSent(p)}</div></div>
           <div class="acts"><a class="pill" style="background:var(--ink);color:var(--bg);font-weight:600" href="${esc(shareUrl(p.share_token))}" target="_blank" rel="noopener">Открыть</a><button class="pill solid" data-share="${esc(p.share_token)}">Ссылка клиенту</button></div></div>`).join('')}</div>`
           :'<div class="empty" style="padding:0">3D пока нет. В PRO100: Экспорт → «Отправить в MGS 3D…» и выберите этого клиента.</div>'}</section>
       <section class="panel"><div class="panel-h"><h3>Файлы <span class="msg num">${fl.length}</span></h3><button class="pill solid" id="fAdd">+ Загрузить</button></div>
@@ -654,12 +655,13 @@ async function renderCard(){
     </div><div class="cside">
       <section class="panel"><div class="panel-h"><h3>Данные клиента</h3><button class="pill solid" id="cEdit">Изменить</button></div>
         <div class="kv" id="kv"><span>Телефон</span><div>${esc(c.phone)||'—'}</div><span>Адрес</span><div>${esc(c.address)||'—'}</div>
-          <span>Что хочет</span><div>${esc(c.want)||'—'}</div><span>Сумма КП</span><div class="num">${money(c.kp_sum)||'—'}</div></div>
+          <span>Что хочет</span><div>${esc(c.want)||'—'}</div><span>Откуда узнали</span><div>${esc(c.source)||'—'}</div><span>Сумма КП</span><div class="num">${money(c.kp_sum)||'—'}</div></div>
         <form id="cForm" hidden style="display:flex;flex-direction:column;gap:10px">
           <label class="f">Имя<input class="in" name="name" value="${esc(c.name)}" required></label>
           <label class="f">Телефон<input class="in" name="phone" type="tel" value="${esc(c.phone)}"></label>
           <label class="f">Адрес объекта<input class="in" name="address" value="${esc(c.address)}"></label>
           <label class="f">Что хочет<input class="in" name="want" value="${esc(c.want)}"></label>
+          <label class="f">Откуда о нас узнали<select class="in" name="source">${srcOpts(c.source)}</select></label>
           <label class="f">Сумма КП, ₽<input class="in num" name="kp_sum" inputmode="numeric" value="${c.kp_sum??''}"></label>
           <div style="display:flex;gap:8px"><button class="pill solid big" type="button" id="cCancel" style="flex:1">Отмена</button><button class="pill lime" type="submit" style="flex:1">Сохранить</button></div></form></section>
       <button class="pill danger" id="cDelete" style="align-self:flex-start">Удалить клиента</button>
@@ -674,7 +676,7 @@ async function renderCard(){
   $('#cEdit').onclick=()=>{$('#kv').hidden=true;$('#cForm').hidden=false;$('#cEdit').hidden=true;};
   $('#cCancel').onclick=()=>{$('#kv').hidden=false;$('#cForm').hidden=true;$('#cEdit').hidden=false;};
   $('#cForm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);const k=String(fd.get('kp_sum')).replace(/[^\d.,]/g,'').replace(',','.');
-    await saveClient(c.id,{name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).trim(),address:String(fd.get('address')).trim(),want:String(fd.get('want')).trim(),kp_sum:k?+k:null});};
+    await saveClient(c.id,{name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).trim(),address:String(fd.get('address')).trim(),want:String(fd.get('want')).trim(),source:String(fd.get('source')||'')||null,kp_sum:k?+k:null});};
   $('#cDelete').onclick=async()=>{if(!confirm(`Удалить клиента «${c.name}» со всеми файлами и позициями? 3D-проекты останутся в кабинете.`))return;
     if(fl.length)await sb.storage.from('crm').remove(fl.map(f=>f.path));
     const {error}=await sb.from('clients').delete().eq('id',c.id);if(error)return showErr(error);
@@ -832,6 +834,9 @@ async function deleteProject(id){
    кладём её в бакет models (<project>/<item>/preview-v2-….webp, где нет WebP — jpg) и в projects.preview. Снимаем, когда у проекта нет снимка свежего изделия
    и его лёгкая модель готова (иначе — при следующем открытии карточки). По одному проекту за раз. */
 // когда модель выгружена из PRO100: время свежего изделия проекта (Макс 12.11: «рядом с превью — дата и время выгрузки»)
+// откуда клиент о нас узнал (Макс 12.11; тот же список — в окне PRO100, mgs3d_send.ps1 $Sources)
+const SOURCES=['Проходящий трафик','Заявка','Рекомендация'];
+const srcOpts=v=>`<option value="">—</option>`+SOURCES.concat(v&&!SOURCES.includes(v)?[v]:[]).map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('');
 const lastItem=p=>(p.items||[]).slice().sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))[0];
 function pjSent(p){const it=lastItem(p),d=new Date((it||p).created_at);
   return (it?'Выгружено из PRO100 ':'Создан ')+d.toLocaleDateString('ru-RU')+', '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}

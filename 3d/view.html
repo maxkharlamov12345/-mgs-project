@@ -108,10 +108,12 @@ async function openItem(it){
   if(!items.length){empty('В проекте пока нет изделий','Менеджер добавит модели, и они появятся здесь.');return;}
   const tabs=$('#tabs');
   items.forEach(it=>{const b=document.createElement('button');b.dataset.id=it.id;
-    const k=document.createElement('small');k.textContent=it.kind||'Изделие';b.append(k,document.createTextNode(it.title));
+    // подпись над названием: время выгрузки из PRO100 (типа изделия больше нет, Макс 12.11) — у версий одного изделия они разные
+    const d=it.created_at?new Date(it.created_at):null;
+    const k=document.createElement('small');k.textContent=d?d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):(it.kind||'Изделие');b.append(k,document.createTextNode(it.title));
     b.onclick=()=>openItem(it);tabs.append(b);});
   tabs.hidden=items.length<2;
-  const want=items.find(i=>i.id===q.get('i'))||items[0];
+  const want=items.find(i=>i.id===q.get('i'))||items[items.length-1];   // по умолчанию — свежая выгрузка
   if(!SHOT){openItem(want);return;}
   try{await openItem(want);shotDone(await snapshot());}catch(e){shotDone(null,String(e&&e.message||e));}
 })();
