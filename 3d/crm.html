@@ -148,7 +148,10 @@ h3{margin:0;font-size:16px;font-weight:600}
 .panel-h h3{white-space:nowrap}
 .panel-h .pill{height:36px}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.pcard{border-radius:12px;background:var(--surface2);padding:6px;display:flex;flex-direction:column;gap:8px}
+.pcard{position:relative;border-radius:12px;background:var(--surface2);padding:6px;display:flex;flex-direction:column;gap:8px}
+.pcard .del{all:unset;cursor:pointer;position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(10,9,8,.75);color:var(--ink2);display:grid;place-items:center}
+.pcard .del:hover{color:var(--red)}
+.pcard .del:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
 .pcard .prev{height:140px;background-color:var(--raised)}
 .pcard .tx{padding:0 6px}
 .pcard .tx b{font-weight:600}
@@ -299,7 +302,7 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
 <script src="lib/supabase.min.js"></script>
 <script type="module" src="as.js"></script>
 <script type="module">
-import {sb,configured} from './db.js';
+import {sb,configured,BUCKET} from './db.js';
 import {SUPABASE_URL} from './config.js';
 import * as M from './mail.js';
 
@@ -638,8 +641,9 @@ async function renderCard(){
       <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="pill solid" id="pjLink">Привязать</button><button class="pill solid" id="pjNew">+ Новый 3D-проект</button></div></div>
         ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev">${(p.items||[]).length} издел${plural((p.items||[]).length,'ие','ия','ий')}</div>
+          <button class="del" data-pjdel="${p.id}" aria-label="Удалить 3D-проект ${esc(p.title)}" title="Удалить 3D-проект"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>
           <div class="tx"><b>${esc(p.title)}</b><div>${new Date(p.created_at).toLocaleDateString('ru-RU')}</div></div>
-          <div class="acts"><a class="pill" style="background:var(--ink);color:var(--bg);font-weight:600" href="index.html?p=${p.id}">Открыть</a><button class="pill solid" data-share="${esc(p.share_token)}">Ссылка клиенту</button></div></div>`).join('')}</div>`
+          <div class="acts"><a class="pill" style="background:var(--ink);color:var(--bg);font-weight:600" href="${esc(shareUrl(p.share_token))}" target="_blank" rel="noopener">Открыть</a><button class="pill solid" data-share="${esc(p.share_token)}">Ссылка клиенту</button></div></div>`).join('')}</div>`
           :'<div class="empty" style="padding:0">3D-проектов пока нет. Отправьте изделие из PRO100, создайте новый проект или привяжите существующий.</div>'}
         <div id="pjPick" hidden></div></section>
       <section class="panel"><div class="panel-h"><h3>Файлы <span class="msg num">${fl.length}</span></h3><button class="pill solid" id="fAdd">+ Загрузить</button></div>
@@ -679,12 +683,13 @@ async function renderCard(){
     S.card=null;setUrl();render();toast('Клиент удалён');};
   /* 3D */
   $('#pjNew').onclick=async()=>{const {data,error}=await sb.from('projects').insert({title:c.name+(c.want?' — '+c.want:''),client:c.name,address:c.address,client_id:c.id}).select('id').single();
-    if(error)return showErr(error);location.href='index.html?p='+data.id;};
+    if(error)return showErr(error);await loadAll();render();toast('3D-проект создан — выберите его в PRO100 при отправке');};
   $('#pjLink').onclick=async()=>{const box=$('#pjPick');if(!box.hidden){box.hidden=true;return;}
     const {data}=await sb.from('projects').select('id,title,created_at').is('client_id',null).order('created_at',{ascending:false}).limit(100);
     box.hidden=false;box.innerHTML=(data||[]).length?`<div class="frow"><select class="in" id="pjSel">${data.map(p=>`<option value="${p.id}">${esc(p.title)} · ${new Date(p.created_at).toLocaleDateString('ru-RU')}</option>`).join('')}</select>
       <button class="pill lime" id="pjDo" style="flex:0 0 auto">Привязать</button></div>`:'<div class="msg">Свободных 3D-проектов нет — все уже привязаны к клиентам.</div>';
     $('#pjDo')&&($('#pjDo').onclick=async()=>{const pid=$('#pjSel').value;const {error}=await sb.from('projects').update({client_id:c.id}).eq('id',pid);if(error)return showErr(error);await loadAll();render();toast('3D-проект привязан');});};
+  root.querySelectorAll('[data-pjdel]').forEach(b=>b.onclick=()=>deleteProject(b.dataset.pjdel));
   root.querySelectorAll('[data-share]').forEach(b=>b.onclick=async()=>{const u=shareUrl(b.dataset.share);try{await navigator.clipboard.writeText(u);toast('Ссылка скопирована');}catch{prompt('Ссылка для клиента',u);}});
   /* файлы */
   const els=[...root.querySelectorAll('[data-img]')];
@@ -816,6 +821,19 @@ setInterval(async()=>{
     if((moved||JSON.stringify(S.unread)!==before)&&S.view==='post')render();}
 },20000);
 
+/* удалить 3D-проект: файлы моделей (исходные и лёгкие GLB) из хранилища, потом сам проект (изделия удалятся вместе с ним) */
+async function deleteProject(id){
+  const p=S.projects.find(x=>x.id===id);if(!p)return;
+  const n=(p.items||[]).length;
+  if(!confirm(`Удалить 3D-проект «${p.title}»${n?` и ${n} издел${plural(n,'ие','ия','ий')}`:''}? Ссылка у клиента перестанет открываться. Отменить нельзя.`))return;
+  const {data:its,error:e1}=await sb.from('items').select('files,glb').eq('project_id',id);
+  if(e1)return showErr(e1);
+  const paths=(its||[]).flatMap(i=>(i.files||[]).map(f=>f.path).concat(i.glb?.path?[i.glb.path]:[])).filter(Boolean);
+  if(paths.length){const {error}=await sb.storage.from(BUCKET).remove(paths);if(error)return showErr(error);}
+  const {error}=await sb.from('projects').delete().eq('id',id);
+  if(error)return showErr(error);
+  S.projects=S.projects.filter(x=>x.id!==id);render();toast('3D-проект удалён');
+}
 const shareUrl=tok=>{const u=/(^|\.)mgsmebel\.com$/.test(location.hostname)&&!/^test\./.test(location.hostname)?new URL('https://my.mgsmebel.com/view.html'):new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);return u.toString();};
 
 /* фото ужимаем (длинная сторона ≤ 2000), остальное — как есть */

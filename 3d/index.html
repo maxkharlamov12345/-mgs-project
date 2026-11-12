@@ -6,7 +6,7 @@
 <title>MGS — кабинет</title>
 <style>@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(../assets/fonts/onest-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2122,U+2212}</style>
 <style>
-/* Кабинет: страница 3D-проекта (?p=) и «Управление» (?admin=). Без параметров — сразу CRM (главная системы, Макс 12.11).
+/* Кабинет: только «Управление» (?admin=). Без параметров — CRM (главная системы); ?p=<проект> — в карточку клиента (Макс 12.11).
    Стиль — как в CRM («Шоурум»): тёплый чёрный, таблетки, панели без рамок; лайм — только главная кнопка. */
 :root{--bg:#0f0e0c;--surface:#1a1815;--surface2:#23211d;--raised:#2b2824;--inset:#0a0908;--ink:#f4f1ec;--ink2:#cfcac0;--ink3:#a39e94;
   --lime:#bfd630;--on-lime:#141a03;--line:rgba(244,241,236,.08);--red:#ff8a7a;--warn:#e0a35a;color-scheme:dark}
@@ -66,25 +66,6 @@ input:disabled,select:disabled{opacity:.6}
 .hint{font-size:12.5px;color:var(--ink3)}
 .login{max-width:380px;margin:14vh auto 0;padding:0 16px}
 .login .card{padding:22px;gap:14px}
-
-/* проект */
-.item{display:flex;align-items:center;gap:12px;padding:10px 10px 10px 14px;border-radius:14px;background:var(--surface2);flex-wrap:wrap}
-.item+.item{margin-top:6px}
-.item .k{height:24px;padding:0 10px;border-radius:999px;background:var(--raised);color:var(--ink2);font-size:12px;font-weight:500;display:inline-flex;align-items:center}
-.item .t{font-weight:600;flex:1;min-width:140px}
-.item .f{color:var(--ink3);font-size:12.5px;font-variant-numeric:tabular-nums}
-.share{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.share code{font:13px/1.3 Onest,system-ui,sans-serif;font-variant-numeric:tabular-nums;background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);border-radius:14px;padding:11px 14px;flex:1 1 300px;min-width:0;overflow-x:auto;white-space:nowrap;user-select:all;color:var(--ink2)}
-.drop{border:1.5px dashed rgba(244,241,236,.14);border-radius:14px;padding:20px;text-align:center;color:var(--ink3);font-size:13.5px;display:flex;flex-direction:column;gap:12px;align-items:center}
-.drop b{color:var(--ink)}
-.drop.on{border-color:var(--lime);background:rgba(191,214,48,.06);color:var(--ink)}
-.drop .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.files{font-size:12.5px;color:var(--ink2);text-align:left;align-self:stretch;max-height:120px;overflow:auto;font-variant-numeric:tabular-nums}
-.client{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.client b{font-size:15px}
-.resp{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.resp .av{width:40px;height:40px}
-.resp select{flex:1 1 220px;width:auto}
 
 /* управление */
 .tabs{display:flex;gap:2px;padding:4px;border-radius:999px;background:var(--surface);align-self:flex-start;max-width:100%;overflow-x:auto}
@@ -235,67 +216,20 @@ input:disabled,select:disabled{opacity:.6}
     <input type="file" id="phIn" accept="image/*" hidden>
   </section>
 
-  <!-- страница 3D-проекта (открывается из карточки клиента в CRM) -->
-  <section id="vProj" class="wrap" hidden>
-    <a class="back" id="back" href="crm.html"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg><span id="backT">Клиенты</span></a>
-    <div class="head"><div><div class="sub" style="margin:0 0 6px">3D-проект</div><h1 id="pTitle"></h1><div class="sub" id="pSub"></div></div></div>
-
-    <div class="card">
-      <h2>Ссылка для клиента</h2>
-      <div class="share"><code id="shareUrl"></code><button class="btn main" id="copy">Скопировать</button><a class="btn" id="openShare" target="_blank" rel="noopener" style="height:44px">Открыть</a></div>
-      <div class="hint">Клиент открывает ссылку без пароля и видит только этот проект.</div>
-    </div>
-
-    <div class="card">
-      <div class="bar"><h2>Изделия</h2><div class="sp"></div><a class="btn small" href="pro100/MGS3D_PRO100.zip" download>Кнопка для PRO100</a></div>
-      <div id="items"></div>
-      <div class="msg" id="itemsMsg"></div>
-    </div>
-
-    <form class="card" id="addForm">
-      <h2>Добавить изделие вручную</h2>
-      <div class="hint">Обычно изделие приходит само — кнопкой «Отправить в MGS 3D…» в PRO100. Здесь — если нужно загрузить файлы экспорта руками.</div>
-      <div class="row">
-        <label>Название<input id="iTitle" required placeholder="Кухня угловая"></label>
-        <label>Тип<select id="iKind">
-          <option>Кухня</option><option>Шкаф</option><option>Гардеробная</option><option>Прихожая</option>
-          <option>Ванная</option><option>Детская</option><option>Гостиная</option><option>Другое</option></select></label>
-      </div>
-      <div class="drop" id="drop">
-        <div>Перетащите сюда файлы экспорта: <b>.obj</b>, <b>.mtl</b> и папку текстур, или zip-архив</div>
-        <div class="btns"><button class="btn ghost small" type="button" id="pickF">Выбрать файлы</button><button class="btn ghost small" type="button" id="pickD">Выбрать папку</button></div>
-        <div class="files" id="fileList"></div>
-        <input type="file" id="fIn" multiple accept=".obj,.mtl,.png,.jpg,.jpeg,.bmp,.zip" hidden>
-        <input type="file" id="dIn" webkitdirectory multiple hidden>
-      </div>
-      <div class="row"><button class="btn" type="submit" id="upBtn" style="height:44px">Загрузить</button></div>
-      <div class="msg" id="upMsg"></div>
-    </form>
-
-    <div class="card" id="respCard">
-      <h2>Ответственный менеджер</h2>
-      <div class="resp"><div class="av" id="respAv"></div><select id="respSel" aria-label="Ответственный менеджер"></select><span class="msg" id="respMsg"></span></div>
-    </div>
-
-    <div class="row"><button class="btn danger" id="delProj">Удалить 3D-проект</button><span class="msg" id="delMsg"></span></div>
-  </section>
 </main>
 </div>
 
-<script src="lib/jszip.min.js"></script>
 <script src="lib/supabase.min.js"></script>
 <script type="module" src="as.js"></script>
 <script type="module">
-import {sb,configured,BUCKET} from './db.js';
+import {sb,configured} from './db.js';
 import {SUPABASE_URL} from './config.js';
 const $=s=>document.querySelector(s);
 /* экраны: вход/нет базы — отдельно; внутри приложения — проект или управление */
 const show=v=>{['vConf','vLogin'].forEach(x=>$('#'+x).hidden=x!==v);$('#vApp').hidden=v==='vConf'||v==='vLogin';
-  ['vProj','vAdmin'].forEach(x=>$('#'+x).hidden=x!==v);};
+  $('#vAdmin').hidden=v!=='vAdmin';};
 const toCrm=(q='')=>location.replace('crm.html'+q);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const viewUrl=(tok,item)=>{const u=/(^|\.)mgsmebel\.com$/.test(location.hostname)&&!/^test\./.test(location.hostname)?new URL('https://my.mgsmebel.com/view.html'):new URL('view.html',location.href);u.search='';u.hash='';u.searchParams.set('s',tok);if(item)u.searchParams.set('i',item);return u.toString();};
-let current=null, picked=[];
 
 if(!configured){show('vConf');}
 else init();
@@ -310,13 +244,14 @@ async function afterLogin(session){
   const pid=new URLSearchParams(location.search).get('p');
   const ad=new URLSearchParams(location.search).get('admin');
   if(!pid&&!ad)return toCrm();                      // главная системы — CRM (Макс 12.11)
+  if(!ad)return openProject(pid);                   // старая ссылка на проект → карточка клиента
   await checkAdmin();
   if(ME.role==='factory'){location.replace('factory.html');return;}
   await loadDirs();
   const me=prof(session.user.id);const av=$('#avBtn');
   if(me?.photo){av.style.backgroundImage=`url("${mediaUrl(me.photo)}")`;av.textContent='';}else av.textContent=initials(me?.name||session.user.email);
   $('#who').textContent=[me?.name||session.user.email,SAL.find(x=>x.id===me?.salon_id)?.name].filter(Boolean).join(' · ');
-  ad?openAdmin(ad):openProject(pid);
+  openAdmin(ad);
 }
 $('#loginForm').onsubmit=async e=>{
   e.preventDefault();$('#loginMsg').className='msg';$('#loginMsg').textContent='Проверяем…';$('#loginBtn').disabled=true;
@@ -520,117 +455,12 @@ async function loadStaff(){
 /* ---- список проектов убран (Макс 12.11): проекты живут в карточках клиентов CRM ---- */
 const loadList=()=>toCrm();
 
-/* ---- project ---- */
+/* ---- страница проекта убрана (Макс 12.11): открыть, ссылка клиенту и удаление — в карточке клиента CRM.
+   Старые ссылки index.html?p=<проект> ведут в карточку клиента этого проекта. ---- */
 async function openProject(id){
-  const {data:p,error}=await sb.from('projects').select('*').eq('id',id).single();
-  if(error||!p){loadList();return;}
-  current=p;history.replaceState(null,'','?p='+id);show('vProj');
-  $('#pTitle').textContent=p.title;$('#pSub').textContent=[p.client,p.address].filter(Boolean).join(' · ');
-  /* назад — в карточку клиента, к которому привязан проект */
-  const back=$('#back');back.href=p.client_id?'crm.html?c='+p.client_id:'crm.html';$('#backT').textContent='Клиенты';
-  if(p.client_id){const {data:c}=await sb.from('clients').select('name,num').eq('id',p.client_id).maybeSingle();
-    if(c&&current===p){$('#backT').textContent=c.name;document.title=`${p.title} — ${c.name}`;}}
-  showResp(p);
-  const url=viewUrl(p.share_token);$('#shareUrl').textContent=url;$('#openShare').href=url;
-  resetUpload();loadItems();
+  const {data:p}=await sb.from('projects').select('client_id').eq('id',id).maybeSingle();
+  toCrm(p?.client_id?'?c='+p.client_id:'');
 }
-async function showResp(p){
-  if(!PROFS.length)await loadDirs();
-  const m=prof(p.manager_id);$('#respAv').outerHTML=avHtml(m).replace('class="av"','class="av" id="respAv"');$('#respMsg').textContent='';
-  // кому можно передать: главный — любому, администратор — менеджерам своих салонов и себе, менеджер — нельзя
-  const {data:{session}}=await sb.auth.getSession();const me=session?.user?.id;
-  let can=PROFS.filter(x=>ME.role==='owner'||(ME.role==='admin'&&(x.user_id===me||(x.role==='manager'&&ME.admin_salons.includes(x.salon_id)))));
-  if(m&&!can.some(x=>x.user_id===m.user_id))can=[m,...can];
-  const salName=id=>SAL.find(s=>s.id===id)?.name;
-  $('#respSel').innerHTML=(m?'':'<option value="">— не указан —</option>')+can.map(x=>`<option value="${x.user_id}">${esc((x.name||'Без имени')+(salName(x.salon_id)?' · '+salName(x.salon_id):''))}</option>`).join('');
-  $('#respSel').value=p.manager_id||'';$('#respSel').disabled=!isBoss();
-  $('#respSel').onchange=async e=>{const v=e.target.value;if(!v)return;$('#respMsg').className='msg';$('#respMsg').textContent='Сохраняем…';
-    const {data,error}=await sb.from('projects').update({manager_id:v}).eq('id',p.id).select('manager_id,salon_id');
-    if(error||!data?.length){$('#respMsg').className='msg err';$('#respMsg').textContent=error?.message||'Нельзя передать проект в чужой салон.';e.target.value=p.manager_id||'';return;}
-    Object.assign(p,data[0]);current=p;showResp(p);$('#respMsg').className='msg ok';$('#respMsg').textContent='Передан';};
-}
-$('#copy').onclick=async()=>{
-  const t=$('#shareUrl').textContent;
-  try{await navigator.clipboard.writeText(t);$('#copy').textContent='Скопировано';}
-  catch{const r=document.createRange();r.selectNodeContents($('#shareUrl'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('#copy').textContent='Выделено — нажмите Ctrl+C';}
-  setTimeout(()=>$('#copy').textContent='Скопировать',2200);
-};
-async function loadItems(){
-  const {data,error}=await sb.from('items').select('*').eq('project_id',current.id).order('sort').order('created_at');
-  if(error){$('#itemsMsg').className='msg err';$('#itemsMsg').textContent=error.message;return;}
-  $('#itemsMsg').className='msg';$('#itemsMsg').textContent=data.length?'':'Пока пусто. Добавьте первое изделие ниже.';
-  $('#items').innerHTML=data.map(it=>{
-    const sz=(it.files||[]).reduce((a,f)=>a+(f.size||0),0);
-    return `<div class="item"><span class="k">${esc(it.kind||'Изделие')}</span><span class="t">${esc(it.title)}</span><span class="f">${(it.files||[]).length} файл. · ${(sz/1048576).toFixed(1)} МБ${it.glb_status==='ok'?` · для клиента ${(it.glb.size/1048576).toFixed(1)} МБ`:it.glb_status==='error'?' · лёгкая модель не получилась, клиент увидит исходную':it.glb_status==='none'?'':' · готовим лёгкую модель…'}</span>
-      <a class="btn small" target="_blank" rel="noopener" href="${viewUrl(current.share_token,it.id)}">Открыть 3D</a>
-      <button class="btn danger small" data-del="${it.id}">Удалить</button></div>`;}).join('');
-  document.querySelectorAll('[data-del]').forEach(b=>{let armed=false;b.onclick=async()=>{
-    if(!armed){armed=true;b.textContent='Точно удалить?';setTimeout(()=>{armed=false;b.textContent='Удалить';},3000);return;}
-    const it=data.find(x=>x.id===b.dataset.del);
-    await sb.storage.from(BUCKET).remove((it.files||[]).map(f=>f.path).concat(it.glb?.path?[it.glb.path]:[]));
-    await sb.from('items').delete().eq('id',it.id);loadItems();}});
-}
-let delArmed=false;
-$('#delProj').onclick=async()=>{
-  if(!delArmed){delArmed=true;$('#delMsg').textContent='Нажмите ещё раз, чтобы удалить проект со всеми моделями.';setTimeout(()=>{delArmed=false;$('#delMsg').textContent='';},4000);return;}
-  const {data:its}=await sb.from('items').select('files,glb').eq('project_id',current.id);
-  const paths=(its||[]).flatMap(i=>(i.files||[]).map(f=>f.path).concat(i.glb?.path?[i.glb.path]:[]));if(paths.length)await sb.storage.from(BUCKET).remove(paths);
-  await sb.from('projects').delete().eq('id',current.id);delArmed=false;$('#delMsg').textContent='';location.replace($('#back').href);
-};
-
-/* ---- upload ---- */
-const OK=/\.(obj|mtl|png|jpe?g|bmp|gif|webp|tga)$/i;
-const bn=p=>String(p).replace(/\\/g,'/').split('/').pop();
-function resetUpload(){picked=[];$('#fileList').textContent='';$('#upMsg').textContent='';$('#addForm').reset();}
-async function addFiles(list){
-  for(const f of list){
-    if(/\.zip$/i.test(f.name)){const z=await JSZip.loadAsync(f);
-      for(const [path,en] of Object.entries(z.files)){if(en.dir||!OK.test(path))continue;const b=await en.async('blob');picked.push(new File([b],bn(path)));}}
-    else if(OK.test(f.name))picked.push(f);
-  }
-  const seen=new Set();picked=picked.filter(f=>{const k=f.name.toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
-  $('#fileList').innerHTML=picked.map(f=>esc(f.name)+' · '+(f.size/1024).toFixed(0)+' КБ').join('<br>');
-  const obj=picked.find(f=>/\.obj$/i.test(f.name));
-  if(obj&&!$('#iTitle').value)$('#iTitle').value=obj.name.replace(/\.obj$/i,'');
-}
-$('#pickF').onclick=()=>$('#fIn').click();$('#pickD').onclick=()=>$('#dIn').click();
-$('#fIn').onchange=e=>addFiles([...e.target.files]);$('#dIn').onchange=e=>addFiles([...e.target.files]);
-const dz=$('#drop');
-dz.ondragover=e=>{e.preventDefault();dz.classList.add('on');};dz.ondragleave=()=>dz.classList.remove('on');
-async function walk(en,out){if(en.isFile){await new Promise(r=>en.file(f=>{out.push(f);r();},r));}
-  else if(en.isDirectory){const rd=en.createReader();let b;do{b=await new Promise(r=>rd.readEntries(r,()=>r([])));for(const x of b)await walk(x,out);}while(b.length);}}
-dz.ondrop=async e=>{e.preventDefault();dz.classList.remove('on');const out=[];
-  const its=[...(e.dataTransfer.items||[])];
-  if(its.length&&its[0].webkitGetAsEntry){for(const it of its){const en=it.webkitGetAsEntry();if(en)await walk(en,out);}}else out.push(...e.dataTransfer.files);
-  addFiles(out);};
-$('#addForm').onsubmit=async e=>{
-  e.preventDefault();const msg=$('#upMsg');msg.className='msg';
-  if(!picked.some(f=>/\.obj$/i.test(f.name))){msg.className='msg err';msg.textContent='Нужен файл .obj — сделайте в PRO100 экспорт в OBJ.';return;}
-  if(!picked.some(f=>/\.mtl$/i.test(f.name))){msg.textContent='Нет файла .mtl — модель будет без текстур. Загружаю…';}
-  $('#upBtn').disabled=true;
-  const itemId=crypto.randomUUID();const files=[];
-  try{
-    for(let i=0;i<picked.length;i++){
-      const f=picked[i];const ext=(f.name.match(/\.[a-z0-9]+$/i)||[''])[0].toLowerCase();
-      // OBJ/MTL сжимаем: текст ужимается в 5–8 раз, а в бесплатном Supabase файл не больше 50 МБ
-      let body=f,gz=false;
-      if(/\.(obj|mtl)$/.test(ext)&&f.size>262144&&typeof CompressionStream!=='undefined'){
-        msg.textContent=`Сжимаем ${f.name} (${(f.size/1048576).toFixed(1)} МБ)…`;
-        body=await new Response(f.stream().pipeThrough(new CompressionStream('gzip'))).blob();gz=true;
-      }
-      const path=`${current.id}/${itemId}/f${i}${ext}${gz?'.gz':''}`;
-      msg.textContent=`Загружаем ${i+1} из ${picked.length}: ${f.name} (${(body.size/1048576).toFixed(1)} МБ)`;
-      const type=gz?'application/gzip':/\.(obj|mtl)$/.test(ext)?'text/plain;charset=utf-8':(f.type||'application/octet-stream');
-      const {error}=await sb.storage.from(BUCKET).upload(path,body,{contentType:type,upsert:true});
-      if(error)throw error;
-      files.push(gz?{name:f.name,path,size:body.size,gz:true}:{name:f.name,path,size:f.size});
-    }
-    const {error}=await sb.from('items').insert({id:itemId,project_id:current.id,title:$('#iTitle').value.trim()||'Изделие',kind:$('#iKind').value,files});
-    if(error)throw error;
-    resetUpload();msg.className='msg ok';msg.textContent='Готово — изделие добавлено.';loadItems();
-  }catch(err){msg.className='msg err';msg.textContent='Ошибка загрузки: '+(err.message||err);}
-  $('#upBtn').disabled=false;
-};
 </script>
 </body>
 </html>
