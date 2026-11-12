@@ -132,7 +132,7 @@ function analyze(root){
     const box=g.boundingBox.clone().applyMatrix4(o.matrixWorld);
     const s=box.getSize(new THREE.Vector3());
     const label=(o.name||'').replace(/^\d+_/,'').trim();
-    const tris=pos.count/3;
+    const tris=(g.index?g.index.count:pos.count)/3;   // настоящие грани (с 12.11 сервер склеивает вершины — по их числу считать нельзя)
     const p={mesh:o,label,box,s,tris};
     // tidy materials: PRO100 writes edge-band textures with d=0.1
     (Array.isArray(o.material)?o.material:[o.material]).forEach(mt=>{
