@@ -520,7 +520,7 @@ https://claude.ai/artifact/4NZ4A9ztHn3dGM2Z597dKK. Решения Макса: о
   `assets/cat/<boyard|hettich|blum|kessebohmer>/*.webp` 480×480 — светлый фон обрезан, изделие по центру с полями 8 %, прозрачный фон → белый.
   Только чистые фото изделия (без людей, интерьеров, надписей); нет такого — остаётся иконка серии. Ставит brand_photos.py (у Макса, после
   match_photos; правила «группа + regex названия → файл»). Источники: boyard.biz, shop.hettich.com (1200Wx1200H), blum.com (снимки *FRD* —
-  «вырезанные» фото), kesseboehmer.com. Нет чистых фото: AVENTOS, LEGRABOX, CLIP top без пружины, FREEflap/FREEfold, InnoTech, FIRMAX (сайт недоступен).
+  «вырезанные» фото), kesseboehmer.com; Blum — в первую очередь www-blum.ru (Макс 13.11; картинки 600×600: image/cache/catalog/files/<id>-800x800-600x600.jpg; у AVENTOS — фото силового механизма, у HF/HK/HL TOP — прошлого поколения, Макс: «подходит»); LEGRABOX — снимки в кухне («бери что есть»); FREEflap/FREEfold — hranipex.com; InnoTech — комплект Atira (shop.hettich.com); FIRMAX NewLine — lavrmf.ru. Без фото: FIRMAX SlimLine, поводки InnoTech, декоративная крышка и междверная петля FREEfold.
   ФУРНИТУРА (Макс 13.11: «много не состыковок» — двухколоночный прайс 05 и прайс 06 «Ручки» разбор резал/терял): Петли, Ящики, Подъёмники,
   Ручки и толкатели, Опоры (кроме своей MGS) — вручную build_furn.py (С ЦЕНАМИ, не в репозиторий) → furn.json; каждый вариант (цвет, длина, тип) —
   своя позиция. ФИЛЬТРЫ-КНОПКИ (Макс 13.11: «когда заходишь в раздел — фильтрация из кнопок»): params.f = {признак: значение|[значения]}
