@@ -107,8 +107,8 @@ main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:10px ma
 .dc button.on{background:var(--ink);color:var(--bg)}.dc input{width:52px;height:32px;border-radius:16px;border:0;background:var(--field);text-align:center}
 .msg{color:var(--ink3);font-size:13px}.msg.err{color:var(--red)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:500;z-index:50}
-.flts{display:flex;flex-direction:column;gap:8px}.fc i{font-style:normal;opacity:.7;margin-left:2px}.fc.all{box-shadow:inset 0 0 0 1px #4a453e}.flt.step em{color:var(--ink);font-weight:500}
-.fsw{margin-left:auto;display:inline-flex;gap:4px;align-items:center;color:var(--ink4)}.fsw button{all:unset;cursor:pointer;padding:2px 8px;border-radius:10px;color:var(--ink3)}.fsw button.on{background:var(--field);color:var(--ink)}.flt{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.flt>em{font-style:normal;font-size:12px;color:var(--ink3);min-width:84px}
+.flts{display:flex;flex-direction:column;gap:8px}.fc i{font-style:normal;opacity:.7;margin-left:2px}.fc.all{box-shadow:inset 0 0 0 1px #4a453e}
+.flt{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.flt>em{font-style:normal;font-size:12px;color:var(--ink3);min-width:84px}
 .fc{all:unset;box-sizing:border-box;cursor:pointer;height:32px;padding:0 12px;border-radius:16px;background:var(--field);color:var(--ink2);font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.fc:hover{background:var(--raised)}.fc.on{background:var(--ink);color:var(--bg);font-weight:600}.fc[disabled]{opacity:.35;pointer-events:none}.fc small{opacity:.6;font-size:11px}
 .fhint{font-size:12px;color:var(--ink3);display:flex;gap:10px;align-items:center}.fhint button{all:unset;cursor:pointer;color:var(--ink2);text-decoration:underline}
 .psearch{position:relative}.psearch input{width:100%;height:46px;border-radius:23px;border:0;box-shadow:inset 0 0 0 1px #3a352f;background:var(--field);padding:0 18px 0 42px;color:var(--ink);font-size:15px}
@@ -166,7 +166,6 @@ const GROUPS=[['Корпус и фасады',['Корпус','Задние ст
   ['Прочее и работы',['Мягкие панели','Декор','Услуги фабрики','Работы']]];
 const SECS=GROUPS.flatMap(g=>g[1]);
 const S={cat:[],byId:{},role:'',smeta:null,client:null,data:null,openGroup:0,open:null,q:'',found:[],saveT:0};
-S.fltMode=(()=>{try{return localStorage.getItem('smeta-flt');}catch(e){return null;}})()||'rows';
 
 if(!configured)document.body.innerHTML='<p style="padding:40px">База не настроена.</p>';else init();
 async function init(){
@@ -383,25 +382,16 @@ function renderPick(){
     /* Макс 13.11: в строке — только одно значение (две кнопки сразу читались как «и с доводчиком, и без пружины») */
     const tog=(k,v)=>{o.ff[k]=sel(k).includes(v)?[]:[v];renderPick();};
     if(facets.length){
-      const list=gi.filter(x=>ok(x)),mode=S.fltMode;
+      const list=gi.filter(x=>ok(x));
       head=head.replace('выберите серию','цены для клиента');
       const chip=(k,v,lab,single)=>{const on=sel(k).includes(v),n=cnt(k,v);if(!on&&(!n||(n===list.length&&!sel(k).length)))return ''; /* нет таких или выбор ничего не меняет — кнопку не показываем */
         return `<button class="fc ${on?'on':''}" data-act="${A(()=>tog(k,v,single))}">${esc(lab||v)}${on?'<i>×</i>':`<small>${n}</small>`}</button>`;};
       const all=`<button class="fc all ${anySel()?'':'on'}" data-act="${A(()=>{o.ff={};renderPick();})}">Показать все<small>${gi.filter(x=>!q||hit(x.name,q)).length}</small></button>`;
-      let fl='';
-      if(mode==='steps'){ /* шаги: по одному вопросу, выбранное — цепочкой сверху */
-        const done=facets.filter(([k])=>sel(k).length),next=facets.find(([k,vs])=>!sel(k).length&&vs.filter(v=>cnt(k,v)).length>1);
-        fl=`<div class="flt">${all}${done.map(([k])=>sel(k).map(v=>`<button class="fc on" data-act="${A(()=>tog(k,v))}">${esc(k)}: ${esc(v)}<i>×</i></button>`).join('')).join('')}</div>`
-          +(next?`<div class="flt step"><em>${esc(next[0])}?</em>${next[1].map(v=>chip(next[0],v,null,true)).join('')}</div>`:'');
-      }else if(mode==='line'){ /* одной строкой: все значения всех признаков подряд, выбранные — первыми */
-        const on=[],off=[];facets.forEach(([k,vs])=>vs.forEach(v=>{const c=chip(k,v);if(c)(sel(k).includes(v)?on:off).push(c);}));
-        fl=`<div class="flt">${all}${on.join('')}${off.join('')}</div>`;
-      }else{ /* строки по признакам, без «Все» в строке */
-        fl=`<div class="flt">${all}</div>`+facets.map(([k,vs])=>{const cs=vs.map(v=>chip(k,v)).join('');return (cs.match(/class="fc/g)||[]).length>1||sel(k).length?`<div class="flt"><em>${esc(k)}</em>${cs}</div>`:'';}).join('');
-      }
-      const sw=[['rows','Строки'],['steps','Шаги'],['line','Одной строкой']].map(([m,l])=>`<button class="${mode===m?'on':''}" data-act="${A(()=>{S.fltMode=m;try{localStorage.setItem('smeta-flt',m);}catch(e){}renderPick();})}">${l}</button>`).join('');
+      /* Макс 14.11: вид фильтров — «одной строкой»: все значения всех признаков подряд, выбранные — первыми */
+      const on=[],off=[];facets.forEach(([k,vs])=>vs.forEach(v=>{const c=chip(k,v);if(c)(sel(k).includes(v)?on:off).push(c);}));
+      const fl=`<div class="flt">${all}${on.join('')}${off.join('')}</div>`;
       body=searchBox('Найти в «'+o.grp+'»…')+`<div class="flts">${fl}</div>
-        <div class="fhint">Найдено: ${list.length}<span class="fsw">Вид фильтров (тест): ${sw}</span></div>
+        <div class="fhint">Найдено: ${list.length}</div>
         <div class="cards">${list.map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
     }else{const shown=x=>!q||hit(x.name,q);
     body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+`<div class="cards">${q?gi.filter(x=>(!o.sub||x.params?.sub===o.sub)&&shown(x)).map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>':o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}}
