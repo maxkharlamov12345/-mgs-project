@@ -307,7 +307,7 @@ const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div clas
 /* --- обычные разделы: бренд/серия → позиции (→ декор у столешниц и стекла) --- */
 function renderPick(){
   const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price')&&x.cprice);
-  const grps=[...new Set(items.map(x=>x.grp))];const acts={};let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
+  const grps=[...new Set(items.map(x=>x.grp))].sort((a,b)=>(/^MGS/.test(b)?1:0)-(/^MGS/.test(a)?1:0));const acts={};/* своя фурнитура фабрики (MGS) — первой */let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
   const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo);return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
     <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span></button>`;};
   let head,body;const q=o.q||'';
