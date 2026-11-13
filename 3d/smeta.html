@@ -288,7 +288,7 @@ const BRANDS=[['mgs','MGS',/^MGS|Leonardo|Dante|REGO|SPACE|DECCO|Smartcube|Ра�
   ['firmax','FIRMAX',/firmax/i],['kessebohmer','Kessebohmer',/kesseb/i],['egger','EGGER',/egger/i],['alvic','ALVIC',/alvic|syncron/i],['agt','AGT',/^agt/i],['tss','TSS / Cleaf',/tss|cleaf/i],
   ['fenix','FENIX',/fenix/i],['arpa','ARPA',/arpa/i],['wilsonart','Wilsonart',/wilsonart/i],['dollken','Döllken',/dollken|döllken/i],['kedr','КЕДР',/кедр/i],['slavyanka','Славянка',/славянка/i],
   ['sonatti','SONATTI',/sonatti/i],['bramek','BRAMEK',/bramek/i]];
-const OWN_LOGO={mgs:{logo:'assets/cat/brand/mgs.webp',dark:true},blum:{logo:'assets/cat/brand/blum.webp',dark:true},hettich:{logo:'assets/cat/brand/hettich.webp',dark:true},boyard:{logo:'assets/cat/brand/boyard-v2.webp',dark:false}};
+const OWN_LOGO={mgs:{logo:'assets/cat/brand/mgs-v2.webp',dark:true},blum:{logo:'assets/cat/brand/blum.webp',dark:true},hettich:{logo:'assets/cat/brand/hettich.webp',dark:true},boyard:{logo:'assets/cat/brand/boyard-v2.webp',dark:false}};
 const FAM_BRAND={egger16:'egger',egger18:'egger',eggerps:'egger',eggersmart:'egger',alvic:'alvic',agt:'agt',tss:'tss',arpa:'arpa',ldsp:'mgs',hdf:'mgs',dvp:'mgs',pvc:'mgs',emal:'mgs'};
 const brandOf=g=>(BRANDS.find(b=>b[2].test(g||''))||[])[0];
 const grpOrder=items=>{const f={};items.forEach(x=>{const k=x.gsort!=null?x.gsort:1e9+x.sort;if(!(x.grp in f)||k<f[x.grp])f[x.grp]=k;});return f;};
@@ -360,7 +360,7 @@ function renderPick(){
   }else if(!o.grp){
     head=`<b>${esc(o.sec)}</b><small>выберите бренд или серию</small>`;
     body=searchBox('Найти в разделе «'+o.sec+'»…')+(grps.length?`<div class="cards">${grps.map(g=>{const its=items.filter(x=>x.grp===g),min=Math.min(...its.map(x=>x.cprice||1e12));const ph=its.find(x=>x.photo)?.photo;
-      const bk=brandOf(g),lg0=bk&&bk!=='mgs'?logoOf(bk):null,gi=lg0?null:grpIcon(o.sec,g),lg=lg0||(gi?null:logoOf(bk)); /* Макс 14.11: у чужих брендов — всегда логотип (иконка с сайта фабрики у Boyard была обрезанным баннером) */
+      const bk=brandOf(g),lg0=bk&&(bk!=='mgs'||g==='MGS')?logoOf(bk):null,gi=lg0?null:grpIcon(o.sec,g),lg=lg0||(gi?null:logoOf(bk)); /* Макс 14.11: у чужих брендов — всегда логотип (иконка с сайта фабрики у Boyard была обрезанным баннером) */
       return `<button class="card" data-act="${A(()=>{o.grp=g;o.ff={};renderPick();})}">${gi?`<span class="im fill" ${bgi(gi)}></span>`:lg?logoTile(lg):`<span class="im" ${bgi(ph)}>${ph?'':esc(g.slice(0,2).toUpperCase())}</span>`}<span class="tx"><b>${esc(g)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;}).join('')}</div>`
       :`<div class="msg">${o.sec==='Работы'?'Сборка, доставка, монтаж — ваш прайс, загрузим, когда пришлёте.':'В этом разделе каталога пока нет позиций.'}</div>`);
   }else{const gi=items.filter(x=>x.grp===o.grp),subs=[...new Set(gi.map(x=>x.params?.sub).filter(Boolean))];
