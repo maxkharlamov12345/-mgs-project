@@ -369,7 +369,8 @@ function renderPick(){
     const fv=(x,k)=>{const v=x.params?.f?.[k];return v==null?[]:Array.isArray(v)?v:[v];};
     const keys=[];gi.forEach(x=>Object.keys(x.params?.f||{}).forEach(k=>{if(!keys.includes(k))keys.push(k);}));
     const facets=keys.map(k=>{const vs=[];gi.forEach(x=>fv(x,k).forEach(v=>{if(!vs.includes(v))vs.push(v);}));if(vs.every(v=>/^\d/.test(v)))vs.sort((a,b)=>parseFloat(a)-parseFloat(b));return [k,vs];}).filter(([,vs])=>vs.length>1);
-    o.ff=o.ff||{};const ok=(x,skip)=>Object.entries(o.ff).every(([k,v])=>k===skip||fv(x,k).includes(v))&&(!q||hit(x.name,q));
+    o.ff=o.ff||{};/* аксессуар (params.fa: поводок, ограничитель…) без признака подходит к любому его значению — не пропадает при фильтрах */
+    const ok=(x,skip)=>Object.entries(o.ff).every(([k,v])=>k===skip||fv(x,k).includes(v)||(x.params?.fa&&!fv(x,k).length&&k!=='Вид'&&k!=='Тип'))&&(!q||hit(x.name,q));
     if(facets.length){
       const list=gi.filter(x=>ok(x));
       head=head.replace('выберите серию','цены для клиента');
