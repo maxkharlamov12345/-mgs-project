@@ -57,7 +57,12 @@
 	encode zstd gzip
 	# браузер перепроверяет файлы при каждом открытии (304 по ETag): без этого Chrome держал старые viewer.js/viewer.css
 	# из кэша после выкладки, и новая страница просмотра не открывала модель (Макс 12.11)
-	header Cache-Control "no-cache"
+	# картинки и шрифты — неделю из кэша без перепроверки (Макс 14.11: каталог сметы грузил сотни плиток каждый раз);
+	# заменённая картинка всегда получает новое имя (-v2, -v3), поэтому старая не «залипнет». Код и страницы — по-прежнему no-cache.
+	@static path_regexp \.(webp|jpe?g|png|gif|svg|ico|woff2?)$
+	@dyn not path_regexp \.(webp|jpe?g|png|gif|svg|ico|woff2?)$
+	header @static Cache-Control "public, max-age=604800"
+	header @dyn Cache-Control "no-cache"
 	handle /assets/* {
 		root * /srv/www/prod
 		file_server
@@ -73,7 +78,12 @@
 	encode zstd gzip
 	# браузер перепроверяет файлы при каждом открытии (304 по ETag): без этого Chrome держал старые viewer.js/viewer.css
 	# из кэша после выкладки, и новая страница просмотра не открывала модель (Макс 12.11)
-	header Cache-Control "no-cache"
+	# картинки и шрифты — неделю из кэша без перепроверки (Макс 14.11: каталог сметы грузил сотни плиток каждый раз);
+	# заменённая картинка всегда получает новое имя (-v2, -v3), поэтому старая не «залипнет». Код и страницы — по-прежнему no-cache.
+	@static path_regexp \.(webp|jpe?g|png|gif|svg|ico|woff2?)$
+	@dyn not path_regexp \.(webp|jpe?g|png|gif|svg|ico|woff2?)$
+	header @static Cache-Control "public, max-age=604800"
+	header @dyn Cache-Control "no-cache"
 	handle /assets/* {
 		root * /srv/www/prod
 		file_server
@@ -88,7 +98,12 @@
 # Тестовая версия: весь репозиторий, ветка main (обновляется каждую минуту)
 {$TEST_DOMAIN} {
 	encode zstd gzip
-	header Cache-Control "no-cache"
+	# картинки и шрифты — неделю из кэша без перепроверки (Макс 14.11: каталог сметы грузил сотни плиток каждый раз);
+	# заменённая картинка всегда получает новое имя (-v2, -v3), поэтому старая не «залипнет». Код и страницы — по-прежнему no-cache.
+	@static path_regexp \.(webp|jpe?g|png|gif|svg|ico|woff2?)$
+	@dyn not path_regexp \.(webp|jpe?g|png|gif|svg|ico|woff2?)$
+	header @static Cache-Control "public, max-age=604800"
+	header @dyn Cache-Control "no-cache"
 	root * /srv/www/test
 	file_server
 }
