@@ -112,6 +112,11 @@ main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:10px ma
 .tile i.no{background:transparent;border:1.5px dashed #3a352f;display:grid;place-items:center}.nop{font-size:11px;color:var(--ink4)}
 .card.on{box-shadow:0 0 0 2px var(--lime)}.card .im.stack{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;overflow:hidden}.card .im.stack i{border-radius:6px;background:#2a2622 center/cover}.card .im.stack i:first-child{grid-row:span 2}
 .edge2{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:16px;background:#1a1c12;box-shadow:inset 0 0 0 1px var(--lime)}.edge2>b{color:var(--lime);font-weight:500}
+.im.logo,.badge.logo{display:grid;place-items:center;background:#fff!important;padding:8px;box-sizing:border-box;overflow:hidden}.im.logo.dk,.badge.logo.dk{background:#1d1a17!important;box-shadow:inset 0 0 0 1px #2c2824}
+.im.logo img,.badge.logo img{max-width:100%;max-height:100%;object-fit:contain}
+.mat i{position:relative}.mat .badge{position:absolute;left:8px;bottom:8px;width:76px;height:34px;border-radius:9px;padding:5px}
+.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.brands .b{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:#1d1a17}
+.brands .b .im{width:100%;height:70px;border-radius:12px}.brands .b .row{display:flex;gap:6px;align-items:center}.brands input[type=text]{flex:1;min-width:0;height:34px;border-radius:10px;border:0;background:var(--field);padding:0 10px;font-size:12px}
 table.mk{width:100%;border-collapse:collapse}table.mk td{padding:8px 6px;border-bottom:1px solid var(--line)}table.mk input{width:80px;height:36px;border-radius:10px;border:0;background:var(--field);text-align:center}
 </style>
 </head>
@@ -172,6 +177,7 @@ async function loadCat(){
   const all=[];for(let from=0;;from+=1000){const {data,error}=await sb.from('cat_view').select('id,kind,sec,grp,name,unit,params,photo,cprice,sort').neq('kind','search').order('sec').order('grp').order('sort').order('name').range(from,from+999);
     if(error){showErr(error.code==='42P01'?'каталог ещё не создан на сервере — подождите минуту и обновите страницу':error);break;}all.push(...data);if(data.length<1000)break;}
   S.cat=all;S.byId=Object.fromEntries(all.map(x=>[x.id,x]));
+  const br=await sb.from('brands').select('key,logo,dark');S.brands=Object.fromEntries((br.data||[]).filter(x=>x.logo).map(x=>[x.key,x]));
   if(!all.length&&S.role==='owner')showErr('Каталог пуст — загрузите файл каталога: кнопка «Каталог и наценки».');
 }
 const V=()=>S.data.variants[S.data.cur];
@@ -263,6 +269,17 @@ function showFound(){
    Декоры — из «Соответствия декоров» фабрики по категориям и толщинам, фото — с сайта фабрики (kind decor, params.fam/cat).
    Цена — kind plate (fam, thick, cat). Где цена без кромки — на последнем шаге сразу кромка и её метры.
    Поиск — на каждом шаге (#ps). */
+/* ---------- логотипы брендов (Макс 13.11): ключ бренда по названию группы / семейству плит; свои — assets/cat/brand, остальные — таблица brands (грузит главный) ---------- */
+const BRANDS=[['mgs','MGS',/^MGS|Leonardo|Dante|REGO|SPACE|DECCO|Smartcube|Рамочные TW/i],['blum','Blum',/blum/i],['hettich','Hettich',/hettich/i],['boyard','Boyard / GTV',/boyard|gtv/i],
+  ['firmax','FIRMAX',/firmax/i],['kessebohmer','Kessebohmer',/kesseb/i],['egger','EGGER',/egger/i],['alvic','ALVIC',/alvic|syncron/i],['agt','AGT',/^agt/i],['tss','TSS / Cleaf',/tss|cleaf/i],
+  ['fenix','FENIX',/fenix/i],['arpa','ARPA',/arpa/i],['wilsonart','Wilsonart',/wilsonart/i],['dollken','Döllken',/dollken|döllken/i],['kedr','КЕДР',/кедр/i],['slavyanka','Славянка',/славянка/i],
+  ['sonatti','SONATTI',/sonatti/i],['bramek','BRAMEK',/bramek/i]];
+const OWN_LOGO={mgs:{logo:'assets/cat/brand/mgs.webp',dark:true},blum:{logo:'assets/cat/brand/blum.webp',dark:true},hettich:{logo:'assets/cat/brand/hettich.webp',dark:true}};
+const FAM_BRAND={egger16:'egger',egger18:'egger',eggerps:'egger',eggersmart:'egger',alvic:'alvic',agt:'agt',tss:'tss',arpa:'arpa',ldsp:'mgs',hdf:'mgs',dvp:'mgs',pvc:'mgs',emal:'mgs'};
+const brandOf=g=>(BRANDS.find(b=>b[2].test(g||''))||[])[0];
+function logoOf(key){const b=key&&(S.brands?.[key]||OWN_LOGO[key]);return b&&b.logo?{src:/^https?:/.test(b.logo)?b.logo:ASSET(b.logo),dark:b.dark}:null;}
+const logoTile=(l,cls='im')=>`<span class="${cls} logo ${l.dark?'dk':''}"><img src="${esc(l.src)}" alt="" loading="lazy"></span>`;
+
 const FAMS={
   egger16:{l:'ЛДСП EGGER 16 / 32 мм',sub:'5 категорий · 16 мм с кромкой 1 мм',edge:{'32':['EGGER',/^(?!.*(Perfect|Smart))/]}},
   egger18:{l:'ЛДСП EGGER 18 / 36 мм',sub:'свои декоры · без кромки',edge:['EGGER',/^(?!.*(Perfect|Smart))/]},
@@ -320,7 +337,8 @@ function renderPick(){
   }else if(!o.grp){
     head=`<b>${esc(o.sec)}</b><small>выберите бренд или серию</small>`;
     body=searchBox('Найти в разделе «'+o.sec+'»…')+(grps.length?`<div class="cards">${grps.map(g=>{const its=items.filter(x=>x.grp===g),min=Math.min(...its.map(x=>x.cprice||1e12));const ph=its.find(x=>x.photo)?.photo;
-      return `<button class="card" data-act="${A(()=>{o.grp=g;renderPick();})}"><span class="im" ${bgi(ph)}>${ph?'':esc(g.slice(0,2).toUpperCase())}</span><span class="tx"><b>${esc(g)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;}).join('')}</div>`
+      const lg=logoOf(brandOf(g));
+      return `<button class="card" data-act="${A(()=>{o.grp=g;renderPick();})}">${lg?logoTile(lg):`<span class="im" ${bgi(ph)}>${ph?'':esc(g.slice(0,2).toUpperCase())}</span>`}<span class="tx"><b>${esc(g)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;}).join('')}</div>`
       :`<div class="msg">${o.sec==='Работы'?'Сборка, доставка, монтаж — ваш прайс, загрузим, когда пришлёте.':'В этом разделе каталога пока нет позиций.'}</div>`);
   }else{head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(o.sec)} › ${esc(o.grp)}</b><small>цены для клиента</small>`;
     body=searchBox('Найти в «'+o.grp+'»…')+`<div class="cards">${items.filter(x=>x.grp===o.grp).map(itemCard).join('')}</div>`;}
@@ -387,7 +405,7 @@ function renderPlate(){
     ph='Найти декор во всех материалах: U999, Агава, Сонома…';
     if(q){const h=decHits(fams);body=`<div class="grid">${h.map(d=>decTile(d,s.decor===d.id,A(()=>pickDecor(d)),famTag(d))).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;}
     else body=`<div class="mats">${fams.map(f=>{const d=decs(f).find(x=>x.photo);const nc=catsOf(f).length,nd=decs(f).length;
-      return `<button class="mat ${s.fam===f?'on':''}" data-act="${A(()=>{o.spec=s=defaults(f,s);o.step=1;o.q='';renderPlate();})}"><i ${f==='emal'?'style="background:linear-gradient(135deg,#e9e0d2,#7a7b7a 55%,#383e42)"':bgi(d?.photo)}></i>
+      return `<button class="mat ${s.fam===f?'on':''}" data-act="${A(()=>{o.spec=s=defaults(f,s);o.step=1;o.q='';renderPlate();})}"><i ${f==='emal'?'style="background:linear-gradient(135deg,#e9e0d2,#7a7b7a 55%,#383e42)"':bgi(d?.photo)}>${(l=>l?logoTile(l,'badge'):'')(logoOf(FAM_BRAND[f]))}</i>
         <b style="font-weight:500">${esc(FAMS[f].l)}</b><span>${esc(FAMS[f].sub)}${nd?` · ${nd} декоров`:''}</span></button>`;}).join('')}</div>`;
   }else if(key==='Толщина'){
     if(q)body=`<div class="grid">${decHits([s.fam]).map(d=>decTile(d,s.decor===d.id,A(()=>pickDecor(d)))).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
@@ -481,7 +499,19 @@ async function openAdmin(){
       <table class="mk"><tr><td><b>По умолчанию</b></td><td><input data-k="*" value="${M['*']??1.8}"></td></tr>
       <tr><td>Плиты: корпус, фасады, стенки (EGGER, ALVIC, AGT, TSS, пластик…)</td><td><input data-k="sec:Плиты" value="${M['sec:Плиты']??''}" placeholder="—"></td></tr>
       ${SECS.map(s=>`<tr><td>${s}</td><td><input data-k="sec:${esc(s)}" value="${M['sec:'+s]??''}" placeholder="—"></td></tr>`).join('')}</table>
-      <button class="pill lime" id="mkSave" style="align-self:flex-start">Сохранить наценки</button><span class="msg" id="mkMsg"></span></div></div>`;
+      <button class="pill lime" id="mkSave" style="align-self:flex-start">Сохранить наценки</button><span class="msg" id="mkMsg"></span></div>
+    <div class="panel"><b style="font-size:20px;font-weight:500">Логотипы брендов</b><span class="msg">Показываются в смете на плитках брендов и материалов. Загрузите файл (PNG, SVG, JPG) или вставьте адрес картинки. «Тёмная плитка» — для светлых логотипов.</span>
+      <div class="brands" id="brands"></div></div></div>`;
+  const drawBrands=()=>{$('#brands').innerHTML=BRANDS.map(([k,n])=>{const l=logoOf(k);return `<div class="b"><b style="font-weight:500">${esc(n)}</b>${l?logoTile(l):'<span class="im" style="display:grid;place-items:center;color:var(--ink4);font-size:12px">нет логотипа</span>'}
+      <div class="row"><label class="pill" style="height:34px;padding:0 12px;font-size:12px">Файл<input type="file" accept="image/*,.svg" data-bf="${k}" hidden></label><input type="text" data-bu="${k}" placeholder="или адрес https://…" value="${esc(S.brands?.[k]?.logo&&/^https?:/.test(S.brands[k].logo)?S.brands[k].logo:'')}"></div>
+      <label class="row" style="font-size:12px;color:var(--ink3)"><input type="checkbox" data-bd="${k}" ${l?.dark?'checked':''}> тёмная плитка</label></div>`;}).join('');
+    const put=async(k,logo,dark)=>{const {error}=await sb.from('brands').upsert({key:k,logo,dark,updated_at:new Date().toISOString()});if(error)return toast('Ошибка: '+error.message);S.brands[k]={key:k,logo,dark};drawBrands();toast('Логотип сохранён');};
+    document.querySelectorAll('[data-bf]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;const k=i.dataset.bf,ext=(f.name.split('.').pop()||'png').toLowerCase();
+      const path=`brand/${k}-${Date.now()}.${ext}`;const {error}=await sb.storage.from('media').upload(path,f,{contentType:f.type||(ext==='svg'?'image/svg+xml':'image/'+ext)});
+      if(error)return toast('Не загрузилось: '+error.message);put(k,SUPABASE_URL+'/storage/v1/object/public/media/'+path,!!S.brands?.[k]?.dark);});
+    document.querySelectorAll('[data-bu]').forEach(i=>i.onchange=()=>{const v=i.value.trim();if(v&&!/^https:\/\//.test(v))return toast('Нужен адрес https://…');put(i.dataset.bu,v||null,!!S.brands?.[i.dataset.bu]?.dark);});
+    document.querySelectorAll('[data-bd]').forEach(i=>i.onchange=()=>{const k=i.dataset.bd,l=S.brands?.[k]?.logo||OWN_LOGO[k]?.logo;if(!l)return;put(k,l,i.checked);});};
+  S.brands=S.brands||{};drawBrands();
   $('#mkSave').onclick=async()=>{const up=[],del=[];document.querySelectorAll('[data-k]').forEach(i=>{const v=parseFloat(i.value.replace(',','.'));v>0?up.push({key:i.dataset.k,k:v}):del.push(i.dataset.k);});
     const r1=await sb.from('markups').upsert(up);const r2=del.length?await sb.from('markups').delete().in('key',del.filter(k=>k!=='*')):{};
     $('#mkMsg').textContent=r1.error||r2.error?'Ошибка: '+(r1.error||r2.error).message:'Сохранено';};
