@@ -277,7 +277,7 @@ const BRANDS=[['mgs','MGS',/^MGS|Leonardo|Dante|REGO|SPACE|DECCO|Smartcube|Ра�
 const OWN_LOGO={mgs:{logo:'assets/cat/brand/mgs.webp',dark:true},blum:{logo:'assets/cat/brand/blum.webp',dark:true},hettich:{logo:'assets/cat/brand/hettich.webp',dark:true}};
 const FAM_BRAND={egger16:'egger',egger18:'egger',eggerps:'egger',eggersmart:'egger',alvic:'alvic',agt:'agt',tss:'tss',arpa:'arpa',ldsp:'mgs',hdf:'mgs',dvp:'mgs',pvc:'mgs',emal:'mgs'};
 const brandOf=g=>(BRANDS.find(b=>b[2].test(g||''))||[])[0];
-const grpIcon=(sec,g)=>S.cat.find(x=>x.kind==='grp'&&x.params.sec===sec&&x.params.grp===g)?.photo;
+const grpIcon=(sec,g,sub)=>S.cat.find(x=>x.kind==='grp'&&x.params.sec===sec&&x.params.grp===g&&(x.params.sub||null)===(sub||null))?.photo;
 const famIcon=f=>S.cat.find(x=>x.kind==='fam'&&x.params.fam===f)?.photo;
 const catIcon=(f,k)=>S.cat.find(x=>x.kind==='famcat'&&x.params.fam===f&&+x.params.cat===+k)?.photo;
 function logoOf(key){const b=key&&(S.brands?.[key]||OWN_LOGO[key]);return b&&b.logo?{src:/^https?:/.test(b.logo)?b.logo:ASSET(b.logo),dark:b.dark}:null;}
@@ -327,8 +327,10 @@ const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div clas
 /* --- обычные разделы: бренд/серия → позиции (→ декор у столешниц и стекла) --- */
 function renderPick(){
   const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price')&&x.cprice);
-  const grps=[...new Set(items.map(x=>x.grp))].sort((a,b)=>(/^MGS/.test(b)?1:0)-(/^MGS/.test(a)?1:0));const acts={};/* своя фурнитура фабрики (MGS) — первой */let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
-  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
+  /* порядок групп — как в файле каталога (по сайту фабрики), своя фурнитура фабрики (MGS) — первой */
+  const first={};items.forEach(x=>{if(!(x.grp in first)||x.sort<first[x.grp])first[x.grp]=x.sort;});
+  const grps=Object.keys(first).sort((a,b)=>((/^MGS/.test(b)?1:0)-(/^MGS/.test(a)?1:0))||first[a]-first[b]);const acts={};/* своя фурнитура фабрики (MGS) — первой */let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
+  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
     <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span></button>`;};
   let head,body;const q=o.q||'';
   if(o.item){const x=o.item,df=DEC_FAM(x);let ds=decs(df);if(q)ds=ds.filter(d=>hit(d.name+' '+d.params.code+' '+(d.params.cat||''),q));
@@ -343,12 +345,16 @@ function renderPick(){
       const gi=grpIcon(o.sec,g),lg=gi?null:logoOf(brandOf(g));
       return `<button class="card" data-act="${A(()=>{o.grp=g;renderPick();})}">${gi?`<span class="im fill" ${bgi(gi)}></span>`:lg?logoTile(lg):`<span class="im" ${bgi(ph)}>${ph?'':esc(g.slice(0,2).toUpperCase())}</span>`}<span class="tx"><b>${esc(g)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;}).join('')}</div>`
       :`<div class="msg">${o.sec==='Работы'?'Сборка, доставка, монтаж — ваш прайс, загрузим, когда пришлёте.':'В этом разделе каталога пока нет позиций.'}</div>`);
-  }else{head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(o.sec)} › ${esc(o.grp)}</b><small>цены для клиента</small>`;
-    body=searchBox('Найти в «'+o.grp+'»…')+`<div class="cards">${items.filter(x=>x.grp===o.grp).map(itemCard).join('')}</div>`;}
+  }else{const gi=items.filter(x=>x.grp===o.grp),subs=[...new Set(gi.map(x=>x.params?.sub).filter(Boolean))];
+    head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(o.sec)} › ${esc(o.grp)}${o.sub?' › '+esc(o.sub):''}</b><small>${subs.length&&!o.sub?'выберите серию':'цены для клиента'}</small>`;
+    /* подгруппы — как вложенные страницы на сайте фабрики (рамочный профиль → TW-NV, Flex, Mystery…) */
+    const subCard=sb=>{const its=gi.filter(x=>x.params?.sub===sb),ic=grpIcon(o.sec,o.grp,sb)||its.find(x=>x.photo)?.photo,min=Math.min(...its.map(x=>x.cprice||1e12));
+      return `<button class="card" data-act="${A(()=>{o.sub=sb;renderPick();})}"><span class="im fill ${ic?'':'no'}" ${bgi(ic)}>${ic?'':'нет фото'}</span><span class="tx"><b>${esc(sb)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;};
+    body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+`<div class="cards">${o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}
   if(!head.includes('pBack'))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
   $('#left').innerHTML=panel(head,body);
   $('#pClose').onclick=()=>{S.open=null;render();};
-  $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.grp)o.grp=null;else{S.open=null;render();return;}renderPick();});
+  $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.grp)o.grp=null;else{S.open=null;render();return;}renderPick();});
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acts[b.dataset.act]());
   bindSearch(renderPick);
   function pickItem(x){if(DEC_FAM(x)&&decs(DEC_FAM(x)).length){o.item=x;o.q='';renderPick();}else finishItem(x,null);}
