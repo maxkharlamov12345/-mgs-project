@@ -53,6 +53,19 @@ window.metodSeries=x=>{const s=x?.params?.f?.['Серия'];return SER_MAP[s]||n
 window.metodBanner=(sec,grp,act)=>{const k=keyOf(sec,grp);if(!k)return '';const M=METOD[k];
   return `<div class="mtd"><div class="mtd-h"><b>📘 ${esc(M.title)}</b><span>${esc(M.sub)}</span></div><div class="mtd-s">${M.series.map(s=>
    `<button class="mtd-c" data-act="${act(()=>openMetod(k,s.k))}"><i style="background-image:url('${IMG+s.tile}')"><em></em></i><b>${esc(s.name)}</b><span>${esc(s.tag)}</span></button>`).join('')}</div></div>`;};
+/* тест раскладок каталога (Макс 14.11): строка-кнопки (A), одна серия (B), мини-панель справа (D) */
+window.metodStrip=(sec,grp,act)=>{const k=keyOf(sec,grp);if(!k)return '';const M=METOD[k];
+  return `<div class="mtd-strip"><span>📘 Методичка:</span>${M.series.map(s=>`<button class="mtd-sp1" data-act="${act(()=>openMetod(k,s.k))}"><i style="background-image:url('${IMG+s.tile}')"></i>${esc(s.name)} ▶</button>`).join('')}</div>`;};
+window.metodOne=(sec,grp,sk,act)=>{const k=keyOf(sec,grp);if(!k)return '';const s=METOD[k].series.find(x=>x.k===sk);if(!s)return '';
+  const sp=s.specs.slice(0,5).map(x=>x[1]).join(' · ');
+  return `<div class="mtd-one"><i style="background-image:url('${IMG+s.tile}')"><em></em></i><div><b>📘 Методичка ${esc(s.name)}</b><span>${esc(sp)}${s.videos[0]?.len?' · '+esc(s.videos[0].t.toLowerCase())+' '+mm(s.videos[0].len):''}</span></div><button class="pill lime" data-act="${act(()=>openMetod(k,s.k))}">Открыть</button></div>`;};
+window.metodMini=(sec,grp,sk,act,pickS)=>{const k=keyOf(sec,grp);if(!k)return '';const M=METOD[k];const s=M.series.find(x=>x.k===sk)||M.series[0];
+  return `<div class="mtd-mini"><div class="mtd-mt">${M.series.map(x=>`<button class="fc ${x.k===s.k?'on':''}" data-act="${act(()=>pickS(x.k))}">${esc(x.name)}</button>`).join('')}</div>
+   <button class="mtd-mv" data-act="${act(()=>openMetod(k,s.k))}" style="background-image:url('${IMG+s.tile}')"><em></em><span>${s.videos.map(v=>esc(v.t)+' '+mm(vlen(v))).join(' · ')}</span></button>
+   <div class="mtd-msp">${s.specs.slice(0,6).map(([a,b,no])=>`<div class="${no?'no':''}"><small>${esc(a)}</small><b>${esc(b)}</b></div>`).join('')}</div>
+   <div class="mtd-ms"><b>Что сказать клиенту</b>${s.say.map(([a,b])=>`<p><b>${esc(a)}.</b> ${esc(b)}</p>`).join('')}</div>
+   <button class="mtd-more" data-act="${act(()=>openMetod(k,s.k))}">Открыть методичку целиком →</button></div>`;};
+window.metodHas=(sec,grp)=>!!keyOf(sec,grp);
 /* окно */
 let cur=null,frag=null;
 function player(v){const q=new URLSearchParams();if(v.p)q.set('p',v.p);if(v.from)q.set('t',v.from);
@@ -116,6 +129,19 @@ html.mtd-open{overflow:hidden}
 .mtd-w h3{font-weight:300;font-size:30px;margin:0}.mtd-sub{color:var(--ink3);margin:4px 0 14px}
 .mtd-sp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mtd-sp div{background:var(--field);border-radius:14px;padding:9px 12px}.mtd-sp small{color:var(--ink4);font-size:12px;display:block}.mtd-sp b{font-weight:500}.mtd-sp .no b{color:var(--red)}
 .mtd-t{color:var(--ink2);line-height:1.55}.mtd-t h4{margin:12px 0 2px;font-weight:500;color:var(--ink);font-size:15px}.mtd-t p{margin:0 0 6px}
-.mtd-t details{margin-top:12px}.mtd-t summary{cursor:pointer;color:var(--lime);font-weight:500;margin-bottom:8px}`;
+.mtd-t details{margin-top:12px}.mtd-t summary{cursor:pointer;color:var(--lime);font-weight:500;margin-bottom:8px}
+.mtd-strip{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.mtd-strip>span{color:var(--ink3);font-size:13px;margin-right:4px}
+.mtd-sp1{all:unset;cursor:pointer;height:36px;border-radius:999px;background:var(--field);display:inline-flex;align-items:center;gap:8px;padding:0 12px 0 4px;font-weight:500;color:var(--ink2)}.mtd-sp1:hover{background:var(--raised)}
+.mtd-sp1 i{width:28px;height:28px;border-radius:50%;background:#fff center/cover}
+.mtd-one{display:flex;gap:14px;align-items:center;background:linear-gradient(100deg,#262a17,#1d1a17 60%);border-radius:18px;padding:10px 12px}
+.mtd-one>i{width:110px;height:64px;border-radius:10px;background:#fff center/cover;flex:none;position:relative}.mtd-one>div{flex:1;min-width:0}.mtd-one b{font-weight:500;display:block}.mtd-one span{color:var(--ink3);font-size:13px}
+.mtd-mini{background:var(--surface);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.mtd-mt{display:flex;flex-wrap:wrap;gap:5px}.mtd-mt .fc{height:28px;font-size:12px;padding:0 10px}
+.mtd-mv{all:unset;cursor:pointer;display:block;position:relative;aspect-ratio:16/9;border-radius:14px;background:#fff center/cover}
+.mtd-mv em{position:absolute;inset:0;margin:auto;width:46px;height:46px;border-radius:50%;background:rgba(15,14,12,.72)}.mtd-mv em:after{content:'';position:absolute;left:18px;top:13px;border-left:14px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
+.mtd-mv span{position:absolute;left:8px;right:8px;bottom:8px;background:rgba(15,14,12,.78);border-radius:8px;padding:4px 8px;font-size:12px;color:var(--ink2)}
+.mtd-msp{display:grid;grid-template-columns:1fr 1fr;gap:6px}.mtd-msp div{background:var(--field);border-radius:12px;padding:6px 10px}.mtd-msp small{color:var(--ink4);font-size:11.5px;display:block}.mtd-msp b{font-weight:500;font-size:13px}.mtd-msp .no b{color:var(--red)}
+.mtd-ms{color:var(--ink2);font-size:13px;line-height:1.5}.mtd-ms>b{font-weight:500;color:var(--ink);display:block;margin-bottom:4px}.mtd-ms p{margin:0 0 5px}.mtd-ms p b{font-weight:500;color:var(--ink)}
+.mtd-more{all:unset;cursor:pointer;color:var(--lime);font-size:13px;font-weight:500}`;
 document.head.appendChild(st);
 })();

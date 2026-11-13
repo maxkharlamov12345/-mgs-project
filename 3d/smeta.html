@@ -131,6 +131,34 @@ main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:10px ma
 .t-g>.tl .tt{font-weight:500}.t-i>.tl{font-size:13px;color:var(--ink2);padding:4px 10px}
 .tadd{all:unset;cursor:pointer;font-size:12px;color:var(--lime);padding:6px 10px}
 table.mk{width:100%;border-collapse:collapse}table.mk td{padding:8px 6px;border-bottom:1px solid var(--line)}table.mk input{width:80px;height:36px;border-radius:10px;border:0;background:var(--field);text-align:center}
+
+/* Макс 14.11 — тест раскладок каталога (A/B/D) */
+body.catx #vars,body.catx #right{display:none}body.catx .left{flex-basis:100%}
+.laysw{display:inline-flex;align-items:center;gap:4px;margin-left:8px}.laysw em{font-style:normal;color:var(--ink4);font-size:12px;margin-right:2px}
+.minicart{display:inline-flex;align-items:center;gap:10px;background:var(--bg);border-radius:999px;padding:4px 4px 4px 16px;color:var(--ink3);margin-left:auto}.minicart b{color:var(--ink);font-weight:600;font-size:15px}.minicart .pill{height:34px}
+body.catx .ph-h .l{flex:1}
+body[data-lay=A] .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+body[data-lay=B] .cards,body[data-lay=D] .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+body[data-lay=D] .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+body[data-lay=B] .card,body[data-lay=D] .card{flex-direction:column;align-items:stretch;padding:0;overflow:hidden;gap:0;position:relative}
+body[data-lay=B] .card .im,body[data-lay=D] .card .im{width:100%;height:auto;flex:none;aspect-ratio:1;border-radius:0;background-color:#fff}
+body[data-lay=D] .card .im{aspect-ratio:4/3;background-size:contain;background-repeat:no-repeat}
+body[data-lay=B] .card .tx,body[data-lay=D] .card .tx{padding:10px 12px 12px}
+body[data-lay=B] .card .tx span,body[data-lay=D] .card .tx span{font-size:15px;color:var(--ink);font-weight:600}
+body[data-lay=B] .card .mtd-i,body[data-lay=D] .card .mtd-i{position:absolute;right:10px;top:10px;margin:0;background:rgba(15,14,12,.8);color:#fff}
+.lyB{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+.lyB aside{background:var(--bg);border-radius:20px;padding:14px;position:sticky;top:12px}.lyB-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.lyB-h b{font-weight:500}
+.lnk{all:unset;cursor:pointer;color:var(--lime);font-size:13px}
+.lyB-f{margin-bottom:14px}.lyB-f em{display:block;font-style:normal;color:var(--ink4);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}.lyB-f>div{display:flex;flex-wrap:wrap;gap:5px}
+.lyB-m,.lyD-m{display:flex;flex-direction:column;gap:12px;min-width:0}
+.lyD{display:grid;grid-template-columns:220px minmax(0,1fr) 330px;gap:16px;align-items:start}
+.lyD nav{background:var(--bg);border-radius:20px;padding:8px;position:sticky;top:12px;display:flex;flex-direction:column}
+.lyD-g{color:var(--ink4);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;padding:10px 10px 4px}
+.lyD-s{all:unset;cursor:pointer;padding:6px 10px 6px 16px;border-radius:10px;color:var(--ink3);font-size:13.5px}.lyD-s:hover{background:var(--field)}.lyD-s.on{background:var(--raised);color:var(--ink)}
+.lyD-b{display:flex;flex-wrap:wrap;gap:6px}.lyD-b .pill{height:36px}
+.lyD aside{position:sticky;top:12px}.lyD aside .mtd-mini{background:var(--bg)}
+@media(max-width:1100px){.lyD{grid-template-columns:200px minmax(0,1fr)}.lyD aside{grid-column:1/-1;position:static}body[data-lay=A] .cards,body[data-lay=B] .cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.lyB,.lyD{grid-template-columns:1fr}.lyB aside,.lyD nav{position:static}body.catx .cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 </head>
 <body>
@@ -148,7 +176,7 @@ table.mk{width:100%;border-collapse:collapse}table.mk td{padding:8px 6px;border-
 </main>
 <main id="adm" hidden></main>
 <script src="lib/supabase.min.js"></script>
-<script src="metod.js?v=1"></script>
+<script src="metod.js?v=2"></script>
 <script type="module">
 import {sb,configured} from './db.js?v=20261112c';
 import {SUPABASE_URL} from './config.js?v=20261112c';
@@ -206,7 +234,7 @@ function save(){clearTimeout(S.saveT);$('#saved').textContent='Сохраняе�
 const setLines=f=>{V().lines=f(V().lines);save();render();};
 
 /* ---------- отрисовка ---------- */
-function render(){renderVars();S.open?renderPanel():renderLeft();renderRight();}
+function render(){document.body.classList.remove('catx');renderVars();S.open?renderPanel():renderLeft();renderRight();}
 function renderVars(){
   const el=$('#vars');
   el.innerHTML=S.data.variants.map((v,i)=>`<button class="pill ${i===S.data.cur?'on':''}" data-v="${i}">${esc(v.name)} · <span class="num">${rub(varTotal(v))}</span></button>`).join('')
@@ -336,7 +364,7 @@ function openFor(l){
   else S.open={mode:'pick',id:l.id,sec:l.sec,grp:null,q:''};
   render();window.scrollTo({top:0});
 }
-function renderPanel(){S.open.mode==='plate'?renderPlate():renderPick();}
+function renderPanel(){document.body.classList.remove('catx');S.open.mode==='plate'?renderPlate():renderPick();}
 /* Макс 13.11: строка попадает в смету только после выбора — до этого черновик S.draft */
 const curL=()=>V().lines.find(y=>y.id===S.open.id)||S.draft;
 function ensureDraft(){const o=S.open;if(S.draft&&S.draft.id===o.id&&!V().lines.some(l=>l.id===o.id))V().lines.push(S.draft);S.draft=null;}
@@ -344,6 +372,10 @@ function setLine(patch){const o=S.open;ensureDraft();V().lines=V().lines.map(l=>
 const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div class="l">${head}</div><button class="rb" id="pClose" aria-label="Закрыть">×</button></div>${body}${foot}</div>`;
 
 /* --- обычные разделы: бренд/серия → позиции (→ декор у столешниц и стекла) --- */
+/* Макс 14.11: тест раскладок каталога — пока только «Ящики и направляющие → MGS» (группа с фильтрами); выбор запоминается */
+const TRY_LAY=o=>o.sec==='Ящики и направляющие'&&!!o.grp&&!o.item;
+function getLay(){try{return localStorage.getItem('smeta-lay')||'A';}catch(e){return 'A';}}
+function setLay(k){try{localStorage.setItem('smeta-lay',k);}catch(e){}}
 function renderPick(){
   const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price')&&x.cprice);
   /* порядок групп — как в файле каталога (по сайту фабрики), своя фурнитура фабрики (MGS) — первой */
@@ -391,12 +423,33 @@ function renderPick(){
       /* Макс 14.11: вид фильтров — «одной строкой»: все значения всех признаков подряд, выбранные — первыми */
       const on=[],off=[];facets.forEach(([k,vs])=>vs.forEach(v=>{const c=chip(k,v);if(c)(sel(k).includes(v)?on:off).push(c);}));
       const fl=`<div class="flt">${all}${on.join('')}${off.join('')}</div>`;
+      const cardsH=`<div class="cards">${list.map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
+      const lay=TRY_LAY(o)?getLay():'';
+      if(lay==='A'){ /* A — во всю ширину, методичка строкой */
+        body=searchBox('Найти в «'+o.grp+'»…')+(window.metodStrip?metodStrip(o.sec,o.grp,A):'')+`<div class="flts">${fl}</div><div class="fhint">Найдено: ${list.length}</div>`+cardsH;
+      }else if(lay==='B'){ /* B — магазин: фильтры столбиком слева, крупные фото */
+        const side=facets.map(([k,vs])=>{const cs=vs.map(v=>chip(k,v)).filter(Boolean);return cs.length?`<div class="lyB-f"><em>${esc(k)}</em><div>${cs.join('')}</div></div>`:'';}).join('');
+        const ser=sel('Серия')[0],sk=ser&&window.metodSeries?metodSeries({params:{f:{'Серия':ser}}}):null;
+        body=`<div class="lyB"><aside><div class="lyB-h"><b>Фильтры</b>${anySel()?`<button class="lnk" data-act="${A(()=>{o.ff={};renderPick();})}">Сбросить</button>`:''}</div>${side}</aside><div class="lyB-m">`+searchBox('Найти в «'+o.grp+'»…')
+          +(sk?metodOne(o.sec,o.grp,sk,A):(window.metodStrip?metodStrip(o.sec,o.grp,A):''))+`<div class="fhint">${ser?esc(ser)+' · ':''}найдено: ${list.length}</div>`+cardsH+`</div></div>`;
+      }else if(lay==='D'){ /* D — разделы слева · каталог · методичка справа */
+        const tree=GROUPS.map(([g,secs])=>`<div class="lyD-g">${esc(g)}</div>`+secs.map(sc=>`<button class="lyD-s ${sc===o.sec?'on':''}" data-act="${A(()=>{if(sc===o.sec)return;S.draft={id:uid(),sec:sc,price:0,qty:0};openFor(S.draft);})}">${esc(sc)}</button>`).join('')).join('');
+        const brands=grps.map(g=>`<button class="pill ${g===o.grp?'on':''}" data-act="${A(()=>{o.grp=g;o.ff={};o.q='';renderPick();})}">${esc(g)}</button>`).join('');
+        const ser=sel('Серия')[0],sk=o.mser||(ser&&window.metodSeries?metodSeries({params:{f:{'Серия':ser}}}):null);
+        const mini=window.metodMini&&metodHas(o.sec,o.grp)?metodMini(o.sec,o.grp,sk,A,k=>{o.mser=k;renderPick();}):'';
+        body=`<div class="lyD"><nav>${tree}</nav><div class="lyD-m">`+searchBox('Найти в «'+o.grp+'»…')+`<div class="lyD-b">${brands}</div><div class="flts">${fl}</div><div class="fhint">Найдено: ${list.length}</div>`+cardsH+`</div>${mini?`<aside>${mini}</aside>`:''}</div>`;
+      }else{
       body=searchBox('Найти в «'+o.grp+'»…')+(window.metodBanner?metodBanner(o.sec,o.grp,A):'')+`<div class="flts">${fl}</div>
         <div class="fhint">Найдено: ${list.length}</div>
-        <div class="cards">${list.map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
+        `+cardsH;}
     }else{const shown=x=>!q||hit(x.name,q);
     body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+(window.metodBanner&&!o.sub?metodBanner(o.sec,o.grp,A):'')+`<div class="cards">${q?gi.filter(x=>(!o.sub||x.params?.sub===o.sub)&&shown(x)).map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>':o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}}
   if(!head.includes('pBack'))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
+  /* Макс 14.11 (тест на «Ящики → MGS»): в каталоге не нужны варианты и панель сметы — каталог во всю ширину, вид A / B / D на выбор */
+  const lay=TRY_LAY(o)?getLay():'',cx=!!lay&&lay!=='now';document.body.classList.toggle('catx',cx);document.body.dataset.lay=cx?lay:'';
+  if(lay){const n=V().lines.filter(l=>l.price).length;
+    head+=`<span class="laysw"><em>Вид (тест):</em>${[['now','Как было'],['A','A'],['B','B'],['D','D']].map(([k,t])=>`<button class="fc ${lay===k?'on':''}" data-act="${A(()=>{setLay(k);renderPick();})}">${t}</button>`).join('')}</span>`
+      +(cx?`<span class="minicart">В смете <b class="num">${n} поз. · ${rub(varTotal(V()))}</b><button class="pill lime" data-act="${A(()=>{S.open=null;render();})}">К смете →</button></span>`:'');}
   $('#left').innerHTML=panel(head,body);
   $('#pClose').onclick=()=>{S.open=null;render();};
   $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp){o.grp=null;o.ff={};}else{S.open=null;render();return;}renderPick();});
