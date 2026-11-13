@@ -148,6 +148,7 @@ table.mk{width:100%;border-collapse:collapse}table.mk td{padding:8px 6px;border-
 </main>
 <main id="adm" hidden></main>
 <script src="lib/supabase.min.js"></script>
+<script src="metod.js?v=1"></script>
 <script type="module">
 import {sb,configured} from './db.js?v=20261112c';
 import {SUPABASE_URL} from './config.js?v=20261112c';
@@ -348,8 +349,8 @@ function renderPick(){
   /* порядок групп — как в файле каталога (по сайту фабрики), своя фурнитура фабрики (MGS) — первой */
   const first=grpOrder(items);
   const grps=Object.keys(first).sort((a,b)=>((/^MGS/.test(b)?1:0)-(/^MGS/.test(a)?1:0))||first[a]-first[b]);const acts={};/* своя фурнитура фабрики (MGS) — первой */let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
-  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||((k=>k&&k!=='mgs'&&(S.brands?.[k]||OWN_LOGO[k])?.logo)(brandOf(x.grp)))||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
-    <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span></button>`;};
+  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||((k=>k&&k!=='mgs'&&(S.brands?.[k]||OWN_LOGO[k])?.logo)(brandOf(x.grp)))||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;const mk=window.metodKey&&metodKey(o.sec,x.grp),ms=mk&&metodSeries(x);return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
+    <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span>${ms?`<span class="mtd-i" role="button" title="Методичка" data-act="${A(()=>openMetod(mk,ms))}">i</span>`:''}</button>`;};
   let head,body;const q=o.q||'';
   if(o.item){const x=o.item,df=DEC_FAM(x);let ds=decs(df);if(q)ds=ds.filter(d=>hit(d.name+' '+d.params.code+' '+(d.params.cat||''),q));
     head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(x.name)}</b><small>выберите декор</small>`;
@@ -390,16 +391,16 @@ function renderPick(){
       /* Макс 14.11: вид фильтров — «одной строкой»: все значения всех признаков подряд, выбранные — первыми */
       const on=[],off=[];facets.forEach(([k,vs])=>vs.forEach(v=>{const c=chip(k,v);if(c)(sel(k).includes(v)?on:off).push(c);}));
       const fl=`<div class="flt">${all}${on.join('')}${off.join('')}</div>`;
-      body=searchBox('Найти в «'+o.grp+'»…')+`<div class="flts">${fl}</div>
+      body=searchBox('Найти в «'+o.grp+'»…')+(window.metodBanner?metodBanner(o.sec,o.grp,A):'')+`<div class="flts">${fl}</div>
         <div class="fhint">Найдено: ${list.length}</div>
         <div class="cards">${list.map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
     }else{const shown=x=>!q||hit(x.name,q);
-    body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+`<div class="cards">${q?gi.filter(x=>(!o.sub||x.params?.sub===o.sub)&&shown(x)).map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>':o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}}
+    body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+(window.metodBanner&&!o.sub?metodBanner(o.sec,o.grp,A):'')+`<div class="cards">${q?gi.filter(x=>(!o.sub||x.params?.sub===o.sub)&&shown(x)).map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>':o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}}
   if(!head.includes('pBack'))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
   $('#left').innerHTML=panel(head,body);
   $('#pClose').onclick=()=>{S.open=null;render();};
   $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp){o.grp=null;o.ff={};}else{S.open=null;render();return;}renderPick();});
-  $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acts[b.dataset.act]());
+  $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.stopPropagation();acts[b.dataset.act]();});
   bindSearch(renderPick);
   function pickItem(x){if(DEC_FAM(x)&&decs(DEC_FAM(x)).length){o.item=x;o.q='';renderPick();}else finishItem(x,null);}
   function finishItem(x,d){const l=curL();
