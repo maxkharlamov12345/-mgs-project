@@ -479,6 +479,7 @@ async function openAdmin(){
       <label class="pill lime" style="align-self:flex-start">Загрузить файл каталога<input type="file" id="catFile" accept=".json" hidden></label><span class="msg" id="catMsg"></span></div>
     <div class="panel"><b style="font-size:20px;font-weight:500">Наценки</b><span class="msg">Цена клиенту = цена фабрики × наценка (до 10 ₽). Менеджеры видят только цену клиенту. Пусто — берётся наценка по умолчанию.</span>
       <table class="mk"><tr><td><b>По умолчанию</b></td><td><input data-k="*" value="${M['*']??1.8}"></td></tr>
+      <tr><td>Плиты: корпус, фасады, стенки (EGGER, ALVIC, AGT, TSS, пластик…)</td><td><input data-k="sec:Плиты" value="${M['sec:Плиты']??''}" placeholder="—"></td></tr>
       ${SECS.map(s=>`<tr><td>${s}</td><td><input data-k="sec:${esc(s)}" value="${M['sec:'+s]??''}" placeholder="—"></td></tr>`).join('')}</table>
       <button class="pill lime" id="mkSave" style="align-self:flex-start">Сохранить наценки</button><span class="msg" id="mkMsg"></span></div></div>`;
   $('#mkSave').onclick=async()=>{const up=[],del=[];document.querySelectorAll('[data-k]').forEach(i=>{const v=parseFloat(i.value.replace(',','.'));v>0?up.push({key:i.dataset.k,k:v}):del.push(i.dataset.k);});
