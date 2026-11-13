@@ -372,13 +372,14 @@ function renderPick(){
     const keys=[];gi.forEach(x=>Object.keys(x.params?.f||{}).forEach(k=>{if(!keys.includes(k))keys.push(k);}));
     const facets=keys.map(k=>{const vs=[];gi.forEach(x=>fv(x,k).forEach(v=>{if(!vs.includes(v))vs.push(v);}));if(vs.every(v=>/^\d/.test(v)))vs.sort((a,b)=>parseFloat(a)-parseFloat(b));return [k,vs];}).filter(([,vs])=>vs.length>1);
     /* Макс 13.11: «Все» в каждой строке путает → одна кнопка «Показать все»; в строке можно выбрать несколько значений (ИЛИ),
-       между строками — И; значений, которых при текущем выборе нет, не показываем — тупиков нет. Три вида на выбор (FLT_MODE). */
+       между строками — И; в строке одно значение; значений, которых при текущем выборе нет, не показываем — тупиков нет. Три вида на выбор (FLT_MODE). */
     o.ff=o.ff||{};for(const k in o.ff)if(!Array.isArray(o.ff[k]))o.ff[k]=[o.ff[k]];
     const sel=k=>o.ff[k]||[],anySel=()=>Object.values(o.ff).some(a=>a.length);
     const okK=(x,k)=>{const s=sel(k);return !s.length||fv(x,k).some(v=>s.includes(v))||(x.params?.fa&&!fv(x,k).length&&k!=='Вид'&&k!=='Тип');};
     const ok=(x,skip)=>facets.every(([k])=>k===skip||okK(x,k))&&(!q||hit(x.name,q));
     const cnt=(k,v)=>gi.filter(x=>ok(x,k)&&fv(x,k).includes(v)).length;
-    const tog=(k,v,single)=>{const s=sel(k);o.ff[k]=s.includes(v)?s.filter(z=>z!==v):single?[v]:[...s,v];renderPick();};
+    /* Макс 13.11: в строке — только одно значение (две кнопки сразу читались как «и с доводчиком, и без пружины») */
+    const tog=(k,v)=>{o.ff[k]=sel(k).includes(v)?[]:[v];renderPick();};
     if(facets.length){
       const list=gi.filter(x=>ok(x)),mode=S.fltMode;
       head=head.replace('выберите серию','цены для клиента');
