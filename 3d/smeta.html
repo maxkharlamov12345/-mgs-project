@@ -151,6 +151,25 @@ body[data-lay=E] .card .tx b{font-size:12.5px}body[data-lay=E] .card .tx span{fo
 body[data-lay=E] .fhint{margin:0;font-size:12px}
 @media(max-width:1100px){.lyE{grid-template-columns:170px minmax(0,1fr)}.lyE aside{grid-column:2;position:static;max-height:none}}
 @media(max-width:760px){.lyE{grid-template-columns:1fr}.lyE nav,.lyE aside{position:static;grid-column:auto}}
+
+/* Макс 14.11: E без рамки и боковых отступов — навигация прижата к левому краю, фильтры к правому */
+body[data-lay=E] header{padding:6px 16px 4px}body[data-lay=E] main{padding:0;gap:0}
+body[data-lay=E] .left{gap:0}body[data-lay=E] .panel{background:transparent;padding:0;border-radius:0;gap:0}
+body[data-lay=E] .ph-h{padding:8px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:5}
+body[data-lay=E] .lyE{grid-template-columns:210px minmax(0,1fr) 250px;gap:0;min-height:calc(100vh - 110px)}
+body[data-lay=E] .lyE.noside{grid-template-columns:210px minmax(0,1fr)}
+body[data-lay=E] .lyE nav,body[data-lay=E] .lyE aside{background:var(--surface);border-radius:0;align-self:stretch;position:static;max-height:none;overflow:visible}
+body[data-lay=E] .lyE nav{padding:6px 6px 20px;border-right:1px solid var(--line)}body[data-lay=E] .lyE aside{padding:12px;border-left:1px solid var(--line)}
+body[data-lay=E] .lyE nav>*,body[data-lay=E] .lyE aside>*{position:relative}
+body[data-lay=E] .lyE-m{padding:12px 16px 40px}
+body[data-lay=E] .lyE.noside .cards{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+@media(max-width:1100px){body[data-lay=E] .lyE{grid-template-columns:190px minmax(0,1fr)}body[data-lay=E] .lyE aside{grid-column:2;border-left:0;border-top:1px solid var(--line)}}
+@media(max-width:760px){body[data-lay=E] .lyE,body[data-lay=E] .lyE.noside{grid-template-columns:minmax(0,1fr);min-height:0}body[data-lay=E] .lyE nav .lyD-s{flex:none}body[data-lay=E] .lyE nav{align-items:center;align-self:start}
+  body[data-lay=E] .lyE nav{flex-direction:row;overflow-x:auto;gap:4px;padding:8px;border-right:0;border-bottom:1px solid var(--line);scrollbar-width:none}
+  body[data-lay=E] .lyE nav .lyD-g{display:none}body[data-lay=E] .lyE nav .lyD-s{white-space:nowrap;padding:6px 12px;background:var(--field);border-radius:999px}
+  body[data-lay=E] .lyE aside{grid-column:auto}body[data-lay=E] .lyE-m{padding:10px}body[data-lay=E] .ph-h{flex-wrap:wrap}
+  body[data-lay=E] .minicart{order:3;width:100%;justify-content:space-between}body[data-lay=E] .cards{grid-template-columns:minmax(0,1fr)!important}
+  body[data-lay=E] .mtd-s{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 /* Макс 14.11 — тест раскладок каталога (A/B/D) */
 body.catx #vars,body.catx #right{display:none}body.catx .left{flex-basis:100%}
 .laysw{display:inline-flex;align-items:center;gap:4px;margin-left:8px}.laysw em{font-style:normal;color:var(--ink4);font-size:12px;margin-right:2px}
@@ -392,14 +411,15 @@ const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div clas
 
 /* --- обычные разделы: бренд/серия → позиции (→ декор у столешниц и стекла) --- */
 /* Макс 14.11: тест раскладок каталога — пока только «Ящики и направляющие → MGS» (группа с фильтрами); выбор запоминается */
-const TRY_LAY=o=>o.sec==='Ящики и направляющие'&&!!o.grp&&!o.item;
-function getLay(){try{return localStorage.getItem('smeta-lay')||'E';}catch(e){return 'E';}}
+const TRY_LAY=o=>!o.item; /* Макс 14.11: вид E — во всём каталоге (кроме выбора декора) */
+function getLay(){return 'E';}
 function setLay(k){try{localStorage.setItem('smeta-lay',k);}catch(e){}}
 function renderPick(){
   const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price')&&x.cprice);
   /* порядок групп — как в файле каталога (по сайту фабрики), своя фурнитура фабрики (MGS) — первой */
   const first=grpOrder(items);
   const grps=Object.keys(first).sort((a,b)=>((/^MGS/.test(b)?1:0)-(/^MGS/.test(a)?1:0))||first[a]-first[b]);const acts={};/* своя фурнитура фабрики (MGS) — первой */let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
+  const treeH=()=>GROUPS.map(([g,secs])=>`<div class="lyD-g">${esc(g)}</div>`+secs.map(sc=>`<button class="lyD-s ${sc===o.sec?'on':''}" data-act="${A(()=>{if(sc===o.sec&&!o.grp)return;if(sc===o.sec){o.grp=null;o.sub=null;o.ff={};o.q='';renderPick();return;}S.draft={id:uid(),sec:sc,price:0,qty:0};openFor(S.draft);})}">${esc(sc)}</button>`).join('')).join('');
   const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||((k=>k&&k!=='mgs'&&(S.brands?.[k]||OWN_LOGO[k])?.logo)(brandOf(x.grp)))||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;const mk=window.metodKey&&metodKey(o.sec,x.grp),ms=mk&&metodSeries(x);return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
     <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span>${ms?`<span class="mtd-i" role="button" title="Методичка" data-act="${A(()=>openMetod(mk,ms))}">i</span>`:''}</button>`;};
   let head,body;const q=o.q||'';
@@ -458,10 +478,9 @@ function renderPick(){
         const mini=window.metodMini&&metodHas(o.sec,o.grp)?metodMini(o.sec,o.grp,sk,A,k=>{o.mser=k;renderPick();}):'';
         body=`<div class="lyD"><nav>${tree}</nav><div class="lyD-m">`+searchBox('Найти в «'+o.grp+'»…')+`<div class="lyD-b">${brands}</div><div class="flts">${fl}</div><div class="fhint">Найдено: ${list.length}</div>`+cardsH+`</div>${mini?`<aside>${mini}</aside>`:''}</div>`;
       }else if(lay==='E'){ /* E (Макс 14.11): навигация слева (из D) · методичка сверху по центру · фильтры справа (из B), всё компактно */
-        const tree=GROUPS.map(([g,secs])=>`<div class="lyD-g">${esc(g)}</div>`+secs.map(sc=>`<button class="lyD-s ${sc===o.sec?'on':''}" data-act="${A(()=>{if(sc===o.sec)return;S.draft={id:uid(),sec:sc,price:0,qty:0};openFor(S.draft);})}">${esc(sc)}</button>`).join('')).join('');
-        const brands=grps.map(g=>`<button class="fc ${g===o.grp?'on':''}" data-act="${A(()=>{o.grp=g;o.ff={};o.q='';renderPick();})}">${esc(g)}</button>`).join('');
+        const tree=treeH();
         const side=facets.map(([k,vs])=>{const cs=vs.map(v=>chip(k,v)).filter(Boolean);return cs.length?`<div class="lyB-f"><em>${esc(k)}</em><div>${cs.join('')}</div></div>`:'';}).join('');
-        body=`<div class="lyE"><nav>${tree}</nav><div class="lyE-m">`+(window.metodBanner?metodBanner(o.sec,o.grp,A):'')+`<div class="lyE-top">${searchBox('Найти в «'+o.grp+'»…')}<div class="lyE-b">${brands}</div></div><div class="fhint">Найдено: ${list.length}</div>`+cardsH
+        body=`<div class="lyE"><nav>${tree}</nav><div class="lyE-m">`+(window.metodBanner?metodBanner(o.sec,o.grp,A):'')+`<div class="lyE-top">${searchBox('Найти в «'+o.grp+'»…')}</div><div class="fhint">Найдено: ${list.length}</div>`+cardsH
           +`</div><aside><div class="lyB-h"><b>Фильтры</b>${anySel()?`<button class="lnk" data-act="${A(()=>{o.ff={};renderPick();})}">Сбросить</button>`:''}</div>${side}</aside></div>`;
       }else{
       body=searchBox('Найти в «'+o.grp+'»…')+(window.metodBanner?metodBanner(o.sec,o.grp,A):'')+`<div class="flts">${fl}</div>
@@ -470,11 +489,12 @@ function renderPick(){
     }else{const shown=x=>!q||hit(x.name,q);
     body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+(window.metodBanner&&!o.sub?metodBanner(o.sec,o.grp,A):'')+`<div class="cards">${q?gi.filter(x=>(!o.sub||x.params?.sub===o.sub)&&shown(x)).map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>':o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}}
   if(!head.includes('pBack'))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
+  /* Макс 14.11: шаг выбора бренда и группы без фильтров — тоже в виде E (навигация слева), без колонки фильтров */
+  if(TRY_LAY(o)&&!body.startsWith('<div class="lyE">'))body=`<div class="lyE noside"><nav>${treeH()}</nav><div class="lyE-m">${body}</div></div>`;
   /* Макс 14.11 (тест на «Ящики → MGS»): в каталоге не нужны варианты и панель сметы — каталог во всю ширину, вид A / B / D на выбор */
   const lay=TRY_LAY(o)?getLay():'',cx=!!lay&&lay!=='now';document.body.classList.toggle('catx',cx);document.body.dataset.lay=cx?lay:'';
   if(lay){const n=V().lines.filter(l=>l.price).length;
-    head+=`<span class="laysw"><em>Вид (тест):</em>${[['now','Как было'],['A','A'],['B','B'],['D','D'],['E','E']].map(([k,t])=>`<button class="fc ${lay===k?'on':''}" data-act="${A(()=>{setLay(k);renderPick();})}">${t}</button>`).join('')}</span>`
-      +(cx?`<span class="minicart">В смете <b class="num">${n} поз. · ${rub(varTotal(V()))}</b><button class="pill lime" data-act="${A(()=>{S.open=null;render();})}">К смете →</button></span>`:'');}
+    head+=(cx?`<span class="minicart">В смете <b class="num">${n} поз. · ${rub(varTotal(V()))}</b><button class="pill lime" data-act="${A(()=>{S.open=null;render();})}">К смете →</button></span>`:'');}
   $('#left').innerHTML=panel(head,body);
   $('#pClose').onclick=()=>{S.open=null;render();};
   $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp){o.grp=null;o.ff={};}else{S.open=null;render();return;}renderPick();});
