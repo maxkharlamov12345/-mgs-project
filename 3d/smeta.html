@@ -107,6 +107,11 @@ main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:10px ma
 .dc button.on{background:var(--ink);color:var(--bg)}.dc input{width:52px;height:32px;border-radius:16px;border:0;background:var(--field);text-align:center}
 .msg{color:var(--ink3);font-size:13px}.msg.err{color:var(--red)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:500;z-index:50}
+.psearch{position:relative}.psearch input{width:100%;height:46px;border-radius:23px;border:0;box-shadow:inset 0 0 0 1px #3a352f;background:var(--field);padding:0 18px 0 42px;color:var(--ink);font-size:15px}
+.psearch svg{position:absolute;left:16px;top:15px}
+.tile i.no{background:transparent;border:1.5px dashed #3a352f;display:grid;place-items:center}.nop{font-size:11px;color:var(--ink4)}
+.card.on{box-shadow:0 0 0 2px var(--lime)}.card .im.stack{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;overflow:hidden}.card .im.stack i{border-radius:6px;background:#2a2622 center/cover}.card .im.stack i:first-child{grid-row:span 2}
+.edge2{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:16px;background:#1a1c12;box-shadow:inset 0 0 0 1px var(--lime)}.edge2>b{color:var(--lime);font-weight:500}
 table.mk{width:100%;border-collapse:collapse}table.mk td{padding:8px 6px;border-bottom:1px solid var(--line)}table.mk input{width:80px;height:36px;border-radius:10px;border:0;background:var(--field);text-align:center}
 </style>
 </head>
@@ -253,149 +258,214 @@ function showFound(){
     S.q='';S.found=[];S.openGroup=GROUPS.findIndex(g=>g[1].includes(sec));save();render();toast('Добавлено в «'+sec+'»');});
 }
 
-/* ---------- каталог раздела ---------- */
+/* ---------- каталог раздела и подбор плит (Макс 13.11, версия 2) ----------
+   Плитные материалы (Корпус, Задние стенки, Фасады): Материал → Толщина → Категория → Декор → Площадь и кромка.
+   Декоры — из «Соответствия декоров» фабрики по категориям и толщинам, фото — с сайта фабрики (kind decor, params.fam/cat).
+   Цена — kind plate (fam, thick, cat). Где цена без кромки — на последнем шаге сразу кромка и её метры.
+   Поиск — на каждом шаге (#ps). */
+const FAMS={
+  egger16:{l:'ЛДСП EGGER 16 / 32 мм',sub:'5 категорий · 16 мм с кромкой 1 мм',edge:{'32':['EGGER',/^(?!.*(Perfect|Smart))/]}},
+  egger18:{l:'ЛДСП EGGER 18 / 36 мм',sub:'свои декоры · без кромки',edge:['EGGER',/^(?!.*(Perfect|Smart))/]},
+  eggerps:{l:'EGGER PerfectSense 18 / 36 мм',sub:'древесные декоры · без кромки',edge:['EGGER',/Perfect Sense/]},
+  eggersmart:{l:'МДФ EGGER PerfectSense Smart 18 мм',sub:'глянец и мат · без кромки',edge:['EGGER',/Smart/]},
+  ldsp:{l:'ЛДСП MGS 16 / 32 мм',sub:'складская · 16 мм с кромкой 1 мм',edge:{'32':['DOLLKEN / ПВХ',/./]}},
+  tss:{l:'TSS Cleaf / Smart',sub:'6 категорий · без кромки',edge:['TSS',/./]},
+  alvic:{l:'ALVIC 18 мм',sub:'5 категорий · без кромки',edge:['ALVIC лазерная',/./],mill:true},
+  agt:{l:'AGT 18 мм',sub:'6 категорий · без кромки',edge:['AGT',/./]},
+  arpa:{l:'Пластик ARPA / FENIX / CLEAF',sub:'10 категорий · без кромки',edge:['FENIX',/./],sides:true},
+  hdf:{l:'ХДФ 3 мм',sub:'ламинированная'},dvp:{l:'ДВП 4 мм',sub:'ламинированная'},
+  emal:{l:'МДФ в эмали',sub:'RAL / NCS · фрезы'},pvc:{l:'МДФ в плёнке ПВХ',sub:'цвета MGS · фрезы'},other:{l:'Другое',sub:'остальные позиции раздела'}};
+const SEC_FAMS={'Корпус':['egger16','egger18','eggerps','eggersmart','ldsp','tss','other'],'Задние стенки':['hdf','dvp','other'],
+  'Фасады':['emal','pvc','egger16','egger18','eggerps','eggersmart','alvic','agt','tss','arpa','other']};
+const DEC_FAM=x=>x.sec==='Стекло и зеркала'&&/^Стекло|Зеркал/.test(x.grp+' '+x.name)&&!/Обработ/.test(x.grp)?'glass':x.sec!=='Столешница'&&x.sec!=='Стеновые панели'?null:
+  /HPL/.test(x.name)?'top_hpl':/Кварц/.test(x.name)?'top_quartz':/Керамик/.test(x.name)?'top_ceramic':/FENIX/.test(x.name)?'top_fenix':/ALVIC|SYNCRON/.test(x.name)?'top_alvic':null;
+const decs=(fam,cat)=>S.cat.filter(x=>x.kind==='decor'&&x.params.fam===fam&&(cat==null||String(x.params.cat)===String(cat)));
+const plates=fam=>S.cat.filter(x=>x.kind==='plate'&&x.params.fam===fam);
+const thicksOf=(fam,s)=>[...new Set(plates(fam).filter(x=>!FAMS[fam].sides||+x.params.sides===+(s?.sides||1)).map(x=>x.params.thick))].sort((a,b)=>a-b);
+const catsOf=(fam,th)=>[...new Set(plates(fam).filter(x=>x.params.cat!=null&&(!th||x.params.thick===String(th))).map(x=>+x.params.cat))].sort((a,b)=>a-b);
+const plateRow=s=>plates(s.fam).find(x=>x.params.thick===String(s.thick)&&(x.params.cat==null||+x.params.cat===+s.cat)&&(!FAMS[s.fam].sides||+x.params.sides===+(s.sides||1)));
+const norm=t=>String(t||'').toLowerCase().replace(/ё/g,'е').replace(/\s+/g,' ');
+const hit=(t,q)=>{const w=norm(q).split(' ').filter(Boolean);const n=norm(t);return w.every(x=>n.includes(x));};
+const NOPH='<span class="nop">нет фото</span>';
+const bgi=p=>p?`style="background-image:url('${esc(ASSET(p))}')"`:'';
+function decTile(d,on,act,sub){return `<button class="tile ${on?'on':''}" data-act="${act}"><i class="${d.photo?'':'no'}" ${bgi(d.photo)}>${d.photo?'':NOPH}</i><b>${esc(d.name)}</b><span>${esc(sub??(d.params.cat!=null&&!isNaN(d.params.cat)?d.params.cat+' кат.':''))}</span></button>`;}
+function edgeOpts(s){const f=FAMS[s.fam];if(!f?.edge)return null;const e=Array.isArray(f.edge)?f.edge:f.edge[String(s.thick)];if(!e)return null;
+  return S.cat.filter(x=>x.sec==='Кромка'&&x.grp===e[0]&&e[1].test(x.name)&&x.cprice);}
+const searchBox=(ph)=>`<div class="psearch"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a8a196" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="ps" placeholder="${esc(ph)}" value="${esc(S.open.q||'')}" autocomplete="off"></div>`;
+function bindSearch(rerender){const i=$('#ps');if(!i)return;i.oninput=()=>{S.open.q=i.value;clearTimeout(S.pst);S.pst=setTimeout(()=>{rerender();const j=$('#ps');j.focus();j.setSelectionRange(j.value.length,j.value.length);},180);};}
+
 function openFor(l){
-  if(l.sec==='Фасады'){S.open={mode:'fac',id:l.id,step:0,spec:l.spec?JSON.parse(JSON.stringify(l.spec)):{mat:null,ex:{},area:l.qty||1,note:''}};}
-  else S.open={mode:'pick',id:l.id,sec:l.sec,grp:null};
+  if(SEC_FAMS[l.sec]){const sp=l.spec&&l.spec.fam?JSON.parse(JSON.stringify(l.spec)):{fam:null,ex:{},area:l.qty||1,note:''};
+    S.open={mode:'plate',id:l.id,sec:l.sec,step:sp.fam?99:0,spec:sp,q:''};}
+  else S.open={mode:'pick',id:l.id,sec:l.sec,grp:null,q:''};
   render();window.scrollTo({top:0});
 }
-const close=()=>{V().lines=V().lines.filter(l=>l.price||l.id!==S.open?.id||true);S.open=null;render();};
-function renderPanel(){S.open.mode==='fac'?renderFac():renderPick();}
-const EGG_PRICE=(thick,cat)=>S.cat.find(x=>x.kind==='price'&&x.sec==='Корпус'&&x.params.mat==='egger'&&x.params.thick===thick&&+x.params.cat===+cat);
-const decors=mat=>S.cat.filter(x=>x.kind==='decor'&&x.params.mat===mat);
+function renderPanel(){S.open.mode==='plate'?renderPlate():renderPick();}
 function setLine(patch){const o=S.open;V().lines=V().lines.map(l=>l.id===o.id?{...l,qtyTxt:undefined,...patch}:l);S.open=null;save();render();}
+const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div class="l">${head}</div><button class="rb" id="pClose" aria-label="Закрыть">×</button></div>${body}${foot}</div>`;
+
+/* --- обычные разделы: бренд/серия → позиции (→ декор у столешниц и стекла) --- */
 function renderPick(){
-  const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price'));
-  const grps=[...new Set(items.map(x=>x.grp))];
-  let head,body;
-  if(!o.grp){
+  const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price')&&x.cprice);
+  const grps=[...new Set(items.map(x=>x.grp))];const acts={};let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
+  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo);return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
+    <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span></button>`;};
+  let head,body;const q=o.q||'';
+  if(o.item){const x=o.item,df=DEC_FAM(x);let ds=decs(df);if(q)ds=ds.filter(d=>hit(d.name+' '+d.params.code+' '+(d.params.cat||''),q));
+    head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(x.name)}</b><small>выберите декор</small>`;
+    body=searchBox('Найти декор…')+`<div class="grid">${ds.map(d=>decTile(d,false,A(()=>finishItem(x,d)),df==='top_ceramic'?d.params.cat+' мм':df==='top_hpl'?d.params.cat:'')).join('')||'<span class="msg">Ничего не нашли</span>'}</div>
+      <div><button class="pill" data-act="${A(()=>finishItem(x,null))}">Без декора — впишу сам</button></div>`;
+  }else if(q){const its=items.filter(x=>hit(x.name+' '+x.grp,q));
+    head=`<b>${esc(o.sec)}</b><small>поиск по разделу</small>`;body=searchBox('Найти в разделе «'+o.sec+'»…')+`<div class="cards">${its.map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
+  }else if(!o.grp){
     head=`<b>${esc(o.sec)}</b><small>выберите бренд или серию</small>`;
-    body=grps.length?grps.map(g=>{const its=items.filter(x=>x.grp===g),min=Math.min(...its.map(x=>x.cprice||1e12));const eg=its[0]?.params?.mat==='egger';
-      return `<button class="card" data-grp="${esc(g)}"><span class="im" ${eg&&decors('egger')[1]?`style="background-image:url('${esc(ASSET(decors('egger')[1].photo))}')"`:''}>${eg?'':esc(g.slice(0,2).toUpperCase())}</span>
-        <span class="tx"><b>${esc(g)}</b><span>${eg?decors('egger').length+' декоров с фото · ':its.length+' поз. · '}от ${rub(min)}</span></span></button>`;}).join('')
-      :`<div class="msg">${o.sec==='Работы'?'Сборка, доставка, монтаж — ваш прайс, загрузим, когда пришлёте.':'В этом разделе каталога пока нет позиций.'}</div>`;
-  }else{
-    const its=items.filter(x=>x.grp===o.grp);head=`<b>${esc(o.sec)} › ${esc(o.grp)}</b><small>цены для клиента</small>`;
-    if(its[0]?.params?.mat==='egger'){const th=its[0].params.thick;
-      body=decors('egger').map(d=>{const p=EGG_PRICE(th,d.params.cat);return `<button class="card" data-dec="${d.id}"><span class="im" style="background-image:url('${esc(ASSET(d.photo))}')"></span>
-        <span class="tx"><b>${esc(d.name)}</b><span>${d.params.cat} кат. · ${p?rub(p.cprice):'—'} / м²</span></span></button>`;}).join('');
-    }else body=its.map(x=>`<button class="card" data-it="${x.id}"><span class="im ${x.photo?'':'no'}" ${x.photo?`style="background-image:url('${esc(ASSET(x.photo))}')"`:''}>${x.photo?'':'нет фото'}</span>
-        <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}</span></span></button>`).join('');
-  }
-  $('#left').innerHTML=`<div class="panel"><div class="ph-h"><div class="l"><button class="rb" id="pBack" aria-label="Назад">‹</button>${head}</div><button class="rb" id="pClose" aria-label="Закрыть">×</button></div><div class="cards">${body}</div></div>`;
-  $('#pBack').onclick=()=>{o.grp?(o.grp=null,renderPick()):(S.open=null,render());};$('#pClose').onclick=()=>{S.open=null;render();};
-  $('#left').querySelectorAll('[data-grp]').forEach(b=>b.onclick=()=>{o.grp=b.dataset.grp;renderPick();});
-  $('#left').querySelectorAll('[data-it]').forEach(b=>b.onclick=()=>{const x=S.byId[b.dataset.it];const l=V().lines.find(y=>y.id===o.id);
-    setLine({item:x.id,name:x.name,price:x.cprice,unit:x.unit,qty:l.qty||1,th:x.photo?{photo:x.photo}:null});});
-  $('#left').querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{const d=S.byId[b.dataset.dec],th=items.find(x=>x.grp===o.grp).params.thick,p=EGG_PRICE(th,d.params.cat);const l=V().lines.find(y=>y.id===o.id);
-    setLine({item:p?.id,name:`ЛДСП EGGER ${th} мм, ${d.params.cat} кат.`,decor:d.name,price:p?.cprice||0,unit:'м²',qty:l.qty||1,th:{photo:d.photo}});});
+    body=searchBox('Найти в разделе «'+o.sec+'»…')+(grps.length?`<div class="cards">${grps.map(g=>{const its=items.filter(x=>x.grp===g),min=Math.min(...its.map(x=>x.cprice||1e12));const ph=its.find(x=>x.photo)?.photo;
+      return `<button class="card" data-act="${A(()=>{o.grp=g;renderPick();})}"><span class="im" ${bgi(ph)}>${ph?'':esc(g.slice(0,2).toUpperCase())}</span><span class="tx"><b>${esc(g)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;}).join('')}</div>`
+      :`<div class="msg">${o.sec==='Работы'?'Сборка, доставка, монтаж — ваш прайс, загрузим, когда пришлёте.':'В этом разделе каталога пока нет позиций.'}</div>`);
+  }else{head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(o.sec)} › ${esc(o.grp)}</b><small>цены для клиента</small>`;
+    body=searchBox('Найти в «'+o.grp+'»…')+`<div class="cards">${items.filter(x=>x.grp===o.grp).map(itemCard).join('')}</div>`;}
+  if(!head.includes('pBack'))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
+  $('#left').innerHTML=panel(head,body);
+  $('#pClose').onclick=()=>{S.open=null;render();};
+  $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.grp)o.grp=null;else{S.open=null;render();return;}renderPick();});
+  $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acts[b.dataset.act]());
+  bindSearch(renderPick);
+  function pickItem(x){if(DEC_FAM(x)&&decs(DEC_FAM(x)).length){o.item=x;o.q='';renderPick();}else finishItem(x,null);}
+  function finishItem(x,d){const l=V().lines.find(y=>y.id===o.id);
+    setLine({item:x.id,name:x.name,decor:d?d.name:'',price:x.cprice,unit:x.unit,qty:l.qty||1,th:d?.photo?{photo:d.photo}:x.photo?{photo:x.photo}:null});}
 }
 
-/* ---------- подбор фасадов по шагам ---------- */
-const FP=f=>S.cat.find(x=>x.kind==='price'&&x.sec==='Фасады'&&f(x.params||{}));
-const MATS=[['emal','МДФ в эмали','RAL / NCS · фрезы'],['pvc','МДФ в плёнке ПВХ','фрезы'],['alvic','ALVIC 18 мм','1–5 кат. · LINE / STEEL'],['egger','ЛДСП EGGER','декоры с фото'],
-  ['agt','AGT 18 мм','1–6 кат.'],['tss','TSS Cleaf / Smart','1–6 кат.'],['arpa','Пластик ARPA / FENIX','1–10 кат.'],['other','Другие фасады','керамика, J-ручка, рамочные…']];
-const stepsOf=m=>m==='egger'?['Материал','Толщина','Декор','Площадь и доплаты']:m==='other'?['Материал','Позиция']:['Материал',['alvic','agt','tss'].includes(m)?'Категория':'Толщина и покрытие',...(['emal','pvc','alvic'].includes(m)?['Фрезеровка']:[]),'Цвет / декор','Площадь и доплаты'];
+/* --- плиты и фасады --- */
 const mills=()=>S.cat.filter(x=>x.kind==='mill');
+const FP=f=>S.cat.find(x=>x.kind==='price'&&x.sec==='Фасады'&&f(x.params||{}));
+function stepsOf(s){const f=s.fam;if(!f)return ['Материал'];if(f==='other')return ['Материал','Позиция'];
+  if(f==='emal')return ['Материал','Толщина и покрытие','Фрезеровка','Цвет','Площадь'];
+  if(f==='pvc')return ['Материал','Толщина и плёнка','Фрезеровка','Цвет','Площадь'];
+  const st=['Материал'];if(thicksOf(f,s).length>1||FAMS[f].sides)st.push('Толщина');if(catsOf(f).length)st.push('Категория');if(FAMS[f].mill)st.push('Фрезеровка');
+  st.push('Декор');st.push(edgeOpts(s)?'Площадь и кромка':'Площадь');return st;}
 function specPrice(s){
   const rows=[];let base=null;
-  if(s.mat==='emal')base=FP(p=>p.mat==='emal'&&p.thick===s.thick&&p.coat===s.coat&&p.mill===(s.mill?1:0));
-  if(s.mat==='pvc')base=FP(p=>p.mat==='pvc'&&p.thick===s.thick&&p.coat===s.coat);
-  if(s.mat==='alvic')base=FP(p=>p.mat==='alvic'&&+p.cat===+s.cat);
-  if(s.mat==='agt')base=FP(p=>p.mat==='agt'&&+p.cat===+s.cat);
-  if(s.mat==='tss')base=FP(p=>p.mat==='tss'&&+p.cat===+s.cat&&p.thick===(s.thick||'18'));
-  if(s.mat==='arpa')base=FP(p=>p.mat==='arpa'&&p.name===s.name&&p.thick===s.thick&&+p.sides===+(s.sides||1));
-  if(s.mat==='egger')base=FP(p=>p.mat==='egger'&&p.thick===s.thick&&+p.cat===+(s.cat||1));
-  if(!base)return {cp:0,rows:[]};
+  if(s.fam==='emal')base=FP(p=>p.mat==='emal'&&p.thick===s.thick&&p.coat===s.coat&&p.mill===(s.mill?1:0));
+  else if(s.fam==='pvc')base=FP(p=>p.mat==='pvc'&&p.thick===s.thick&&p.coat===s.coat);
+  else if(s.fam&&s.fam!=='other')base=plateRow(s);
+  if(!base)return {cp:0,rows:[],base:null};
   let cp=base.cprice;rows.push([base.name,base.cprice]);
-  if(s.mill){const m=S.byId[s.mill];const add=FP(p=>p.millcat===(m?.params.special?'special':m?.params.cat));if(add){cp+=add.cprice;rows.push([`Фреза ${m.params.code} (${m.params.special?'312–341':m.params.cat+' кат.'})`,add.cprice]);}}
-  if(s.mat==='alvic'&&s.alvMill){const a=FP(p=>p.alvmill);if(a){cp+=a.cprice;rows.push(['Фрезеровка ALVIC '+s.alvMill,a.cprice]);}}
+  if(s.mill&&(s.fam==='emal'||s.fam==='pvc')){const m=S.byId[s.mill];const add=FP(p=>p.millcat===(m?.params.special?'special':m?.params.cat));if(add){cp+=add.cprice;rows.push([`Фреза ${m.params.code} (${m.params.special?'312–341':m.params.cat+' кат.'})`,add.cprice]);}}
+  if(s.fam==='alvic'&&s.alvMill){const a=S.cat.find(x=>x.params?.alvmill);if(a){cp+=a.cprice;rows.push(['Фрезеровка ALVIC '+s.alvMill,a.cprice]);}}
   const ex=s.ex||{},b=base.cprice;
-  if(ex.two){cp+=b*.5;rows.push([s.mat==='pvc'?'Плёнка с двух сторон +50%':'Две стороны +50%',b*.5]);}
+  if(ex.two){cp+=b*.5;rows.push([s.fam==='pvc'?'Плёнка с двух сторон +50%':'Две стороны +50%',b*.5]);}
   if(ex.twocolor){cp+=b*.5;rows.push(['Два цвета +50%',b*.5]);}
   if(ex.patina){const p=FP(q=>q.extra===(s.coat==='глянец'?'patina_gl':'patina_mat'));if(p){cp+=p.cprice;rows.push(['Патина',p.cprice]);}}
   if(ex.glitter){const p=FP(q=>q.extra==='glitter');if(p){cp+=p.cprice;rows.push(['Блёстки',p.cprice]);}}
-  return {cp:Math.round(cp),rows};
+  return {cp:Math.round(cp),rows,base};
 }
-const EDGE={alvic:['Кромка','ALVIC лазерная'],agt:['Кромка','AGT'],tss:['Кромка','TSS'],arpa:['Кромка','FENIX'],egger18:['Кромка','EGGER']};
-function edgeOf(s){const k=s.mat==='egger'?(s.thick==='16'?null:'egger18'):s.mat;const e=EDGE[k];if(!e)return null;return S.cat.find(x=>x.sec===e[0]&&x.grp===e[1]&&x.cprice);}
-function facName(s){const m=s.mill?S.byId[s.mill]:null;
-  return s.mat==='emal'?`МДФ эмаль ${s.thick} мм, ${s.coat}${m?`, фреза ${m.params.code}`:', без фрезы'}`:s.mat==='pvc'?`МДФ ПВХ ${s.thick} мм, ${s.coat}${m?`, фреза ${m.params.code}`:', без фрезы'}`
-   :s.mat==='alvic'?`ALVIC 18 мм, ${s.cat} кат.${s.alvMill?', '+s.alvMill:''}`:s.mat==='agt'?`AGT 18 мм, ${s.cat} кат.`:s.mat==='tss'?`TSS ${s.thick||'18'} мм, ${s.cat} кат.`
-   :s.mat==='arpa'?`${s.name}, ${s.thick} мм${+s.sides===2?', двусторонний':''}`:s.mat==='egger'?`ЛДСП EGGER ${s.thick} мм, ${s.cat||'–'} кат.`:'';}
-function facDecor(s){if(s.mat==='emal'){const c=S.byId[s.color];return c?c.name:(s.colorTxt||'цвет не выбран');}if(s.mat==='egger'){const d=S.byId[s.decor];return d?d.name:'декор не выбран';}return s.decorTxt||'';}
-function facThumb(s){if(s.mat==='egger'&&S.byId[s.decor])return {photo:S.byId[s.decor].photo};if(s.mat==='emal'&&S.byId[s.color])return {hex:S.byId[s.color].params.hex};if(s.mill&&S.byId[s.mill])return {photo:S.byId[s.mill].photo};return null;}
-function renderFac(){
-  const o=S.open,s=o.spec,steps=stepsOf(s.mat),step=Math.min(o.step,steps.length-1),key=steps[step];o.step=step;
-  const upd=(patch,next)=>{Object.assign(s,patch);if(next!=null)o.step=next;renderFac();};
+function plateName(s){const m=s.mill?S.byId[s.mill]:null;
+  if(s.fam==='emal')return `МДФ эмаль ${s.thick} мм, ${s.coat}${m?`, фреза ${m.params.code}`:', без фрезы'}`;
+  if(s.fam==='pvc')return `МДФ ПВХ ${s.thick} мм, ${s.coat}${m?`, фреза ${m.params.code}`:', без фрезы'}`;
+  const r=plateRow(s);return (r?r.name:FAMS[s.fam]?.l||'')+(s.alvMill?', '+s.alvMill:'');}
+function plateDecor(s){if(s.fam==='emal'){const c=S.byId[s.color];return c?c.name:(s.colorTxt||'цвет не выбран');}const d=S.byId[s.decor];return d?d.name:(s.decorTxt||'декор не выбран');}
+function plateThumb(s){const d=S.byId[s.decor];if(d?.photo)return {photo:d.photo};if(s.fam==='emal'&&S.byId[s.color])return {hex:S.byId[s.color].params.hex};if(s.mill&&S.byId[s.mill])return {photo:S.byId[s.mill].photo};return null;}
+function defaults(fam,s){const o={fam,ex:{},area:s.area,note:s.note,areaTxt:s.areaTxt};
+  if(fam==='emal')return {...o,thick:'16',coat:'матовый'};if(fam==='pvc')return {...o,thick:'16',coat:'MGS матовый'};if(fam==='other')return o;
+  if(FAMS[fam].sides)o.sides=1;const th=thicksOf(fam,o);o.thick=th.includes('18')?'18':th.includes('16')?'16':th[0];return o;}
+
+function renderPlate(){
+  const o=S.open;let s=o.spec;const steps=stepsOf(s);const step=Math.min(o.step,steps.length-1),key=steps[step];o.step=step;
+  const go=(patch,next)=>{Object.assign(s,patch);if(next!=null){o.step=next;o.q='';}renderPlate();};
+  const acts={};let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
   const ob=(on,label,sub,act)=>`<button class="ob ${on?'on':''}" data-act="${act}">${esc(label)}${sub?`<small>${esc(sub)}</small>`:''}</button>`;
-  let body='';const acts={};let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
+  const fams=SEC_FAMS[o.sec].filter(f=>f==='other'||f==='emal'||f==='pvc'||plates(f).length);
+  const q=o.q||'';const last=steps.length-1;
+  const pickDecor=d=>{const f=d.params.fam;if(s.fam!==f)o.spec=s={...defaults(f,s)};s.decor=d.id;if(d.params.cat!=null&&!isNaN(d.params.cat)){s.cat=+d.params.cat;
+      if(!plateRow(s)){const t=plates(f).find(x=>+x.params.cat===+s.cat&&(!FAMS[f].sides||+x.params.sides===+(s.sides||1)));if(t)s.thick=t.params.thick;}}
+    if(f==='pvc'&&d.params.cat)s.coat=d.params.cat==='GL'?'MGS глянец':'MGS матовый';
+    o.q='';o.step=stepsOf(s).indexOf(f==='pvc'?'Цвет':'Декор')+1;renderPlate();};
+  const decHits=(fl)=>S.cat.filter(x=>x.kind==='decor'&&fl.includes(x.params.fam)&&hit(x.name+' '+x.params.code,q)).slice(0,120);
+  const famTag=d=>(FAMS[d.params.fam]?.l||'')+(d.params.cat!=null&&!isNaN(d.params.cat)?' · '+d.params.cat+' кат.':'');
+  let body='',ph='Найти декор по названию или коду…';
   if(key==='Материал'){
-    body=`<div class="mats">${MATS.map(([k,l,sub])=>{const eg=k==='egger'?decors('egger')[30]:null;
-      return `<button class="mat ${s.mat===k?'on':''}" data-act="${A(()=>{const d={emal:{thick:'16',coat:'матовый'},pvc:{thick:'16',coat:'Матовый'},alvic:{cat:1},agt:{cat:1},tss:{cat:1,thick:'18'},arpa:{name:'Arpa 1 кат.',thick:'18',sides:1},egger:{thick:'16',cat:1},other:{}}[k];
-        o.spec={mat:k,ex:{},area:s.area,note:s.note,...d};o.step=1;renderFac();})}"><i ${eg?`style="background-image:url('${esc(ASSET(eg.photo))}')"`:''}></i><b style="font-weight:500">${l}</b><span>${sub}</span></button>`;}).join('')}</div>`;
-  }else if(key==='Толщина и покрытие'){
-    const all=S.cat.filter(x=>x.kind==='price'&&x.sec==='Фасады'&&x.params.mat===s.mat);
-    if(s.mat==='arpa'){const names=[...new Set(all.map(x=>x.params.name))];const ths=[...new Set(all.filter(x=>x.params.name===s.name&&+x.params.sides===+s.sides).map(x=>x.params.thick))];
-      body=`<div class="opt"><span>Категория</span><div class="opts">${names.map(nm=>ob(s.name===nm,nm,'',A(()=>upd({name:nm})))).join('')}</div></div>
-        <div class="opt"><span>Пластик</span><div class="opts">${[1,2].map(k=>ob(+s.sides===k,k===1?'Односторонний':'Двусторонний','',A(()=>upd({sides:k,thick:k===2?'18':s.thick})))).join('')}</div></div>
-        <div class="opt"><span>Толщина</span><div class="opts">${ths.map(t=>{const p=all.find(x=>x.params.name===s.name&&+x.params.sides===+s.sides&&x.params.thick===t);return ob(s.thick===t,t+' мм',p?rub(p.cprice):'',A(()=>upd({thick:t})));}).join('')}</div></div>`;
-    }else{const ths=[...new Set(all.map(x=>x.params.thick))];const coats=[...new Set(all.filter(x=>x.params.thick===s.thick).map(x=>x.params.coat))];
-      body=`<div class="opt"><span>Толщина</span><div class="opts">${ths.map(t=>ob(s.thick===t,t+' мм','',A(()=>{const c=all.some(x=>x.params.thick===t&&x.params.coat===s.coat)?s.coat:all.find(x=>x.params.thick===t).params.coat;upd({thick:t,coat:c});}))).join('')}</div></div>
-        <div class="opt"><span>${s.mat==='emal'?'Покрытие':'Плёнка'}</span><div class="opts">${coats.map(c=>{const p0=all.find(x=>x.params.thick===s.thick&&x.params.coat===c&&!x.params.mill),p1=all.find(x=>x.params.thick===s.thick&&x.params.coat===c&&x.params.mill);
-          return ob(s.coat===c,c,(p0?rub(p0.cprice):'')+(s.mat==='emal'?' / с фрезой '+(p1?rub(p1.cprice):'—'):''),A(()=>upd({coat:c})));}).join('')}</div></div>`;}
-  }else if(key==='Категория'||key==='Толщина'){
-    const all=S.cat.filter(x=>x.kind==='price'&&x.sec==='Фасады'&&x.params.mat===s.mat);
-    const ths=[...new Set(all.map(x=>x.params.thick).filter(Boolean))];
-    body=(ths.length>1?`<div class="opt"><span>Толщина</span><div class="opts">${ths.map(t=>ob(s.thick===t,t+' мм',s.mat==='egger'?(t==='16'?'с кромкой 1 мм':'без кромки — добавится кромка'):'',A(()=>upd({thick:t})))).join('')}</div></div>`:'')
-      +`<div class="opt"><span>${s.mat==='egger'?'Категорию задаст декор на следующем шаге':'Категория'}</span><div class="opts">${[...new Set(all.filter(x=>!x.params.thick||x.params.thick===(s.thick||x.params.thick)).map(x=>+x.params.cat))].sort((a,b)=>a-b).map(k=>{const p=all.find(x=>+x.params.cat===k&&(!x.params.thick||x.params.thick===(s.thick||x.params.thick)));
-        return ob(+s.cat===k,k+' кат.',p?rub(p.cprice)+' / м²':'',A(()=>upd({cat:k},s.mat==='egger'?step+1:null)));}).join('')}</div></div>`;
+    ph='Найти декор во всех материалах: U999, Агава, Сонома…';
+    if(q){const h=decHits(fams);body=`<div class="grid">${h.map(d=>decTile(d,s.decor===d.id,A(()=>pickDecor(d)),famTag(d))).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;}
+    else body=`<div class="mats">${fams.map(f=>{const d=decs(f).find(x=>x.photo);const nc=catsOf(f).length,nd=decs(f).length;
+      return `<button class="mat ${s.fam===f?'on':''}" data-act="${A(()=>{o.spec=s=defaults(f,s);o.step=1;o.q='';renderPlate();})}"><i ${f==='emal'?'style="background:linear-gradient(135deg,#e9e0d2,#7a7b7a 55%,#383e42)"':bgi(d?.photo)}></i>
+        <b style="font-weight:500">${esc(FAMS[f].l)}</b><span>${esc(FAMS[f].sub)}${nd?` · ${nd} декоров`:''}</span></button>`;}).join('')}</div>`;
+  }else if(key==='Толщина'){
+    if(q)body=`<div class="grid">${decHits([s.fam]).map(d=>decTile(d,s.decor===d.id,A(()=>pickDecor(d)))).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
+    else{const th=thicksOf(s.fam,s);
+      body=(FAMS[s.fam].sides?`<div class="opt"><span>Пластик</span><div class="opts">${[1,2].map(k=>ob(+s.sides===k,k===1?'Односторонний':'Двусторонний','',A(()=>{s.sides=k;const t=thicksOf(s.fam,s);if(!t.includes(s.thick))s.thick=t.includes('18')?'18':t[0];renderPlate();}))).join('')}</div></div>`:'')
+      +`<div class="opt"><span>Толщина</span><div class="opts">${th.map(t=>{const r=plates(s.fam).filter(x=>x.params.thick===t&&(!FAMS[s.fam].sides||+x.params.sides===+(s.sides||1)));const mn=Math.min(...r.map(x=>x.cprice));
+        const e=FAMS[s.fam].edge,ne=e&&(Array.isArray(e)||e[t]);return ob(s.thick===t,t+' мм',(r.length>1?'от ':'')+rub(mn)+' / м²'+(ne?' · без кромки':/egger16|ldsp/.test(s.fam)?' · с кромкой 1 мм':''),A(()=>go({thick:t},step+1)));}).join('')}</div></div>`;}
+  }else if(key==='Категория'){
+    if(q)body=`<div class="grid">${decHits([s.fam]).map(d=>decTile(d,s.decor===d.id,A(()=>pickDecor(d)))).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
+    else body=`<div class="cards">${catsOf(s.fam,s.thick).map(k=>{const r=plateRow({...s,cat:k});const ds=decs(s.fam,k);const p=ds.filter(x=>x.photo).slice(0,3);
+      return `<button class="card ${+s.cat===k?'on':''}" data-act="${A(()=>go({cat:k,decor:S.byId[s.decor]?.params.cat==k?s.decor:null},step+1))}"><span class="im stack">${p.map(d=>`<i ${bgi(d.photo)}></i>`).join('')||'—'}</span>
+        <span class="tx"><b>${k} категория</b><span>${r?rub(r.cprice)+' / м²':'нет цены для '+s.thick+' мм'} · ${ds.length} декоров</span></span></button>`;}).join('')}</div>`;
   }else if(key==='Фрезеровка'){
-    if(s.mat==='alvic')body=`<div class="opts">${[[null,'Без фрезеровки'],['LINE','ALVIC LINE'],['STEEL','ALVIC STEEL']].map(([k,l])=>ob(s.alvMill===k,l,k?'+ '+rub(FP(p=>p.alvmill)?.cprice)+' / м²':'',A(()=>upd({alvMill:k})))).join('')}</div>`;
-    else{const mc=s.millCat||0,withM=!!s.mill||s.millOn;
-      const tabs=[ob(!withM,'Без фрезы','',A(()=>upd({mill:null,millOn:false})))].concat([0,1,2,3,4].map(k=>ob(withM&&mc===k,k?k+' категория':'С фрезой: все',k?'+ '+rub(FP(p=>p.millcat===k)?.cprice)+' / м²':mills().length+' фрез',A(()=>upd({millOn:true,millCat:k})))));
-      body=`<div class="opts">${tabs.join('')}</div>`+(withM?`<div class="grid">${mills().filter(m=>!mc||m.params.cat===mc).map(m=>`<button class="tile ${s.mill===m.id?'on':''}" data-act="${A(()=>upd({mill:m.id,millOn:true}))}"><i style="background-image:url('${esc(ASSET(m.photo))}')"></i><b>${esc(m.params.code)}</b><span>${m.params.special?'312–341 · +'+rub(FP(p=>p.millcat==='special')?.cprice):m.params.cat+' кат.'}</span></button>`).join('')}</div>`:'')
+    if(s.fam==='alvic'){const a=S.cat.find(x=>x.params?.alvmill);body=`<div class="opts">${[[null,'Без фрезеровки'],['LINE','ALVIC LINE'],['STEEL','ALVIC STEEL']].map(([k,l])=>ob(s.alvMill===k,l,k&&a?'+ '+rub(a.cprice)+' / м²':'',A(()=>go({alvMill:k},step+1)))).join('')}</div>`;ph='';}
+    else{const mc=s.millCat||0,withM=!!s.mill||s.millOn;ph='Найти фрезу по номеру…';
+      const tabs=[ob(!withM,'Без фрезы','',A(()=>go({mill:null,millOn:false},step+1)))].concat([0,1,2,3,4].map(k=>ob(withM&&mc===k,k?k+' категория':'С фрезой: все',k?'+ '+rub(FP(p=>p.millcat===k)?.cprice)+' / м²':mills().length+' фрез',A(()=>go({millOn:true,millCat:k})))));
+      const ms=mills().filter(m=>(q?hit(m.params.code,q):(!mc||m.params.cat===mc)));
+      body=`<div class="opts">${tabs.join('')}</div>`+(withM||q?`<div class="grid">${ms.map(m=>`<button class="tile ${s.mill===m.id?'on':''}" data-act="${A(()=>go({mill:m.id,millOn:true},step+1))}"><i ${bgi(m.photo)}></i><b>${esc(m.params.code)}</b><span>${m.params.special?'312–341 · +'+rub(FP(p=>p.millcat==='special')?.cprice):m.params.cat+' кат.'}</span></button>`).join('')||'<span class="msg">Нет такой фрезы</span>'}</div>`:'')
         +`<span class="msg">Фрезы с сайта фабрики. 312–341 — особая надбавка по прайсу.</span>`;}
-  }else if(key==='Цвет / декор'||key==='Декор'){
-    if(s.mat==='emal')body=`<div class="grid">${S.cat.filter(x=>x.kind==='color').map(c=>`<button class="tile ${s.color===c.id?'on':''}" data-act="${A(()=>upd({color:c.id}))}"><i style="background:${esc(c.params.hex)}"></i><b>${esc(c.name.split(' · ')[0])}</b><span>${esc(c.name.split(' · ')[1]||'')}</span></button>`).join('')}</div>
+  }else if(key==='Толщина и покрытие'||key==='Толщина и плёнка'){ph='';
+    const all=S.cat.filter(x=>x.kind==='price'&&x.sec==='Фасады'&&x.params.mat===s.fam);const ths=[...new Set(all.map(x=>x.params.thick))];const coats=[...new Set(all.filter(x=>x.params.thick===s.thick).map(x=>x.params.coat))];
+    body=`<div class="opt"><span>Толщина</span><div class="opts">${ths.map(t=>ob(s.thick===t,t+' мм','',A(()=>{const c=all.some(x=>x.params.thick===t&&x.params.coat===s.coat)?s.coat:all.find(x=>x.params.thick===t).params.coat;go({thick:t,coat:c});}))).join('')}</div></div>
+      <div class="opt"><span>${s.fam==='emal'?'Покрытие':'Плёнка'}</span><div class="opts">${coats.map(c=>{const p0=all.find(x=>x.params.thick===s.thick&&x.params.coat===c&&!x.params.mill),p1=all.find(x=>x.params.thick===s.thick&&x.params.coat===c&&x.params.mill);
+        return ob(s.coat===c,c,(p0?rub(p0.cprice):'')+(s.fam==='emal'?' / с фрезой '+(p1?rub(p1.cprice):'—'):''),A(()=>go({coat:c},step+1)));}).join('')}</div></div>`;
+  }else if(key==='Цвет'&&s.fam==='emal'){ph='Найти цвет: 9003, антрацит…';
+    const cs=S.cat.filter(x=>x.kind==='color'&&(!q||hit(x.name,q)));
+    body=`<div class="grid">${cs.map(c=>`<button class="tile ${s.color===c.id?'on':''}" data-act="${A(()=>go({color:c.id,colorTxt:''},step+1))}"><i style="background:${esc(c.params.hex)}"></i><b>${esc(c.name.split(' · ')[0])}</b><span>${esc(c.name.split(' · ')[1]||'')}</span></button>`).join('')||'<span class="msg">Нет в палитре — впишите ниже</span>'}</div>
       <label class="fld">Или впишите цвет (NCS, CS, WCP…)<input id="cTxt" value="${esc(s.colorTxt||'')}" placeholder="например, NCS S 2005-Y20R"></label><span class="msg">Палитра RAL — примерные цвета на экране. NCS/CS/WCP загрузим позже.</span>`;
-    else if(s.mat==='egger')body=`<div class="grid">${decors('egger').filter(d=>!s.cat||true).map(d=>`<button class="tile ${s.decor===d.id?'on':''}" data-act="${A(()=>upd({decor:d.id,cat:d.params.cat}))}"><i style="background-image:url('${esc(ASSET(d.photo))}')"></i><b>${esc(d.name)}</b><span>${d.params.cat} кат.</span></button>`).join('')}</div>`;
-    else body=`<label class="fld">Декор / цвет${s.mat==='alvic'?' ALVIC':s.mat==='pvc'?' плёнки':''}<input id="dTxt" value="${esc(s.decorTxt||'')}" placeholder="название или код декора"></label><span class="msg">Каталог декоров с фото для этого материала заберём с сайта фабрики.</span>`;
-  }else if(key==='Площадь и доплаты'){
-    const X=s.mat==='emal'?[['two','Две стороны +50%'],['twocolor','Два цвета +50%'],['patina','Патина'],['glitter','Блёстки']]:s.mat==='pvc'?[['two','Плёнка с двух сторон +50%']]:[];
-    const pr=specPrice(s),e=edgeOf(s);
-    body=`<div style="display:flex;flex-wrap:wrap;gap:18px"><div style="flex:1 1 280px;display:flex;flex-direction:column;gap:12px">
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><label class="fld">Площадь, м²<input id="fArea" value="${esc(s.areaTxt??nfmt(s.area))}" inputmode="decimal" style="width:130px;text-align:right"></label>
+  }else if(key==='Декор'||key==='Цвет'){
+    const all=decs(s.fam,catsOf(s.fam).length&&s.fam!=='pvc'?s.cat:null);let ds=q?all.filter(d=>hit(d.name+' '+d.params.code,q)):all;
+    const other=q&&catsOf(s.fam).length?decHits([s.fam]).filter(d=>!all.includes(d)):[];
+    body=`<div class="grid">${ds.map(d=>decTile(d,s.decor===d.id,A(()=>{s.decor=d.id;if(s.fam==='pvc'&&d.params.cat)s.coat=d.params.cat==='GL'?'MGS глянец':'MGS матовый';o.q='';o.step=step+1;renderPlate();}),s.fam==='pvc'?(d.params.cat==='GL'?'глянец':'мат'):'')).join('')||(other.length?'':'<span class="msg">Ничего не нашли</span>')}</div>`
+      +(other.length?`<span class="msg">В других категориях:</span><div class="grid">${other.map(d=>decTile(d,false,A(()=>pickDecor(d)))).join('')}</div>`:'')
+      +`<label class="fld">Нет в списке — впишите декор<input id="dTxt" value="${esc(s.decorTxt||'')}" placeholder="название или код"></label>`;
+  }else if(key==='Позиция'){ph='Найти позицию раздела…';
+    const its=S.cat.filter(x=>x.sec===o.sec&&x.kind==='item'&&x.cprice&&(!q||hit(x.name+' '+x.grp,q)));
+    body=`<div class="cards">${its.map(x=>`<button class="card" data-act="${A(()=>{const l=V().lines.find(y=>y.id===o.id);setLine({item:x.id,name:x.name,price:x.cprice,unit:x.unit,qty:l.qty||1,decor:'',th:x.photo?{photo:x.photo}:null,spec:null});})}"><span class="im ${x.photo?'':'no'}" ${bgi(x.photo)}>${x.photo?'':'нет фото'}</span><span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit)} · ${esc(x.grp)}</span></span></button>`).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
+  }else{ph='';
+    const X=s.fam==='emal'?[['two','Две стороны +50%'],['twocolor','Два цвета +50%'],['patina','Патина'],['glitter','Блёстки']]:s.fam==='pvc'?[['two','Плёнка с двух сторон +50%']]:[];
+    const pr=specPrice(s),eo=edgeOpts(s);if(eo&&!eo.some(e=>e.id===s.edge))s.edge=eo[0].id;
+    body=`<div style="display:flex;flex-wrap:wrap;gap:18px"><div style="flex:1 1 300px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><label class="fld">${o.sec==='Фасады'?'Площадь фасадов':'Площадь'}, м²<input id="fArea" value="${esc(s.areaTxt??nfmt(s.area))}" inputmode="decimal" style="width:130px;text-align:right"></label>
       <label class="fld" style="flex:1 1 160px">Где (необязательно)<input id="fNote" value="${esc(s.note||'')}" placeholder="низ, верх, пенал…"></label></div>
-      ${X.length?`<span class="msg">Доплаты</span><div class="opts">${X.map(([k,l])=>ob(!!s.ex?.[k],(s.ex?.[k]?'✓ ':'')+l,'',A(()=>{s.ex={...s.ex,[k]:!s.ex?.[k]};renderFac();}))).join('')}</div>`:''}
-      ${e?`<div class="edge"><b style="color:var(--lime);font-weight:500">Кромка</b><span>Цена материала без кромки — в смету добавится «${esc(e.name)}», ${rub(e.cprice)} / м.п. Метры впишите в строке.</span></div>`:''}</div>
-      <div class="calc" style="flex:1 1 260px"><span class="msg">Цена для клиента, за м²</span>${pr.rows.map(([k,v])=>`<div><span>${esc(k)}</span><span class="num">${rub(v)}</span></div>`).join('')}
-        <div style="border-top:1px solid #2c2824;padding-top:10px"><span>Итого ${nfmt(s.area)} м²</span><b class="num" style="font-size:20px;font-weight:400">${rub(pr.cp*s.area)}</b></div></div></div>`;
-  }else if(key==='Позиция'){
-    body=`<div class="cards">${S.cat.filter(x=>x.sec==='Фасады'&&x.kind==='item').map(x=>`<button class="card" data-act="${A(()=>{const l=V().lines.find(y=>y.id===o.id);setLine({item:x.id,name:x.name,price:x.cprice,unit:x.unit,qty:l.qty||1,decor:'',th:null,spec:null});})}"><span class="im no">нет фото</span><span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit)}</span></span></button>`).join('')}</div>`;
+      ${eo?`<div class="edge2"><b>Кромка</b><span class="msg">Цена этого материала без кромки — кромка считается отдельно, в погонных метрах.</span>
+        <div class="opts">${eo.map(e=>ob(s.edge===e.id,e.name,rub(e.cprice)+' / м.п.',A(()=>{s.edge=e.id;renderPlate();}))).join('')}</div>
+        <label class="fld">Кромка, м.п.<input id="fEdge" value="${esc(s.edgeTxt??(s.edgeM?nfmt(s.edgeM):''))}" inputmode="decimal" placeholder="0" style="width:130px;text-align:right"></label></div>`:''}
+      ${X.length?`<span class="msg">Доплаты</span><div class="opts">${X.map(([k,l])=>ob(!!s.ex?.[k],(s.ex?.[k]?'✓ ':'')+l,'',A(()=>{s.ex={...s.ex,[k]:!s.ex?.[k]};renderPlate();}))).join('')}</div>`:''}</div>
+      <div class="calc" style="flex:1 1 260px"><span class="msg">Цена для клиента</span>${pr.rows.map(([k,v])=>`<div><span>${esc(k)}</span><span class="num">${rub(v)} / м²</span></div>`).join('')}
+        <div style="border-top:1px solid #2c2824;padding-top:10px"><span id="cA">${nfmt(s.area)} м²</span><span class="num" id="cAs">${rub(pr.cp*s.area)}</span></div>
+        ${eo?`<div><span id="cE">Кромка ${nfmt(s.edgeM||0)} м.п.</span><span class="num" id="cEs">${rub((S.byId[s.edge]?.cprice||0)*(s.edgeM||0))}</span></div>`:''}
+        <div><b>Итого</b><b class="num" id="cT" style="font-size:20px;font-weight:400">${rub(pr.cp*s.area+(eo?(S.byId[s.edge]?.cprice||0)*(s.edgeM||0):0))}</b></div></div></div>`;
   }
-  const pr=s.mat&&s.mat!=='other'?specPrice(s):{cp:0},last=step===steps.length-1,th=s.mat?facThumb(s):null;
-  $('#left').innerHTML=`<div class="panel"><div class="ph-h"><div class="l"><b>Фасады · подбор</b></div><button class="rb" id="pClose" aria-label="Закрыть">×</button></div>
-    <div class="steps">${steps.map((n,i)=>`<button class="${i===step?'cur':i<step?'done':''}" data-st="${i}">${i+1} ${n}</button>`).join('')}</div>
-    <div>${body}</div>
-    ${s.mat&&s.mat!=='other'?`<div class="foot"><span class="ph" style="${th?.photo?`background-image:url('${esc(ASSET(th.photo))}')`:th?.hex?'background:'+esc(th.hex):''}"></span>
-      <span class="d"><b style="font-weight:400">${esc(facName(s))}</b><span>${esc(facDecor(s))}</span></span><span class="num">${pr.cp?rub(pr.cp)+' / м²':'—'}</span>
-      <button class="pill" id="fPrev">Назад</button><button class="pill lime" id="fNext">${last?'Добавить в смету':'Далее'}</button></div>`:''}</div>`;
+  const pr=s.fam&&s.fam!=='other'?specPrice(s):{cp:0},th=s.fam?plateThumb(s):null,isLast=step===last;
+  $('#left').innerHTML=panel(`<b>${esc(o.sec)} · подбор</b>`,`<div class="steps">${steps.map((t,i)=>`<button class="${i===step?'cur':i<step?'done':''}" data-st="${i}">${i+1} ${t}</button>`).join('')}</div>
+    ${ph?searchBox(ph):''}<div>${body}</div>`,
+    s.fam&&s.fam!=='other'?`<div class="foot"><span class="ph" style="${th?.photo?`background-image:url('${esc(ASSET(th.photo))}')`:th?.hex?'background:'+esc(th.hex):''}"></span>
+      <span class="d"><b style="font-weight:400">${esc(plateName(s))}</b><span>${esc(plateDecor(s))}</span></span><span class="num">${pr.cp?rub(pr.cp)+' / м²':'—'}</span>
+      <button class="pill" id="fPrev">Назад</button><button class="pill lime" id="fNext">${isLast?'Добавить в смету':'Далее'}</button></div>`:'');
   $('#pClose').onclick=()=>{S.open=null;render();};
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acts[b.dataset.act]());
-  $('#left').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{if(s.mat||+b.dataset.st===0){o.step=+b.dataset.st;renderFac();}});
+  $('#left').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{if(s.fam||+b.dataset.st===0){o.step=+b.dataset.st;o.q='';renderPlate();}});
+  bindSearch(renderPlate);
   $('#cTxt')&&($('#cTxt').oninput=e=>{s.colorTxt=e.target.value;s.color=null;});
-  $('#dTxt')&&($('#dTxt').oninput=e=>{s.decorTxt=e.target.value;});
+  $('#dTxt')&&($('#dTxt').oninput=e=>{s.decorTxt=e.target.value;if(e.target.value)s.decor=null;});
   $('#fNote')&&($('#fNote').oninput=e=>{s.note=e.target.value;});
-  $('#fArea')&&($('#fArea').oninput=e=>{s.areaTxt=e.target.value;const n=parseFloat(e.target.value.replace(/\s/g,'').replace(',','.'));s.area=isNaN(n)?0:n;const t=$('#left .calc b');if(t)t.textContent=rub(specPrice(s).cp*s.area);});
-  $('#fPrev')&&($('#fPrev').onclick=()=>{if(step>0){o.step=step-1;renderFac();}else{S.open=null;render();}});
+  const num=v=>{const n=parseFloat(String(v).replace(/\s/g,'').replace(',','.'));return isNaN(n)?0:n;};
+  const recalc=()=>{const p=specPrice(s).cp,ep=S.byId[s.edge]?.cprice||0,eo=edgeOpts(s);$('#cA').textContent=nfmt(s.area)+' м²';$('#cAs').textContent=rub(p*s.area);
+    if(eo){$('#cE').textContent='Кромка '+nfmt(s.edgeM||0)+' м.п.';$('#cEs').textContent=rub(ep*(s.edgeM||0));}$('#cT').textContent=rub(p*s.area+(eo?ep*(s.edgeM||0):0));};
+  $('#fArea')&&($('#fArea').oninput=e=>{s.areaTxt=e.target.value;s.area=num(e.target.value);recalc();});
+  $('#fEdge')&&($('#fEdge').oninput=e=>{s.edgeTxt=e.target.value;s.edgeM=num(e.target.value);recalc();});
+  $('#fPrev')&&($('#fPrev').onclick=()=>{if(step>0){o.step=step-1;o.q='';renderPlate();}else{S.open=null;render();}});
   $('#fNext')&&($('#fNext').onclick=()=>{
-    if(!last){o.step=step+1;renderFac();return;}
-    const p=specPrice(s);if(!p.cp){toast('Нет цены для этого сочетания — проверьте параметры');return;}
-    const e=edgeOf(s),dec=facDecor(s);
+    if(!isLast){o.step=step+1;o.q='';renderPlate();return;}
+    const p=specPrice(s);if(!p.cp){toast('Нет цены для этого сочетания — проверьте толщину и категорию');return;}
+    const eo=edgeOpts(s),e=eo?S.byId[s.edge]:null,dec=plateDecor(s);
     V().lines=V().lines.filter(l=>l.parent!==o.id).flatMap(l=>{if(l.id!==o.id)return [l];
-      const nl={...l,qtyTxt:undefined,name:facName(s),decor:[dec,s.note].filter(Boolean).join(' · '),qty:s.area,unit:'м²',price:p.cp,th:facThumb(s),spec:s};
-      return e?[nl,{id:uid(),parent:o.id,auto:true,sec:'Кромка',item:e.id,name:e.name,decor:'авто к фасаду · впишите м.п.',qty:0,unit:'м.п.',price:e.cprice}]:[nl];});
+      const nl={...l,qtyTxt:undefined,name:plateName(s),decor:[dec,s.note].filter(Boolean).join(' · '),qty:s.area,unit:'м²',price:p.cp,th:plateThumb(s),spec:s};
+      return e?[nl,{id:uid(),parent:o.id,auto:true,sec:'Кромка',item:e.id,name:'Кромка '+e.name,decor:'к «'+(S.byId[s.decor]?.name||plateName(s))+'»',qty:s.edgeM||0,unit:'м.п.',price:e.cprice}]:[nl];});
     S.open=null;save();render();});
 }
 
