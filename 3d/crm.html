@@ -242,6 +242,7 @@ dialog::backdrop{background:rgba(5,5,4,.72)}
   <div class="menu" id="menu" role="menu" hidden>
     <div class="who" id="who"></div>
     <a href="index.html?admin=staff" id="admLink" role="menuitem" hidden>Управление</a>
+    <a href="smeta.html?admin=1" id="catLink" role="menuitem" hidden>Каталог и наценки</a>
     <a href="pro100/MGS3D_PRO100.zip" download role="menuitem">Кнопка для PRO100</a>
     <button id="demoAdd" role="menuitem" hidden>Добавить тестовых клиентов</button>
     <button id="demoDel" role="menuitem" hidden>Удалить тестовых клиентов</button>
@@ -384,7 +385,7 @@ async function start(session){
   S.uid=session.user.id;$('#vLogin').hidden=true;$('#vApp').hidden=false;
   try{const r=await fetch(SUPABASE_URL+'/admin/v1/me',{headers:{Authorization:'Bearer '+session.access_token}});if(r.ok)S.me=await r.json();}catch{}
   if(S.me.role==='factory'){location.replace('factory.html');return;}
-  $('#admLink').hidden=!isBoss();
+  $('#admLink').hidden=!isBoss();$('#catLink').hidden=S.me.role!=='owner';
   const [a,b]=await Promise.all([sb.from('staff_profiles').select('user_id,name,photo,salon_id,role'),sb.from('salons').select('*').order('sort')]);
   S.profs=a.data||[];S.salons=b.data||[];
   const me=prof(S.uid);const av=$('#avBtn');
@@ -410,6 +411,7 @@ async function loadAll(){
     sb.from('positions').select('*').order('sort').order('created_at'),
     sb.from('projects').select('id,title,client_id,share_token,created_at,preview,items(id,title,created_at,glb_status)').not('client_id','is',null),
     sb.from('client_files').select('*').order('created_at')]);
+  const sm=await sb.from('smetas').select('id,client_id,title,total,updated_at').order('updated_at',{ascending:false});S.smetas=sm.error?[]:(sm.data||[]);
   const e=c.error||p.error||pr.error||f.error;
   if(e){showErr(e.message?.includes('clients')||e.code==='42P01'?'таблицы CRM ещё не созданы на сервере — подождите минуту и обновите страницу':e);}
   S.clients=c.data||[];S.positions=p.data||[];S.projects=pr.data||[];S.files=f.data||[];
@@ -640,6 +642,10 @@ async function renderCard(){
           ${p.sent_at?`<div class="msg">Фабрика: <span style="color:var(--ink)">${esc(M.FSTAGES[p.fstage??0])}</span>${p.f_num?` · № <span class="num" style="color:var(--ink)">${esc(p.f_num)}</span>`:''}${p.f_price!=null?` · предварительно <span class="num" style="color:var(--ink)">${money(p.f_price)}</span>`:''}${p.f_ready?` · готовность <span class="num" style="color:var(--ink)">${M.dmy(p.f_ready)}</span>`:''}${p.deadline?` · дедлайн <span class="num" style="color:var(--ink)">${M.dmy(p.deadline)}</span>`:''}${S.unread[p.id]?` <span class="ubadge">${S.unread[p.id]}</span>`:''}</div>`:''}
           ${rail(p)}${(()=>{const k=colOf(p),ok=canCols(p);return ok.size?`<select class="in" data-pos="${p.id}" aria-label="Этап позиции">${POST.map((l,i)=>i===k||ok.has(i)?`<option value="${i}" ${i===k?'selected':''}>${i+1}. ${l}</option>`:'').join('')}</select>`
             :`<div class="msg">Этап: <span style="color:var(--ink)">${POST[k]}</span>${p.kind==='furniture'&&p.sent_at?' — ведёт фабрика':''}</div>`;})()}</div>`).join('')||'<div class="empty">Позиций нет.</div>'}</section>`:''}
+      <section class="panel"><div class="panel-h"><h3>Сметы <span class="msg num">${(S.smetas||[]).filter(x=>x.client_id===c.id).length}</span></h3><button class="pill solid" id="smNew">+ Новая смета</button></div>
+        ${(S.smetas||[]).filter(x=>x.client_id===c.id).map(x=>`<div class="posline"><div class="h"><b>${esc(x.title)}</b><span class="num">${money(x.total)}</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a class="pill" style="background:var(--ink);color:var(--bg);font-weight:600" href="smeta.html?s=${x.id}">Открыть</a><span class="msg">изменена ${new Date(x.updated_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
+          <button class="pill danger" data-smdel="${x.id}" style="margin-left:auto">Удалить</button></div></div>`).join('')||'<div class="empty" style="padding:0">Смет пока нет.</div>'}</section>
       <section class="panel"><div class="panel-h"><h3>3D-проекты <span class="msg num">${pj.length}</span></h3></div>
         ${pj.length?`<div class="pgrid">${pj.map(p=>`<div class="pcard"><div class="prev" data-pjprev="${p.id}" ${p.preview?`style="background-image:url('${esc(publicUrl(p.preview))}')"`:''}></div>
           <button class="del" data-pjdel="${p.id}" aria-label="Удалить 3D-проект ${esc(p.title)}" title="Удалить 3D-проект"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>
@@ -682,6 +688,12 @@ async function renderCard(){
     const {error}=await sb.from('clients').delete().eq('id',c.id);if(error)return showErr(error);
     S.clients=S.clients.filter(x=>x.id!==c.id);S.files=S.files.filter(f=>f.client_id!==c.id);S.positions=S.positions.filter(p=>p.client_id!==c.id);
     S.card=null;setUrl();render();toast('Клиент удалён');};
+  /* сметы */
+  $('#smNew').onclick=async()=>{const n=(S.smetas||[]).filter(x=>x.client_id===c.id).length;
+    const {data,error}=await sb.from('smetas').insert({client_id:c.id,title:n?`Смета ${n+1}`:'Смета',data:{cur:0,variants:[{name:'Вариант A',disc:0,lines:[]}]}}).select('id').single();
+    if(error)return showErr(error);location.href='smeta.html?s='+data.id;};
+  root.querySelectorAll('[data-smdel]').forEach(b=>b.onclick=async()=>{const x=S.smetas.find(y=>y.id===b.dataset.smdel);if(!confirm(`Удалить смету «${x.title}»? Отменить нельзя.`))return;
+    const {error}=await sb.from('smetas').delete().eq('id',x.id);if(error)return showErr(error);S.smetas=S.smetas.filter(y=>y.id!==x.id);render();});
   /* 3D */
   root.querySelectorAll('[data-pjdel]').forEach(b=>b.onclick=()=>deleteProject(b.dataset.pjdel));
   queueShots(pj);
