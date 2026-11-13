@@ -117,6 +117,15 @@ main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:10px ma
 .mat i{position:relative}.mat .badge{position:absolute;left:8px;bottom:8px;width:76px;height:34px;border-radius:9px}.mat .badge img{object-fit:contain}
 .brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.brands .b{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;background:#1d1a17}
 .brands .b .im{width:100%;height:70px;border-radius:12px}.brands .b .row{display:flex;gap:6px;align-items:center}.brands input[type=text]{flex:1;min-width:0;height:34px;border-radius:10px;border:0;background:var(--field);padding:0 10px;font-size:12px}
+.tree{display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:14px;background:#1a1714}
+.tn .tl{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;cursor:default;user-select:none}
+.tn .tl[draggable="true"]{cursor:grab}.tn .tl:hover{background:#24211d}.tn .tl.over{background:#2c3115;box-shadow:inset 0 0 0 1.5px var(--lime)}
+.tn .tw{width:14px;color:var(--ink4);cursor:pointer;transition:transform .15s;display:inline-block}.tn.open>.tl .tw{transform:rotate(90deg)}
+.tn .tt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tn .tt input{width:100%;height:28px;border-radius:8px;border:0;background:var(--field);padding:0 8px}
+.tn .tc{font-size:12px;color:var(--ink4);font-variant-numeric:tabular-nums}
+.t-s>.tl{font-weight:600;font-size:15px;cursor:pointer}.tk{padding-left:18px;border-left:1px solid #2c2824;margin-left:16px}
+.t-g>.tl .tt{font-weight:500}.t-i>.tl{font-size:13px;color:var(--ink2);padding:4px 10px}
+.tadd{all:unset;cursor:pointer;font-size:12px;color:var(--lime);padding:6px 10px}
 table.mk{width:100%;border-collapse:collapse}table.mk td{padding:8px 6px;border-bottom:1px solid var(--line)}table.mk input{width:80px;height:36px;border-radius:10px;border:0;background:var(--field);text-align:center}
 </style>
 </head>
@@ -174,7 +183,7 @@ async function init(){
   $('#app').hidden=false;render();
 }
 async function loadCat(){
-  const all=[];for(let from=0;;from+=1000){const {data,error}=await sb.from('cat_view').select('id,kind,sec,grp,name,unit,params,photo,cprice,sort').neq('kind','search').order('sec').order('grp').order('sort').order('name').range(from,from+999);
+  const all=[];for(let from=0;;from+=1000){const {data,error}=await sb.from('cat_view').select('id,kind,sec,grp,name,unit,params,photo,cprice,sort,gsort,sec0,grp0,sub0').neq('kind','search').order('sec').order('grp').order('sort').order('name').range(from,from+999);
     if(error){showErr(error.code==='42P01'?'каталог ещё не создан на сервере — подождите минуту и обновите страницу':error);break;}all.push(...data);if(data.length<1000)break;}
   S.cat=all;S.byId=Object.fromEntries(all.map(x=>[x.id,x]));
   const br=await sb.from('brands').select('key,logo,dark');S.brands=Object.fromEntries((br.data||[]).filter(x=>x.logo).map(x=>[x.key,x]));
@@ -277,7 +286,8 @@ const BRANDS=[['mgs','MGS',/^MGS|Leonardo|Dante|REGO|SPACE|DECCO|Smartcube|Ра�
 const OWN_LOGO={mgs:{logo:'assets/cat/brand/mgs.webp',dark:true},blum:{logo:'assets/cat/brand/blum.webp',dark:true},hettich:{logo:'assets/cat/brand/hettich.webp',dark:true}};
 const FAM_BRAND={egger16:'egger',egger18:'egger',eggerps:'egger',eggersmart:'egger',alvic:'alvic',agt:'agt',tss:'tss',arpa:'arpa',ldsp:'mgs',hdf:'mgs',dvp:'mgs',pvc:'mgs',emal:'mgs'};
 const brandOf=g=>(BRANDS.find(b=>b[2].test(g||''))||[])[0];
-const grpIcon=(sec,g,sub)=>S.cat.find(x=>x.kind==='grp'&&x.params.sec===sec&&x.params.grp===g&&(x.params.sub||null)===(sub||null))?.photo;
+const grpOrder=items=>{const f={};items.forEach(x=>{const k=x.gsort!=null?x.gsort:1e9+x.sort;if(!(x.grp in f)||k<f[x.grp])f[x.grp]=k;});return f;};
+const grpIcon=(sec,g,sub)=>{const m=x=>x.kind==='grp'&&x.params.grp===g&&(x.params.sub||null)===(sub||null);return (S.cat.find(x=>m(x)&&x.params.sec===sec)||S.cat.find(m))?.photo;};
 const famIcon=f=>S.cat.find(x=>x.kind==='fam'&&x.params.fam===f)?.photo;
 const catIcon=(f,k)=>S.cat.find(x=>x.kind==='famcat'&&x.params.fam===f&&+x.params.cat===+k)?.photo;
 function logoOf(key){const b=key&&(S.brands?.[key]||OWN_LOGO[key]);return b&&b.logo?{src:/^https?:/.test(b.logo)?b.logo:ASSET(b.logo),dark:b.dark}:null;}
@@ -328,7 +338,7 @@ const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div clas
 function renderPick(){
   const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price')&&x.cprice);
   /* порядок групп — как в файле каталога (по сайту фабрики), своя фурнитура фабрики (MGS) — первой */
-  const first={};items.forEach(x=>{if(!(x.grp in first)||x.sort<first[x.grp])first[x.grp]=x.sort;});
+  const first=grpOrder(items);
   const grps=Object.keys(first).sort((a,b)=>((/^MGS/.test(b)?1:0)-(/^MGS/.test(a)?1:0))||first[a]-first[b]);const acts={};/* своя фурнитура фабрики (MGS) — первой */let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
   const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
     <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span></button>`;};
@@ -354,7 +364,7 @@ function renderPick(){
   if(!head.includes('pBack'))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
   $('#left').innerHTML=panel(head,body);
   $('#pClose').onclick=()=>{S.open=null;render();};
-  $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.grp)o.grp=null;else{S.open=null;render();return;}renderPick();});
+  $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp)o.grp=null;else{S.open=null;render();return;}renderPick();});
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acts[b.dataset.act]());
   bindSearch(renderPick);
   function pickItem(x){if(DEC_FAM(x)&&decs(DEC_FAM(x)).length){o.item=x;o.q='';renderPick();}else finishItem(x,null);}
@@ -401,7 +411,9 @@ function renderPlate(){
   const go=(patch,next)=>{Object.assign(s,patch);if(next!=null){o.step=next;o.q='';}renderPlate();};
   const acts={};let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
   const ob=(on,label,sub,act)=>`<button class="ob ${on?'on':''}" data-act="${act}">${esc(label)}${sub?`<small>${esc(sub)}</small>`:''}</button>`;
-  const fams=SEC_FAMS[o.sec].filter(f=>f==='other'||f==='emal'||f==='pvc'||plates(f).length);
+  const fams=SEC_FAMS[o.sec].filter(f=>f==='emal'||f==='pvc'||plates(f).length);
+  const its=S.cat.filter(x=>x.sec===o.sec&&x.kind==='item'&&x.cprice),gf=grpOrder(its),igr=Object.keys(gf).sort((a,b)=>gf[a]-gf[b]);
+  const openGrp=g=>{S.open={mode:'pick',id:o.id,sec:o.sec,grp:g,q:'',back:o};renderPick();};
   const q=o.q||'';const last=steps.length-1;
   const pickDecor=d=>{const f=d.params.fam;if(s.fam!==f)o.spec=s={...defaults(f,s)};s.decor=d.id;if(d.params.cat!=null&&!isNaN(d.params.cat)){s.cat=+d.params.cat;
       if(!plateRow(s)){const t=plates(f).find(x=>+x.params.cat===+s.cat&&(!FAMS[f].sides||+x.params.sides===+(s.sides||1)));if(t)s.thick=t.params.thick;}}
@@ -415,7 +427,8 @@ function renderPlate(){
     if(q){const h=decHits(fams);body=`<div class="grid">${h.map(d=>decTile(d,s.decor===d.id,A(()=>pickDecor(d)),famTag(d))).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;}
     else body=`<div class="mats">${fams.map(f=>{const d=decs(f).find(x=>x.photo);const nc=catsOf(f).length,nd=decs(f).length;
       return `<button class="mat ${s.fam===f?'on':''}" data-act="${A(()=>{o.spec=s=defaults(f,s);o.step=1;o.q='';renderPlate();})}"><i ${famIcon(f)?bgi(famIcon(f)):f==='emal'?'style="background:linear-gradient(135deg,#e9e0d2,#7a7b7a 55%,#383e42)"':bgi(d?.photo)}>${famIcon(f)?'':(l=>l?logoTile(l,'badge'):'')(logoOf(FAM_BRAND[f]))}</i>
-        <b style="font-weight:500">${esc(FAMS[f].l)}</b><span>${esc(FAMS[f].sub)}${nd?` · ${nd} декоров`:''}</span></button>`;}).join('')}</div>`;
+        <b style="font-weight:500">${esc(FAMS[f].l)}</b><span>${esc(FAMS[f].sub)}${nd?` · ${nd} декоров`:''}</span></button>`;}).join('')}${igr.map(g=>{const gi=its.filter(x=>x.grp===g),ic=grpIcon(o.sec,g)||gi.find(x=>x.photo)?.photo,ns=new Set(gi.map(x=>x.params?.sub).filter(Boolean)).size;
+      return `<button class="mat" data-act="${A(()=>openGrp(g))}"><i ${bgi(ic)}></i><b style="font-weight:500">${esc(g)}</b><span>${ns?ns+' серий · ':''}${gi.length} поз.</span></button>`;}).join('')}</div>`;
   }else if(key==='Толщина'){
     if(q)body=`<div class="grid">${decHits([s.fam]).map(d=>decTile(d,s.decor===d.id,A(()=>pickDecor(d)))).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
     else{const th=thicksOf(s.fam,s);
@@ -496,6 +509,71 @@ function renderPlate(){
     S.open=null;save();render();});
 }
 
+
+/* ---------- главный: дерево каталога (Макс 13.11: «сам перетаскиваю в правильную структуру») ----------
+   Перестановки — таблица cat_tree (миграция 015) поверх файла каталога; ключи по ИСХОДНЫМ sec0/grp0/sub0 позиции.
+   Группа = все её исходные группы → правило 'grp:'; подгруппа → 'sub:'; позиция → 'item:'. Порядок групп — sort у правил 'grp:'. */
+const TR={open:new Set(),drag:null,extra:{}};
+const rk={g:x=>'grp:'+x.sec0+'|'+x.grp0,u:x=>'sub:'+x.sec0+'|'+x.grp0+'|'+(x.sub0||''),i:x=>'item:'+x.id};
+async function trLoad(){const r=await sb.from('cat_tree').select('*');if(r.error){$('#trMsg').textContent='Структура не загрузилась: '+r.error.message;return null;}S.rules=Object.fromEntries((r.data||[]).map(x=>[x.key,x]));return S.rules;}
+async function trSave(rows,msg){if(!rows.length)return;const now=new Date().toISOString();
+  const {error}=await sb.from('cat_tree').upsert(rows.map(r=>({...r,updated_at:now})));if(error){$('#trMsg').textContent='Ошибка: '+error.message;return;}
+  await loadCat();await drawTree();toast(msg||'Сохранено');}
+function trItems(){return S.cat.filter(x=>x.kind==='item');}
+async function drawTree(){
+  if(!S.rules&&!(await trLoad()))return;
+  const its=trItems(),bySec={};its.forEach(x=>((bySec[x.sec]??={})[x.grp]??=[]).push(x));
+  Object.entries(TR.extra).forEach(([sec,gs])=>gs.forEach(g=>((bySec[sec]??={})[g]??=[])));
+  const secs=[...SECS,...Object.keys(bySec).filter(x=>!SECS.includes(x))];
+  const ord=(sec)=>{const gs=bySec[sec]||{},f=grpOrder(its.filter(x=>x.sec===sec));return Object.keys(gs).sort((a,b)=>(f[a]??1e12)-(f[b]??1e12));};
+  const node=(t,attrs,label,cnt,inner,open)=>`<div class="tn t-${t} ${open?'open':''}" ${attrs}><div class="tl" draggable="${t!=='s'}"><span class="tw">${inner!=null?'▸':''}</span><span class="tt">${esc(label)}</span><span class="tc">${cnt}</span></div>${open&&inner!=null?`<div class="tk">${inner()}</div>`:''}</div>`;
+  $('#tree').innerHTML=secs.map(sec=>{const gs=ord(sec),ks='s|'+sec;
+    return node('s',`data-k="${esc(ks)}" data-sec="${esc(sec)}"`,sec,gs.length?gs.length+' гр.':'пусто',()=>gs.map(g=>{const gi=bySec[sec][g],kg='g|'+sec+'|'+g,subs=[...new Set(gi.map(x=>x.params?.sub).filter(Boolean))];
+      return node('g',`data-k="${esc(kg)}" data-sec="${esc(sec)}" data-grp="${esc(g)}"`,g,gi.length+' поз.',()=>subs.map(u=>{const ui=gi.filter(x=>x.params?.sub===u),ku='u|'+sec+'|'+g+'|'+u;
+          return node('u',`data-k="${esc(ku)}" data-sec="${esc(sec)}" data-grp="${esc(g)}" data-sub="${esc(u)}"`,u,ui.length+' поз.',()=>ui.map(x=>node('i',`data-id="${x.id}" data-sec="${esc(sec)}" data-grp="${esc(g)}" data-sub="${esc(u)}"`,x.name,rub(x.cprice))).join(''),TR.open.has(ku));}).join('')
+        +gi.filter(x=>!x.params?.sub).map(x=>node('i',`data-id="${x.id}" data-sec="${esc(sec)}" data-grp="${esc(g)}"`,x.name,rub(x.cprice))).join(''),TR.open.has(kg));}).join('')
+      +`<button class="tadd" data-addg="${esc(sec)}">+ новая группа</button>`,TR.open.has(ks));}).join('');
+  const tree=$('#tree');
+  tree.querySelectorAll('.tw').forEach(w=>w.onclick=e=>{const n=w.closest('.tn'),k=n.dataset.k;if(!k)return;TR.open.has(k)?TR.open.delete(k):TR.open.add(k);drawTree();});
+  tree.querySelectorAll('.t-s>.tl .tt').forEach(t=>t.onclick=()=>{const k=t.closest('.tn').dataset.k;TR.open.has(k)?TR.open.delete(k):TR.open.add(k);drawTree();});
+  tree.querySelectorAll('[data-addg]').forEach(b=>b.onclick=()=>{const sec=b.dataset.addg;let i=1;while(bySec[sec]?.['Новая группа '+i])i++;(TR.extra[sec]??=[]).push('Новая группа '+i);TR.open.add('s|'+sec);drawTree();});
+  // переименование — двойной щелчок
+  tree.querySelectorAll('.t-g>.tl .tt,.t-u>.tl .tt').forEach(t=>t.ondblclick=()=>{const n=t.closest('.tn'),old=t.textContent;t.innerHTML=`<input value="${esc(old)}">`;const i=t.querySelector('input');i.focus();i.select();
+    const done=ok=>{const v=i.value.trim();if(!ok||!v||v===old){drawTree();return;}n.classList.contains('t-g')?moveGrp(n.dataset.sec,n.dataset.grp,n.dataset.sec,v):moveSub(n.dataset,{sec:n.dataset.sec,grp:n.dataset.grp,sub:v});};
+    i.onkeydown=e=>{if(e.key==='Enter')done(true);if(e.key==='Escape')done(false);};i.onblur=()=>done(true);});
+  // перетаскивание
+  tree.querySelectorAll('.tl[draggable="true"]').forEach(l=>{l.ondragstart=e=>{const n=l.closest('.tn');TR.drag={...n.dataset,t:n.classList.contains('t-g')?'g':n.classList.contains('t-u')?'u':'i'};e.dataTransfer.setData('text/plain','x');e.dataTransfer.effectAllowed='move';};
+    l.ondragend=()=>{TR.drag=null;tree.querySelectorAll('.over').forEach(x=>x.classList.remove('over'));};});
+  tree.querySelectorAll('.tl').forEach(l=>{const n=l.closest('.tn'),t=n.classList.contains('t-s')?'s':n.classList.contains('t-g')?'g':n.classList.contains('t-u')?'u':'i';
+    const ok=()=>{const d=TR.drag;if(!d)return false;return (d.t==='g'&&(t==='s'||t==='g'))||(d.t==='u'&&(t==='g'||t==='s'||t==='u'))||(d.t==='i'&&(t==='g'||t==='u'));};
+    l.ondragover=e=>{if(ok()){e.preventDefault();l.classList.add('over');}};l.ondragleave=()=>l.classList.remove('over');
+    l.ondrop=e=>{e.preventDefault();l.classList.remove('over');const d=TR.drag,tg=n.dataset;if(!d||!ok())return;TR.drag=null;
+      if(d.t==='g'&&t==='s')moveGrp(d.sec,d.grp,tg.sec,d.grp);
+      else if(d.t==='g'&&t==='g')moveGrp(d.sec,d.grp,tg.sec,d.grp,tg.grp);
+      else if(d.t==='u'&&t==='g')moveSub(d,{sec:tg.sec,grp:tg.grp,sub:d.sub});
+      else if(d.t==='u'&&t==='u')moveSub(d,{sec:tg.sec,grp:tg.grp,sub:tg.sub});
+      else if(d.t==='u'&&t==='s')moveSub(d,{sec:tg.sec,grp:d.sub,sub:null});
+      else if(d.t==='i')moveItem(d.id,{sec:tg.sec,grp:tg.grp,sub:tg.sub||null});};});
+}
+// группа (итоговая) → в раздел sec2 под именем grp2; before — встать перед этой группой
+async function moveGrp(sec,grp,sec2,grp2,before){
+  const its=trItems(),gi=its.filter(x=>x.sec===sec&&x.grp===grp),rows=[],seen=new Set();
+  gi.forEach(x=>{const k=rk.g(x);if(!seen.has(k)){seen.add(k);rows.push({key:k,sec:sec2,grp:grp2,sub:null,sort:S.rules[k]?.sort??null});}
+    [rk.u(x),rk.i(x)].forEach(k=>{const r=S.rules[k];if(r&&!seen.has(k)){seen.add(k);rows.push({...r,sec:sec2,grp:grp2});}});});
+  if(TR.extra[sec])TR.extra[sec]=TR.extra[sec].filter(g=>g!==grp);
+  // порядок групп в разделе назначения
+  const f=grpOrder(its.filter(x=>x.sec===sec2&&!(x.sec===sec&&x.grp===grp)));let order=Object.keys(f).sort((a,b)=>f[a]-f[b]).filter(g=>g!==grp2);
+  const at=before?order.indexOf(before):-1;at<0?order.push(grp2):order.splice(at,0,grp2);
+  order.forEach((g,ix)=>{its.filter(x=>x.sec===sec2&&x.grp===g).forEach(x=>{const k=rk.g(x);const r=rows.find(y=>y.key===k);if(r)r.sort=ix;else if(!seen.has(k)){seen.add(k);rows.push({key:k,sec:x.sec,grp:x.grp,sub:null,sort:ix});}});});
+  rows.filter(r=>r.key.startsWith('grp:')&&r.sec===sec2&&r.grp===grp2).forEach(r=>r.sort=order.indexOf(grp2));
+  await trSave(rows,before?'Группа переставлена':'Группа перенесена в «'+sec2+'»');}
+async function moveSub(d,to){
+  const gi=trItems().filter(x=>x.sec===d.sec&&x.grp===d.grp&&x.params?.sub===d.sub),rows=[],seen=new Set();
+  gi.forEach(x=>{const k=rk.u(x);if(!seen.has(k)){seen.add(k);rows.push({key:k,sec:to.sec,grp:to.grp,sub:to.sub,sort:null});}const ki=rk.i(x);if(S.rules[ki]&&!seen.has(ki)){seen.add(ki);rows.push({...S.rules[ki],sec:to.sec,grp:to.grp,sub:to.sub});}});
+  if(TR.extra[to.sec])TR.extra[to.sec]=TR.extra[to.sec].filter(g=>g!==to.grp);
+  await trSave(rows,'Подгруппа перенесена');}
+async function moveItem(id,to){const x=S.byId[id];if(!x)return;if(TR.extra[to.sec])TR.extra[to.sec]=TR.extra[to.sec].filter(g=>g!==to.grp);await trSave([{key:rk.i(x),sec:to.sec,grp:to.grp,sub:to.sub,sort:null}],'Позиция перенесена');}
+
 /* ---------- главный: каталог и наценки ---------- */
 async function openAdmin(){
   $('#app').hidden=true;$('#adm').hidden=false;$('#vars').innerHTML='';$('#ttl').value='Каталог и наценки';$('#ttl').disabled=true;
@@ -509,6 +587,11 @@ async function openAdmin(){
       <tr><td>Плиты: корпус, фасады, стенки (EGGER, ALVIC, AGT, TSS, пластик…)</td><td><input data-k="sec:Плиты" value="${M['sec:Плиты']??''}" placeholder="—"></td></tr>
       ${SECS.map(s=>`<tr><td>${s}</td><td><input data-k="sec:${esc(s)}" value="${M['sec:'+s]??''}" placeholder="—"></td></tr>`).join('')}</table>
       <button class="pill lime" id="mkSave" style="align-self:flex-start">Сохранить наценки</button><span class="msg" id="mkMsg"></span></div>
+    <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><b style="font-size:20px;font-weight:500">Структура каталога</b>
+      <span style="display:flex;gap:8px"><button class="pill" id="trOpen">Развернуть всё</button><button class="pill dash" id="trReset">Вернуть как в файле</button></span></div>
+      <span class="msg">Перетаскивайте мышью: группу — на раздел (перенос) или на другую группу (встанет перед ней); подгруппу — на группу; позицию — на группу или подгруппу.
+        Двойной щелчок по названию группы или подгруппы — переименовать. Новая загрузка файла каталога перестановки не сбрасывает.</span>
+      <div class="tree" id="tree"></div><span class="msg" id="trMsg"></span></div>
     <div class="panel"><b style="font-size:20px;font-weight:500">Логотипы брендов</b><span class="msg">Показываются в смете на плитках брендов и материалов. Загрузите файл (PNG, SVG, JPG) или вставьте адрес картинки. «Тёмная плитка» — для светлых логотипов.</span>
       <div class="brands" id="brands"></div></div></div>`;
   const drawBrands=()=>{$('#brands').innerHTML=BRANDS.map(([k,n])=>{const l=logoOf(k);return `<div class="b"><b style="font-weight:500">${esc(n)}</b>${l?logoTile(l):'<span class="im" style="display:grid;place-items:center;color:var(--ink4);font-size:12px">нет логотипа</span>'}
@@ -521,6 +604,9 @@ async function openAdmin(){
     document.querySelectorAll('[data-bu]').forEach(i=>i.onchange=()=>{const v=i.value.trim();if(v&&!/^https:\/\//.test(v))return toast('Нужен адрес https://…');put(i.dataset.bu,v||null,!!S.brands?.[i.dataset.bu]?.dark);});
     document.querySelectorAll('[data-bd]').forEach(i=>i.onchange=()=>{const k=i.dataset.bd,l=S.brands?.[k]?.logo||OWN_LOGO[k]?.logo;if(!l)return;put(k,l,i.checked);});};
   S.brands=S.brands||{};drawBrands();
+  drawTree();
+  $('#trOpen').onclick=()=>{const all=TR.open.size>3;TR.open.clear();if(!all){SECS.forEach(x=>TR.open.add('s|'+x));}drawTree();};
+  $('#trReset').onclick=async()=>{if(!confirm('Вернуть структуру как в файле каталога? Все перестановки удалятся.'))return;const {error}=await sb.from('cat_tree').delete().neq('key','');if(error)return toast('Ошибка: '+error.message);S.rules={};await loadCat();drawTree();toast('Структура как в файле');};
   $('#mkSave').onclick=async()=>{const up=[],del=[];document.querySelectorAll('[data-k]').forEach(i=>{const v=parseFloat(i.value.replace(',','.'));v>0?up.push({key:i.dataset.k,k:v}):del.push(i.dataset.k);});
     const r1=await sb.from('markups').upsert(up);const r2=del.length?await sb.from('markups').delete().in('key',del.filter(k=>k!=='*')):{};
     $('#mkMsg').textContent=r1.error||r2.error?'Ошибка: '+(r1.error||r2.error).message:'Сохранено';};
