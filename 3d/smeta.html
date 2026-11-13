@@ -107,6 +107,9 @@ main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:10px ma
 .dc button.on{background:var(--ink);color:var(--bg)}.dc input{width:52px;height:32px;border-radius:16px;border:0;background:var(--field);text-align:center}
 .msg{color:var(--ink3);font-size:13px}.msg.err{color:var(--red)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:500;z-index:50}
+.flts{display:flex;flex-direction:column;gap:8px}.flt{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.flt>em{font-style:normal;font-size:12px;color:var(--ink3);min-width:84px}
+.fc{all:unset;box-sizing:border-box;cursor:pointer;height:32px;padding:0 12px;border-radius:16px;background:var(--field);color:var(--ink2);font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.fc:hover{background:var(--raised)}.fc.on{background:var(--ink);color:var(--bg);font-weight:600}.fc[disabled]{opacity:.35;pointer-events:none}.fc small{opacity:.6;font-size:11px}
+.fhint{font-size:12px;color:var(--ink3);display:flex;gap:10px;align-items:center}.fhint button{all:unset;cursor:pointer;color:var(--ink2);text-decoration:underline}
 .psearch{position:relative}.psearch input{width:100%;height:46px;border-radius:23px;border:0;box-shadow:inset 0 0 0 1px #3a352f;background:var(--field);padding:0 18px 0 42px;color:var(--ink);font-size:15px}
 .psearch svg{position:absolute;left:16px;top:15px}
 .tile i.no{background:transparent;border:1.5px dashed #3a352f;display:grid;place-items:center}.nop{font-size:11px;color:var(--ink4)}
@@ -349,24 +352,37 @@ function renderPick(){
     head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(x.name)}</b><small>выберите декор</small>`;
     body=searchBox('Найти декор…')+`<div class="grid">${ds.map(d=>decTile(d,false,A(()=>finishItem(x,d)),df==='top_ceramic'?d.params.cat+' мм':df==='top_hpl'?d.params.cat:'')).join('')||'<span class="msg">Ничего не нашли</span>'}</div>
       <div><button class="pill" data-act="${A(()=>finishItem(x,null))}">Без декора — впишу сам</button></div>`;
-  }else if(q){const its=items.filter(x=>hit(x.name+' '+x.grp,q));
+  }else if(q&&!o.grp){const its=items.filter(x=>hit(x.name+' '+x.grp,q));
     head=`<b>${esc(o.sec)}</b><small>поиск по разделу</small>`;body=searchBox('Найти в разделе «'+o.sec+'»…')+`<div class="cards">${its.map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
   }else if(!o.grp){
     head=`<b>${esc(o.sec)}</b><small>выберите бренд или серию</small>`;
     body=searchBox('Найти в разделе «'+o.sec+'»…')+(grps.length?`<div class="cards">${grps.map(g=>{const its=items.filter(x=>x.grp===g),min=Math.min(...its.map(x=>x.cprice||1e12));const ph=its.find(x=>x.photo)?.photo;
       const gi=grpIcon(o.sec,g),lg=gi?null:logoOf(brandOf(g));
-      return `<button class="card" data-act="${A(()=>{o.grp=g;renderPick();})}">${gi?`<span class="im fill" ${bgi(gi)}></span>`:lg?logoTile(lg):`<span class="im" ${bgi(ph)}>${ph?'':esc(g.slice(0,2).toUpperCase())}</span>`}<span class="tx"><b>${esc(g)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;}).join('')}</div>`
+      return `<button class="card" data-act="${A(()=>{o.grp=g;o.ff={};renderPick();})}">${gi?`<span class="im fill" ${bgi(gi)}></span>`:lg?logoTile(lg):`<span class="im" ${bgi(ph)}>${ph?'':esc(g.slice(0,2).toUpperCase())}</span>`}<span class="tx"><b>${esc(g)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;}).join('')}</div>`
       :`<div class="msg">${o.sec==='Работы'?'Сборка, доставка, монтаж — ваш прайс, загрузим, когда пришлёте.':'В этом разделе каталога пока нет позиций.'}</div>`);
   }else{const gi=items.filter(x=>x.grp===o.grp),subs=[...new Set(gi.map(x=>x.params?.sub).filter(Boolean))];
     head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(o.sec)} › ${esc(o.grp)}${o.sub?' › '+esc(o.sub):''}</b><small>${subs.length&&!o.sub?'выберите серию':'цены для клиента'}</small>`;
     /* подгруппы — как вложенные страницы на сайте фабрики (рамочный профиль → TW-NV, Flex, Mystery…) */
     const subCard=sb=>{const its=gi.filter(x=>x.params?.sub===sb),ic=grpIcon(o.sec,o.grp,sb)||its.find(x=>x.photo)?.photo,min=Math.min(...its.map(x=>x.cprice||1e12));
-      return `<button class="card" data-act="${A(()=>{o.sub=sb;renderPick();})}"><span class="im fill ${ic?'':'no'}" ${bgi(ic)}>${ic?'':'нет фото'}</span><span class="tx"><b>${esc(sb)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;};
-    body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+`<div class="cards">${o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}
+      return `<button class="card" data-act="${A(()=>{o.sub=sb;renderPick();})}">${ic?`<span class="im fill" ${bgi(ic)}></span>`:logoOf(brandOf(o.grp))?logoTile(logoOf(brandOf(o.grp))):`<span class="im no">нет фото</span>`}<span class="tx"><b>${esc(sb)}</b><span>${its.length} поз. · от ${rub(min)}</span></span></button>`;};
+    /* Макс 13.11: фильтры-кнопки (params.f) — серия, цвет, длина…; признак показываем, если в группе ≥ 2 значений */
+    const fv=(x,k)=>{const v=x.params?.f?.[k];return v==null?[]:Array.isArray(v)?v:[v];};
+    const keys=[];gi.forEach(x=>Object.keys(x.params?.f||{}).forEach(k=>{if(!keys.includes(k))keys.push(k);}));
+    const facets=keys.map(k=>{const vs=[];gi.forEach(x=>fv(x,k).forEach(v=>{if(!vs.includes(v))vs.push(v);}));if(vs.every(v=>/^\d/.test(v)))vs.sort((a,b)=>parseFloat(a)-parseFloat(b));return [k,vs];}).filter(([,vs])=>vs.length>1);
+    o.ff=o.ff||{};const ok=(x,skip)=>Object.entries(o.ff).every(([k,v])=>k===skip||fv(x,k).includes(v))&&(!q||hit(x.name,q));
+    if(facets.length){
+      const list=gi.filter(x=>ok(x));
+      head=head.replace('выберите серию','цены для клиента');
+      body=searchBox('Найти в «'+o.grp+'»…')+`<div class="flts">${facets.map(([k,vs])=>`<div class="flt"><em>${esc(k)}</em><button class="fc ${o.ff[k]==null?'on':''}" data-act="${A(()=>{delete o.ff[k];renderPick();})}">Все</button>${vs.map(v=>{const n=gi.filter(x=>ok(x,k)&&fv(x,k).includes(v)).length,on=o.ff[k]===v;
+        return `<button class="fc ${on?'on':''}" ${n||on?'':'disabled'} data-act="${A(()=>{if(on)delete o.ff[k];else o.ff[k]=v;renderPick();})}">${esc(v)}<small>${n}</small></button>`;}).join('')}</div>`).join('')}</div>
+        <div class="fhint">Найдено: ${list.length}${Object.keys(o.ff).length?` <button data-act="${A(()=>{o.ff={};renderPick();})}">сбросить фильтры</button>`:''}</div>
+        <div class="cards">${list.map(itemCard).join('')||'<span class="msg">Ничего не нашли — снимите какой-нибудь фильтр</span>'}</div>`;
+    }else{const shown=x=>!q||hit(x.name,q);
+    body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+`<div class="cards">${q?gi.filter(x=>(!o.sub||x.params?.sub===o.sub)&&shown(x)).map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>':o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}}
   if(!head.includes('pBack'))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
   $('#left').innerHTML=panel(head,body);
   $('#pClose').onclick=()=>{S.open=null;render();};
-  $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp)o.grp=null;else{S.open=null;render();return;}renderPick();});
+  $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp){o.grp=null;o.ff={};}else{S.open=null;render();return;}renderPick();});
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acts[b.dataset.act]());
   bindSearch(renderPick);
   function pickItem(x){if(DEC_FAM(x)&&decs(DEC_FAM(x)).length){o.item=x;o.q='';renderPick();}else finishItem(x,null);}
