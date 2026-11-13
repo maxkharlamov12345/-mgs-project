@@ -288,7 +288,7 @@ const BRANDS=[['mgs','MGS',/^MGS|Leonardo|Dante|REGO|SPACE|DECCO|Smartcube|Ра�
   ['firmax','FIRMAX',/firmax/i],['kessebohmer','Kessebohmer',/kesseb/i],['egger','EGGER',/egger/i],['alvic','ALVIC',/alvic|syncron/i],['agt','AGT',/^agt/i],['tss','TSS / Cleaf',/tss|cleaf/i],
   ['fenix','FENIX',/fenix/i],['arpa','ARPA',/arpa/i],['wilsonart','Wilsonart',/wilsonart/i],['dollken','Döllken',/dollken|döllken/i],['kedr','КЕДР',/кедр/i],['slavyanka','Славянка',/славянка/i],
   ['sonatti','SONATTI',/sonatti/i],['bramek','BRAMEK',/bramek/i]];
-const OWN_LOGO={mgs:{logo:'assets/cat/brand/mgs.webp',dark:true},blum:{logo:'assets/cat/brand/blum.webp',dark:true},hettich:{logo:'assets/cat/brand/hettich.webp',dark:true}};
+const OWN_LOGO={mgs:{logo:'assets/cat/brand/mgs.webp',dark:true},blum:{logo:'assets/cat/brand/blum.webp',dark:true},hettich:{logo:'assets/cat/brand/hettich.webp',dark:true},boyard:{logo:'assets/cat/brand/boyard.webp',dark:false}};
 const FAM_BRAND={egger16:'egger',egger18:'egger',eggerps:'egger',eggersmart:'egger',alvic:'alvic',agt:'agt',tss:'tss',arpa:'arpa',ldsp:'mgs',hdf:'mgs',dvp:'mgs',pvc:'mgs',emal:'mgs'};
 const brandOf=g=>(BRANDS.find(b=>b[2].test(g||''))||[])[0];
 const grpOrder=items=>{const f={};items.forEach(x=>{const k=x.gsort!=null?x.gsort:1e9+x.sort;if(!(x.grp in f)||k<f[x.grp])f[x.grp]=k;});return f;};
