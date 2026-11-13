@@ -218,14 +218,14 @@ function renderLeft(){
     return `<div class="grp ${on?'open':''}"><div class="gh"><span class="t"><b>${gname}</b><span>${used.length?used.join(' · '):'ничего не добавлено'}</span></span>
       <span class="th">${th.map(l=>`<i ${phStyle(l)}></i>`).join('')}</span><span class="cnt">${filled.length?filled.length+' поз.':'пусто'}</span><span class="sum num">${sum?rub(sum):''}</span>
       </div>
-      ${on?`<div class="gb">${used.map(s=>`<div class="sec"><div class="sh"><span>${s}</span><button class="lnk" data-add="${esc(s)}">+ ещё</button></div>
+      ${on?`<div class="gb">${used.map(s=>`<div class="sec"><div class="sh"><span>${s}</span></div>
         ${L.filter(l=>l.sec===s).map(lineHtml).join('')}</div>`).join('')}
-        ${secs.length>used.length?`<div class="unused"><em>Добавить:</em>${secs.filter(s=>!used.includes(s)).map(s=>`<button data-add="${esc(s)}">+ ${s}</button>`).join('')}</div>`:''}</div>`:''}</div>`;
+        <div class="unused"><em>Добавить:</em>${secs.map(s=>`<button data-add="${esc(s)}">+ ${s}</button>`).join('')}</div></div>`:''}</div>`;
   }).join('');
   $('#left').innerHTML=html+`<div class="search"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a8a196" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
     <input id="q" placeholder="Найти позицию во всех прайсах (и Hettich)…" value="${esc(S.q)}" autocomplete="off"><div id="found"></div></div>`;
   const left=$('#left');
-  left.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const l={id:uid(),sec:b.dataset.add,price:0,qty:0};V().lines.push(l);openFor(l);});
+  left.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{S.draft={id:uid(),sec:b.dataset.add,price:0,qty:0};openFor(S.draft);});
   left.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const l=V().lines.find(x=>x.id===b.dataset.open);if(l&&!l.auto)openFor(l);});
   left.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>setLines(L=>L.filter(x=>x.id!==b.dataset.del&&x.parent!==b.dataset.del)));
   left.querySelectorAll('[data-qty]').forEach(i=>i.oninput=()=>{const l=V().lines.find(x=>x.id===i.dataset.qty);const n=parseFloat(i.value.replace(/\s/g,'').replace(',','.'));
@@ -330,7 +330,10 @@ function openFor(l){
   render();window.scrollTo({top:0});
 }
 function renderPanel(){S.open.mode==='plate'?renderPlate():renderPick();}
-function setLine(patch){const o=S.open;V().lines=V().lines.map(l=>l.id===o.id?{...l,qtyTxt:undefined,...patch}:l);S.open=null;save();render();}
+/* Макс 13.11: строка попадает в смету только после выбора — до этого черновик S.draft */
+const curL=()=>V().lines.find(y=>y.id===S.open.id)||S.draft;
+function ensureDraft(){const o=S.open;if(S.draft&&S.draft.id===o.id&&!V().lines.some(l=>l.id===o.id))V().lines.push(S.draft);S.draft=null;}
+function setLine(patch){const o=S.open;ensureDraft();V().lines=V().lines.map(l=>l.id===o.id?{...l,qtyTxt:undefined,...patch}:l);S.open=null;save();render();}
 const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div class="l">${head}</div><button class="rb" id="pClose" aria-label="Закрыть">×</button></div>${body}${foot}</div>`;
 
 /* --- обычные разделы: бренд/серия → позиции (→ декор у столешниц и стекла) --- */
@@ -367,7 +370,7 @@ function renderPick(){
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acts[b.dataset.act]());
   bindSearch(renderPick);
   function pickItem(x){if(DEC_FAM(x)&&decs(DEC_FAM(x)).length){o.item=x;o.q='';renderPick();}else finishItem(x,null);}
-  function finishItem(x,d){const l=V().lines.find(y=>y.id===o.id);
+  function finishItem(x,d){const l=curL();
     setLine({item:x.id,name:x.name,decor:d?d.name:'',price:x.cprice,unit:x.unit,qty:l.qty||1,th:d?.photo?{photo:d.photo}:x.photo?{photo:x.photo}:null});}
 }
 
@@ -463,7 +466,7 @@ function renderPlate(){
       +`<label class="fld">Нет в списке — впишите декор<input id="dTxt" value="${esc(s.decorTxt||'')}" placeholder="название или код"></label>`;
   }else if(key==='Позиция'){ph='Найти позицию раздела…';
     const its=S.cat.filter(x=>x.sec===o.sec&&x.kind==='item'&&x.cprice&&(!q||hit(x.name+' '+x.grp,q)));
-    body=`<div class="cards">${its.map(x=>`<button class="card" data-act="${A(()=>{const l=V().lines.find(y=>y.id===o.id);setLine({item:x.id,name:x.name,price:x.cprice,unit:x.unit,qty:l.qty||1,decor:'',th:x.photo?{photo:x.photo}:null,spec:null});})}"><span class="im ${x.photo?'':'no'}" ${bgi(x.photo)}>${x.photo?'':'нет фото'}</span><span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit)} · ${esc(x.grp)}</span></span></button>`).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
+    body=`<div class="cards">${its.map(x=>`<button class="card" data-act="${A(()=>{const l=curL();setLine({item:x.id,name:x.name,price:x.cprice,unit:x.unit,qty:l.qty||1,decor:'',th:x.photo?{photo:x.photo}:null,spec:null});})}"><span class="im ${x.photo?'':'no'}" ${bgi(x.photo)}>${x.photo?'':'нет фото'}</span><span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit)} · ${esc(x.grp)}</span></span></button>`).join('')||'<span class="msg">Ничего не нашли</span>'}</div>`;
   }else{ph='';
     const X=s.fam==='emal'?[['two','Две стороны +50%'],['twocolor','Два цвета +50%'],['patina','Патина'],['glitter','Блёстки']]:s.fam==='pvc'?[['two','Плёнка с двух сторон +50%']]:[];
     const pr=specPrice(s),eo=edgeOpts(s);if(eo&&!eo.some(e=>e.id===s.edge))s.edge=eo[0].id;
@@ -502,7 +505,7 @@ function renderPlate(){
     if(!isLast){o.step=step+1;o.q='';renderPlate();return;}
     const p=specPrice(s);if(!p.cp){toast('Нет цены для этого сочетания — проверьте толщину и категорию');return;}
     const eo=edgeOpts(s),e=eo?S.byId[s.edge]:null,dec=plateDecor(s);
-    V().lines=V().lines.filter(l=>l.parent!==o.id).flatMap(l=>{if(l.id!==o.id)return [l];
+    ensureDraft();V().lines=V().lines.filter(l=>l.parent!==o.id).flatMap(l=>{if(l.id!==o.id)return [l];
       const nl={...l,qtyTxt:undefined,name:plateName(s),decor:[dec,s.note].filter(Boolean).join(' · '),qty:s.area,unit:'м²',price:p.cp,th:plateThumb(s),spec:s};
       return e?[nl,{id:uid(),parent:o.id,auto:true,sec:'Кромка',item:e.id,name:'Кромка '+e.name,decor:'к «'+(S.byId[s.decor]?.name||plateName(s))+'»',qty:s.edgeM||0,unit:'м.п.',price:e.cprice}]:[nl];});
     S.open=null;save();render();});
