@@ -34,11 +34,13 @@ main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:10px ma
 .right{flex:1 1 360px;max-width:460px;min-width:0;background:var(--surface);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:6px;position:sticky;top:12px}
 @media (max-width:1000px){.right{position:static;max-width:none}}
 .grp{background:var(--surface);border-radius:22px}
+.grp.open{box-shadow:0 0 0 1px #2c2824}
 .gh{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:16px 20px}
 .gh .t{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:3px}.gh .t b{font-size:17px;font-weight:500}
 .gh .t span{font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gh .th{display:flex;gap:4px}.gh .th i{width:26px;height:26px;border-radius:7px;background:#2a2622 center/cover}
 .gh .cnt{font-size:12px;color:var(--ink3);min-width:60px;text-align:right}.gh .sum{font-size:16px;min-width:100px;text-align:right}
+.gh svg{transition:transform .2s}.grp.open .gh svg{transform:rotate(180deg)}
 .gb{display:flex;flex-direction:column;gap:14px;padding:0 14px 16px}
 .sec .sh{display:flex;justify-content:space-between;align-items:baseline;padding:0 8px 4px}
 .sec .sh span{font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em}
@@ -55,9 +57,6 @@ main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;padding:10px ma
 .ln label.q span{font-size:11px;color:var(--ink3);min-width:22px}
 .ln .s{flex:0 0 100px;text-align:right;font-variant-numeric:tabular-nums}
 .ln .x{all:unset;cursor:pointer;width:28px;text-align:center;color:#6f695f;font-size:18px}
-.sec.empty .sh span{color:var(--ink4)}
-.addpl{all:unset;box-sizing:border-box;cursor:pointer;width:100%;min-height:52px;display:flex;align-items:center;gap:10px;padding:0 16px;border-radius:16px;box-shadow:inset 0 0 0 1px #3a352f;color:var(--ink3);font-size:14px}
-.addpl:hover{box-shadow:inset 0 0 0 1px #bfd630;color:var(--ink)}.addpl i{font-style:normal;font-size:20px;line-height:1;color:#bfd630}
 .unused{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:4px 8px 0}.unused em{font-style:normal;font-size:12px;color:var(--ink4);margin-right:4px}
 .unused button{all:unset;cursor:pointer;height:32px;padding:0 12px;border-radius:16px;box-shadow:inset 0 0 0 1px #4a453e;color:var(--ink2);font-size:12px;display:inline-flex;align-items:center}
 .search{position:relative}
@@ -213,14 +212,15 @@ const phStyle=l=>l.th?.photo?`style="background-image:url('${esc(ASSET(l.th.phot
 function renderLeft(){
   const L=V().lines;
   const html=GROUPS.map(([gname,secs],gi)=>{
-    const used=secs.filter(s=>L.some(l=>l.sec===s));
+    const used=secs.filter(s=>L.some(l=>l.sec===s)),on=true; /* Макс 13.11: группы не сворачиваются — плашки разделов видны сразу */
     const filled=L.filter(l=>secs.includes(l.sec)&&l.price);const sum=filled.reduce((a,l)=>a+lineSum(l),0);
     const th=[...new Map(filled.filter(l=>l.th).map(l=>[JSON.stringify(l.th),l])).values()].slice(0,4);
-    /* Макс 13.11: группы не сворачиваются, видны все разделы — пустые плашкой «+ Выбрать» */
-    return `<div class="grp"><div class="gh"><span class="t"><b>${gname}</b><span>${used.length?used.join(' · '):'ничего не добавлено'}</span></span>
-      <span class="th">${th.map(l=>`<i ${phStyle(l)}></i>`).join('')}</span><span class="cnt">${filled.length?filled.length+' поз.':'пусто'}</span><span class="sum num">${sum?rub(sum):''}</span></div>
-      <div class="gb">${secs.map(s=>{const ls=L.filter(l=>l.sec===s);return ls.length?`<div class="sec"><div class="sh"><span>${s}</span><button class="lnk" data-add="${esc(s)}">+ ещё</button></div>
-        ${ls.map(lineHtml).join('')}</div>`:`<div class="sec empty"><div class="sh"><span>${s}</span></div><button class="addpl" data-add="${esc(s)}"><i>+</i>Выбрать из каталога</button></div>`;}).join('')}</div></div>`;
+    return `<div class="grp ${on?'open':''}"><div class="gh"><span class="t"><b>${gname}</b><span>${used.length?used.join(' · '):'ничего не добавлено'}</span></span>
+      <span class="th">${th.map(l=>`<i ${phStyle(l)}></i>`).join('')}</span><span class="cnt">${filled.length?filled.length+' поз.':'пусто'}</span><span class="sum num">${sum?rub(sum):''}</span>
+      </div>
+      ${on?`<div class="gb">${used.map(s=>`<div class="sec"><div class="sh"><span>${s}</span><button class="lnk" data-add="${esc(s)}">+ ещё</button></div>
+        ${L.filter(l=>l.sec===s).map(lineHtml).join('')}</div>`).join('')}
+        ${secs.length>used.length?`<div class="unused"><em>Добавить:</em>${secs.filter(s=>!used.includes(s)).map(s=>`<button data-add="${esc(s)}">+ ${s}</button>`).join('')}</div>`:''}</div>`:''}</div>`;
   }).join('');
   $('#left').innerHTML=html+`<div class="search"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a8a196" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
     <input id="q" placeholder="Найти позицию во всех прайсах (и Hettich)…" value="${esc(S.q)}" autocomplete="off"><div id="found"></div></div>`;
