@@ -17,7 +17,7 @@ const R=(id,p)=>({id,p});
 const PROMO=R('e7b62d70a0909e988180a5eb6a88cef9','');
 const IMG='../assets/cat/mgs/';
 const METOD={
- 'mgs-box':{sec:'Ящики и направляющие',grp:'MGS',title:'Методичка MGS',sub:'видео, характеристики, чертежи и что сказать клиенту — по каждой системе',
+ 'mgs-box':{sec:'Ящики и направляющие',grp:'MGS',badge:'Гарантия фабрики 10 лет',title:'Методичка MGS',sub:'видео, характеристики, чертежи и что сказать клиенту — по каждой системе',
   series:[
    {k:'t',name:'T-box',tag:'с рейлингами',tile:'doc/t-tile.webp',draw:['doc/t-box.svg'],heights:['tbox-h100-white-v3.webp','tbox-h155-white-v3.webp','tbox-h220-white-v3.webp'],
     sub:'Двустенные царги, рейлинги · с 2022 года · гарантия 10 лет',
@@ -51,12 +51,12 @@ const METOD={
     videos:[{t:'Обучение MGS PRO',...R('cddb9c913d1ac7f127965fb706f9106c','s-be5H4F3CaAKeA1gIsy9Q'),len:184},{t:'Промо MGS PRO',...PROMO,from:10,to:30},{t:'Промо «2+2»',...PROMO,from:98,to:122},{t:'Как поставить Tip-On',...R('cb467e52b77afd5e38f0f3b6a09a681b','Hpp0eBRPqpe5PXVHRwoXUg'),len:87}]}
   ]},
  /* Макс 14.11: петли MGS — сайт фабрики (MGS_petly, регламенты, стандарты проектирования, изменения), прайс 04/05, Rutube MGS MEBEL */
- 'mgs-hinge':{sec:'Петли',grp:'MGS',title:'Методичка: петли MGS',sub:'какую петлю выбрать, характеристики, схемы и что сказать клиенту',drawLabel:'Схемы',
+ 'mgs-hinge':{sec:'Петли',grp:'MGS',badge:'Гарантия фабрики 10 лет',title:'Методичка: петли MGS',sub:'какую петлю выбрать, характеристики, схемы и что сказать клиенту',drawLabel:'Схемы',
   src:'Источник: сайт фабрики MGS (TECHNO) — «Петли от компании MGS», регламент и стандарты проектирования; прайс фабрики; Rutube MGS MEBEL',
   map:x=>{const n=x.name||'';return /mystery/i.test(n)?'h-mys':/алюмин/i.test(n)?'h-alu':/тонких/i.test(n)?'h-thin':/180/.test(n)?'h-180':/без пружины/i.test(n)?'h-nos':'h-std';},
   series:[
-   {k:'h-how',name:'Как выбрать',tag:'и что указать в бланке',tile:'doc/h-how-tile.webp',photo:'doc/h-mount.svg',draw:['doc/h-gap-overlay.svg','doc/h-gap-inset.svg'],heights:[],
-    when:'Какую петлю MGS ставить в каждом случае — и правила фабрики, которые нужно не забыть в заказе.',facts:[],specsTitle:'Какую петлю ставить',
+   {k:'h-how',name:'Как выбрать',tag:'и что указать в бланке',tile:'doc/h-how-tile.webp',photo:null,draw:['doc/h-mount.svg','doc/h-gap-overlay.svg','doc/h-gap-inset.svg'],heights:[],
+    when:'Какую петлю MGS ставить в каждом случае — и правила фабрики, которые нужно не забыть в заказе. На всю фурнитуру MGS — петли и ящики — фабрика даёт гарантию 10 лет.',facts:[],specsTitle:'Какую петлю ставить',
     specs:[['Обычный распашной фасад','MGS с доводчиком'],['Фасад без ручек, с толкателем','MGS без пружины + Tip-on'],['Угловая секция, фасад у фальшпанели','MGS 180° с доводчиком'],['Тонкий фасад, от 12 мм','MGS для тонких фасадов'],['Узкая алюминиевая рамка','MGS для узкой рамки, чёрная'],['Рамка MYSTERY','MYSTERY скрытая']],
     say:[['Пишите петли MGS явно','Если петли в заказе не указаны, фабрика по умолчанию ставит Boyard без доводчика.'],['Монтаж — накладная по умолчанию','Вкладные фасады указывайте в бланке, расположение петель — на чертеже.'],['Зазоры 3 мм','Между фасадами по умолчанию 3 мм; под толкатель — минимум 3 мм.']],
     warn:['Петли не указаны — фабрика ставит Boyard без доводчика.','Фасады с толкателем по умолчанию идут на Blum без пружины — MGS нужно указать.','Радиусные фасады, TW-PLUS и ALVIC с ручкой 22 мм — только петли Blum.','Не ставьте в одну плоскость фасады с толкателем и фасады с доводчиком.','Фасады выше 1,5 м — заказывайте корректоры (по умолчанию не ставятся, без них претензии по выгибанию не принимаются).'],
@@ -102,7 +102,7 @@ const METOD={
     specs:[['Вес фасада','до 30 кг'],['Угол открывания','110°'],['Толщина двери','от 18 мм'],['Профиль','только рамка MYSTERY'],['Механизм','доводчик или без пружины'],['Регулировка по глубине','+2 / −0,5 мм'],['Регулировка по ширине','±2 мм'],['Регулировка по высоте','±1,5 мм'],['Продаётся','комплектом']],
     say:[['Петель не видно','Фасад выглядит цельной плоскостью — эффект «невидимой» двери.'],['Точная подгонка','Регулировка в трёх плоскостях — ровные зазоры.'],['Под толкатель','Есть версия без пружины — для Tip-on.']],
     warn:['Фасады выше 1700 мм — работа петель не гарантируется; фабрика рекомендует петли SALICE AIR.','В EGGER 18 мм при фасадах выше 1700 мм возможен выгиб в районе петель.','Ставится только на алюминиевую рамку MYSTERY.'],
-    videos:[]}
+    videos:[{t:'Петля MYSTERY',...R('98a24f7a7963e712df0cad54975fc919',''),from:16,to:26}]}
   ]}
 };
 const SER_MAP={'T-box':'t','L-box':'l','S-box':'s','N-box':'n','F-box':'f','MGS PRO':'rails','Направляющие MGS':'rails'};
@@ -142,14 +142,15 @@ window.openMetod=(k,sk,vi=0)=>{const M=METOD[k];const s=M.series.find(x=>x.k===s
   frag=v&&v.to!=null?{from:v.from||0,to:v.to,done:false}:null;
   let w=document.getElementById('mtdW');if(!w){w=document.createElement('div');w.id='mtdW';document.body.appendChild(w);
     w.addEventListener('click',e=>{if(e.target===w)closeMetod();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mtdW')?.classList.contains('on')){const z=document.getElementById('mtdZ');z?z.remove():closeMetod();}});}
-  const full=EDU[s.k]||[],facts=factsOf(s),warn=warnOf(s),pics=[...s.draw,...s.heights],ph=s.photo||s.tile;
+  const full=EDU[s.k]||[],facts=factsOf(s),warn=warnOf(s),pics=[...s.draw,...s.heights],ph=s.photo===null?null:(s.photo||s.tile);
+  const badge=M.badge?`<span class="mm-badge">🛡 ${esc(M.badge)}</span>`:'';
   const sec=(t,body,cls='')=>body?`<section class="mm-s ${cls}"><h4>${t}</h4>${body}</section>`:'';
   w.innerHTML=`<div class="mm" role="dialog" aria-label="${esc(M.title)}">
-   <div class="mm-top"><b>📘 ${esc(M.title)}</b><button class="mm-x" aria-label="Закрыть">×</button></div>
+   <div class="mm-top"><b>📘 ${esc(M.title)}</b>${badge}<button class="mm-x" aria-label="Закрыть">×</button></div>
    <div class="mm-g"><nav class="mm-nav">${M.series.map(x=>`<button class="${x.k===s.k?'on':''}" data-s="${x.k}"><i style="background-image:url('${IMG+(x.tile||x.photo)}')"></i><span><b>${esc(x.name)}</b><small>${esc(x.tag)}</small></span></button>`).join('')}</nav>
    <div class="mm-main">
-    <div class="mm-hero"><div class="mm-ph ${/\.svg$/.test(ph)?'fit':''}" style="background-image:url('${IMG+ph}')"></div>
-     <div class="mm-hi"><h3>${esc(s.name)}</h3><p class="mm-when">${esc(s.when||s.sub)}</p>
+    <div class="mm-hero ${ph?'':'nophoto'}">${ph?`<div class="mm-ph ${/\.svg$/.test(ph)?'fit':''}" style="background-image:url('${IMG+ph}')"></div>`:''}
+     <div class="mm-hi"><h3>${esc(s.name)}</h3>${M.badge&&s.k!=='h-how'?`<div class="mm-gar"><b>10 лет</b><span>гарантия фабрики на фурнитуру MGS</span></div>`:''}<p class="mm-when">${esc(s.when||s.sub)}</p>
       ${facts.length?`<div class="mm-facts">${facts.map(([val,lab])=>`<div><b>${esc(val)}</b><small>${esc(lab)}</small></div>`).join('')}</div>`:''}
       ${s.videos.length?`<button class="pill lime mm-go" data-go="vid">▶ Смотреть видео · ${mm(vlen(s.videos[0]))}</button>`:''}</div></div>
     ${sec('Что сказать клиенту',s.say.length?`<div class="mm-say">${s.say.map(([a,b],i)=>`<div><em>${i+1}</em><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div>`:'')}
@@ -159,7 +160,7 @@ window.openMetod=(k,sk,vi=0)=>{const M=METOD[k];const s=M.series.find(x=>x.k===s
       ${s.videos.length>1?`<div class="mtd-vs">${s.videos.map((x,i)=>`<button class="pill ${i===vi?'on':''}" data-v="${i}">${esc(x.t)} · ${mm(vlen(x))}</button>`).join('')}</div>`:''}
       <div class="mtd-note">${v.to!=null?`Фрагмент общего ролика фабрики — только про ${esc(s.name)} (${mm(v.from)}–${mm(v.to)})`:esc(v.t)+' · видео фабрики MGS'}</div></section>`:''}
     ${sec(M.drawLabel||'Схемы и фото',pics.length?`<div class="mm-pics">${pics.map(d=>`<button data-z="${IMG+d}" class="${/mount|adj/.test(d)?'wide':''}"><img src="${IMG+d}" alt="" loading="lazy"></button>`).join('')}</div><div class="mtd-note">Нажмите на картинку, чтобы увеличить</div>`:'')}
-    ${full.length?`<details class="mm-full"><summary>Подробно от фабрики</summary>${full.map(x=>`<p>${esc(x)}</p>`).join('')}</details>`:''}
+    ${sec('Подробно от фабрики',full.length?`<div class="mm-full">${full.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`:'')}
     <div class="mtd-src">${esc(M.src||'Источник: сайт фабрики MGS (TECHNO)')}</div>
    </div></div></div>`;
   w.classList.add('on');document.documentElement.classList.add('mtd-open');w.scrollTop=0;
@@ -220,7 +221,11 @@ html.mtd-open{overflow:hidden}
 /* окно методички — универсальный шаблон */
 .mm{position:relative;max-width:1240px;margin:0 auto;background:var(--bg);border-radius:28px;box-shadow:0 0 0 1px #2c2824,0 30px 80px #000a;overflow:hidden}
 .mm-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px 14px 22px;background:linear-gradient(100deg,#262a17,#1d1a17 60%);border-bottom:1px solid #2c2824}
-.mm-top b{font-weight:500;font-size:16px;color:#dfe6b0}
+.mm-top b{font-weight:500;font-size:16px;color:#dfe6b0;flex:1}
+.mm-badge{background:var(--lime);color:#0f0e0c;border-radius:999px;padding:6px 14px;font-weight:600;font-size:13px;white-space:nowrap}
+.mm-gar{display:inline-flex;align-items:center;gap:10px;background:rgba(191,214,48,.12);box-shadow:inset 0 0 0 1px rgba(191,214,48,.35);border-radius:14px;padding:8px 14px;margin:0 0 14px}
+.mm-gar b{color:var(--lime);font-size:20px;font-weight:600;white-space:nowrap}.mm-gar span{color:#dfe6b0;font-size:13.5px;line-height:1.3}
+.mm-hero.nophoto{grid-template-columns:1fr}.mm-hero.nophoto .mm-hi{max-width:820px}
 .mm-x{all:unset;cursor:pointer;width:38px;height:38px;border-radius:50%;background:rgba(15,14,12,.6);display:grid;place-items:center;font-size:22px;color:var(--ink2)}.mm-x:hover{background:var(--raised)}
 .mm-g{display:grid;grid-template-columns:250px minmax(0,1fr)}
 .mm-nav{display:flex;flex-direction:column;gap:4px;padding:14px 10px;background:var(--surface);border-right:1px solid #24211d}
@@ -247,7 +252,7 @@ html.mtd-open{overflow:hidden}
 .mm-pics button{all:unset;cursor:zoom-in;background:#fff;border-radius:14px;padding:8px;display:grid;place-items:center;aspect-ratio:4/3;box-sizing:border-box}.mm-pics button.wide{grid-column:1/-1;aspect-ratio:auto}
 .mm-pics img{max-width:100%;max-height:100%;display:block}
 #mmVid .mtd-v{max-width:760px}.mm-pics button{max-height:320px}.mm-pics button.wide{max-height:none}
-.mm-full summary{cursor:pointer;color:var(--lime);font-weight:500}.mm-full p{color:var(--ink2);line-height:1.6;margin:8px 0}
+.mm-full{background:var(--surface);border-radius:16px;padding:6px 18px}.mm-full p{color:var(--ink2);line-height:1.6;margin:10px 0}
 #mtdZ{position:fixed;inset:0;z-index:70;background:rgba(8,7,6,.9);display:grid;place-items:center;padding:24px;cursor:zoom-out}#mtdZ img{max-width:100%;max-height:100%;background:#fff;border-radius:12px}
 @media(max-width:900px){.mm-g{grid-template-columns:1fr}.mm-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid #24211d;padding:8px;scrollbar-width:none}
  .mm-nav button{flex:none}.mm-nav i{width:36px;height:36px}.mm-hero{grid-template-columns:1fr}.mm-main{padding:16px}.mm-tbl{grid-template-columns:1fr}.mm-hi h3{font-size:26px}}
