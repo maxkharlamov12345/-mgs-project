@@ -55,13 +55,13 @@ const METOD={
   src:'Источник: сайт фабрики MGS (TECHNO) — «Петли от компании MGS», регламент и стандарты проектирования; прайс фабрики; Rutube MGS MEBEL',
   map:x=>{const n=x.name||'';return /mystery/i.test(n)?'h-mys':/алюмин/i.test(n)?'h-alu':/тонких/i.test(n)?'h-thin':/180/.test(n)?'h-180':/без пружины/i.test(n)?'h-nos':'h-std';},
   series:[
-   {k:'h-how',name:'Как выбрать',tag:'и что указать в бланке',tile:'doc/h-how-tile.webp',photo:null,draw:['doc/h-mount.svg','doc/h-gap-overlay.svg','doc/h-gap-inset.svg'],heights:[],
+   {k:'h-how',name:'Как выбрать',tag:'и что указать в бланке',tile:'doc/h-how-tile.webp',photo:null,draw:['doc/h-gap-overlay.svg','doc/h-gap-inset.svg'],blocks:['mount'],heights:[],
     when:'Какую петлю MGS ставить в каждом случае — и правила фабрики, которые нужно не забыть в заказе. На всю фурнитуру MGS — петли и ящики — фабрика даёт гарантию 10 лет.',facts:[],specsTitle:'Какую петлю ставить',
     specs:[['Обычный распашной фасад','MGS с доводчиком'],['Фасад без ручек, с толкателем','MGS без пружины + Tip-on'],['Угловая секция, фасад у фальшпанели','MGS 180° с доводчиком'],['Тонкий фасад, от 12 мм','MGS для тонких фасадов'],['Узкая алюминиевая рамка','MGS для узкой рамки, чёрная'],['Рамка MYSTERY','MYSTERY скрытая']],
     say:[['Пишите петли MGS явно','Если петли в заказе не указаны, фабрика по умолчанию ставит Boyard без доводчика.'],['Монтаж — накладная по умолчанию','Вкладные фасады указывайте в бланке, расположение петель — на чертеже.'],['Зазоры 3 мм','Между фасадами по умолчанию 3 мм; под толкатель — минимум 3 мм.']],
     warn:['Петли не указаны — фабрика ставит Boyard без доводчика.','Фасады с толкателем по умолчанию идут на Blum без пружины — MGS нужно указать.','Радиусные фасады, TW-PLUS и ALVIC с ручкой 22 мм — только петли Blum.','Не ставьте в одну плоскость фасады с толкателем и фасады с доводчиком.','Фасады выше 1,5 м — заказывайте корректоры (по умолчанию не ставятся, без них претензии по выгибанию не принимаются).'],
     videos:[]},
-   {k:'h-std',name:'С доводчиком',tag:'накладная · полу · вкладная',tile:'doc/h-std-tile.webp',photo:'doc/h-std-tile.webp',draw:['doc/h-mount.svg'],heights:[],
+   {k:'h-std',name:'С доводчиком',tag:'накладная · полу · вкладная',tile:'doc/h-std-tile.webp',photo:'doc/h-std-tile.webp',draw:[],blocks:['mount'],heights:[],
     when:'Основная петля для распашных фасадов: дверь закрывается мягко и бесшумно. Собственная линия фурнитуры MGS.',
     facts:[['3 вида','накладная · полунакладная · вкладная'],['Доводчик','встроен в петлю'],['Прямая планка','в комплекте'],['Заглушки','декоративные']],
     specs:[['Монтаж','накладная · полунакладная · вкладная'],['Механизм','встроенный доводчик'],['Ответная планка','прямая, в комплекте'],['Регулировка планки','эксцентриковая'],['Крестообразная планка','отдельная позиция'],['Заглушки','декоративные, в комплекте']],
@@ -96,7 +96,7 @@ const METOD={
     say:[['Не бросается в глаза','Чёрная петля в узкой рамке почти не видна сквозь стекло.'],['Под толкатель','Есть версия без пружины — для фасадов с Tip-on.'],['Новые профили','К TW-S01/TW-S02 (утолщённые стенки) подходит эта же петля.']],
     warn:['Петли Blum с доводчиком на узкой рамке видно — если клиент хочет Blum, предложите шелкографию (согласовать).','Присадка под петли клиента на узкой рамке не производится.'],
     videos:[{t:'Петля для узкой алюминиевой рамки',...R('4eb43b4376dd8d34a8d1838db1c63377','kU6puF3uFUcu4EWL_PuX2g'),len:37}]},
-   {k:'h-mys',name:'MYSTERY скрытая',tag:'петли не видно',tile:'doc/h-mys-tile.webp',photo:'doc/h-mys-tile.webp',draw:['doc/h-mys-adj.svg'],heights:[],
+   {k:'h-mys',name:'MYSTERY скрытая',tag:'петли не видно',tile:'doc/h-mys-tile.webp',photo:'doc/h-mys-tile.webp',draw:[],blocks:['mysadj'],heights:[],
     when:'Скрытая петля для рамочных фасадов MYSTERY: снаружи петель не видно, фасад выглядит цельной плоскостью.',
     facts:[['до 30 кг','вес фасада'],['110°','угол открывания'],['3 плоскости','регулировка'],['от 18 мм','толщина двери']],
     specs:[['Вес фасада','до 30 кг'],['Угол открывания','110°'],['Толщина двери','от 18 мм'],['Профиль','только рамка MYSTERY'],['Механизм','доводчик или без пружины'],['Регулировка по глубине','+2 / −0,5 мм'],['Регулировка по ширине','±2 мм'],['Регулировка по высоте','±1,5 мм'],['Продаётся','комплектом']],
@@ -138,6 +138,21 @@ function player(v){const q=new URLSearchParams();if(v.p)q.set('p',v.p);if(v.from
    характеристики → видео → схемы и фото → подробно от фабрики. Слева — список видов (на телефоне — строкой). */
 const factsOf=s=>s.facts||s.specs.filter(x=>!x[2]).slice(0,4).map(([a,b])=>[b,a]);
 const warnOf=s=>s.warn||s.specs.filter(x=>x[2]).map(([a,b])=>a+': '+b);
+/* Наши схемы — НЕ картинкой, а блоком карточек как «Что сказать клиенту» (Макс 14.11): рисунок на тёмной карточке + подпись */
+const K='#c9b48f',F='#9aa0a6',L='#bfd630',sv=b=>`<svg viewBox="0 0 200 120" aria-hidden="true">${b}</svg>`;
+const hinge=(x,d)=>`<path d="M${x} 78 h${d} v-38" fill="none" stroke="${L}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+const arr=(x1,y1,x2,y2)=>`<g stroke="${L}" stroke-width="5" stroke-linecap="round" fill="none"><path d="M${x1} ${y1} L${x2} ${y2}"/></g>`;
+const BLOCKS={
+ mount:{t:'Виды установки (вид сверху)',note:'бежевый — корпус, серый — фасад, лаймовый — петля',cards:[
+  {d:sv(`<rect x="44" y="40" width="12" height="70" rx="2" fill="${K}"/><rect x="44" y="26" width="132" height="14" rx="2" fill="${F}"/>${hinge(56,30)}`),b:'Накладная',sub:'стандарт по умолчанию',p:'Фасад закрывает боковину целиком.'},
+  {d:sv(`<rect x="94" y="40" width="12" height="70" rx="2" fill="${K}"/><rect x="18" y="26" width="80" height="14" rx="2" fill="${F}"/><rect x="102" y="26" width="80" height="14" rx="2" fill="${F}"/>${hinge(94,-30)}${hinge(106,30)}`),b:'Полунакладная',sub:'средняя стойка',p:'Два фасада на одной стойке.'},
+  {d:sv(`<rect x="44" y="26" width="12" height="84" rx="2" fill="${K}"/><rect x="58" y="26" width="120" height="14" rx="2" fill="${F}"/>${hinge(56,30)}`),b:'Вкладная',sub:'указать в бланке',p:'Фасад внутри корпуса, заподлицо.'}]},
+ mysadj:{t:'Регулировка — в 3 плоскостях',note:'по инструкции фабрики к петле MYSTERY',cards:[
+  {d:sv(`<rect x="70" y="20" width="60" height="80" rx="4" fill="${F}" opacity=".35"/><rect x="58" y="30" width="60" height="80" rx="4" fill="${F}"/>${arr(150,30,108,72)}<path d="M150 30 l-14 2 m14 -2 l-2 14 M108 72 l14 -2 m-14 2 l2 -14" stroke="${L}" stroke-width="5" stroke-linecap="round"/>`),b:'+2 / −0,5 мм',sub:'по глубине',p:'Фасад ближе / дальше от корпуса.'},
+  {d:sv(`<rect x="70" y="24" width="60" height="80" rx="4" fill="${F}"/>${arr(30,64,170,64)}<path d="M30 64 l12 -10 M30 64 l12 10 M170 64 l-12 -10 M170 64 l-12 10" stroke="${L}" stroke-width="5" stroke-linecap="round"/>`),b:'±2 мм',sub:'по ширине',p:'Фасад влево / вправо.'},
+  {d:sv(`<rect x="70" y="24" width="60" height="80" rx="4" fill="${F}"/>${arr(100,8,100,116)}<path d="M100 8 l-10 12 M100 8 l10 12 M100 116 l-10 -12 M100 116 l10 -12" stroke="${L}" stroke-width="5" stroke-linecap="round"/>`),b:'±1,5 мм',sub:'по высоте',p:'Фасад вверх / вниз.'}]}
+};
+const blockHtml=k=>{const B=BLOCKS[k];if(!B)return '';return `<section class="mm-s"><h4>${esc(B.t)}</h4><div class="mm-say mm-sch">${B.cards.map(c=>`<div>${c.d}<b>${esc(c.b)}</b><small>${esc(c.sub)}</small><p>${esc(c.p)}</p></div>`).join('')}</div>${B.note?`<div class="mtd-note">${esc(B.note)}</div>`:''}</section>`;};
 /* медиа вида (Макс 14.11): лента в стиле Pinterest — фото, схемы и видео в своих пропорциях, без обрезки и миниатюр;
    нажатие — просмотр на весь экран: листать ← →, приближать (клик/колесо/два пальца), таскать; видео играет там же */
 function mediaOf(s){const L=[],ph=s.photo===null?null:(s.photo||s.tile);
@@ -190,6 +205,7 @@ window.openMetod=(k,sk,vi=-1)=>{const M=METOD[k];const s=M.series.find(x=>x.k===
     <div class="mm-hi"><h3>${esc(s.name)}</h3>${M.badge&&s.k!=='h-how'?`<div class="mm-gar"><b>10 лет</b><span>гарантия фабрики на фурнитуру MGS</span></div>`:''}<p class="mm-when">${esc(s.when||s.sub)}</p>
       ${facts.length?`<div class="mm-facts">${facts.map(([val,lab])=>`<div><b>${esc(val)}</b><small>${esc(lab)}</small></div>`).join('')}</div>`:''}</div>
     ${med.length?`<section class="mm-s"><h4>Фото, видео и схемы <i>${med.length}</i></h4><div class="mp">${med.map(tileHtml).join('')}</div></section>`:''}
+    ${(s.blocks||[]).map(blockHtml).join('')}
     ${sec('Что сказать клиенту',s.say.length?`<div class="mm-say">${s.say.map(([a,b],i)=>`<div><em>${i+1}</em><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div>`:'')}
     ${sec('⚠ Важно при заказе',warn.length?`<ul>${warn.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'','mm-warn')}
     ${sec(s.specsTitle||'Характеристики',s.specs.length?`<div class="mm-tbl">${s.specs.map(([a,b,no])=>`<div class="${no?'no':''}"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div>`:'')}
@@ -289,6 +305,7 @@ html.mtd-open{overflow:hidden}
  .mm-nav button{flex:none}.mm-nav i{width:36px;height:36px}.mm-hero{grid-template-columns:1fr}.mm-main{padding:16px}.mm-tbl{grid-template-columns:1fr}.mm-hi h3{font-size:26px}}
 @media(max-width:600px){#mtdW{padding:0}.mm{border-radius:0}}
 /* медиа — лента Pinterest + просмотр */
+.mm-sch svg{display:block;width:100%;height:auto;max-height:120px;margin:0 0 10px;background:#0f0e0c;border-radius:12px;padding:8px;box-sizing:border-box}.mm-sch small{display:block;color:var(--ink4);font-size:12px;margin:-2px 0 6px}
 .mm-s h4 i{font-style:normal;color:var(--ink3);margin-left:6px}
 .mm-hi{max-width:900px}.mm-facts{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .mp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
