@@ -160,7 +160,7 @@ body[data-lay=E] .cadd{background:var(--lime);color:#0f0e0c}
 .cq.cqm{padding:4px 10px;font-size:12px;color:var(--lime)}
 .card[role=button] .tx{padding-bottom:22px}
 /* Макс 14.11 — тест раскладок каталога (A/B/D) */
-body.catx #vars,body.catx #right{display:none}body.catx .left{flex-basis:100%}
+body.catx main>.left{flex-basis:100%}
 .laysw{display:inline-flex;align-items:center;gap:4px;margin-left:8px}.laysw em{font-style:normal;color:var(--ink4);font-size:12px;margin-right:2px}
 .minicart{display:inline-flex;align-items:center;gap:10px;background:var(--bg);border-radius:999px;padding:4px 4px 4px 16px;color:var(--ink3);margin-left:auto}.minicart b{color:var(--ink);font-weight:600;font-size:15px}.minicart .pill{height:34px}
 body.catx .ph-h .l{flex:1}
@@ -185,22 +185,41 @@ body[data-lay=B] .card .mtd-i,body[data-lay=D] .card .mtd-i{position:absolute;ri
 .lyD-b{display:flex;flex-wrap:wrap;gap:6px}.lyD-b .pill{height:36px}
 .lyD aside{position:sticky;top:12px}.lyD aside .mtd-mini{background:var(--bg)}
 @media(max-width:1100px){.lyD{grid-template-columns:200px minmax(0,1fr)}.lyD aside{grid-column:1/-1;position:static}body[data-lay=A] .cards,body[data-lay=B] .cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:760px){.lyB,.lyD{grid-template-columns:1fr}.lyB aside,.lyD nav{position:static}body.catx .cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:760px){.lyB,.lyD{grid-template-columns:1fr}.lyB aside,.lyD nav{position:static}}
+/* Макс 14.11: главный экран — каталог (меню разделов слева, открыт «Корпус»); смета — окном по кнопке «Смета», как корзина */
+body.catx main>.left{flex-basis:100%}
+.hsearch{flex:1 1 360px;max-width:640px}.hsearch input{height:44px;border-radius:22px}.hsearch svg{top:13px}
+.hsearch #found{position:absolute;left:0;right:0;top:100%;z-index:30}
+.minicart .pill.lime{gap:6px}
+.cartw{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-start;justify-content:center;padding:28px 20px}
+.cart-bg{position:absolute;inset:0;background:rgba(8,7,6,.72)}
+.cart-box{position:relative;background:var(--bg);border-radius:28px;box-shadow:0 0 0 1px #2c2824,0 30px 80px rgba(0,0,0,.6);width:min(1280px,100%);max-height:calc(100vh - 56px);display:flex;flex-direction:column;overflow:hidden}
+.cart-h{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 22px 12px}.cart-h>b{font-size:24px;font-weight:400}.cart-h .vars{flex:1}.cart-h .vars .pill{height:38px}
+.cart-b{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;padding:4px 22px 24px;overflow:auto}
+.cart-b .left{flex:999 1 560px}.cart-b .right{position:sticky;top:0}
+html.cart-on{overflow:hidden}
+@media(max-width:760px){.cartw{padding:0}.cart-box{border-radius:0;max-height:100vh;height:100%}.cart-b{padding:4px 12px 24px}.hsearch{order:5;flex-basis:100%;max-width:none}}
 </style>
 </head>
 <body>
 <header>
   <a class="back" id="back" href="crm.html"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>Карточка клиента</a>
   <div class="title"><span class="sub" id="who">Загрузка…</span><input id="ttl" aria-label="Название сметы" value="Смета"></div>
-  <div class="vars" id="vars"></div>
+  <div class="search hsearch"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a8a196" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="q" placeholder="Найти позицию во всех прайсах (и Hettich)…" autocomplete="off"><div id="found"></div></div>
   <span class="saved" id="saved"></span>
   <button class="pill" id="admBtn" hidden>Каталог и наценки</button>
 </header>
 <div class="msg err" id="err" hidden style="padding:0 28px"></div>
 <main id="app" hidden>
   <div class="left" id="left"></div>
-  <aside class="right" id="right"></aside>
 </main>
+<!-- Макс 14.11: смета — всплывающим окном, как корзина на сайте -->
+<div class="cartw" id="cart" hidden><div class="cart-bg" id="cartBg"></div>
+  <div class="cart-box" role="dialog" aria-modal="true" aria-label="Смета">
+    <div class="cart-h"><b>Смета</b><div class="vars" id="vars"></div><button class="rb" id="cartX" aria-label="Закрыть">×</button></div>
+    <div class="cart-b"><div class="left" id="cartL"></div><aside class="right" id="right"></aside></div>
+  </div></div>
 <main id="adm" hidden></main>
 <script src="lib/supabase.min.js"></script>
 <script src="metod.js?v=3"></script>
@@ -242,6 +261,11 @@ async function init(){
   S.data=S.smeta.data&&S.smeta.data.variants?S.smeta.data:{cur:0,variants:[{name:'Вариант A',disc:0,lines:[]}]};
   /* Макс 13.11: «Ручки и толкатели» разделены — старые строки смет переносим */
   S.data.variants.forEach(v=>v.lines.forEach(l=>{if(l.sec==='Ручки и толкатели')l.sec=/tip-on|push|amf|latch|толкат/i.test(l.name||'')?'Толкатели':'Ручки';}));
+  const q=$('#q');q.oninput=()=>{S.q=q.value;clearTimeout(S.qt);S.qt=setTimeout(search,250);};
+  q.onkeydown=e=>{if(e.key==='Escape'){q.value='';S.q='';S.found=[];$('#found').innerHTML='';q.blur();}};
+  document.addEventListener('click',e=>{if(!e.target.closest('.hsearch')){S.found=[];$('#found').innerHTML='';}});
+  $('#cartX').onclick=closeCart;$('#cartBg').onclick=closeCart;document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.cartOn)closeCart();});
+  document.body.classList.add('catx');document.body.dataset.lay='E';
   $('#app').hidden=false;render();
 }
 async function loadCat(){
@@ -261,20 +285,31 @@ function save(){clearTimeout(S.saveT);$('#saved').textContent='Сохраняе�
 const setLines=f=>{V().lines=f(V().lines);save();render();};
 
 /* ---------- отрисовка ---------- */
-function render(){document.body.classList.remove('catx');renderVars();S.open?renderPanel():renderLeft();renderRight();}
+function render(){
+  /* Макс 14.11: на главном экране всегда каталог; закрыли/добавили — снова раздел, где работали (сначала «Корпус») */
+  if(!S.open){const sec=S.homeSec||'Корпус';S.draft={id:uid(),sec,price:0,qty:0};openFor(S.draft,true);return;}
+  renderPanel();if(S.cartOn)renderCart();}
+function renderCart(){renderVars();renderLeft();renderRight();}
+function openCart(){S.cartOn=true;$('#cart').hidden=false;document.documentElement.classList.add('cart-on');renderCart();}
+function closeCart(){S.cartOn=false;$('#cart').hidden=true;document.documentElement.classList.remove('cart-on');}
+const cartBtn=A=>{const n=V().lines.filter(l=>l.price).length;
+  return `<span class="minicart">В смете <b class="num">${n} поз. · ${rub(varTotal(V()))}</b><button class="pill lime" data-act="${A(openCart)}">Смета →</button></span>`;};
+/* меню разделов слева — общее для каталога и подбора плит */
+function treeHtml(o,A,back){return GROUPS.map(([g,secs])=>`<div class="lyD-g">${esc(g)}</div>`+secs.map(sc=>`<button class="lyD-s ${sc===o.sec?'on':''}" data-act="${A(()=>{if(sc===o.sec){back();return;}S.draft={id:uid(),sec:sc,price:0,qty:0};openFor(S.draft);})}">${esc(sc)}</button>`).join('')).join('');}
 function renderVars(){
   const el=$('#vars');
   el.innerHTML=S.data.variants.map((v,i)=>`<button class="pill ${i===S.data.cur?'on':''}" data-v="${i}">${esc(v.name)} · <span class="num">${rub(varTotal(v))}</span></button>`).join('')
     +`<button class="pill dash" id="vCopy">+ копией</button>`+(S.data.variants.length>1?`<button class="pill dash" id="vDel" title="Удалить текущий вариант">Удалить вариант</button>`:'');
-  el.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{S.data.cur=+b.dataset.v;S.open=null;save();render();});
+  el.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{S.data.cur=+b.dataset.v;save();render();});
   $('#vCopy').onclick=()=>{const v=JSON.parse(JSON.stringify(V()));v.name='Вариант '+'ABCDEFGHIJ'[S.data.variants.length];S.data.variants.push(v);S.data.cur=S.data.variants.length-1;save();render();};
   $('#vDel')&&($('#vDel').onclick=()=>{if(!confirm(`Удалить «${V().name}»?`))return;S.data.variants.splice(S.data.cur,1);S.data.cur=0;save();render();});
 }
 const phStyle=l=>l.th?.photo?`style="background-image:url('${esc(ASSET(l.th.photo))}')"`:l.th?.hex?`style="background:${esc(l.th.hex)}"`:'';
 function renderLeft(){
   const L=V().lines;
+  /* Макс 14.11: в окне сметы (как корзина) — только группы, где что-то есть; добавлять — из каталога */
   const html=GROUPS.map(([gname,secs],gi)=>{
-    const used=secs.filter(s=>L.some(l=>l.sec===s)),on=true; /* Макс 13.11: группы не сворачиваются — плашки разделов видны сразу */
+    const used=secs.filter(s=>L.some(l=>l.sec===s)),on=true;if(!used.length)return ''; /* Макс 13.11: группы не сворачиваются — плашки разделов видны сразу */
     const filled=L.filter(l=>secs.includes(l.sec)&&l.price);const sum=filled.reduce((a,l)=>a+lineSum(l),0);
     const th=[...new Map(filled.filter(l=>l.th).map(l=>[JSON.stringify(l.th),l])).values()].slice(0,4);
     return `<div class="grp ${on?'open':''}"><div class="gh"><span class="t"><b>${gname}</b><span>${used.length?used.join(' · '):'ничего не добавлено'}</span></span>
@@ -282,18 +317,15 @@ function renderLeft(){
       </div>
       ${on?`<div class="gb">${used.map(s=>`<div class="sec"><div class="sh"><span>${s}</span></div>
         ${L.filter(l=>l.sec===s).map(lineHtml).join('')}</div>`).join('')}
-        <div class="unused"><em>Добавить:</em>${secs.map(s=>`<button data-add="${esc(s)}">+ ${s}</button>`).join('')}</div></div>`:''}</div>`;
-  }).join('');
-  $('#left').innerHTML=`<div class="search"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a8a196" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-    <input id="q" placeholder="Найти позицию во всех прайсах (и Hettich)…" value="${esc(S.q)}" autocomplete="off"><div id="found"></div></div>`+html;
-  const left=$('#left');
-  left.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{S.draft={id:uid(),sec:b.dataset.add,price:0,qty:0};openFor(S.draft);});
-  left.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const l=V().lines.find(x=>x.id===b.dataset.open);if(l&&!l.auto)openFor(l);});
+        </div>`:''}</div>`;
+  }).join('')||'<div class="msg" style="padding:20px 4px">Смета пока пустая — выберите позиции в каталоге.</div>';
+  $('#cartL').innerHTML=html;
+  const left=$('#cartL');
+  left.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{closeCart();S.draft={id:uid(),sec:b.dataset.add,price:0,qty:0};openFor(S.draft);});
+  left.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const l=V().lines.find(x=>x.id===b.dataset.open);if(l&&!l.auto){closeCart();S.backCart=true;openFor(l);}});
   left.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>setLines(L=>L.filter(x=>x.id!==b.dataset.del&&x.parent!==b.dataset.del)));
   left.querySelectorAll('[data-qty]').forEach(i=>i.oninput=()=>{const l=V().lines.find(x=>x.id===i.dataset.qty);const n=parseFloat(i.value.replace(/\s/g,'').replace(',','.'));
     l.qtyTxt=i.value;l.qty=isNaN(n)?0:n;save();const row=i.closest('.ln');row.querySelector('.s').textContent=l.price?rub(lineSum(l)):'—';renderRight();renderVars();});
-  const q=$('#q');q.oninput=()=>{S.q=q.value;clearTimeout(S.qt);S.qt=setTimeout(search,250);};
-  if(S.found.length)showFound();
 }
 function lineHtml(l){
   const e=!l.price;
@@ -331,7 +363,7 @@ function showFound(){
   $('#found').innerHTML=S.found.length?`<div class="found">${S.found.map(x=>`<button data-f="${x.id}"><span>${esc(x.name)}<br><small>${esc(guessSec(x))} · ${esc(x.grp)}</small></span><span class="num">${rub(x.cprice)} / ${esc(x.unit||'')}</span></button>`).join('')}</div>`:'<div class="msg" style="padding:8px 16px">Ничего не нашли</div>';
   $('#found').querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const x=S.found.find(y=>y.id===b.dataset.f);const sec=guessSec(x);
     V().lines.push({id:uid(),sec,item:x.id,name:x.name,decor:'',qty:1,unit:x.unit,price:x.cprice,th:x.photo?{photo:x.photo}:null});
-    S.q='';S.found=[];S.openGroup=GROUPS.findIndex(g=>g[1].includes(sec));save();render();toast('Добавлено в «'+sec+'»');});
+    S.q='';S.found=[];$('#q').value='';$('#found').innerHTML='';save();render();toast('Добавлено в «'+sec+'»');});
 }
 
 /* ---------- каталог раздела и подбор плит (Макс 13.11, версия 2) ----------
@@ -385,18 +417,19 @@ function edgeOpts(s){const f=FAMS[s.fam];if(!f?.edge)return null;const e=Array.i
 const searchBox=(ph)=>`<div class="psearch"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a8a196" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="ps" placeholder="${esc(ph)}" value="${esc(S.open.q||'')}" autocomplete="off"></div>`;
 function bindSearch(rerender){const i=$('#ps');if(!i)return;i.oninput=()=>{S.open.q=i.value;clearTimeout(S.pst);S.pst=setTimeout(()=>{rerender();const j=$('#ps');j.focus();j.setSelectionRange(j.value.length,j.value.length);},180);};}
 
-function openFor(l){
+function openFor(l,keepY){S.homeSec=l.sec;
   if(SEC_FAMS[l.sec]){const sp=l.spec&&l.spec.fam?JSON.parse(JSON.stringify(l.spec)):{fam:null,ex:{},area:l.qty||1,note:''};
     S.open={mode:'plate',id:l.id,sec:l.sec,step:sp.fam?99:0,spec:sp,q:''};}
   else S.open={mode:'pick',id:l.id,sec:l.sec,grp:null,q:''};
-  render();window.scrollTo({top:0});
+  render();if(!keepY)window.scrollTo({top:0});
 }
-function renderPanel(){document.body.classList.remove('catx');S.open.mode==='plate'?renderPlate():renderPick();}
+function renderPanel(){S.open.mode==='plate'?renderPlate():renderPick();}
 /* Макс 13.11: строка попадает в смету только после выбора — до этого черновик S.draft */
 const curL=()=>V().lines.find(y=>y.id===S.open.id)||S.draft;
 function ensureDraft(){const o=S.open;if(S.draft&&S.draft.id===o.id&&!V().lines.some(l=>l.id===o.id))V().lines.push(S.draft);S.draft=null;}
-function setLine(patch){const o=S.open;ensureDraft();V().lines=V().lines.map(l=>l.id===o.id?{...l,qtyTxt:undefined,...patch}:l);S.open=null;save();render();}
-const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div class="l">${head}</div><button class="rb" id="pClose" aria-label="Закрыть">×</button></div>${body}${foot}</div>`;
+function afterLine(){if(S.backCart){S.backCart=false;openCart();}else toast('Добавлено в смету');}
+function setLine(patch){const o=S.open;ensureDraft();V().lines=V().lines.map(l=>l.id===o.id?{...l,qtyTxt:undefined,...patch}:l);S.open=null;save();render();afterLine();}
+const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div class="l">${head}</div></div>${body}${foot}</div>`;
 
 /* --- обычные разделы: бренд/серия → позиции (→ декор у столешниц и стекла) --- */
 /* Макс 14.11: тест раскладок каталога — пока только «Ящики и направляющие → MGS» (группа с фильтрами); выбор запоминается */
@@ -404,14 +437,14 @@ const TRY_LAY=o=>!o.item; /* Макс 14.11: вид E — во всём ката
 function getLay(){return 'E';}
 function setLay(k){try{localStorage.setItem('smeta-lay',k);}catch(e){}}
 /* меню разделов каталога без своей прокрутки: выше экрана — липнет так, чтобы низ был виден */
-function fitNav(){const n=document.querySelector('.lyE nav');if(!n)return;n.style.top=innerWidth<=760?'':Math.min(12,innerHeight-n.offsetHeight-12)+'px';}
+function fitNav(){const n=document.querySelector('.lyE nav');if(!n)return;if(innerWidth<=760){const on=n.querySelector('.on');if(on)n.scrollLeft=on.offsetLeft-n.clientWidth/2+on.offsetWidth/2;}n.style.top=innerWidth<=760?'':Math.min(12,innerHeight-n.offsetHeight-12)+'px';}
 addEventListener('resize',fitNav);
 function renderPick(){
   const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price')&&x.cprice);
   /* порядок групп — как в файле каталога (по сайту фабрики), своя фурнитура фабрики (MGS) — первой */
   const first=grpOrder(items);
   const grps=Object.keys(first).sort((a,b)=>((/^MGS/.test(b)?1:0)-(/^MGS/.test(a)?1:0))||first[a]-first[b]);const acts={};/* своя фурнитура фабрики (MGS) — первой */let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
-  const treeH=()=>GROUPS.map(([g,secs])=>`<div class="lyD-g">${esc(g)}</div>`+secs.map(sc=>`<button class="lyD-s ${sc===o.sec?'on':''}" data-act="${A(()=>{if(sc===o.sec&&!o.grp)return;if(sc===o.sec){o.grp=null;o.sub=null;o.ff={};o.q='';renderPick();return;}S.draft={id:uid(),sec:sc,price:0,qty:0};openFor(S.draft);})}">${esc(sc)}</button>`).join('')).join('');
+  const treeH=()=>treeHtml(o,A,()=>{if(!o.grp&&!o.item&&!o.q)return;o.grp=null;o.sub=null;o.item=null;o.ff={};o.q='';renderPick();});
   /* Макс 14.11: в каталоге (не при замене строки) — выбор сразу в смету: «+», количество на карточке, можно несколько позиций и разделов подряд */
   const MULTI=!V().lines.some(l=>l.id===o.id);
   const inL=(x,dn)=>V().lines.find(l=>l.item===x.id&&(l.decor||'')===(dn||''));
@@ -490,15 +523,12 @@ function renderPick(){
         `+cardsH;}
     }else{const shown=x=>!q||hit(x.name,q);
     body=searchBox('Найти в «'+(o.sub||o.grp)+'»…')+(window.metodBanner&&!o.sub?metodBanner(o.sec,o.grp,A):'')+`<div class="cards">${q?gi.filter(x=>(!o.sub||x.params?.sub===o.sub)&&shown(x)).map(itemCard).join('')||'<span class="msg">Ничего не нашли</span>':o.sub?gi.filter(x=>x.params?.sub===o.sub).map(itemCard).join(''):subs.map(subCard).join('')+gi.filter(x=>!x.params?.sub).map(itemCard).join('')}</div>`;}}
-  if(!head.includes('pBack'))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
+  if(!head.includes('pBack')&&(o.grp||o.q||o.back||!MULTI))head=`<button class="rb" id="pBack" aria-label="Назад">‹</button>`+head;
   /* Макс 14.11: шаг выбора бренда и группы без фильтров — тоже в виде E (навигация слева), без колонки фильтров */
   if(TRY_LAY(o)&&!body.startsWith('<div class="lyE">'))body=`<div class="lyE noside"><nav>${treeH()}</nav><div class="lyE-m">${body}</div></div>`;
   /* Макс 14.11 (тест на «Ящики → MGS»): в каталоге не нужны варианты и панель сметы — каталог во всю ширину, вид A / B / D на выбор */
-  const lay=getLay(),cx=true; /* каталог всегда без панели сметы, и на выборе декора тоже */document.body.classList.toggle('catx',cx);document.body.dataset.lay=cx?lay:'';
-  if(lay){const n=V().lines.filter(l=>l.price).length;
-    head+=(cx?`<span class="minicart">В смете <b class="num">${n} поз. · ${rub(varTotal(V()))}</b><button class="pill lime" data-act="${A(()=>{S.open=null;render();})}">К смете →</button></span>`:'');}
+  head+=cartBtn(A);
   $('#left').innerHTML=panel(head,body);fitNav();
-  $('#pClose').onclick=()=>{S.open=null;render();};
   $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp){o.grp=null;o.ff={};}else{S.open=null;render();return;}renderPick();});
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.stopPropagation();acts[b.dataset.act]();});
   $('#left').querySelectorAll('[data-stop]').forEach(b=>b.addEventListener('click',e=>e.stopPropagation()));
@@ -620,12 +650,12 @@ function renderPlate(){
         <div><b>Итого</b><b class="num" id="cT" style="font-size:20px;font-weight:400">${rub(pr.cp*s.area+(eo?(S.byId[s.edge]?.cprice||0)*(s.edgeM||0):0))}</b></div></div></div>`;
   }
   const pr=s.fam&&s.fam!=='other'?specPrice(s):{cp:0},th=s.fam?plateThumb(s):null,isLast=step===last;
-  $('#left').innerHTML=panel(`<b>${esc(o.sec)} · подбор</b>`,`<div class="steps">${steps.map((t,i)=>`<button class="${i===step?'cur':i<step?'done':''}" data-st="${i}">${i+1} ${t}</button>`).join('')}</div>
-    ${ph?searchBox(ph):''}<div>${body}</div>`,
-    s.fam&&s.fam!=='other'?`<div class="foot"><span class="ph" style="${th?.photo?`background-image:url('${esc(ASSET(th.photo))}')`:th?.hex?'background:'+esc(th.hex):''}"></span>
+  const acts2=A; const navP=treeHtml(o,A,()=>{if(o.step===0&&!o.q)return;o.step=0;o.q='';renderPlate();});
+  const foot=s.fam&&s.fam!=='other'?`<div class="foot"><span class="ph" style="${th?.photo?`background-image:url('${esc(ASSET(th.photo))}')`:th?.hex?'background:'+esc(th.hex):''}"></span>
       <span class="d"><b style="font-weight:400">${esc(plateName(s))}</b><span>${esc(plateDecor(s))}</span></span><span class="num">${pr.cp?rub(pr.cp)+' / м²':'—'}</span>
-      <button class="pill" id="fPrev">Назад</button><button class="pill lime" id="fNext">${isLast?'Добавить в смету':'Далее'}</button></div>`:'');
-  $('#pClose').onclick=()=>{S.open=null;render();};
+      <button class="pill" id="fPrev">Назад</button><button class="pill lime" id="fNext">${isLast?'Добавить в смету':'Далее'}</button></div>`:'';
+  $('#left').innerHTML=panel(`<b>${esc(o.sec)}</b><small>подбор материала</small>`+cartBtn(A),`<div class="lyE noside"><nav>${navP}</nav><div class="lyE-m"><div class="steps">${steps.map((t,i)=>`<button class="${i===step?'cur':i<step?'done':''}" data-st="${i}">${i+1} ${t}</button>`).join('')}</div>
+    ${ph?searchBox(ph):''}<div>${body}</div>${foot}</div></div>`);fitNav();
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acts[b.dataset.act]());
   $('#left').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{if(s.fam||+b.dataset.st===0){o.step=+b.dataset.st;o.q='';renderPlate();}});
   bindSearch(renderPlate);
@@ -645,7 +675,7 @@ function renderPlate(){
     ensureDraft();V().lines=V().lines.filter(l=>l.parent!==o.id).flatMap(l=>{if(l.id!==o.id)return [l];
       const nl={...l,qtyTxt:undefined,name:plateName(s),decor:[dec,s.note].filter(Boolean).join(' · '),qty:s.area,unit:'м²',price:p.cp,th:plateThumb(s),spec:s};
       return e?[nl,{id:uid(),parent:o.id,auto:true,sec:'Кромка',item:e.id,name:'Кромка '+e.name,decor:'к «'+(S.byId[s.decor]?.name||plateName(s))+'»',qty:s.edgeM||0,unit:'м.п.',price:e.cprice}]:[nl];});
-    S.open=null;save();render();});
+    S.open=null;save();render();afterLine();});
 }
 
 
