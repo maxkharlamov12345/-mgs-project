@@ -138,36 +138,62 @@ function player(v){const q=new URLSearchParams();if(v.p)q.set('p',v.p);if(v.from
    характеристики → видео → схемы и фото → подробно от фабрики. Слева — список видов (на телефоне — строкой). */
 const factsOf=s=>s.facts||s.specs.filter(x=>!x[2]).slice(0,4).map(([a,b])=>[b,a]);
 const warnOf=s=>s.warn||s.specs.filter(x=>x[2]).map(([a,b])=>a+': '+b);
-/* медиа вида одним блоком (Макс 14.11): фото, видео, схемы — один просмотрщик одного размера + ряд одинаковых квадратиков с плашкой «Фото/Видео/Схема» */
+/* медиа вида (Макс 14.11): лента в стиле Pinterest — фото, схемы и видео в своих пропорциях, без обрезки и миниатюр;
+   нажатие — просмотр на весь экран: листать ← →, приближать (клик/колесо/два пальца), таскать; видео играет там же */
 function mediaOf(s){const L=[],ph=s.photo===null?null:(s.photo||s.tile);
   if(ph)L.push({k:'photo',img:ph});(s.photos||[]).forEach(x=>L.push({k:'photo',img:x}));
   s.videos.forEach((v,i)=>L.push({k:'video',v,vi:i}));
   s.draw.forEach(x=>L.push({k:'scheme',img:x}));(s.heights||[]).forEach(x=>L.push({k:'height',img:x}));return L;}
 const LBL={photo:'Фото',video:'Видео',scheme:'Схема',height:'Высота'};
-function viewHtml(m,s){if(!m)return '';
-  if(m.k==='video'){const v=m.v;return v.src?`<video src="${IMG+v.src}" poster="${IMG+v.src.replace(/\.mp4$/,'.jpg')}" controls playsinline preload="metadata" autoplay></video>`
-    :`<iframe src="${player(v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe>`;}
-  return `<button class="mm-zoom" data-z="${IMG+m.img}" aria-label="Увеличить"><img src="${IMG+m.img}" alt=""></button>`;}
-function thumbHtml(m,i,on){const t=m.k==='video'?(m.v.src?IMG+m.v.src.replace(/\.mp4$/,'.jpg'):`https://rutube.ru/api/video/${m.v.id}/thumbnail/?redirect=1`):IMG+m.img;
-  return `<button class="mm-th ${m.k} ${on?'on':''}" data-m="${i}"><i style="background-image:url('${t}')"></i>${m.k==='video'?'<em>▶</em>':''}<span>${LBL[m.k]}${m.k==='video'?' · '+mm(vlen(m.v)):''}</span></button>`;}
+const vposter=v=>v.src?IMG+v.src.replace(/\.mp4$/,'.jpg'):`https://rutube.ru/api/video/${v.id}/thumbnail/?redirect=1`;
+function tileHtml(m,i){const lab=LBL[m.k]+(m.k==='video'?' · '+mm(vlen(m.v)):'');
+  if(m.k==='video')return `<button class="mp-t video" data-m="${i}"><img src="${vposter(m.v)}" alt="" loading="lazy"><em></em><span>${lab}</span><small>${esc(m.v.t)}</small></button>`;
+  return `<button class="mp-t ${m.k}" data-m="${i}"><img src="${IMG+m.img}" alt="" loading="lazy"><span>${lab}</span></button>`;}
+function lightbox(med,start,name){let i=start,z=null;const box=document.createElement('div');box.id='mtdZ';document.body.appendChild(box);
+  const close=()=>{box.remove();document.removeEventListener('keydown',key,true);};
+  const show=n=>{i=(n+med.length)%med.length;const m=med[i];z={s:1,x:0,y:0};
+    const body=m.k==='video'?(m.v.src?`<video src="${IMG+m.v.src}" poster="${vposter(m.v)}" controls playsinline autoplay></video>`
+      :`<iframe src="${player(m.v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe>`)
+      :`<div class="lz-st"><img src="${IMG+m.img}" alt="" draggable="false"></div>`;
+    box.innerHTML=`<div class="lz-bar"><span>${LBL[m.k]}${m.k==='video'?' · '+esc(m.v.t):''} · ${esc(name)}</span><b>${i+1} / ${med.length}</b><button class="lz-x" aria-label="Закрыть">×</button></div>
+      <div class="lz-in ${m.k==='video'?'vid':''}">${body}</div>
+      ${med.length>1?'<button class="lz-a l" aria-label="Назад">‹</button><button class="lz-a r" aria-label="Дальше">›</button>':''}
+      ${m.k!=='video'?'<div class="lz-hint">Колесо или двойное касание — приблизить · тянуть — двигать</div>':''}`;
+    box.querySelector('.lz-x').onclick=close;box.querySelector('.lz-a.l')?.addEventListener('click',()=>show(i-1));box.querySelector('.lz-a.r')?.addEventListener('click',()=>show(i+1));
+    const st=box.querySelector('.lz-st');if(st)zoomable(st);};
+  function zoomable(st){const img=st.querySelector('img');const ap=()=>{img.style.transform=`translate(${z.x}px,${z.y}px) scale(${z.s})`;st.classList.toggle('zm',z.s>1.01);};
+    const at=(ns,cx,cy)=>{const r=st.getBoundingClientRect();const ox=cx-r.left-r.width/2,oy=cy-r.top-r.height/2;ns=Math.max(1,Math.min(6,ns));
+      z.x=ox-(ox-z.x)*ns/z.s;z.y=oy-(oy-z.y)*ns/z.s;z.s=ns;if(ns===1){z.x=0;z.y=0;}ap();};
+    st.addEventListener('wheel',e=>{e.preventDefault();at(z.s*Math.exp(-e.deltaY*0.0022),e.clientX,e.clientY);},{passive:false});
+    let moved=0,last=0;const P=new Map();let pinch=null,drag=null;
+    st.addEventListener('pointerdown',e=>{st.setPointerCapture(e.pointerId);P.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;
+      if(P.size===2){const[a,b]=[...P.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:z.s};drag=null;}else drag={x:e.clientX,y:e.clientY,zx:z.x,zy:z.y};});
+    st.addEventListener('pointermove',e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pinch&&P.size===2){const[a,b]=[...P.values()];at(pinch.s*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,(a.x+b.x)/2,(a.y+b.y)/2);moved=9;}
+      else if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;moved=Math.max(moved,Math.abs(dx)+Math.abs(dy));
+        if(z.s>1){z.x=drag.zx+dx;z.y=drag.zy+dy;ap();}}});
+    const up=e=>{P.delete(e.pointerId);if(P.size<2)pinch=null;
+      if(drag&&P.size===0){const dx=e.clientX-drag.x;if(z.s<=1.01&&Math.abs(dx)>60&&moved>60){show(i+(dx<0?1:-1));return;}
+        if(moved<6){const t=Date.now();if(t-last<320||e.pointerType==='mouse'){at(z.s>1.01?1:2.5,e.clientX,e.clientY);last=0;}else last=t;}}
+      drag=null;};
+    st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);}
+  const key=e=>{if(e.key==='Escape'){e.stopPropagation();close();}else if(e.key==='ArrowRight')show(i+1);else if(e.key==='ArrowLeft')show(i-1);};
+  document.addEventListener('keydown',key,true);
+  box.addEventListener('click',e=>{if(e.target===box||e.target.classList.contains('lz-in'))close();});
+  show(start);}
 window.openMetod=(k,sk,vi=-1)=>{const M=METOD[k];const s=M.series.find(x=>x.k===sk)||M.series[0];cur={k,sk:s.k,vi};frag=null;
   let w=document.getElementById('mtdW');if(!w){w=document.createElement('div');w.id='mtdW';document.body.appendChild(w);
     w.addEventListener('click',e=>{if(e.target===w)closeMetod();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mtdW')?.classList.contains('on')){const z=document.getElementById('mtdZ');z?z.remove():closeMetod();}});}
   const full=EDU[s.k]||[],facts=factsOf(s),warn=warnOf(s),med=mediaOf(s);
-  let mi=vi>=0?Math.max(0,med.findIndex(x=>x.k==='video'&&x.vi===vi)):0;
   const badge=M.badge?`<span class="mm-badge">🛡 ${esc(M.badge)}</span>`:'';
   const sec=(t,body,cls='')=>body?`<section class="mm-s ${cls}"><h4>${t}</h4>${body}</section>`:'';
-  const cap=m=>m?(m.k==='video'?esc(m.v.t)+(m.v.src?' · фрагмент ролика фабрики — только про '+esc(s.name):' · видео фабрики MGS'):LBL[m.k]+' · нажмите, чтобы увеличить'):'';
   w.innerHTML=`<div class="mm" role="dialog" aria-label="${esc(M.title)}">
    <div class="mm-top"><b>📘 ${esc(M.title)}</b>${badge}<button class="mm-x" aria-label="Закрыть">×</button></div>
    <div class="mm-g"><nav class="mm-nav">${M.series.map(x=>`<button class="${x.k===s.k?'on':''}" data-s="${x.k}"><i style="background-image:url('${IMG+(x.tile||x.photo)}')"></i><span><b>${esc(x.name)}</b><small>${esc(x.tag)}</small></span></button>`).join('')}</nav>
    <div class="mm-main">
-    <div class="mm-hero ${med.length?'':'nophoto'}">
-     ${med.length?`<div class="mm-media"><div class="mm-view ${med[mi].k==='video'?'vid':''}" id="mmView">${viewHtml(med[mi],s)}</div>
-       ${med.length>1?`<div class="mm-ths">${med.map((m,i)=>thumbHtml(m,i,i===mi)).join('')}</div>`:''}<div class="mtd-note" id="mmCap">${cap(med[mi])}</div></div>`:''}
-     <div class="mm-hi"><h3>${esc(s.name)}</h3>${M.badge&&s.k!=='h-how'?`<div class="mm-gar"><b>10 лет</b><span>гарантия фабрики на фурнитуру MGS</span></div>`:''}<p class="mm-when">${esc(s.when||s.sub)}</p>
-      ${facts.length?`<div class="mm-facts">${facts.map(([val,lab])=>`<div><b>${esc(val)}</b><small>${esc(lab)}</small></div>`).join('')}</div>`:''}
-      <div class="mm-cnt">${['photo','video','scheme'].map(t=>{const n=med.filter(m=>m.k===t||(t==='scheme'&&m.k==='height')).length;return n?`<button class="pill" data-kind="${t}">${{photo:'Фото',video:'Видео',scheme:'Схемы'}[t]} · ${n}</button>`:'';}).join('')}</div></div></div>
+    <div class="mm-hi"><h3>${esc(s.name)}</h3>${M.badge&&s.k!=='h-how'?`<div class="mm-gar"><b>10 лет</b><span>гарантия фабрики на фурнитуру MGS</span></div>`:''}<p class="mm-when">${esc(s.when||s.sub)}</p>
+      ${facts.length?`<div class="mm-facts">${facts.map(([val,lab])=>`<div><b>${esc(val)}</b><small>${esc(lab)}</small></div>`).join('')}</div>`:''}</div>
+    ${med.length?`<section class="mm-s"><h4>Фото, видео и схемы <i>${med.length}</i></h4><div class="mp">${med.map(tileHtml).join('')}</div></section>`:''}
     ${sec('Что сказать клиенту',s.say.length?`<div class="mm-say">${s.say.map(([a,b],i)=>`<div><em>${i+1}</em><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div>`:'')}
     ${sec('⚠ Важно при заказе',warn.length?`<ul>${warn.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'','mm-warn')}
     ${sec(s.specsTitle||'Характеристики',s.specs.length?`<div class="mm-tbl">${s.specs.map(([a,b,no])=>`<div class="${no?'no':''}"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div>`:'')}
@@ -177,12 +203,8 @@ window.openMetod=(k,sk,vi=-1)=>{const M=METOD[k];const s=M.series.find(x=>x.k===
   w.classList.add('on');document.documentElement.classList.add('mtd-open');if(vi<0)w.scrollTop=0;
   w.querySelector('.mm-x').onclick=closeMetod;
   w.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>openMetod(k,b.dataset.s));
-  const bindZoom=()=>w.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{const z=document.createElement('div');z.id='mtdZ';z.innerHTML=`<img src="${b.dataset.z}" alt="">`;z.onclick=()=>z.remove();document.body.appendChild(z);});
-  const pick=i=>{mi=i;const vw=w.querySelector('#mmView');vw.className='mm-view'+(med[i].k==='video'?' vid':'');vw.innerHTML=viewHtml(med[i],s);w.querySelector('#mmCap').innerHTML=cap(med[i]);
-    w.querySelectorAll('.mm-th').forEach(t=>t.classList.toggle('on',+t.dataset.m===i));bindZoom();};
-  w.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>pick(+b.dataset.m));
-  w.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{const t=b.dataset.kind;const i=med.findIndex(m=>m.k===t||(t==='scheme'&&m.k==='height'));if(i>=0){pick(i);w.querySelector('.mm-media').scrollIntoView({behavior:'smooth',block:'nearest'});}});
-  bindZoom();
+  w.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>lightbox(med,+b.dataset.m,s.name));
+  if(vi>=0){const n=med.findIndex(x=>x.k==='video'&&x.vi===vi);if(n>=0)lightbox(med,n,s.name);}
 };
 function send(m){const f=document.querySelector('#mtdW iframe');try{f?.contentWindow?.postMessage(JSON.stringify(m),'*');}catch(e){}}
 window.closeMetod=()=>{document.getElementById('mtdZ')?.remove();const w=document.getElementById('mtdW');if(!w)return;w.classList.remove('on');w.innerHTML='';frag=null;document.documentElement.classList.remove('mtd-open');};
@@ -270,19 +292,33 @@ html.mtd-open{overflow:hidden}
 @media(max-width:900px){.mm-g{grid-template-columns:1fr}.mm-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid #24211d;padding:8px;scrollbar-width:none}
  .mm-nav button{flex:none}.mm-nav i{width:36px;height:36px}.mm-hero{grid-template-columns:1fr}.mm-main{padding:16px}.mm-tbl{grid-template-columns:1fr}.mm-hi h3{font-size:26px}}
 @media(max-width:600px){#mtdW{padding:0}.mm{border-radius:0}}
-/* единый блок медиа */
-.mm-media{min-width:0}
-.mm-view{aspect-ratio:4/3;border-radius:20px;background:#fff;overflow:hidden;position:relative;display:grid;place-items:center}
-.mm-view.vid{background:#000}.mm-view video,.mm-view iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
-.mm-zoom{all:unset;cursor:zoom-in;position:absolute;inset:0;display:grid;place-items:center;padding:12px;box-sizing:border-box}.mm-zoom img{max-width:100%;max-height:100%;object-fit:contain;display:block}
-.mm-ths{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;margin-top:10px}
-.mm-th{all:unset;cursor:pointer;position:relative;aspect-ratio:1;border-radius:12px;background:#fff;overflow:hidden;box-shadow:inset 0 0 0 1px #2c2824}
-.mm-th i{position:absolute;inset:5px 5px 20px;background:center/contain no-repeat}
-.mm-th.video{background:#1d1a17}.mm-th.video i{inset:0 0 18px;background-size:cover;opacity:.75}
-.mm-th em{position:absolute;left:50%;top:calc(50% - 9px);transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:rgba(15,14,12,.75);color:#fff;display:grid;place-items:center;font-style:normal;font-size:11px}
-.mm-th span{position:absolute;left:0;right:0;bottom:0;height:18px;line-height:18px;text-align:center;font-size:10.5px;font-weight:600;background:#e9e6e0;color:#3a3630;white-space:nowrap}
-.mm-th.video span{background:#2a2622;color:var(--ink2)}.mm-th.scheme span,.mm-th.height span{background:#e8eccf;color:#4b5419}
-.mm-th.on{box-shadow:0 0 0 2px var(--lime)}
-.mm-cnt{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.mm-cnt .pill{height:34px;font-size:13px}`;
+/* медиа — лента Pinterest + просмотр */
+.mm-s h4 i{font-style:normal;color:var(--ink3);margin-left:6px}
+.mm-hi{max-width:900px}.mm-facts{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.mp{columns:3 220px;column-gap:12px}
+.mp-t{all:unset;box-sizing:border-box;cursor:zoom-in;display:block;width:100%;margin:0 0 12px;break-inside:avoid;position:relative;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px #2c2824}
+.mp-t img{display:block;width:100%;height:auto}
+.mp-t.scheme img,.mp-t.height img{padding:10px;box-sizing:border-box}
+.mp-t:hover{box-shadow:0 0 0 2px var(--lime)}
+.mp-t span{position:absolute;left:8px;bottom:8px;height:26px;line-height:26px;padding:0 10px;border-radius:999px;background:rgba(244,241,236,.92);color:#2a2622;font-size:12px;font-weight:600}
+.mp-t.scheme span,.mp-t.height span{background:#e3eab8;color:#3f4714}
+.mp-t.video{background:#000;cursor:pointer}.mp-t.video img{aspect-ratio:16/9;object-fit:cover;opacity:.85}
+.mp-t.video span{background:rgba(15,14,12,.8);color:#fff;top:8px;bottom:auto}
+.mp-t.video small{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 9px;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;font-size:13px;font-weight:500}
+.mp-t em{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:rgba(15,14,12,.72);box-shadow:0 0 0 2px rgba(255,255,255,.5)}
+.mp-t em:after{content:'';position:absolute;left:21px;top:16px;border-left:16px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent}
+@media(max-width:600px){.mp{columns:2;column-gap:8px}.mp-t{margin-bottom:8px;border-radius:12px}}
+#mtdZ{position:fixed;inset:0;z-index:70;background:rgba(8,7,6,.96);display:block;padding:0;cursor:default}
+.lz-bar{position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;gap:14px;padding:0 12px 0 20px;z-index:3;color:var(--ink2);font-size:14px}
+.lz-bar span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lz-bar b{font-weight:500;font-variant-numeric:tabular-nums}
+.lz-x{all:unset;cursor:pointer;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;font-size:24px;color:#fff}
+.lz-in{position:absolute;inset:56px 70px 36px;display:grid;place-items:center}.lz-in.vid video,.lz-in.vid iframe{width:min(100%,calc((100vh - 110px)*16/9));aspect-ratio:16/9;border:0;background:#000;border-radius:12px}
+.lz-st{width:100%;height:100%;display:grid;place-items:center;overflow:hidden;touch-action:none;cursor:zoom-in}.lz-st.zm{cursor:grab}
+.lz-st img{max-width:100%;max-height:100%;background:#fff;border-radius:10px;transform-origin:center;user-select:none;-webkit-user-drag:none;transition:transform .12s ease-out}
+.lz-a{all:unset;cursor:pointer;position:absolute;top:50%;transform:translateY(-50%);width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:32px;display:grid;place-items:center;z-index:3}
+.lz-a:hover{background:rgba(255,255,255,.2)}.lz-a.l{left:10px}.lz-a.r{right:10px}
+.lz-hint{position:absolute;left:0;right:0;bottom:8px;text-align:center;color:var(--ink4);font-size:12px}
+@media(max-width:700px){.lz-in{inset:56px 0 30px}.lz-a{top:auto;bottom:40px;transform:none;width:44px;height:44px}}
+`;
 document.head.appendChild(st);
 })();
