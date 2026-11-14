@@ -56,40 +56,53 @@ const METOD={
   map:x=>{const n=x.name||'';return /mystery/i.test(n)?'h-mys':/алюмин/i.test(n)?'h-alu':/тонких/i.test(n)?'h-thin':/180/.test(n)?'h-180':/без пружины/i.test(n)?'h-nos':'h-std';},
   series:[
    {k:'h-how',name:'Как выбрать',tag:'и что указать в бланке',tile:'doc/h-how-tile.webp',photo:'doc/h-mount.svg',draw:['doc/h-gap-overlay.svg','doc/h-gap-inset.svg'],heights:[],
-    sub:'Какую петлю MGS ставить в каждом случае — и правила фабрики, которые важно не забыть в заказе',
-    specs:[['Обычный распашной фасад','MGS с доводчиком'],['Фасад с толкателем','MGS без пружины + Tip-on'],['Угловая секция с фальшпанелью','MGS 180° с доводчиком'],['Тонкий фасад, от 12 мм','MGS для тонких фасадов'],['Узкая алюминиевая рамка','MGS для узкой рамки, чёрная'],['Рамка MYSTERY','MYSTERY скрытая'],['Петли не указаны','фабрика ставит Boyard без доводчика',1],['Радиусные, TW-PLUS, ALVIC с ручкой 22 мм','только Blum',1]],
-    say:[['Пишите петли MGS явно','Если петли в заказе не указаны, фабрика по умолчанию ставит Boyard без доводчика.'],['Монтаж — накладная по умолчанию','Вкладные фасады нужно указать в бланке; расположение петель — на чертеже.'],['Зазоры 3 мм','Между фасадами по умолчанию 3 мм; под толкатель — минимум 3 мм.'],['Не смешивать в одной плоскости','Фасады с толкателем и фасады с плавным закрыванием рядом не ставят.'],['Высокие фасады','Выше 1,5 м — корректоры (по умолчанию не ставятся, без них претензии по выгибанию не принимаются).']],
+    when:'Какую петлю MGS ставить в каждом случае — и правила фабрики, которые нужно не забыть в заказе.',facts:[],specsTitle:'Какую петлю ставить',
+    specs:[['Обычный распашной фасад','MGS с доводчиком'],['Фасад без ручек, с толкателем','MGS без пружины + Tip-on'],['Угловая секция, фасад у фальшпанели','MGS 180° с доводчиком'],['Тонкий фасад, от 12 мм','MGS для тонких фасадов'],['Узкая алюминиевая рамка','MGS для узкой рамки, чёрная'],['Рамка MYSTERY','MYSTERY скрытая']],
+    say:[['Пишите петли MGS явно','Если петли в заказе не указаны, фабрика по умолчанию ставит Boyard без доводчика.'],['Монтаж — накладная по умолчанию','Вкладные фасады указывайте в бланке, расположение петель — на чертеже.'],['Зазоры 3 мм','Между фасадами по умолчанию 3 мм; под толкатель — минимум 3 мм.']],
+    warn:['Петли не указаны — фабрика ставит Boyard без доводчика.','Фасады с толкателем по умолчанию идут на Blum без пружины — MGS нужно указать.','Радиусные фасады, TW-PLUS и ALVIC с ручкой 22 мм — только петли Blum.','Не ставьте в одну плоскость фасады с толкателем и фасады с доводчиком.','Фасады выше 1,5 м — заказывайте корректоры (по умолчанию не ставятся, без них претензии по выгибанию не принимаются).'],
     videos:[]},
    {k:'h-std',name:'С доводчиком',tag:'накладная · полу · вкладная',tile:'doc/h-std-tile.webp',photo:'doc/h-std-tile.webp',draw:['doc/h-mount.svg'],heights:[],
-    sub:'Собственная линия фурнитуры MGS · эксклюзив фабрики',
+    when:'Основная петля для распашных фасадов: дверь закрывается мягко и бесшумно. Собственная линия фурнитуры MGS.',
+    facts:[['3 вида','накладная · полунакладная · вкладная'],['Доводчик','встроен в петлю'],['Прямая планка','в комплекте'],['Заглушки','декоративные']],
     specs:[['Монтаж','накладная · полунакладная · вкладная'],['Механизм','встроенный доводчик'],['Ответная планка','прямая, в комплекте'],['Регулировка планки','эксцентриковая'],['Крестообразная планка','отдельная позиция'],['Заглушки','декоративные, в комплекте']],
     say:[['Тихо и мягко','Доводчик встроен в петлю — дверь закрывается плавно, без хлопка.'],['Аккуратный вид','Декоративные заглушки закрывают крепёж.'],['Своя фурнитура фабрики','Петля из собственной линии MGS — подобрана под фасады фабрики.']],
+    warn:['Вкладной монтаж указывайте в бланке — по умолчанию фабрика считает фасады накладными.','Крестообразная ответная планка — отдельная позиция, по умолчанию идёт прямая.'],
     videos:[]},
-   {k:'h-nos',name:'Без пружины',tag:'под толкатель',tile:'doc/h-nos-tile.webp',photo:'doc/h-nos-tile.webp',draw:['doc/h-mount.svg'],heights:[],
-    sub:'Для фасадов без ручек — открываются нажатием (толкатель Tip-on MGS)',
-    specs:[['Монтаж','накладная · полунакладная · вкладная'],['Пружина','нет — фасад не притягивается'],['Работает с','толкателем Tip-on MGS (магнит или защёлка)'],['Зазор под толкатель','минимум 3 мм'],['Ответная планка','прямая, эксцентриковая регулировка'],['Доводчик','нет — с толкателем не сочетается',1]],
-    say:[['Без ручек','Нажали на фасад — он открылся. Чистый минималистичный фасад.'],['Толкатель обязателен','Петля без пружины сама дверь не держит — нужен Tip-on (добавьте его в смету).'],['Правило фабрики','Фасады с толкателем по умолчанию идут на петлях Blum без пружины — MGS нужно указать.']],
-    videos:[{t:'Как поставить Tip-On',...R('cb467e52b77afd5e38f0f3b6a09a681b','Hpp0eBRPqpe5PXVHRwoXUg'),len:87}]},
-   {k:'h-180',name:'180° под фальшпанель',tag:'угловая секция',tile:'doc/h-180-tile.webp',photo:'doc/h-180-tile.webp',draw:['doc/h-angle-1.webp','doc/h-angle-2.webp'],heights:[],
-    sub:'Петля MGS 180° (180–270) с доводчиком — для фасада рядом с фальшпанелью в угловой секции',
+   {k:'h-nos',name:'Без пружины',tag:'под толкатель',tile:'doc/h-nos-tile.webp',photo:'doc/h-nos-tile.webp',draw:[],heights:[],
+    when:'Для фасадов без ручек: фасад открывается нажатием. Ставится только в паре с толкателем Tip-on.',
+    facts:[['3 вида','накладная · полунакладная · вкладная'],['Без пружины','фасад не притягивается'],['Tip-on MGS','магнит или защёлка'],['Зазор ≥ 3 мм','под толкатель']],
+    specs:[['Монтаж','накладная · полунакладная · вкладная'],['Пружина','нет'],['Работает с','толкателем Tip-on MGS'],['Зазор под толкатель','минимум 3 мм'],['Ответная планка','прямая, эксцентриковая регулировка'],['Доводчик','нет',1]],
+    say:[['Без ручек','Нажали на фасад — он открылся. Чистый минималистичный фасад.'],['Толкатель обязателен','Петля без пружины сама дверь не держит — работает только с Tip-on.'],['Подходит под любой монтаж','Накладная, полунакладная и вкладная.']],
+    warn:['Добавьте в смету толкатель Tip-on MGS — без него петля не работает.','Фасады с толкателем по умолчанию идут на Blum без пружины — петлю MGS нужно указать.','Зазор под толкатель — минимум 3 мм; не ставьте такие фасады в одну плоскость с фасадами на доводчике.'],
+    videos:[]},
+   {k:'h-180',name:'180° под фальшпанель',tag:'угловая секция',tile:'doc/h-180-tile.webp',photo:'doc/h-180-tile.webp',draw:[],heights:[],
+    when:'Петля MGS 180–270° с доводчиком — для фасада, который стоит рядом с фальшпанелью в угловой секции.',
+    facts:[['Вкладная','вид монтажа'],['Доводчик','встроен'],['Под фальшпанель','угловая секция'],['Прямая планка','эксцентриковая регулировка']],
     specs:[['Монтаж','вкладная'],['Назначение','угловая секция, под фальшпанель'],['Механизм','доводчик'],['Ответная планка','прямая, эксцентриковая регулировка'],['Заглушки','декоративные']],
-    say:[['Фасад открывается полностью','Без фальшпанели фасад в угловой секции открывается не до конца — поддон сушки не вынуть (рис. справа).'],['Размер фальшпанели','Зависит от ручки (лицевой фурнитуры) — уточняйте при проектировании.'],['Плавно','Встроенный доводчик, как у обычной петли MGS.']],
+    say:[['Фасад открывается полностью','В угловой секции с фальшпанелью дверь не упирается и открывается до конца.'],['Плавно','Встроенный доводчик, как у обычной петли MGS.']],
+    warn:['Без фальшпанели фасад в угловой секции открывается не полностью — поддон сушки не вынуть.','Размер фальшпанели зависит от ручки (лицевой фурнитуры) — уточняйте при проектировании.'],
     videos:[]},
    {k:'h-thin',name:'Для тонких фасадов',tag:'от 12 мм',tile:'doc/h-thin-tile.webp',photo:'doc/h-thin-tile.webp',draw:[],heights:[],
-    sub:'Петля MGS с доводчиком для дверей толщиной от 12 мм',
+    when:'Петля MGS с доводчиком для тонких дверей — толщиной от 12 мм.',
+    facts:[['от 12 мм','толщина двери'],['110°','угол открывания'],['Доводчик','встроен']],
     specs:[['Толщина двери','от 12 мм'],['Угол открывания','110°'],['Механизм','доводчик']],
-    say:[['Тонкий фасад — без компромиссов','Петля рассчитана на двери от 12 мм — крепится надёжно, закрывается плавно.'],['Тяжёлые фасады (стекло)','Для стеклянных фасадов на МДФ/ЛДСП фабрика советует усиленную фурнитуру и следить за габаритами — иначе петли провисают.']],
+    say:[['Для тонкого фасада','Петля рассчитана на двери от 12 мм — держит надёжно, закрывается плавно.'],['Открывается на 110°','Стандартный угол — удобно доставать содержимое.']],
+    warn:['Тяжёлые фасады (стекло на МДФ/ЛДСП) — фабрика советует усиленную фурнитуру и следить за габаритами, иначе петли провисают.'],
     videos:[]},
-   {k:'h-alu',name:'Узкая алюминиевая рамка',tag:'чёрная',tile:'doc/h-alu-tile.webp',photo:'doc/h-alu-2.webp',draw:['doc/h-alu-tile.webp','doc/h-alu-2.webp'],heights:[],
-    sub:'Петля MGS для узкой алюминиевой рамки · чёрная · с 2024 года',
-    specs:[['Цвет','чёрный'],['Монтаж','накладная'],['Механизм','доводчик или без пружины'],['Ответная планка','прямая, эксцентриковая регулировка'],['Подходит к','узкому профилю, TW-S01 и TW-S02'],['Петли клиента','присадка не производится',1]],
-    say:[['Петлю не видно сквозь стекло','Чёрная петля не бросается в глаза в узкой рамке; петли Blum с доводчиком на узкой рамке видно — с ними советуют шелкографию.'],['Под толкатель','Есть версия без пружины — для фасадов с Tip-on.'],['Новые профили','TW-S01/TW-S02 (утолщённые стенки) — обычная петля для узкой рамки подходит.']],
-    videos:[{t:'Промо петли',...R('4eb43b4376dd8d34a8d1838db1c63377','kU6puF3uFUcu4EWL_PuX2g'),len:37}]},
-   {k:'h-mys',name:'MYSTERY скрытая',tag:'петли не видно',tile:'doc/h-mys-tile.webp',photo:'doc/h-mys-tile.webp',draw:['doc/h-mys-adj.svg','doc/h-mys-2.webp'],heights:[],
-    sub:'Скрытая петля для рамочных фасадов MYSTERY · комплектом',
-    specs:[['Вес фасада','до 30 кг'],['Угол открывания','110°'],['Регулировка','в 3 плоскостях'],['Толщина двери','от 18 мм'],['Профиль','только рамка MYSTERY'],['Механизм','доводчик или без пружины'],['Регулировка, мм','глубина +2/−0,5 · ширина ±2 · высота ±1,5'],['Фасад выше 1700 мм','работа не гарантируется',1]],
-    say:[['Петель не видно вообще','Фасад выглядит цельной плоскостью — эффект «невидимой» двери.'],['Высокие фасады','Выше 1700 мм фабрика не гарантирует работу; рекомендует петли SALICE AIR. В EGGER 18 мм на таких фасадах возможен выгиб у петель.'],['Под толкатель','Есть версия без пружины — для Tip-on.']],
-    videos:[{t:'Промо MYSTERY',...R('98a24f7a7963e712df0cad54975fc919',''),len:32}]}
+   {k:'h-alu',name:'Узкая алюм. рамка',tag:'чёрная',tile:'doc/h-alu-2.webp',photo:'doc/h-alu-2.webp',draw:['doc/h-alu-tile.webp'],heights:[],
+    when:'Петля MGS для фасадов в узкой алюминиевой рамке. Чёрная — почти не заметна за стеклом.',
+    facts:[['Чёрная','цвет'],['Накладная','вид монтажа'],['Доводчик','или без пружины'],['Узкий профиль','и TW-S01 / TW-S02']],
+    specs:[['Цвет','чёрный'],['Монтаж','накладная'],['Механизм','доводчик или без пружины'],['Ответная планка','прямая, эксцентриковая регулировка'],['Подходит к','узкому профилю, TW-S01 и TW-S02']],
+    say:[['Не бросается в глаза','Чёрная петля в узкой рамке почти не видна сквозь стекло.'],['Под толкатель','Есть версия без пружины — для фасадов с Tip-on.'],['Новые профили','К TW-S01/TW-S02 (утолщённые стенки) подходит эта же петля.']],
+    warn:['Петли Blum с доводчиком на узкой рамке видно — если клиент хочет Blum, предложите шелкографию (согласовать).','Присадка под петли клиента на узкой рамке не производится.'],
+    videos:[{t:'Петля для узкой алюминиевой рамки',...R('4eb43b4376dd8d34a8d1838db1c63377','kU6puF3uFUcu4EWL_PuX2g'),len:37}]},
+   {k:'h-mys',name:'MYSTERY скрытая',tag:'петли не видно',tile:'doc/h-mys-tile.webp',photo:'doc/h-mys-tile.webp',draw:['doc/h-mys-adj.svg'],heights:[],
+    when:'Скрытая петля для рамочных фасадов MYSTERY: снаружи петель не видно, фасад выглядит цельной плоскостью.',
+    facts:[['до 30 кг','вес фасада'],['110°','угол открывания'],['3 плоскости','регулировка'],['от 18 мм','толщина двери']],
+    specs:[['Вес фасада','до 30 кг'],['Угол открывания','110°'],['Толщина двери','от 18 мм'],['Профиль','только рамка MYSTERY'],['Механизм','доводчик или без пружины'],['Регулировка по глубине','+2 / −0,5 мм'],['Регулировка по ширине','±2 мм'],['Регулировка по высоте','±1,5 мм'],['Продаётся','комплектом']],
+    say:[['Петель не видно','Фасад выглядит цельной плоскостью — эффект «невидимой» двери.'],['Точная подгонка','Регулировка в трёх плоскостях — ровные зазоры.'],['Под толкатель','Есть версия без пружины — для Tip-on.']],
+    warn:['Фасады выше 1700 мм — работа петель не гарантируется; фабрика рекомендует петли SALICE AIR.','В EGGER 18 мм при фасадах выше 1700 мм возможен выгиб в районе петель.','Ставится только на алюминиевую рамку MYSTERY.'],
+    videos:[]}
   ]}
 };
 const SER_MAP={'T-box':'t','L-box':'l','S-box':'s','N-box':'n','F-box':'f','MGS PRO':'rails','Направляющие MGS':'rails'};
@@ -120,36 +133,45 @@ window.metodHas=(sec,grp)=>!!keyOf(sec,grp);
 let cur=null,frag=null;
 function player(v){const q=new URLSearchParams();if(v.p)q.set('p',v.p);if(v.from)q.set('t',v.from);
   return `https://rutube.ru/play/embed/${v.id}/${q.toString()?'?'+q:''}`;}
+/* Окно методички — один шаблон на все разделы (Макс 14.11: «универсальная, чтобы любой менеджер легко ознакомился»).
+   Порядок всегда одинаковый, пустые блоки не показываются: фото + коротко → что сказать клиенту → важно при заказе →
+   характеристики → видео → схемы и фото → подробно от фабрики. Слева — список видов (на телефоне — строкой). */
+const factsOf=s=>s.facts||s.specs.filter(x=>!x[2]).slice(0,4).map(([a,b])=>[b,a]);
+const warnOf=s=>s.warn||s.specs.filter(x=>x[2]).map(([a,b])=>a+': '+b);
 window.openMetod=(k,sk,vi=0)=>{const M=METOD[k];const s=M.series.find(x=>x.k===sk)||M.series[0];cur={k,sk:s.k,vi};const v=s.videos[vi]||s.videos[0];
   frag=v&&v.to!=null?{from:v.from||0,to:v.to,done:false}:null;
   let w=document.getElementById('mtdW');if(!w){w=document.createElement('div');w.id='mtdW';document.body.appendChild(w);
-    w.addEventListener('click',e=>{if(e.target===w)closeMetod();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mtdW')?.classList.contains('on'))closeMetod();});}
-  const full=EDU[s.k]||[];
-  w.innerHTML=`<div class="mtd-w" role="dialog" aria-label="${esc(M.title)}"><button class="mtd-x" aria-label="Закрыть">×</button>
-   <div class="mtd-tabs">${M.series.map(x=>`<button class="pill ${x.k===s.k?'on':''}" data-s="${x.k}">${esc(x.name)}</button>`).join('')}</div>
-   <div class="mtd-g"><div>
-    ${v?`<div class="mtd-v"><iframe src="${player(v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe><div class="mtd-end" hidden><span>Фрагмент про ${esc(s.name)} закончился</span><button class="pill lime" data-rep>Повторить</button></div></div>
-    <div class="mtd-vs">${s.videos.map((x,i)=>`<button class="pill ${i===vi?'on':''}" data-v="${i}">${esc(x.t)} · ${mm(vlen(x))}</button>`).join('')}</div>
-    <div class="mtd-note">${v.to!=null?`Фрагмент общего ролика фабрики «Системы выдвижения MGS» — только про ${esc(s.name)} (${mm(v.from)}–${mm(v.to)})`:'Видео фабрики MGS'}</div>`
-    :`<div class="mtd-v mtd-ph" style="background-image:url('${IMG+(s.photo||s.tile)}')"></div><div class="mtd-note">Видео по этой петле у фабрики пока нет — фото с сайта фабрики</div>`}
-    ${s.draw.length||s.heights.length?`<div class="mtd-l">${esc(M.drawLabel||('Чертёж'+(s.heights.length?' и высоты':'')))}</div>
-    <div class="mtd-d">${s.draw.map(d=>`<img class="${/mount|adj/.test(d)?'wide':''}" src="${IMG+d}" alt="Чертёж ${esc(s.name)}" loading="lazy">`).join('')}${s.heights.map(h=>`<img src="${IMG+h}" alt="" loading="lazy">`).join('')}</div>`:''}
-   </div><div>
-    <h3>${esc(s.name)}</h3><div class="mtd-sub">${esc(s.sub)}</div>
-    <div class="mtd-sp">${s.specs.map(([a,b,no])=>`<div class="${no?'no':''}"><small>${esc(a)}</small><b>${esc(b)}</b></div>`).join('')}</div>
-    <div class="mtd-l">Что сказать клиенту</div>
-    <div class="mtd-t">${s.say.map(([a,b])=>`<h4>${esc(a)}</h4><p>${esc(b)}</p>`).join('')}
-     ${full.length?`<details><summary>Читать полностью</summary>${full.map(p=>`<p>${esc(p)}</p>`).join('')}</details>`:''}</div>
+    w.addEventListener('click',e=>{if(e.target===w)closeMetod();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mtdW')?.classList.contains('on')){const z=document.getElementById('mtdZ');z?z.remove():closeMetod();}});}
+  const full=EDU[s.k]||[],facts=factsOf(s),warn=warnOf(s),pics=[...s.draw,...s.heights],ph=s.photo||s.tile;
+  const sec=(t,body,cls='')=>body?`<section class="mm-s ${cls}"><h4>${t}</h4>${body}</section>`:'';
+  w.innerHTML=`<div class="mm" role="dialog" aria-label="${esc(M.title)}">
+   <div class="mm-top"><b>📘 ${esc(M.title)}</b><button class="mm-x" aria-label="Закрыть">×</button></div>
+   <div class="mm-g"><nav class="mm-nav">${M.series.map(x=>`<button class="${x.k===s.k?'on':''}" data-s="${x.k}"><i style="background-image:url('${IMG+(x.tile||x.photo)}')"></i><span><b>${esc(x.name)}</b><small>${esc(x.tag)}</small></span></button>`).join('')}</nav>
+   <div class="mm-main">
+    <div class="mm-hero"><div class="mm-ph ${/\.svg$/.test(ph)?'fit':''}" style="background-image:url('${IMG+ph}')"></div>
+     <div class="mm-hi"><h3>${esc(s.name)}</h3><p class="mm-when">${esc(s.when||s.sub)}</p>
+      ${facts.length?`<div class="mm-facts">${facts.map(([val,lab])=>`<div><b>${esc(val)}</b><small>${esc(lab)}</small></div>`).join('')}</div>`:''}
+      ${s.videos.length?`<button class="pill lime mm-go" data-go="vid">▶ Смотреть видео · ${mm(vlen(s.videos[0]))}</button>`:''}</div></div>
+    ${sec('Что сказать клиенту',s.say.length?`<div class="mm-say">${s.say.map(([a,b],i)=>`<div><em>${i+1}</em><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div>`:'')}
+    ${sec('⚠ Важно при заказе',warn.length?`<ul>${warn.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'','mm-warn')}
+    ${sec(s.specsTitle||'Характеристики',s.specs.length?`<div class="mm-tbl">${s.specs.map(([a,b,no])=>`<div class="${no?'no':''}"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div>`:'')}
+    ${v?`<section class="mm-s" id="mmVid"><h4>Видео</h4><div class="mtd-v"><iframe src="${player(v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe><div class="mtd-end" hidden><span>Фрагмент про ${esc(s.name)} закончился</span><button class="pill lime" data-rep>Повторить</button></div></div>
+      ${s.videos.length>1?`<div class="mtd-vs">${s.videos.map((x,i)=>`<button class="pill ${i===vi?'on':''}" data-v="${i}">${esc(x.t)} · ${mm(vlen(x))}</button>`).join('')}</div>`:''}
+      <div class="mtd-note">${v.to!=null?`Фрагмент общего ролика фабрики — только про ${esc(s.name)} (${mm(v.from)}–${mm(v.to)})`:esc(v.t)+' · видео фабрики MGS'}</div></section>`:''}
+    ${sec(M.drawLabel||'Схемы и фото',pics.length?`<div class="mm-pics">${pics.map(d=>`<button data-z="${IMG+d}" class="${/mount|adj/.test(d)?'wide':''}"><img src="${IMG+d}" alt="" loading="lazy"></button>`).join('')}</div><div class="mtd-note">Нажмите на картинку, чтобы увеличить</div>`:'')}
+    ${full.length?`<details class="mm-full"><summary>Подробно от фабрики</summary>${full.map(x=>`<p>${esc(x)}</p>`).join('')}</details>`:''}
     <div class="mtd-src">${esc(M.src||'Источник: сайт фабрики MGS (TECHNO)')}</div>
    </div></div></div>`;
-  w.classList.add('on');document.documentElement.classList.add('mtd-open');
-  w.querySelector('.mtd-x').onclick=closeMetod;
+  w.classList.add('on');document.documentElement.classList.add('mtd-open');w.scrollTop=0;
+  w.querySelector('.mm-x').onclick=closeMetod;
   w.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>openMetod(k,b.dataset.s,0));
   w.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>openMetod(k,s.k,+b.dataset.v));
+  const go=w.querySelector('[data-go]');if(go)go.onclick=()=>w.querySelector('#mmVid')?.scrollIntoView({behavior:'smooth',block:'start'});
+  w.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{const z=document.createElement('div');z.id='mtdZ';z.innerHTML=`<img src="${b.dataset.z}" alt="">`;z.onclick=()=>z.remove();document.body.appendChild(z);});
   const rep=w.querySelector('[data-rep]');if(rep)rep.onclick=()=>{frag&&(frag.done=false);w.querySelector('.mtd-end').hidden=true;send({type:'player:setCurrentTime',data:{time:frag?frag.from:0}});send({type:'player:play',data:{}});};
 };
 function send(m){const f=document.querySelector('#mtdW iframe');try{f?.contentWindow?.postMessage(JSON.stringify(m),'*');}catch(e){}}
-window.closeMetod=()=>{const w=document.getElementById('mtdW');if(!w)return;w.classList.remove('on');w.innerHTML='';frag=null;document.documentElement.classList.remove('mtd-open');};
+window.closeMetod=()=>{document.getElementById('mtdZ')?.remove();const w=document.getElementById('mtdW');if(!w)return;w.classList.remove('on');w.innerHTML='';frag=null;document.documentElement.classList.remove('mtd-open');};
 /* конец фрагмента: плеер Rutube шлёт player:currentTime — дошли до to → пауза и «Повторить» */
 window.addEventListener('message',e=>{if(!frag||!/rutube\.ru$/.test(new URL(e.origin).hostname))return;let m=e.data;try{if(typeof m==='string')m=JSON.parse(m);}catch(_){return;}
   if(m?.type==='player:currentTime'){const t=+(m.data?.time??m.data?.currentTime);if(!frag.done&&t>=frag.to){frag.done=true;send({type:'player:pause',data:{}});const x=document.querySelector('#mtdW .mtd-end');if(x)x.hidden=false;}
@@ -194,6 +216,41 @@ html.mtd-open{overflow:hidden}
 .mtd-mv span{position:absolute;left:8px;right:8px;bottom:8px;background:rgba(15,14,12,.78);border-radius:8px;padding:4px 8px;font-size:12px;color:var(--ink2)}
 .mtd-msp{display:grid;grid-template-columns:1fr 1fr;gap:6px}.mtd-msp div{background:var(--field);border-radius:12px;padding:6px 10px}.mtd-msp small{color:var(--ink4);font-size:11.5px;display:block}.mtd-msp b{font-weight:500;font-size:13px}.mtd-msp .no b{color:var(--red)}
 .mtd-ms{color:var(--ink2);font-size:13px;line-height:1.5}.mtd-ms>b{font-weight:500;color:var(--ink);display:block;margin-bottom:4px}.mtd-ms p{margin:0 0 5px}.mtd-ms p b{font-weight:500;color:var(--ink)}
-.mtd-more{all:unset;cursor:pointer;color:var(--lime);font-size:13px;font-weight:500}`;
+.mtd-more{all:unset;cursor:pointer;color:var(--lime);font-size:13px;font-weight:500}
+/* окно методички — универсальный шаблон */
+.mm{position:relative;max-width:1240px;margin:0 auto;background:var(--bg);border-radius:28px;box-shadow:0 0 0 1px #2c2824,0 30px 80px #000a;overflow:hidden}
+.mm-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px 14px 22px;background:linear-gradient(100deg,#262a17,#1d1a17 60%);border-bottom:1px solid #2c2824}
+.mm-top b{font-weight:500;font-size:16px;color:#dfe6b0}
+.mm-x{all:unset;cursor:pointer;width:38px;height:38px;border-radius:50%;background:rgba(15,14,12,.6);display:grid;place-items:center;font-size:22px;color:var(--ink2)}.mm-x:hover{background:var(--raised)}
+.mm-g{display:grid;grid-template-columns:250px minmax(0,1fr)}
+.mm-nav{display:flex;flex-direction:column;gap:4px;padding:14px 10px;background:var(--surface);border-right:1px solid #24211d}
+.mm-nav button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;padding:7px 10px 7px 7px;border-radius:14px;color:var(--ink2)}
+.mm-nav button:hover{background:var(--field)}.mm-nav button.on{background:var(--raised);color:var(--ink);box-shadow:inset 3px 0 0 var(--lime)}
+.mm-nav i{flex:none;width:46px;height:46px;border-radius:10px;background:#fff center/cover no-repeat}
+.mm-nav span{display:flex;flex-direction:column;min-width:0}.mm-nav b{font-weight:500;font-size:14px;line-height:1.25}.mm-nav small{color:var(--ink4);font-size:12px}
+.mm-main{padding:22px 26px 26px;display:flex;flex-direction:column;gap:22px;min-width:0}
+.mm-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px;align-items:start}
+.mm-ph{aspect-ratio:4/3;border-radius:20px;background:#fff center/cover no-repeat}.mm-ph.fit{background-size:contain}
+.mm-hi h3{font-weight:300;font-size:32px;line-height:1.1;margin:2px 0 8px}
+.mm-when{color:var(--ink2);font-size:15.5px;line-height:1.5;margin:0 0 14px}
+.mm-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.mm-facts div{background:var(--surface);border-radius:14px;padding:10px 12px}.mm-facts b{display:block;font-weight:500;font-size:16px;line-height:1.3}.mm-facts small{color:var(--ink4);font-size:12px}
+.mm-s h4{margin:0 0 10px;font-weight:500;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4)}
+.mm-say{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.mm-say>div{background:var(--surface);border-radius:16px;padding:14px;position:relative}.mm-say em{font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--lime);color:#0f0e0c;display:grid;place-items:center;font-weight:600;font-size:13px;margin-bottom:8px}
+.mm-say b{display:block;font-weight:500;font-size:15px;margin-bottom:4px}.mm-say p{margin:0;color:var(--ink2);font-size:13.5px;line-height:1.5}
+.mm-warn{background:#2a2113;border-radius:16px;padding:14px 16px;box-shadow:inset 3px 0 0 #e0a43a}.mm-warn h4{color:#e9b75a}
+.mm-warn ul{margin:0;padding-left:18px;color:#f1dfbd;line-height:1.55;font-size:14px}.mm-warn li+li{margin-top:4px}
+.mm-tbl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px}
+.mm-tbl div{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid #24211d}.mm-tbl span{color:var(--ink3)}.mm-tbl b{font-weight:500;text-align:right}.mm-tbl .no b{color:var(--red)}
+.mm-pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.mm-pics button{all:unset;cursor:zoom-in;background:#fff;border-radius:14px;padding:8px;display:grid;place-items:center;aspect-ratio:4/3;box-sizing:border-box}.mm-pics button.wide{grid-column:1/-1;aspect-ratio:auto}
+.mm-pics img{max-width:100%;max-height:100%;display:block}
+#mmVid .mtd-v{max-width:760px}.mm-pics button{max-height:320px}.mm-pics button.wide{max-height:none}
+.mm-full summary{cursor:pointer;color:var(--lime);font-weight:500}.mm-full p{color:var(--ink2);line-height:1.6;margin:8px 0}
+#mtdZ{position:fixed;inset:0;z-index:70;background:rgba(8,7,6,.9);display:grid;place-items:center;padding:24px;cursor:zoom-out}#mtdZ img{max-width:100%;max-height:100%;background:#fff;border-radius:12px}
+@media(max-width:900px){.mm-g{grid-template-columns:1fr}.mm-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid #24211d;padding:8px;scrollbar-width:none}
+ .mm-nav button{flex:none}.mm-nav i{width:36px;height:36px}.mm-hero{grid-template-columns:1fr}.mm-main{padding:16px}.mm-tbl{grid-template-columns:1fr}.mm-hi h3{font-size:26px}}
+@media(max-width:600px){#mtdW{padding:0}.mm{border-radius:0}}`;
 document.head.appendChild(st);
 })();
