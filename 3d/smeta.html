@@ -266,7 +266,19 @@ async function init(){
   document.addEventListener('click',e=>{if(!e.target.closest('.hsearch')){S.found=[];$('#found').innerHTML='';}});
   $('#cartX').onclick=closeCart;$('#cartBg').onclick=closeCart;document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.cartOn)closeCart();});
   document.body.classList.add('catx');document.body.dataset.lay='E';
-  $('#app').hidden=false;render();
+  /* Макс 14.11: «бесит, что при обновлении скидывает на первый экран» — где был (раздел, бренд, фильтры, шаг подбора, окно сметы,
+     прокрутка), сохраняем при уходе со страницы (sessionStorage на смету) и восстанавливаем при загрузке */
+  const PK='smeta-pos-'+S.smeta.id;
+  addEventListener('pagehide',()=>{try{const o=S.open;if(!o)return;
+    sessionStorage.setItem(PK,JSON.stringify({sec:o.sec,mode:o.mode,grp:o.grp||null,sub:o.sub||null,ff:o.ff||{},q:o.q||'',step:o.step,spec:o.spec,cart:!!S.cartOn,y:scrollY}));}catch(e){}});
+  let pos=null;try{pos=JSON.parse(sessionStorage.getItem(PK)||'null');}catch(e){}
+  $('#app').hidden=false;
+  if(pos&&SECS.includes(pos.sec)){S.homeSec=pos.sec;S.draft={id:uid(),sec:pos.sec,price:0,qty:0};
+    S.open=pos.mode==='plate'&&SEC_FAMS[pos.sec]?{mode:'plate',id:S.draft.id,sec:pos.sec,step:pos.step||0,spec:pos.spec||{fam:null,ex:{},area:1,note:''},q:pos.q||''}
+      :{mode:'pick',id:S.draft.id,sec:pos.sec,grp:pos.grp,sub:pos.sub,ff:pos.ff||{},q:pos.q||''};
+    render();if(pos.cart)openCart();
+    const y=pos.y||0;if(y){scrollTo(0,y);requestAnimationFrame(()=>scrollTo(0,y));setTimeout(()=>scrollTo(0,y),300);}}
+  else render();
 }
 async function loadCat(){
   const all=[];for(let from=0;;from+=1000){const {data,error}=await sb.from('cat_view').select('id,kind,sec,grp,name,unit,params,photo,cprice,sort,gsort,sec0,grp0,sub0').neq('kind','search').order('sec').order('grp').order('sort').order('name').range(from,from+999);
