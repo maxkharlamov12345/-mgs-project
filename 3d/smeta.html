@@ -163,6 +163,11 @@ body[data-lay=E] .lyE nav{padding:6px 6px 20px;border-right:1px solid var(--line
 body[data-lay=E] .lyE nav>*,body[data-lay=E] .lyE aside>*{position:relative}
 body[data-lay=E] .lyE-m{padding:12px 16px 40px}
 body[data-lay=E] .lyE.noside .cards{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+/* навигация и фильтры не уезжают при прокрутке: сами колонки липкие, фон колонок — у сетки */
+@media(min-width:761px){body[data-lay=E] .lyE{background:linear-gradient(90deg,var(--surface) 209px,var(--line) 209px 210px,transparent 210px calc(100% - 251px),var(--line) calc(100% - 251px) calc(100% - 250px),var(--surface) calc(100% - 250px))}
+  body[data-lay=E] .lyE.noside{background:linear-gradient(90deg,var(--surface) 209px,var(--line) 209px 210px,transparent 210px)}
+  body[data-lay=E] .lyE nav,body[data-lay=E] .lyE aside{position:sticky;top:58px;align-self:start;max-height:calc(100vh - 58px);overflow:auto;background:transparent;border:0;scrollbar-width:thin}}
+@media(min-width:761px) and (max-width:1100px){body[data-lay=E] .lyE{background:linear-gradient(90deg,var(--surface) 189px,var(--line) 189px 190px,transparent 190px)}body[data-lay=E] .lyE aside{position:static;max-height:none}}
 @media(max-width:1100px){body[data-lay=E] .lyE{grid-template-columns:190px minmax(0,1fr)}body[data-lay=E] .lyE aside{grid-column:2;border-left:0;border-top:1px solid var(--line)}}
 @media(max-width:760px){body[data-lay=E] .lyE,body[data-lay=E] .lyE.noside{grid-template-columns:minmax(0,1fr);min-height:0}body[data-lay=E] .lyE nav .lyD-s{flex:none}body[data-lay=E] .lyE nav{align-items:center;align-self:start}
   body[data-lay=E] .lyE nav{flex-direction:row;overflow-x:auto;gap:4px;padding:8px;border-right:0;border-bottom:1px solid var(--line);scrollbar-width:none}
@@ -170,6 +175,16 @@ body[data-lay=E] .lyE.noside .cards{grid-template-columns:repeat(auto-fill,minma
   body[data-lay=E] .lyE aside{grid-column:auto}body[data-lay=E] .lyE-m{padding:10px}body[data-lay=E] .ph-h{flex-wrap:wrap}
   body[data-lay=E] .minicart{order:3;width:100%;justify-content:space-between}body[data-lay=E] .cards{grid-template-columns:minmax(0,1fr)!important}
   body[data-lay=E] .mtd-s{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+
+/* Макс 14.11: выбор сразу в смету из каталога */
+.card{position:relative}.card.in{box-shadow:inset 0 0 0 2px var(--lime)}
+.cadd{position:absolute;right:8px;bottom:8px;width:28px;height:28px;border-radius:50%;background:var(--raised);color:var(--ink2);display:grid;place-items:center;font-size:18px;font-weight:600}
+.card:hover .cadd{background:var(--lime);color:#0f0e0c}
+.cq{position:absolute;right:8px;bottom:8px;display:inline-flex;align-items:center;gap:2px;background:var(--bg);border-radius:999px;padding:2px}
+.cqb{all:unset;cursor:pointer;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--field);color:var(--ink);font-size:16px}.cqb:hover{background:var(--lime);color:#0f0e0c}
+.cqi{width:40px;height:26px;border:0;background:transparent;color:var(--ink);text-align:center;font:600 13px Onest,sans-serif}
+.cq.cqm{padding:4px 10px;font-size:12px;color:var(--lime)}
+.card[role=button] .tx{padding-bottom:22px}
 /* Макс 14.11 — тест раскладок каталога (A/B/D) */
 body.catx #vars,body.catx #right{display:none}body.catx .left{flex-basis:100%}
 .laysw{display:inline-flex;align-items:center;gap:4px;margin-left:8px}.laysw em{font-style:normal;color:var(--ink4);font-size:12px;margin-right:2px}
@@ -420,8 +435,21 @@ function renderPick(){
   const first=grpOrder(items);
   const grps=Object.keys(first).sort((a,b)=>((/^MGS/.test(b)?1:0)-(/^MGS/.test(a)?1:0))||first[a]-first[b]);const acts={};/* своя фурнитура фабрики (MGS) — первой */let n=0;const A=f=>{const k='a'+(n++);acts[k]=f;return k;};
   const treeH=()=>GROUPS.map(([g,secs])=>`<div class="lyD-g">${esc(g)}</div>`+secs.map(sc=>`<button class="lyD-s ${sc===o.sec?'on':''}" data-act="${A(()=>{if(sc===o.sec&&!o.grp)return;if(sc===o.sec){o.grp=null;o.sub=null;o.ff={};o.q='';renderPick();return;}S.draft={id:uid(),sec:sc,price:0,qty:0};openFor(S.draft);})}">${esc(sc)}</button>`).join('')).join('');
-  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||((k=>k&&k!=='mgs'&&(S.brands?.[k]||OWN_LOGO[k])?.logo)(brandOf(x.grp)))||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;const mk=window.metodKey&&metodKey(o.sec,x.grp),ms=mk&&metodSeries(x);return `<button class="card" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
-    <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span>${ms?`<span class="mtd-i" role="button" title="Методичка" data-act="${A(()=>openMetod(mk,ms))}">i</span>`:''}</button>`;};
+  /* Макс 14.11: в каталоге (не при замене строки) — выбор сразу в смету: «+», количество на карточке, можно несколько позиций и разделов подряд */
+  const MULTI=!V().lines.some(l=>l.id===o.id);
+  const inL=(x,dn)=>V().lines.find(l=>l.item===x.id&&(l.decor||'')===(dn||''));
+  const qtyOf=x=>V().lines.filter(l=>l.item===x.id).reduce((a,l)=>a+(l.qty||0),0);
+  function addLine(x,d){const dn=d?d.name:'';const ex=inL(x,dn);
+    if(ex){ex.qty=(ex.qty||0)+1;ex.qtyTxt=undefined;}
+    else V().lines.push({id:uid(),sec:o.sec,item:x.id,name:x.name,decor:dn,price:x.cprice,unit:x.unit,qty:1,th:d?.photo?{photo:d.photo}:x.photo?{photo:x.photo}:null});
+    save();o.item=null;renderPick();toast(`Добавлено: ${x.name}${dn?' · '+dn:''}`);}
+  function setQty(x,v){const ls=V().lines.filter(l=>l.item===x.id);if(!ls.length)return;const l=ls[ls.length-1];
+    if(v<=0)V().lines=V().lines.filter(y=>y!==l);else{l.qty=v;l.qtyTxt=undefined;}save();renderPick();}
+  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||((k=>k&&k!=='mgs'&&(S.brands?.[k]||OWN_LOGO[k])?.logo)(brandOf(x.grp)))||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;const mk=window.metodKey&&metodKey(o.sec,x.grp),ms=mk&&metodSeries(x);const qn=MULTI?qtyOf(x):0,one=V().lines.filter(l=>l.item===x.id).length<=1;
+    const qc=!MULTI?'':qn&&one?`<span class="cq" data-stop><button class="cqb" data-act="${A(()=>setQty(x,qn-1))}" aria-label="Меньше">−</button><input class="cqi" data-x="${esc(x.id)}" value="${nfmt(qn)}" inputmode="decimal" aria-label="Количество"><button class="cqb" data-act="${A(()=>setQty(x,qn+1))}" aria-label="Больше">+</button></span>`
+      :qn?`<span class="cq cqm">в смете: ${nfmt(qn)}</span>`:`<span class="cadd" aria-hidden="true">+</span>`;
+    return `<div class="card ${qn?'in':''}" role="button" tabindex="0" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
+    <span class="tx"><b>${esc(x.name)}</b><span>${rub(x.cprice)} / ${esc(x.unit||'')}${df?' · '+decs(df).length+' декоров':''}${o.grp?'':' · '+esc(x.grp)}</span></span>${ms?`<span class="mtd-i" role="button" title="Методичка" data-act="${A(()=>openMetod(mk,ms))}">i</span>`:''}${qc}</div>`;};
   let head,body;const q=o.q||'';
   if(o.item){const x=o.item,df=DEC_FAM(x);let ds=decs(df);if(q)ds=ds.filter(d=>hit(d.name+' '+d.params.code+' '+(d.params.cat||''),q));
     head=`<button class="rb" id="pBack" aria-label="Назад">‹</button><b>${esc(x.name)}</b><small>выберите декор</small>`;
@@ -492,16 +520,20 @@ function renderPick(){
   /* Макс 14.11: шаг выбора бренда и группы без фильтров — тоже в виде E (навигация слева), без колонки фильтров */
   if(TRY_LAY(o)&&!body.startsWith('<div class="lyE">'))body=`<div class="lyE noside"><nav>${treeH()}</nav><div class="lyE-m">${body}</div></div>`;
   /* Макс 14.11 (тест на «Ящики → MGS»): в каталоге не нужны варианты и панель сметы — каталог во всю ширину, вид A / B / D на выбор */
-  const lay=TRY_LAY(o)?getLay():'',cx=!!lay&&lay!=='now';document.body.classList.toggle('catx',cx);document.body.dataset.lay=cx?lay:'';
+  const lay=getLay(),cx=true; /* каталог всегда без панели сметы, и на выборе декора тоже */document.body.classList.toggle('catx',cx);document.body.dataset.lay=cx?lay:'';
   if(lay){const n=V().lines.filter(l=>l.price).length;
     head+=(cx?`<span class="minicart">В смете <b class="num">${n} поз. · ${rub(varTotal(V()))}</b><button class="pill lime" data-act="${A(()=>{S.open=null;render();})}">К смете →</button></span>`:'');}
   $('#left').innerHTML=panel(head,body);
   $('#pClose').onclick=()=>{S.open=null;render();};
   $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp){o.grp=null;o.ff={};}else{S.open=null;render();return;}renderPick();});
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.stopPropagation();acts[b.dataset.act]();});
+  $('#left').querySelectorAll('[data-stop]').forEach(b=>b.addEventListener('click',e=>e.stopPropagation()));
+  $('#left').querySelectorAll('.card[role=button]').forEach(c=>c.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===c){e.preventDefault();c.click();}});
+  $('#left').querySelectorAll('.cqi').forEach(i=>{i.onclick=e=>e.stopPropagation();i.onkeydown=e=>{if(e.key==='Enter')i.blur();};
+    i.onchange=()=>{const x=S.cat.find(y=>y.id===i.dataset.x);const n=parseFloat(i.value.replace(',','.'));if(x)setQty(x,isNaN(n)?0:n);};});
   bindSearch(renderPick);
   function pickItem(x){if(DEC_FAM(x)&&decs(DEC_FAM(x)).length){o.item=x;o.q='';renderPick();}else finishItem(x,null);}
-  function finishItem(x,d){const l=curL();
+  function finishItem(x,d){if(MULTI){addLine(x,d);return;}const l=curL();
     setLine({item:x.id,name:x.name,decor:d?d.name:'',price:x.cprice,unit:x.unit,qty:l.qty||1,th:d?.photo?{photo:d.photo}:x.photo?{photo:x.photo}:null});}
 }
 
