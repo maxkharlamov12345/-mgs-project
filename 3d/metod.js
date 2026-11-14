@@ -19,32 +19,32 @@ const IMG='../assets/cat/mgs/';
 const METOD={
  'mgs-box':{sec:'Ящики и направляющие',grp:'MGS',badge:'Гарантия фабрики 10 лет',title:'Методичка MGS',sub:'видео, характеристики, чертежи и что сказать клиенту — по каждой системе',
   series:[
-   {k:'t',name:'T-box',tag:'с рейлингами',tile:'doc/t-tile.webp',draw:['doc/t-box.svg'],heights:['tbox-h100-white-v3.webp','tbox-h155-white-v3.webp','tbox-h220-white-v3.webp'],
+   {k:'t',name:'T-box',tag:'с рейлингами',tile:'doc/t-tile.webp',photo:'doc/t-photo.webp',draw:['doc/t-box.svg'],heights:['tbox-h100-white-v3.webp','tbox-h155-white-v3.webp','tbox-h220-white-v3.webp'],
     sub:'Двустенные царги, рейлинги · с 2022 года · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','350–550 мм'],['Высота','100 · 155 · 220 мм'],['Цвет','белый · серый'],['Механизм','доводчик'],['Push-Open','нет',1]],
     say:[['Классика с рейлингами','Продольный рейлинг увеличивает полезную высоту и жёсткость ящика.'],['Тихо закрывается','Встроенный доводчик — плавно и бесшумно.'],['Бюджетно','Лучшее решение по цене при нагрузке до 45 кг.']],
     videos:[{t:'Обучение',...R('bfbe381d49848a5f40e32826d2ee17d4','6nH99wJ-sgCZnKdEzQdYbw'),len:189},{t:'Промо',src:'video/box-tbox.mp4',len:34}]},
-   {k:'l',name:'L-box',tag:'тонкие боковины',tile:'doc/l-tile.webp',draw:['doc/l-box.svg'],heights:['lbox-h88-white-v3.webp','lbox-h202-white-v3.webp'],
+   {k:'l',name:'L-box',tag:'тонкие боковины',tile:'doc/l-tile.webp',photo:'doc/l-photo.webp',draw:['doc/l-box.svg'],heights:['lbox-h88-white-v3.webp','lbox-h202-white-v3.webp'],
     sub:'Современный дизайн, тонкие боковины · с 2022 года · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','350–550 мм'],['Высота','88 · 202 мм'],['Цвет','белый · серый'],['Механизм','доводчик или Push-Open'],['Синхронизатор','нельзя',1]],
     say:[['Плавно и тихо','Ящик выдвигается без рывков и закрывается мягко.'],['Тонкие боковины','Современный минималистичный вид, подходит под любой интерьер.'],['Push-Open','Лёгкое касание — ящик открывается сам, ручки не нужны.']],
     videos:[{t:'Обучение',...R('095aa859795c090e1af695a892e91cd9','zo4AkeUvP4hu0BMYAW5W5A'),len:161},{t:'Промо',src:'video/box-lbox.mp4',len:34}]},
-   {k:'s',name:'S-box',tag:'доводчик + Push-Open',tile:'doc/s-tile.webp',draw:['doc/s-box.svg'],heights:['sbox-h83-white-v3.webp','sbox-h121-white-v3.webp','sbox-h168-white-v3.webp'],
+   {k:'s',name:'S-box',tag:'доводчик + Push-Open',tile:'doc/s-tile.webp',photo:'doc/s-photo.webp',draw:['doc/s-box.svg'],heights:['sbox-h83-white-v3.webp','sbox-h121-white-v3.webp','sbox-h168-white-v3.webp'],
     sub:'Толкатель и доводчик сразу, синхронизатор в комплекте · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','400–550 мм'],['Высота','83 · 121 · 168 мм'],['Цвет','белый · серый'],['Механизм','доводчик + Push-Open'],['Синхронизатор','есть']],
     say:[['Открыть — нажатием, закрыть — мягко','Толкатель и доводчик работают одновременно.'],['Нажимайте где угодно','Синхронизатор срабатывает при нажатии в любой точке фасада.'],['Чистый вид','Нет выступающих креплений дна на боковинах.']],
     videos:[{t:'Обучение',...R('1df7b7b5cb78298621fda5812cd0bb6d','ctoDW4QFe4IeQweXTTHXFQ'),len:122},{t:'Промо',src:'video/box-sbox.mp4',len:18}]},
-   {k:'n',name:'N-box',tag:'регулировка в 3D',tile:'doc/n-tile.webp',draw:['doc/n-box.svg'],heights:['nbox-h90-white-v3.webp','nbox-h175-white-v3.webp','nbox-h239-white-v3.webp'],
+   {k:'n',name:'N-box',tag:'регулировка в 3D',tile:'doc/n-tile.webp',photo:'doc/n-photo.webp',draw:['doc/n-box.svg'],heights:['nbox-h90-white-v3.webp','nbox-h175-white-v3.webp','nbox-h239-white-v3.webp'],
     sub:'Премиум: регулировка в 3 плоскостях, есть внутренний ящик · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','300–550 мм'],['Высота','90 · 175 · 239 мм'],['Цвет','белый · серый'],['Механизм','доводчик или Push-Open'],['Синхронизатор','по запросу'],['Регулировка','в 3 плоскостях'],['Внутренний ящик','90 и 175 мм']],
     say:[['Точная подгонка','Регулировка в трёх плоскостях — ровные зазоры фасадов, без перекосов.'],['Можно внутренний','Металлическая передняя панель превращает его во внутренний ящик (90 и 175 мм).'],['Синхронизатор по запросу','С ним Push-Open срабатывает при нажатии в любой точке фасада.']],
     videos:[{t:'Обучение',...R('db8ba9ea7b4eb2b31382a9ebfb97190f','-nKnLa4uM9Il-yEmmJDdDA'),len:181},{t:'Промо',...R('44a210da9f63f114eaf4005d8dff8916',''),len:29}]},
-   {k:'f',name:'F-box',tag:'стекло, подсветка',tile:'doc/f-tile.webp',draw:['doc/f-box.svg'],heights:['fbox-h171-white-v3.webp'],
+   {k:'f',name:'F-box',tag:'стекло, подсветка',tile:'doc/f-tile.webp',photo:'doc/f-photo.webp',draw:['doc/f-box.svg'],heights:['fbox-h171-white-v3.webp'],
     sub:'Стеклянные боковины, встроенная подсветка · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','450–500 мм'],['Высота','171 мм'],['Цвет','белый · серый'],['Механизм','доводчик'],['Регулировка','в 2 плоскостях'],['Подсветка','в боковинах'],['Батарейки','23A 12V — не в комплекте',1]],
     say:[['Витрина внутри шкафа','Стекло в боковинах — содержимое видно, ящик выглядит дорого.'],['С подсветкой','Подсветка встроена в боковины (батарейки 23A 12V докупаются).'],['Можно внутренний','Есть вариант внутреннего ящика с металлической панелью.']],
     videos:[{t:'Промо',...R('624b2ba8261c1eda381d9767eb5ee6ab',''),len:33}]},
-   {k:'rails',name:'Направляющие',tag:'скрытого монтажа',tile:'doc/rails-tile.webp',draw:['doc/mgs_pro.svg','doc/2p2_mgs.svg'],heights:[],
+   {k:'rails',name:'Направляющие',tag:'скрытого монтажа',tile:'doc/rails-tile.webp',photo:'doc/rails-photo.webp',draw:['doc/mgs_pro.svg','doc/2p2_mgs.svg'],heights:[],
     sub:'MGS PRO и MGS «2+2» · гарантия 10 лет',
     specs:[['Нагрузка','до 20 кг'],['MGS «2+2»','250–600 мм · доводчик или Push-Open'],['MGS PRO','300–600 мм · доводчик'],['MGS PRO Push-Open','350–550 мм · + доводчик и синхронизатор'],['Регулировка «2+2»','в 2 плоскостях'],['250 мм','без регулировок',1]],
     say:[['Не видно направляющих','Скрытый монтаж — чистые линии ящика.'],['PRO — тише и плавнее','Новая платформа: ход заметно мягче, чем у «2+2».'],['Push-Open на PRO','Только у PRO есть толкатель с доводчиком и синхронизатором.']],
@@ -138,38 +138,51 @@ function player(v){const q=new URLSearchParams();if(v.p)q.set('p',v.p);if(v.from
    характеристики → видео → схемы и фото → подробно от фабрики. Слева — список видов (на телефоне — строкой). */
 const factsOf=s=>s.facts||s.specs.filter(x=>!x[2]).slice(0,4).map(([a,b])=>[b,a]);
 const warnOf=s=>s.warn||s.specs.filter(x=>x[2]).map(([a,b])=>a+': '+b);
-window.openMetod=(k,sk,vi=0)=>{const M=METOD[k];const s=M.series.find(x=>x.k===sk)||M.series[0];cur={k,sk:s.k,vi};const v=s.videos[vi]||s.videos[0];
-  frag=v&&v.to!=null?{from:v.from||0,to:v.to,done:false}:null;
+/* медиа вида одним блоком (Макс 14.11): фото, видео, схемы — один просмотрщик одного размера + ряд одинаковых квадратиков с плашкой «Фото/Видео/Схема» */
+function mediaOf(s){const L=[],ph=s.photo===null?null:(s.photo||s.tile);
+  if(ph)L.push({k:'photo',img:ph});(s.photos||[]).forEach(x=>L.push({k:'photo',img:x}));
+  s.videos.forEach((v,i)=>L.push({k:'video',v,vi:i}));
+  s.draw.forEach(x=>L.push({k:'scheme',img:x}));(s.heights||[]).forEach(x=>L.push({k:'height',img:x}));return L;}
+const LBL={photo:'Фото',video:'Видео',scheme:'Схема',height:'Высота'};
+function viewHtml(m,s){if(!m)return '';
+  if(m.k==='video'){const v=m.v;return v.src?`<video src="${IMG+v.src}" poster="${IMG+v.src.replace(/\.mp4$/,'.jpg')}" controls playsinline preload="metadata" autoplay></video>`
+    :`<iframe src="${player(v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe>`;}
+  return `<button class="mm-zoom" data-z="${IMG+m.img}" aria-label="Увеличить"><img src="${IMG+m.img}" alt=""></button>`;}
+function thumbHtml(m,i,on){const t=m.k==='video'?(m.v.src?IMG+m.v.src.replace(/\.mp4$/,'.jpg'):`https://rutube.ru/api/video/${m.v.id}/thumbnail/?redirect=1`):IMG+m.img;
+  return `<button class="mm-th ${m.k} ${on?'on':''}" data-m="${i}"><i style="background-image:url('${t}')"></i>${m.k==='video'?'<em>▶</em>':''}<span>${LBL[m.k]}${m.k==='video'?' · '+mm(vlen(m.v)):''}</span></button>`;}
+window.openMetod=(k,sk,vi=-1)=>{const M=METOD[k];const s=M.series.find(x=>x.k===sk)||M.series[0];cur={k,sk:s.k,vi};frag=null;
   let w=document.getElementById('mtdW');if(!w){w=document.createElement('div');w.id='mtdW';document.body.appendChild(w);
     w.addEventListener('click',e=>{if(e.target===w)closeMetod();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mtdW')?.classList.contains('on')){const z=document.getElementById('mtdZ');z?z.remove():closeMetod();}});}
-  const full=EDU[s.k]||[],facts=factsOf(s),warn=warnOf(s),pics=[...s.draw,...s.heights],ph=s.photo===null?null:(s.photo||s.tile);
+  const full=EDU[s.k]||[],facts=factsOf(s),warn=warnOf(s),med=mediaOf(s);
+  let mi=vi>=0?Math.max(0,med.findIndex(x=>x.k==='video'&&x.vi===vi)):0;
   const badge=M.badge?`<span class="mm-badge">🛡 ${esc(M.badge)}</span>`:'';
   const sec=(t,body,cls='')=>body?`<section class="mm-s ${cls}"><h4>${t}</h4>${body}</section>`:'';
+  const cap=m=>m?(m.k==='video'?esc(m.v.t)+(m.v.src?' · фрагмент ролика фабрики — только про '+esc(s.name):' · видео фабрики MGS'):LBL[m.k]+' · нажмите, чтобы увеличить'):'';
   w.innerHTML=`<div class="mm" role="dialog" aria-label="${esc(M.title)}">
    <div class="mm-top"><b>📘 ${esc(M.title)}</b>${badge}<button class="mm-x" aria-label="Закрыть">×</button></div>
    <div class="mm-g"><nav class="mm-nav">${M.series.map(x=>`<button class="${x.k===s.k?'on':''}" data-s="${x.k}"><i style="background-image:url('${IMG+(x.tile||x.photo)}')"></i><span><b>${esc(x.name)}</b><small>${esc(x.tag)}</small></span></button>`).join('')}</nav>
    <div class="mm-main">
-    <div class="mm-hero ${ph?'':'nophoto'}">${ph?`<div class="mm-ph ${/\.svg$/.test(ph)?'fit':''}" style="background-image:url('${IMG+ph}')"></div>`:''}
+    <div class="mm-hero ${med.length?'':'nophoto'}">
+     ${med.length?`<div class="mm-media"><div class="mm-view ${med[mi].k==='video'?'vid':''}" id="mmView">${viewHtml(med[mi],s)}</div>
+       ${med.length>1?`<div class="mm-ths">${med.map((m,i)=>thumbHtml(m,i,i===mi)).join('')}</div>`:''}<div class="mtd-note" id="mmCap">${cap(med[mi])}</div></div>`:''}
      <div class="mm-hi"><h3>${esc(s.name)}</h3>${M.badge&&s.k!=='h-how'?`<div class="mm-gar"><b>10 лет</b><span>гарантия фабрики на фурнитуру MGS</span></div>`:''}<p class="mm-when">${esc(s.when||s.sub)}</p>
       ${facts.length?`<div class="mm-facts">${facts.map(([val,lab])=>`<div><b>${esc(val)}</b><small>${esc(lab)}</small></div>`).join('')}</div>`:''}
-      ${s.videos.length?`<button class="pill lime mm-go" data-go="vid">▶ Смотреть видео · ${mm(vlen(s.videos[0]))}</button>`:''}</div></div>
+      <div class="mm-cnt">${['photo','video','scheme'].map(t=>{const n=med.filter(m=>m.k===t||(t==='scheme'&&m.k==='height')).length;return n?`<button class="pill" data-kind="${t}">${{photo:'Фото',video:'Видео',scheme:'Схемы'}[t]} · ${n}</button>`:'';}).join('')}</div></div></div>
     ${sec('Что сказать клиенту',s.say.length?`<div class="mm-say">${s.say.map(([a,b],i)=>`<div><em>${i+1}</em><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div>`:'')}
     ${sec('⚠ Важно при заказе',warn.length?`<ul>${warn.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'','mm-warn')}
     ${sec(s.specsTitle||'Характеристики',s.specs.length?`<div class="mm-tbl">${s.specs.map(([a,b,no])=>`<div class="${no?'no':''}"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div>`:'')}
-    ${v?`<section class="mm-s" id="mmVid"><h4>Видео</h4><div class="mtd-v">${v.src?`<video src="${IMG+v.src}" poster="${IMG+v.src.replace(/\.mp4$/,'.jpg')}" controls playsinline preload="metadata"></video>`:`<iframe src="${player(v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe>`}<div class="mtd-end" hidden><span>Фрагмент про ${esc(s.name)} закончился</span><button class="pill lime" data-rep>Повторить</button></div></div>
-      ${s.videos.length>1?`<div class="mtd-vs">${s.videos.map((x,i)=>`<button class="pill ${i===vi?'on':''}" data-v="${i}">${esc(x.t)} · ${mm(vlen(x))}</button>`).join('')}</div>`:''}
-      <div class="mtd-note">${v.src?`${esc(v.t)} · фрагмент ролика фабрики MGS — только про ${esc(s.name)}`:esc(v.t)+' · видео фабрики MGS'}</div></section>`:''}
-    ${sec(M.drawLabel||'Схемы и фото',pics.length?`<div class="mm-pics">${pics.map(d=>`<button data-z="${IMG+d}" class="${/mount|adj/.test(d)?'wide':''}"><img src="${IMG+d}" alt="" loading="lazy"></button>`).join('')}</div><div class="mtd-note">Нажмите на картинку, чтобы увеличить</div>`:'')}
     ${sec('Подробно от фабрики',full.length?`<div class="mm-full">${full.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`:'')}
     <div class="mtd-src">${esc(M.src||'Источник: сайт фабрики MGS (TECHNO)')}</div>
    </div></div></div>`;
-  w.classList.add('on');document.documentElement.classList.add('mtd-open');w.scrollTop=0;
+  w.classList.add('on');document.documentElement.classList.add('mtd-open');if(vi<0)w.scrollTop=0;
   w.querySelector('.mm-x').onclick=closeMetod;
-  w.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>openMetod(k,b.dataset.s,0));
-  w.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>openMetod(k,s.k,+b.dataset.v));
-  const go=w.querySelector('[data-go]');if(go)go.onclick=()=>w.querySelector('#mmVid')?.scrollIntoView({behavior:'smooth',block:'start'});
-  w.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{const z=document.createElement('div');z.id='mtdZ';z.innerHTML=`<img src="${b.dataset.z}" alt="">`;z.onclick=()=>z.remove();document.body.appendChild(z);});
-  const rep=w.querySelector('[data-rep]');if(rep)rep.onclick=()=>{frag&&(frag.done=false);w.querySelector('.mtd-end').hidden=true;send({type:'player:setCurrentTime',data:{time:frag?frag.from:0}});send({type:'player:play',data:{}});};
+  w.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>openMetod(k,b.dataset.s));
+  const bindZoom=()=>w.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{const z=document.createElement('div');z.id='mtdZ';z.innerHTML=`<img src="${b.dataset.z}" alt="">`;z.onclick=()=>z.remove();document.body.appendChild(z);});
+  const pick=i=>{mi=i;const vw=w.querySelector('#mmView');vw.className='mm-view'+(med[i].k==='video'?' vid':'');vw.innerHTML=viewHtml(med[i],s);w.querySelector('#mmCap').innerHTML=cap(med[i]);
+    w.querySelectorAll('.mm-th').forEach(t=>t.classList.toggle('on',+t.dataset.m===i));bindZoom();};
+  w.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>pick(+b.dataset.m));
+  w.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{const t=b.dataset.kind;const i=med.findIndex(m=>m.k===t||(t==='scheme'&&m.k==='height'));if(i>=0){pick(i);w.querySelector('.mm-media').scrollIntoView({behavior:'smooth',block:'nearest'});}});
+  bindZoom();
 };
 function send(m){const f=document.querySelector('#mtdW iframe');try{f?.contentWindow?.postMessage(JSON.stringify(m),'*');}catch(e){}}
 window.closeMetod=()=>{document.getElementById('mtdZ')?.remove();const w=document.getElementById('mtdW');if(!w)return;w.classList.remove('on');w.innerHTML='';frag=null;document.documentElement.classList.remove('mtd-open');};
@@ -256,6 +269,20 @@ html.mtd-open{overflow:hidden}
 #mtdZ{position:fixed;inset:0;z-index:70;background:rgba(8,7,6,.9);display:grid;place-items:center;padding:24px;cursor:zoom-out}#mtdZ img{max-width:100%;max-height:100%;background:#fff;border-radius:12px}
 @media(max-width:900px){.mm-g{grid-template-columns:1fr}.mm-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid #24211d;padding:8px;scrollbar-width:none}
  .mm-nav button{flex:none}.mm-nav i{width:36px;height:36px}.mm-hero{grid-template-columns:1fr}.mm-main{padding:16px}.mm-tbl{grid-template-columns:1fr}.mm-hi h3{font-size:26px}}
-@media(max-width:600px){#mtdW{padding:0}.mm{border-radius:0}}`;
+@media(max-width:600px){#mtdW{padding:0}.mm{border-radius:0}}
+/* единый блок медиа */
+.mm-media{min-width:0}
+.mm-view{aspect-ratio:4/3;border-radius:20px;background:#fff;overflow:hidden;position:relative;display:grid;place-items:center}
+.mm-view.vid{background:#000}.mm-view video,.mm-view iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.mm-zoom{all:unset;cursor:zoom-in;position:absolute;inset:0;display:grid;place-items:center;padding:12px;box-sizing:border-box}.mm-zoom img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.mm-ths{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;margin-top:10px}
+.mm-th{all:unset;cursor:pointer;position:relative;aspect-ratio:1;border-radius:12px;background:#fff;overflow:hidden;box-shadow:inset 0 0 0 1px #2c2824}
+.mm-th i{position:absolute;inset:5px 5px 20px;background:center/contain no-repeat}
+.mm-th.video{background:#1d1a17}.mm-th.video i{inset:0 0 18px;background-size:cover;opacity:.75}
+.mm-th em{position:absolute;left:50%;top:calc(50% - 9px);transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:rgba(15,14,12,.75);color:#fff;display:grid;place-items:center;font-style:normal;font-size:11px}
+.mm-th span{position:absolute;left:0;right:0;bottom:0;height:18px;line-height:18px;text-align:center;font-size:10.5px;font-weight:600;background:#e9e6e0;color:#3a3630;white-space:nowrap}
+.mm-th.video span{background:#2a2622;color:var(--ink2)}.mm-th.scheme span,.mm-th.height span{background:#e8eccf;color:#4b5419}
+.mm-th.on{box-shadow:0 0 0 2px var(--lime)}
+.mm-cnt{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.mm-cnt .pill{height:34px;font-size:13px}`;
 document.head.appendChild(st);
 })();
