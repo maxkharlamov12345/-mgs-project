@@ -143,24 +143,20 @@ const warnOf=s=>s.warn||s.specs.filter(x=>x[2]).map(([a,b])=>a+': '+b);
 function mediaOf(s){const L=[],ph=s.photo===null?null:(s.photo||s.tile);
   if(ph)L.push({k:'photo',img:ph});(s.photos||[]).forEach(x=>L.push({k:'photo',img:x}));
   s.videos.forEach((v,i)=>L.push({k:'video',v,vi:i}));
-  s.draw.forEach(x=>L.push({k:'scheme',img:x}));return L;} /* heights (наши нарисованные картинки ящиков) не показываем — Макс 14.11: переделаем */
+  s.draw.forEach(x=>L.push({k:/\.svg$/i.test(x)?'scheme':'photo',img:x}));return L;} /* heights (наши нарисованные картинки ящиков) не показываем — Макс 14.11: переделаем */
 const LBL={photo:'Фото',video:'Видео',scheme:'Схема',height:'Высота'};
-const vposter=v=>v.src?IMG+v.src.replace(/\.mp4$/,'.jpg'):`https://rutube.ru/api/video/${v.id}/thumbnail/?redirect=1`;
+const vposter=v=>v.src?IMG+v.src.replace(/\.mp4$/,'-v2.jpg'):IMG+'video/rt-'+v.id+'.webp'; /* обложки Rutube скачаны к нам (у приватных роликов публичной нет) */
 function tileHtml(m,i){const lab=LBL[m.k]+(m.k==='video'?' · '+mm(vlen(m.v)):'');
   if(m.k==='video')return `<button class="mp-t video" data-m="${i}"><img src="${vposter(m.v)}" alt="" loading="lazy"><em></em><span>${lab}</span><small>${esc(m.v.t)}</small></button>`;
-  return `<button class="mp-t ${m.k}" data-m="${i}"><img src="${IMG+m.img}" alt="" loading="lazy"><span>${lab}</span></button>`;}
-function lightbox(med,start,name){let i=start,z=null;const box=document.createElement('div');box.id='mtdZ';document.body.appendChild(box);
+  return `<button class="mp-t ${m.k} ${/-photo\.webp$/.test(m.img)?'fit':''}" data-m="${i}"><img src="${IMG+m.img}" alt="" loading="lazy"><span>${lab}</span></button>`;}
+function lightbox(med,start,name){const m=med[start];let z={s:1,x:0,y:0};const box=document.createElement('div');box.id='mtdZ';document.body.appendChild(box);
   const close=()=>{box.remove();document.removeEventListener('keydown',key,true);};
-  const show=n=>{i=(n+med.length)%med.length;const m=med[i];z={s:1,x:0,y:0};
-    const body=m.k==='video'?(m.v.src?`<video src="${IMG+m.v.src}" poster="${vposter(m.v)}" controls playsinline autoplay></video>`
+  const body=m.k==='video'?(m.v.src?`<video src="${IMG+m.v.src}" poster="${vposter(m.v)}" controls playsinline autoplay></video>`
       :`<iframe src="${player(m.v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe>`)
       :`<div class="lz-st"><img src="${IMG+m.img}" alt="" draggable="false"></div>`;
-    box.innerHTML=`<div class="lz-bar"><span>${LBL[m.k]}${m.k==='video'?' · '+esc(m.v.t):''} · ${esc(name)}</span><b>${i+1} / ${med.length}</b><button class="lz-x" aria-label="Закрыть">×</button></div>
-      <div class="lz-in ${m.k==='video'?'vid':''}">${body}</div>
-      ${med.length>1?'<button class="lz-a l" aria-label="Назад">‹</button><button class="lz-a r" aria-label="Дальше">›</button>':''}
-      ${m.k!=='video'?'<div class="lz-hint">Колесо или двойное касание — приблизить · тянуть — двигать</div>':''}`;
-    box.querySelector('.lz-x').onclick=close;box.querySelector('.lz-a.l')?.addEventListener('click',()=>show(i-1));box.querySelector('.lz-a.r')?.addEventListener('click',()=>show(i+1));
-    const st=box.querySelector('.lz-st');if(st)zoomable(st);};
+  box.innerHTML=`<div class="lz-bar"><span>${LBL[m.k]}${m.k==='video'?' · '+esc(m.v.t):''} · ${esc(name)}</span><button class="lz-x" aria-label="Закрыть">×</button></div>
+      <div class="lz-in ${m.k==='video'?'vid':''}">${body}</div>${m.k!=='video'?'<div class="lz-hint">Колесо или двойное касание — приблизить · тянуть — двигать</div>':''}`;
+  box.querySelector('.lz-x').onclick=close;
   function zoomable(st){const img=st.querySelector('img');const ap=()=>{img.style.transform=`translate(${z.x}px,${z.y}px) scale(${z.s})`;st.classList.toggle('zm',z.s>1.01);};
     const at=(ns,cx,cy)=>{const r=st.getBoundingClientRect();const ox=cx-r.left-r.width/2,oy=cy-r.top-r.height/2;ns=Math.max(1,Math.min(6,ns));
       z.x=ox-(ox-z.x)*ns/z.s;z.y=oy-(oy-z.y)*ns/z.s;z.s=ns;if(ns===1){z.x=0;z.y=0;}ap();};
@@ -173,14 +169,14 @@ function lightbox(med,start,name){let i=start,z=null;const box=document.createEl
       else if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;moved=Math.max(moved,Math.abs(dx)+Math.abs(dy));
         if(z.s>1){z.x=drag.zx+dx;z.y=drag.zy+dy;ap();}}});
     const up=e=>{P.delete(e.pointerId);if(P.size<2)pinch=null;
-      if(drag&&P.size===0){const dx=e.clientX-drag.x;if(z.s<=1.01&&Math.abs(dx)>60&&moved>60){show(i+(dx<0?1:-1));return;}
+      if(drag&&P.size===0){
         if(moved<6){const t=Date.now();if(t-last<320||e.pointerType==='mouse'){at(z.s>1.01?1:2.5,e.clientX,e.clientY);last=0;}else last=t;}}
       drag=null;};
     st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);}
-  const key=e=>{if(e.key==='Escape'){e.stopPropagation();close();}else if(e.key==='ArrowRight')show(i+1);else if(e.key==='ArrowLeft')show(i-1);};
+  const key=e=>{if(e.key==='Escape'){e.stopPropagation();close();}};
   document.addEventListener('keydown',key,true);
   box.addEventListener('click',e=>{if(e.target===box||e.target.classList.contains('lz-in'))close();});
-  show(start);}
+  const st=box.querySelector('.lz-st');if(st)zoomable(st);}
 window.openMetod=(k,sk,vi=-1)=>{const M=METOD[k];const s=M.series.find(x=>x.k===sk)||M.series[0];cur={k,sk:s.k,vi};frag=null;
   let w=document.getElementById('mtdW');if(!w){w=document.createElement('div');w.id='mtdW';document.body.appendChild(w);
     w.addEventListener('click',e=>{if(e.target===w)closeMetod();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mtdW')?.classList.contains('on')){const z=document.getElementById('mtdZ');z?z.remove():closeMetod();}});}
@@ -188,7 +184,7 @@ window.openMetod=(k,sk,vi=-1)=>{const M=METOD[k];const s=M.series.find(x=>x.k===
   const badge=M.badge?`<span class="mm-badge">🛡 ${esc(M.badge)}</span>`:'';
   const sec=(t,body,cls='')=>body?`<section class="mm-s ${cls}"><h4>${t}</h4>${body}</section>`:'';
   w.innerHTML=`<div class="mm" role="dialog" aria-label="${esc(M.title)}">
-   <div class="mm-top"><b>📘 ${esc(M.title)}</b>${badge}<button class="mm-x" aria-label="Закрыть">×</button></div>
+   <div class="mm-top"><b>📘 ${esc(M.title)}</b><button class="mm-x" aria-label="Закрыть">×</button></div>
    <div class="mm-g"><nav class="mm-nav">${M.series.map(x=>`<button class="${x.k===s.k?'on':''}" data-s="${x.k}"><i style="background-image:url('${IMG+(x.tile||x.photo)}')"></i><span><b>${esc(x.name)}</b><small>${esc(x.tag)}</small></span></button>`).join('')}</nav>
    <div class="mm-main">
     <div class="mm-hi"><h3>${esc(s.name)}</h3>${M.badge&&s.k!=='h-how'?`<div class="mm-gar"><b>10 лет</b><span>гарантия фабрики на фурнитуру MGS</span></div>`:''}<p class="mm-when">${esc(s.when||s.sub)}</p>
@@ -295,19 +291,21 @@ html.mtd-open{overflow:hidden}
 /* медиа — лента Pinterest + просмотр */
 .mm-s h4 i{font-style:normal;color:var(--ink3);margin-left:6px}
 .mm-hi{max-width:900px}.mm-facts{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-.mp{columns:3 220px;column-gap:12px}
-.mp-t{all:unset;box-sizing:border-box;cursor:zoom-in;display:block;width:100%;margin:0 0 12px;break-inside:avoid;position:relative;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px #2c2824}
-.mp-t img{display:block;width:100%;height:auto}
-.mp-t.scheme img,.mp-t.height img{padding:10px;box-sizing:border-box}
-.mp-t:hover{box-shadow:0 0 0 2px var(--lime)}
-.mp-t span{position:absolute;left:8px;bottom:8px;height:26px;line-height:26px;padding:0 10px;border-radius:999px;background:rgba(244,241,236,.92);color:#2a2622;font-size:12px;font-weight:600}
-.mp-t.scheme span,.mp-t.height span{background:#e3eab8;color:#3f4714}
-.mp-t.video{background:#000;cursor:pointer}.mp-t.video img{aspect-ratio:16/9;object-fit:cover;opacity:.85}
-.mp-t.video span{background:rgba(15,14,12,.8);color:#fff;top:8px;bottom:auto}
-.mp-t.video small{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 9px;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;font-size:13px;font-weight:500}
-.mp-t em{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:rgba(15,14,12,.72);box-shadow:0 0 0 2px rgba(255,255,255,.5)}
-.mp-t em:after{content:'';position:absolute;left:21px;top:16px;border-left:16px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent}
-@media(max-width:600px){.mp{columns:2;column-gap:8px}.mp-t{margin-bottom:8px;border-radius:12px}}
+.mp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.mp-t{all:unset;box-sizing:border-box;cursor:zoom-in;display:block;position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;background:#fff;isolation:isolate}
+.mp-t img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;border:0}
+.mp-t.scheme img,.mp-t.fit img{object-fit:contain;padding:14px;box-sizing:border-box} /* fit — фото-коллажи с сайта (фото + чертежи), их не режем */
+.mp-t:after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;transition:box-shadow .15s}
+.mp-t:hover:after{box-shadow:inset 0 0 0 2px var(--lime)}
+.mp-t span{position:absolute;left:10px;bottom:10px;height:28px;line-height:28px;padding:0 12px;border-radius:999px;background:rgba(244,241,236,.94);color:#2a2622;font-size:12.5px;font-weight:600;z-index:1}
+.mp-t.scheme span{background:#e3eab8;color:#3f4714}
+.mp-t.video{background:#151311;cursor:pointer}
+.mp-t.video:before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.35),transparent 30%,transparent 55%,rgba(0,0,0,.75));z-index:1}
+.mp-t.video span{background:rgba(15,14,12,.78);color:#fff;top:10px;bottom:auto}
+.mp-t.video small{position:absolute;left:12px;right:12px;bottom:11px;color:#fff;font-size:13.5px;font-weight:500;line-height:1.3;z-index:1}
+.mp-t em{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(15,14,12,.6);box-shadow:inset 0 0 0 2px rgba(255,255,255,.75);z-index:1}
+.mp-t em:after{content:'';position:absolute;left:22px;top:17px;border-left:17px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent}
+@media(max-width:600px){.mp{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mp-t{border-radius:12px}}
 #mtdZ{position:fixed;inset:0;z-index:70;background:rgba(8,7,6,.96);display:block;padding:0;cursor:default}
 .lz-bar{position:absolute;left:0;right:0;top:0;height:56px;display:flex;align-items:center;gap:14px;padding:0 12px 0 20px;z-index:3;color:var(--ink2);font-size:14px}
 .lz-bar span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lz-bar b{font-weight:500;font-variant-numeric:tabular-nums}
