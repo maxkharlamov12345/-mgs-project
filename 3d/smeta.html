@@ -222,7 +222,7 @@ html.cart-on{overflow:hidden}
   </div></div>
 <main id="adm" hidden></main>
 <script src="lib/supabase.min.js"></script>
-<script src="metod.js?v=3"></script>
+<script src="metod.js?v=4"></script>
 <script type="module">
 import {sb,configured} from './db.js?v=20261112c';
 import {SUPABASE_URL} from './config.js?v=20261112c';
@@ -455,7 +455,7 @@ function renderPick(){
     save();o.item=null;renderPick();toast(`Добавлено: ${x.name}${dn?' · '+dn:''}`);}
   function setQty(x,v){const ls=V().lines.filter(l=>l.item===x.id);if(!ls.length)return;const l=ls[ls.length-1];
     if(v<=0)V().lines=V().lines.filter(y=>y!==l);else{l.qty=v;l.qtyTxt=undefined;}save();renderPick();}
-  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||((k=>k&&k!=='mgs'&&(S.brands?.[k]||OWN_LOGO[k])?.logo)(brandOf(x.grp)))||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;const mk=window.metodKey&&metodKey(o.sec,x.grp),ms=mk&&metodSeries(x);const qn=MULTI?qtyOf(x):0,one=V().lines.filter(l=>l.item===x.id).length<=1;
+  const itemCard=x=>{const df=DEC_FAM(x);const ph=x.photo||(df&&decs(df)[0]?.photo)||grpIcon(o.sec,x.grp,x.params?.sub)||((k=>k&&k!=='mgs'&&(S.brands?.[k]||OWN_LOGO[k])?.logo)(brandOf(x.grp)))||grpIcon(o.sec,x.grp)||(OWN_LOGO[brandOf(x.grp)]||{}).logo;const mk=window.metodKey&&metodKey(o.sec,x.grp),ms=mk&&metodSeries(x,mk);const qn=MULTI?qtyOf(x):0,one=V().lines.filter(l=>l.item===x.id).length<=1;
     const qc=!MULTI?'':qn&&one?`<span class="cq" data-stop><button class="cqb" data-act="${A(()=>setQty(x,qn-1))}" aria-label="Меньше">−</button><input class="cqi" data-x="${esc(x.id)}" value="${nfmt(qn)}" inputmode="decimal" aria-label="Количество"><button class="cqb" data-act="${A(()=>setQty(x,qn+1))}" aria-label="Больше">+</button></span>`
       :qn?`<span class="cq cqm">в смете: ${nfmt(qn)}</span>`:`<span class="cadd" aria-hidden="true">+</span>`;
     return `<div class="card ${qn?'in':''}" role="button" tabindex="0" data-act="${A(()=>pickItem(x))}"><span class="im ${ph?'':'no'}" ${bgi(ph)}>${ph?'':'нет фото'}</span>
