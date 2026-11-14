@@ -143,7 +143,7 @@ const warnOf=s=>s.warn||s.specs.filter(x=>x[2]).map(([a,b])=>a+': '+b);
 function mediaOf(s){const L=[],ph=s.photo===null?null:(s.photo||s.tile);
   if(ph)L.push({k:'photo',img:ph});(s.photos||[]).forEach(x=>L.push({k:'photo',img:x}));
   s.videos.forEach((v,i)=>L.push({k:'video',v,vi:i}));
-  s.draw.forEach(x=>L.push({k:'scheme',img:x}));(s.heights||[]).forEach(x=>L.push({k:'height',img:x}));return L;}
+  s.draw.forEach(x=>L.push({k:'scheme',img:x}));return L;} /* heights (наши нарисованные картинки ящиков) не показываем — Макс 14.11: переделаем */
 const LBL={photo:'Фото',video:'Видео',scheme:'Схема',height:'Высота'};
 const vposter=v=>v.src?IMG+v.src.replace(/\.mp4$/,'.jpg'):`https://rutube.ru/api/video/${v.id}/thumbnail/?redirect=1`;
 function tileHtml(m,i){const lab=LBL[m.k]+(m.k==='video'?' · '+mm(vlen(m.v)):'');
