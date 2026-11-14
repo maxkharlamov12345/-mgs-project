@@ -23,17 +23,17 @@ const METOD={
     sub:'Двустенные царги, рейлинги · с 2022 года · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','350–550 мм'],['Высота','100 · 155 · 220 мм'],['Цвет','белый · серый'],['Механизм','доводчик'],['Push-Open','нет',1]],
     say:[['Классика с рейлингами','Продольный рейлинг увеличивает полезную высоту и жёсткость ящика.'],['Тихо закрывается','Встроенный доводчик — плавно и бесшумно.'],['Бюджетно','Лучшее решение по цене при нагрузке до 45 кг.']],
-    videos:[{t:'Обучение',...R('bfbe381d49848a5f40e32826d2ee17d4','6nH99wJ-sgCZnKdEzQdYbw'),len:189},{t:'Промо',...PROMO,from:64,to:98}]},
+    videos:[{t:'Обучение',...R('bfbe381d49848a5f40e32826d2ee17d4','6nH99wJ-sgCZnKdEzQdYbw'),len:189},{t:'Промо',src:'video/box-tbox.mp4',len:34}]},
    {k:'l',name:'L-box',tag:'тонкие боковины',tile:'doc/l-tile.webp',draw:['doc/l-box.svg'],heights:['lbox-h88-white-v3.webp','lbox-h202-white-v3.webp'],
     sub:'Современный дизайн, тонкие боковины · с 2022 года · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','350–550 мм'],['Высота','88 · 202 мм'],['Цвет','белый · серый'],['Механизм','доводчик или Push-Open'],['Синхронизатор','нельзя',1]],
     say:[['Плавно и тихо','Ящик выдвигается без рывков и закрывается мягко.'],['Тонкие боковины','Современный минималистичный вид, подходит под любой интерьер.'],['Push-Open','Лёгкое касание — ящик открывается сам, ручки не нужны.']],
-    videos:[{t:'Обучение',...R('095aa859795c090e1af695a892e91cd9','zo4AkeUvP4hu0BMYAW5W5A'),len:161},{t:'Промо',...PROMO,from:30,to:64}]},
+    videos:[{t:'Обучение',...R('095aa859795c090e1af695a892e91cd9','zo4AkeUvP4hu0BMYAW5W5A'),len:161},{t:'Промо',src:'video/box-lbox.mp4',len:34}]},
    {k:'s',name:'S-box',tag:'доводчик + Push-Open',tile:'doc/s-tile.webp',draw:['doc/s-box.svg'],heights:['sbox-h83-white-v3.webp','sbox-h121-white-v3.webp','sbox-h168-white-v3.webp'],
     sub:'Толкатель и доводчик сразу, синхронизатор в комплекте · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','400–550 мм'],['Высота','83 · 121 · 168 мм'],['Цвет','белый · серый'],['Механизм','доводчик + Push-Open'],['Синхронизатор','есть']],
     say:[['Открыть — нажатием, закрыть — мягко','Толкатель и доводчик работают одновременно.'],['Нажимайте где угодно','Синхронизатор срабатывает при нажатии в любой точке фасада.'],['Чистый вид','Нет выступающих креплений дна на боковинах.']],
-    videos:[{t:'Обучение',...R('1df7b7b5cb78298621fda5812cd0bb6d','ctoDW4QFe4IeQweXTTHXFQ'),len:122},{t:'Промо',...PROMO,from:122,to:147}]},
+    videos:[{t:'Обучение',...R('1df7b7b5cb78298621fda5812cd0bb6d','ctoDW4QFe4IeQweXTTHXFQ'),len:122},{t:'Промо',src:'video/box-sbox.mp4',len:18}]},
    {k:'n',name:'N-box',tag:'регулировка в 3D',tile:'doc/n-tile.webp',draw:['doc/n-box.svg'],heights:['nbox-h90-white-v3.webp','nbox-h175-white-v3.webp','nbox-h239-white-v3.webp'],
     sub:'Премиум: регулировка в 3 плоскостях, есть внутренний ящик · гарантия 10 лет',
     specs:[['Нагрузка','до 45 кг'],['Глубина ящика','300–550 мм'],['Высота','90 · 175 · 239 мм'],['Цвет','белый · серый'],['Механизм','доводчик или Push-Open'],['Синхронизатор','по запросу'],['Регулировка','в 3 плоскостях'],['Внутренний ящик','90 и 175 мм']],
@@ -48,7 +48,7 @@ const METOD={
     sub:'MGS PRO и MGS «2+2» · гарантия 10 лет',
     specs:[['Нагрузка','до 20 кг'],['MGS «2+2»','250–600 мм · доводчик или Push-Open'],['MGS PRO','300–600 мм · доводчик'],['MGS PRO Push-Open','350–550 мм · + доводчик и синхронизатор'],['Регулировка «2+2»','в 2 плоскостях'],['250 мм','без регулировок',1]],
     say:[['Не видно направляющих','Скрытый монтаж — чистые линии ящика.'],['PRO — тише и плавнее','Новая платформа: ход заметно мягче, чем у «2+2».'],['Push-Open на PRO','Только у PRO есть толкатель с доводчиком и синхронизатором.']],
-    videos:[{t:'Обучение MGS PRO',...R('cddb9c913d1ac7f127965fb706f9106c','s-be5H4F3CaAKeA1gIsy9Q'),len:184},{t:'Промо MGS PRO',...PROMO,from:10,to:30},{t:'Промо «2+2»',...PROMO,from:98,to:122},{t:'Как поставить Tip-On',...R('cb467e52b77afd5e38f0f3b6a09a681b','Hpp0eBRPqpe5PXVHRwoXUg'),len:87}]}
+    videos:[{t:'Обучение MGS PRO',...R('cddb9c913d1ac7f127965fb706f9106c','s-be5H4F3CaAKeA1gIsy9Q'),len:184},{t:'Промо MGS PRO',src:'video/box-pro.mp4',len:20},{t:'Промо «2+2»',src:'video/box-2p2.mp4',len:24},{t:'Как поставить Tip-On',...R('cb467e52b77afd5e38f0f3b6a09a681b','Hpp0eBRPqpe5PXVHRwoXUg'),len:87}]}
   ]},
  /* Макс 14.11: петли MGS — сайт фабрики (MGS_petly, регламенты, стандарты проектирования, изменения), прайс 04/05, Rutube MGS MEBEL */
  'mgs-hinge':{sec:'Петли',grp:'MGS',badge:'Гарантия фабрики 10 лет',title:'Методичка: петли MGS',sub:'какую петлю выбрать, характеристики, схемы и что сказать клиенту',drawLabel:'Схемы',
@@ -102,7 +102,7 @@ const METOD={
     specs:[['Вес фасада','до 30 кг'],['Угол открывания','110°'],['Толщина двери','от 18 мм'],['Профиль','только рамка MYSTERY'],['Механизм','доводчик или без пружины'],['Регулировка по глубине','+2 / −0,5 мм'],['Регулировка по ширине','±2 мм'],['Регулировка по высоте','±1,5 мм'],['Продаётся','комплектом']],
     say:[['Петель не видно','Фасад выглядит цельной плоскостью — эффект «невидимой» двери.'],['Точная подгонка','Регулировка в трёх плоскостях — ровные зазоры.'],['Под толкатель','Есть версия без пружины — для Tip-on.']],
     warn:['Фасады выше 1700 мм — работа петель не гарантируется; фабрика рекомендует петли SALICE AIR.','В EGGER 18 мм при фасадах выше 1700 мм возможен выгиб в районе петель.','Ставится только на алюминиевую рамку MYSTERY.'],
-    videos:[{t:'Петля MYSTERY',...R('98a24f7a7963e712df0cad54975fc919',''),from:16,to:26}]}
+    videos:[{t:'Петля MYSTERY',src:'video/h-mys.mp4',len:9}]}
   ]}
 };
 const SER_MAP={'T-box':'t','L-box':'l','S-box':'s','N-box':'n','F-box':'f','MGS PRO':'rails','Направляющие MGS':'rails'};
@@ -156,9 +156,9 @@ window.openMetod=(k,sk,vi=0)=>{const M=METOD[k];const s=M.series.find(x=>x.k===s
     ${sec('Что сказать клиенту',s.say.length?`<div class="mm-say">${s.say.map(([a,b],i)=>`<div><em>${i+1}</em><b>${esc(a)}</b><p>${esc(b)}</p></div>`).join('')}</div>`:'')}
     ${sec('⚠ Важно при заказе',warn.length?`<ul>${warn.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'','mm-warn')}
     ${sec(s.specsTitle||'Характеристики',s.specs.length?`<div class="mm-tbl">${s.specs.map(([a,b,no])=>`<div class="${no?'no':''}"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join('')}</div>`:'')}
-    ${v?`<section class="mm-s" id="mmVid"><h4>Видео</h4><div class="mtd-v"><iframe src="${player(v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe><div class="mtd-end" hidden><span>Фрагмент про ${esc(s.name)} закончился</span><button class="pill lime" data-rep>Повторить</button></div></div>
+    ${v?`<section class="mm-s" id="mmVid"><h4>Видео</h4><div class="mtd-v">${v.src?`<video src="${IMG+v.src}" poster="${IMG+v.src.replace(/\.mp4$/,'.jpg')}" controls playsinline preload="metadata"></video>`:`<iframe src="${player(v)}" allow="clipboard-write; autoplay; fullscreen" allowfullscreen></iframe>`}<div class="mtd-end" hidden><span>Фрагмент про ${esc(s.name)} закончился</span><button class="pill lime" data-rep>Повторить</button></div></div>
       ${s.videos.length>1?`<div class="mtd-vs">${s.videos.map((x,i)=>`<button class="pill ${i===vi?'on':''}" data-v="${i}">${esc(x.t)} · ${mm(vlen(x))}</button>`).join('')}</div>`:''}
-      <div class="mtd-note">${v.to!=null?`Фрагмент общего ролика фабрики — только про ${esc(s.name)} (${mm(v.from)}–${mm(v.to)})`:esc(v.t)+' · видео фабрики MGS'}</div></section>`:''}
+      <div class="mtd-note">${v.src?`${esc(v.t)} · фрагмент ролика фабрики MGS — только про ${esc(s.name)}`:esc(v.t)+' · видео фабрики MGS'}</div></section>`:''}
     ${sec(M.drawLabel||'Схемы и фото',pics.length?`<div class="mm-pics">${pics.map(d=>`<button data-z="${IMG+d}" class="${/mount|adj/.test(d)?'wide':''}"><img src="${IMG+d}" alt="" loading="lazy"></button>`).join('')}</div><div class="mtd-note">Нажмите на картинку, чтобы увеличить</div>`:'')}
     ${sec('Подробно от фабрики',full.length?`<div class="mm-full">${full.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`:'')}
     <div class="mtd-src">${esc(M.src||'Источник: сайт фабрики MGS (TECHNO)')}</div>
@@ -194,7 +194,7 @@ html.mtd-open{overflow:hidden}
 .mtd-x{all:unset;cursor:pointer;position:absolute;right:16px;top:16px;width:40px;height:40px;border-radius:50%;background:var(--field);display:grid;place-items:center;font-size:22px;color:var(--ink2)}
 .mtd-tabs{display:flex;gap:6px;flex-wrap:wrap;padding-right:50px;margin-bottom:16px}
 .mtd-g{display:grid;grid-template-columns:1.25fr 1fr;gap:24px}@media(max-width:900px){.mtd-g{grid-template-columns:1fr}}
-.mtd-v{position:relative;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000}.mtd-v iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.mtd-v video{position:absolute;inset:0;width:100%;height:100%;background:#000}.mtd-v{position:relative;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000}.mtd-v iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .mtd-v.mtd-ph{background-color:#fff;background-position:center;background-size:contain;background-repeat:no-repeat}.mtd-d img.wide{grid-column:1/-1}
 .mtd-end{position:absolute;inset:0;background:rgba(10,9,8,.82);display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;font-size:15px}
 .mtd-vs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.mtd-vs .pill{height:34px;font-size:13px;padding:0 12px}
