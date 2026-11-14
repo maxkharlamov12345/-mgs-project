@@ -136,7 +136,9 @@ table.mk{width:100%;border-collapse:collapse}table.mk td{padding:8px 6px;border-
 /* E (Макс 14.11, вечер): слева меню разделов в рамке, в стиле CRM, не сжато; справа — как вид A
    (поиск, методичка строкой, фильтры одной строкой над карточками, 4 колонки, лаймовый «+»); колонки фильтров справа нет */
 .lyE{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start}
-.lyE nav{background:var(--bg);border-radius:18px;padding:8px;position:sticky;top:12px;display:flex;flex-direction:column;max-height:calc(100vh - 24px);overflow:auto;scrollbar-width:thin}
+.lyE nav{background:var(--bg);border-radius:18px;padding:6px 8px 10px;position:sticky;top:12px;display:flex;flex-direction:column}
+/* Макс 14.11: у меню разделов своего ползунка нет — оно целиком; не влезает в экран — липнет низом (fitNav: top = экран − высота меню) */
+.lyE nav .lyD-g{padding:8px 10px 2px}.lyE nav .lyD-s{padding:5px 10px 5px 16px}
 .lyE-m{display:flex;flex-direction:column;gap:12px;min-width:0}.lyE-m .psearch{margin:0}.lyE-m .fhint{margin:0}
 .lyE-m .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
 body[data-lay=E] .cadd{background:var(--lime);color:#0f0e0c}
@@ -401,6 +403,9 @@ const panel=(head,body,foot='')=>`<div class="panel"><div class="ph-h"><div clas
 const TRY_LAY=o=>!o.item; /* Макс 14.11: вид E — во всём каталоге (кроме выбора декора) */
 function getLay(){return 'E';}
 function setLay(k){try{localStorage.setItem('smeta-lay',k);}catch(e){}}
+/* меню разделов каталога без своей прокрутки: выше экрана — липнет так, чтобы низ был виден */
+function fitNav(){const n=document.querySelector('.lyE nav');if(!n)return;n.style.top=innerWidth<=760?'':Math.min(12,innerHeight-n.offsetHeight-12)+'px';}
+addEventListener('resize',fitNav);
 function renderPick(){
   const o=S.open,items=S.cat.filter(x=>x.sec===o.sec&&(x.kind==='item'||x.kind==='price')&&x.cprice);
   /* порядок групп — как в файле каталога (по сайту фабрики), своя фурнитура фабрики (MGS) — первой */
@@ -492,7 +497,7 @@ function renderPick(){
   const lay=getLay(),cx=true; /* каталог всегда без панели сметы, и на выборе декора тоже */document.body.classList.toggle('catx',cx);document.body.dataset.lay=cx?lay:'';
   if(lay){const n=V().lines.filter(l=>l.price).length;
     head+=(cx?`<span class="minicart">В смете <b class="num">${n} поз. · ${rub(varTotal(V()))}</b><button class="pill lime" data-act="${A(()=>{S.open=null;render();})}">К смете →</button></span>`:'');}
-  $('#left').innerHTML=panel(head,body);
+  $('#left').innerHTML=panel(head,body);fitNav();
   $('#pClose').onclick=()=>{S.open=null;render();};
   $('#pBack')&&($('#pBack').onclick=()=>{if(o.item){o.item=null;o.q='';}else if(o.q){o.q='';}else if(o.sub)o.sub=null;else if(o.back){S.open=o.back;renderPlate();return;}else if(o.grp){o.grp=null;o.ff={};}else{S.open=null;render();return;}renderPick();});
   $('#left').querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.stopPropagation();acts[b.dataset.act]();});
